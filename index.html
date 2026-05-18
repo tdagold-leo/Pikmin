@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>皮克敏-巨菇-倒數追蹤器</title>
+    <title>皮克敏-巨菇-雲端同步追蹤器</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -19,7 +19,22 @@
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            position: relative;
         }
+        
+        .view-counter {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            border: 1px solid #c5e1a5;
+        }
+
         h2, h3 {
             margin-top: 0;
             color: #2e7d32;
@@ -119,6 +134,24 @@
             background-color: #43a047;
         }
         
+        /* 針對小螢幕與手機優化輸入排版 */
+        @media (max-width: 600px) {
+            .view-counter {
+                position: static;
+                display: inline-block;
+                margin-bottom: 15px;
+            }
+            .form-row-bottom {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .submit-btn {
+                width: 100%;
+                margin-left: 0;
+            }
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -195,7 +228,6 @@
             font-style: italic;
         }
 
-        /* 彈出視窗樣式 */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -239,11 +271,16 @@
         .modal-btn.cancel { background-color: #e0e0e0; color: #333; }
         .modal-btn.cancel:hover { background-color: #d5d5d5; }
     </style>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
 <div class="container">
-    <h2>皮克敏-巨菇-倒數追蹤器</h2>
+    <div class="view-counter" id="view-counter-text">雲端總瀏覽次數：0 次</div>
+
+    <h2>皮克敏-巨菇-雲端同步追蹤器</h2>
     
     <div class="input-form">
         <div class="form-row-top">
@@ -348,11 +385,52 @@
 </div>
 
 <script>
+    // 已將你圖片中的金鑰與資料庫網址完美填入
+    const firebaseConfig = {
+        apiKey: "AIzaSyBkmQhSKbiSTeHkbAnjSZTgYtGbmPySJbo",
+        authDomain: "pikmin-tracker-3cf56.firebaseapp.com",
+        databaseURL: "https://pikmin-tracker-3cf56-default-rtdb.firebaseio.com/",
+        projectId: "pikmin-tracker-3cf56",
+        storageBucket: "pikmin-tracker-3cf56.firebasestorage.app",
+        messagingSenderId: "848190561510",
+        appId: "1:848190561510:web:07ceb7fa8bc57a7004af27"
+    };
+
+    // 初始化 Firebase 服務
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
     let dataList = [];
-    let currentSerialNumber = 1;
     let currentClaimingId = null;
 
-    // 核心修復：確保主功能讀取完全正常且具有極強防錯性
+    // 即時監聽雲端資料庫變化
+    database.ref('mushrooms').on('value', (snapshot) => {
+        const cloudData = snapshot.val();
+        dataList = [];
+        if (cloudData) {
+            Object.keys(cloudData).forEach((key) => {
+                dataList.push({
+                    id: key, 
+                    sn: cloudData[key].sn,
+                    user: cloudData[key].user,
+                    name: cloudData[key].name,
+                    coords: cloudData[key].coords,
+                    targetTime: cloudData[key].targetTime
+                });
+            });
+        }
+        updateTable();
+    });
+
+    // 雲端全網總瀏覽次數統計機制
+    database.ref('views').transaction((currentViews) => {
+        return (currentViews || 0) + 1;
+    });
+    database.ref('views').on('value', (snapshot) => {
+        const views = snapshot.val() || 0;
+        document.getElementById('view-counter-text').innerText = `雲端總瀏覽次數：${views} 次`;
+    });
+
     function addItem() {
         const userEl = document.getElementById('user');
         const nameEl = document.getElementById('name');
@@ -379,31 +457,34 @@
 
         const processedUser = userEl ? userEl.value.trim() : "";
 
+        let nextSn = 1;
+        if (dataList.length > 0) {
+            nextSn = Math.max(...dataList.map(item => item.sn || 0)) + 1;
+        }
+
         const newItem = {
-            id: Date.now(),
-            sn: currentSerialNumber++,
+            sn: nextSn,
             user: processedUser,
             name: nameEl.value.trim(),
             coords: coordsEl.value.trim(),
             targetTime: targetTime
         };
 
-        dataList.push(newItem);
+        // 上傳至雲端資料庫
+        database.ref('mushrooms').push(newItem);
         
-        // 重設輸入框
         if(userEl) userEl.value = '';
         nameEl.value = '';
         coordsEl.value = '';
         document.getElementById('days').value = '0';
         document.getElementById('hours').value = '0';
         document.getElementById('minutes').value = '0';
-
-        updateTable();
     }
 
     function deleteItem(id) {
-        dataList = dataList.filter(item => item.id !== id);
-        updateTable();
+        if(confirm('確定要刪除這筆巨菇資料嗎？（刪除後所有人畫面都會同步消失）')) {
+            database.ref('mushrooms/' + id).remove();
+        }
     }
 
     function openClaimModal(id, currentName) {
@@ -434,17 +515,16 @@
         const h = parseInt(document.getElementById('modal-hours').value, 10) || 0;
         const m = parseInt(document.getElementById('modal-minutes').value, 10) || 0;
 
-        const item = dataList.find(item => item.id === currentClaimingId);
-        if (item) {
-            item.user = usernameInput;
-            
-            if (d > 0 || h > 0 || m > 0) {
-                const totalMs = ((d * 24 * 60) + (h * 60) + m) * 60 * 1000;
-                item.targetTime = Date.now() + totalMs;
-            }
-            
-            updateTable();
+        const updates = {
+            user: usernameInput
+        };
+        
+        if (d > 0 || h > 0 || m > 0) {
+            const totalMs = ((d * 24 * 60) + (h * 60) + m) * 60 * 1000;
+            updates.targetTime = Date.now() + totalMs;
         }
+        
+        database.ref('mushrooms/' + currentClaimingId).update(updates);
         closeModal();
     }
 
@@ -507,7 +587,7 @@
                     const secs = totalSeconds % 60;
 
                     if (days > 0) {
-                        timeText = `${days} 天 ${hours} 時 ${mins} 分 ${secs} 秒`;
+                        timeText = `${days} 天 ${hours} 時 ${mins} 分`;
                     } else if (hours > 0) {
                         timeText = `${hours} 時 ${mins} 分 ${secs} 秒`;
                     } else {
@@ -532,8 +612,8 @@
                     <td>${timeText}</td>
                     <td>
                         <div class="action-btns">
-                            <button class="claim-btn" onclick="openClaimModal(${item.id}, '${safeName.replace(/'/g, "\\'")}')">認領</button>
-                            <button class="delete-btn" onclick="deleteItem(${item.id})">刪除</button>
+                            <button class="claim-btn" onclick="openClaimModal('${item.id}', '${safeName.replace(/'/g, "\\'")}')">認領</button>
+                            <button class="delete-btn" onclick="deleteItem('${item.id}')">刪除</button>
                         </div>
                     </td>
                 `;
@@ -551,7 +631,7 @@
                     <td>${timeText}</td>
                     <td>
                         <div class="action-btns">
-                            <button class="delete-btn" onclick="deleteItem(${item.id})">刪除</button>
+                            <button class="delete-btn" onclick="deleteItem('${item.id}')">刪除</button>
                         </div>
                     </td>
                 `;
