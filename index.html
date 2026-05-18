@@ -19,23 +19,7 @@
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            position: relative; /* 為了讓瀏覽次數定位 */
         }
-        
-        /* 【新功能】瀏覽次數樣式 */
-        .view-counter {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background-color: #e8f5e9;
-            color: #2e7d32;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            border: 1px solid #c5e1a5;
-        }
-
         h2, h3 {
             margin-top: 0;
             color: #2e7d32;
@@ -211,6 +195,7 @@
             font-style: italic;
         }
 
+        /* 彈出視窗樣式 */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -258,8 +243,6 @@
 <body>
 
 <div class="container">
-    <div class="view-counter" id="view-counter-text">瀏覽次數：0 次</div>
-
     <h2>皮克敏-巨菇-倒數追蹤器</h2>
     
     <div class="input-form">
@@ -369,17 +352,7 @@
     let currentSerialNumber = 1;
     let currentClaimingId = null;
 
-    // 【新功能】網頁載入時自動計算並顯示瀏覽次數
-    window.onload = function() {
-        // 從瀏覽器快取中取出舊的次數，如果沒有就從 0 開始
-        let currentViews = parseInt(localStorage.getItem('pikmin_tracker_views'), 10) || 0;
-        currentViews++; // 這次進來算 1 次
-        localStorage.setItem('pikmin_tracker_views', currentViews); // 存回快取
-        
-        // 更新到畫面上
-        document.getElementById('view-counter-text').innerText = `瀏覽次數：${currentViews} 次`;
-    };
-
+    // 核心修復：確保主功能讀取完全正常且具有極強防錯性
     function addItem() {
         const userEl = document.getElementById('user');
         const nameEl = document.getElementById('name');
@@ -400,4 +373,202 @@
 
         let targetTime = null;
         if (days > 0 || hours > 0 || minutes > 0) {
-            const totalMs = ((days * 24 * 60) + (hours * 60) + minutes) * 60 * 10
+            const totalMs = ((days * 24 * 60) + (hours * 60) + minutes) * 60 * 1000;
+            targetTime = Date.now() + totalMs;
+        }
+
+        const processedUser = userEl ? userEl.value.trim() : "";
+
+        const newItem = {
+            id: Date.now(),
+            sn: currentSerialNumber++,
+            user: processedUser,
+            name: nameEl.value.trim(),
+            coords: coordsEl.value.trim(),
+            targetTime: targetTime
+        };
+
+        dataList.push(newItem);
+        
+        // 重設輸入框
+        if(userEl) userEl.value = '';
+        nameEl.value = '';
+        coordsEl.value = '';
+        document.getElementById('days').value = '0';
+        document.getElementById('hours').value = '0';
+        document.getElementById('minutes').value = '0';
+
+        updateTable();
+    }
+
+    function deleteItem(id) {
+        dataList = dataList.filter(item => item.id !== id);
+        updateTable();
+    }
+
+    function openClaimModal(id, currentName) {
+        currentClaimingId = id;
+        document.getElementById('modal-title').innerText = `認領巨菇 - ${currentName}`;
+        document.getElementById('modal-username').value = '';
+        document.getElementById('modal-days').value = '0';
+        document.getElementById('modal-hours').value = '0';
+        document.getElementById('modal-minutes').value = '0';
+        
+        document.getElementById('modal-submit-btn').onclick = submitClaim;
+        document.getElementById('claim-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('claim-modal').style.display = 'none';
+        currentClaimingId = null;
+    }
+
+    function submitClaim() {
+        const usernameInput = document.getElementById('modal-username').value.trim();
+        if (!usernameInput) {
+            alert('請輸入認領人的名字！');
+            return;
+        }
+
+        const d = parseInt(document.getElementById('modal-days').value, 10) || 0;
+        const h = parseInt(document.getElementById('modal-hours').value, 10) || 0;
+        const m = parseInt(document.getElementById('modal-minutes').value, 10) || 0;
+
+        const item = dataList.find(item => item.id === currentClaimingId);
+        if (item) {
+            item.user = usernameInput;
+            
+            if (d > 0 || h > 0 || m > 0) {
+                const totalMs = ((d * 24 * 60) + (h * 60) + m) * 60 * 1000;
+                item.targetTime = Date.now() + totalMs;
+            }
+            
+            updateTable();
+        }
+        closeModal();
+    }
+
+    function copyCoords(text, buttonElement) {
+        navigator.clipboard.writeText(text).then(() => {
+            const originalText = buttonElement.innerText;
+            buttonElement.innerText = '已複製！';
+            buttonElement.classList.add('copied');
+            buttonElement.disabled = true;
+
+            setTimeout(() => {
+                buttonElement.innerText = originalText;
+                buttonElement.classList.remove('copied');
+                buttonElement.disabled = false;
+            }, 1500);
+        }).catch(err => {
+            console.error('無法複製座標: ', err);
+            alert('複製失敗，請手動複製。');
+        });
+    }
+
+    function updateTable() {
+        const activeTbody = document.getElementById('active-table-body');
+        const unclaimedTbody = document.getElementById('unclaimed-table-body');
+        if (!activeTbody || !unclaimedTbody) return;
+
+        const now = Date.now();
+
+        const sortedList = [...dataList].sort((a, b) => {
+            if (a.targetTime === null && b.targetTime === null) return 0;
+            if (a.targetTime === null) return 1;
+            if (b.targetTime === null) return -1;
+            return a.targetTime - b.targetTime;
+        });
+
+        activeTbody.innerHTML = '';
+        unclaimedTbody.innerHTML = '';
+
+        let activeCount = 0;
+        let unclaimedCount = 0;
+
+        sortedList.forEach((item) => {
+            const tr = document.createElement('tr');
+            let timeText = '';
+
+            if (item.targetTime === null) {
+                timeText = '<span class="not-set">尚未設定</span>';
+            } else {
+                const remainingMs = item.targetTime - now;
+                if (remainingMs <= 0) {
+                    timeText = '<span class="expired">已過期/可開打！</span>';
+                } else {
+                    const totalSeconds = Math.floor(remainingMs / 1000);
+                    const totalMinutes = Math.floor(totalSeconds / 60);
+                    const totalHours = Math.floor(totalMinutes / 60);
+                    
+                    const days = Math.floor(totalHours / 24);
+                    const hours = totalHours % 24;
+                    const mins = totalMinutes % 60;
+                    const secs = totalSeconds % 60;
+
+                    if (days > 0) {
+                        timeText = `${days} 天 ${hours} 時 ${mins} 分 ${secs} 秒`;
+                    } else if (hours > 0) {
+                        timeText = `${hours} 時 ${mins} 分 ${secs} 秒`;
+                    } else {
+                        timeText = `${mins} 分 ${secs} 秒`;
+                    }
+                }
+            }
+
+            const safeCoords = escapeHtml(item.coords);
+            const safeName = escapeHtml(item.name);
+
+            if (item.user === "") {
+                unclaimedCount++;
+                tr.innerHTML = `
+                    <td>${item.sn}</td>
+                    <td><span style="color:#8e8e93; font-style:italic;">無</span></td>
+                    <td>${safeName}</td>
+                    <td>
+                        <span>${safeCoords}</span>
+                        <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
+                    </td>
+                    <td>${timeText}</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="claim-btn" onclick="openClaimModal(${item.id}, '${safeName.replace(/'/g, "\\'")}')">認領</button>
+                            <button class="delete-btn" onclick="deleteItem(${item.id})">刪除</button>
+                        </div>
+                    </td>
+                `;
+                unclaimedTbody.appendChild(tr);
+            } else {
+                activeCount++;
+                tr.innerHTML = `
+                    <td>${item.sn}</td>
+                    <td><strong>${escapeHtml(item.user)}</strong></td>
+                    <td>${safeName}</td>
+                    <td>
+                        <span>${safeCoords}</span>
+                        <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
+                    </td>
+                    <td>${timeText}</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="delete-btn" onclick="deleteItem(${item.id})">刪除</button>
+                        </div>
+                    </td>
+                `;
+                activeTbody.appendChild(tr);
+            }
+        });
+
+        document.getElementById('active-empty').style.display = activeCount === 0 ? 'block' : 'none';
+        document.getElementById('unclaimed-empty').style.display = unclaimedCount === 0 ? 'block' : 'none';
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    setInterval(updateTable, 1000);
+</script>
+
+</body>
+</html>
