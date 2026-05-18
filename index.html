@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>皮克敏-巨菇-雲端同步追蹤器</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -134,7 +138,6 @@
             background-color: #43a047;
         }
         
-        /* 針對小螢幕與手機優化輸入排版 */
         @media (max-width: 600px) {
             .view-counter {
                 position: static;
@@ -271,9 +274,6 @@
         .modal-btn.cancel { background-color: #e0e0e0; color: #333; }
         .modal-btn.cancel:hover { background-color: #d5d5d5; }
     </style>
-
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -385,7 +385,7 @@
 </div>
 
 <script>
-    // 已將你圖片中的金鑰與資料庫網址完美填入
+    // 綁定你專案的資料設定
     const firebaseConfig = {
         apiKey: "AIzaSyBkmQhSKbiSTeHkbAnjSZTgYtGbmPySJbo",
         authDomain: "pikmin-tracker-3cf56.firebaseapp.com",
@@ -396,14 +396,14 @@
         appId: "1:848190561510:web:07ceb7fa8bc57a7004af27"
     };
 
-    // 初始化 Firebase 服務
+    // 初始化（相容高、不易被擋的舊語法格式）
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
     let dataList = [];
     let currentClaimingId = null;
 
-    // 即時監聽雲端資料庫變化
+    // 即時同步雲端資料庫
     database.ref('mushrooms').on('value', (snapshot) => {
         const cloudData = snapshot.val();
         dataList = [];
@@ -422,7 +422,7 @@
         updateTable();
     });
 
-    // 雲端全網總瀏覽次數統計機制
+    // 全網總瀏覽次數統計
     database.ref('views').transaction((currentViews) => {
         return (currentViews || 0) + 1;
     });
@@ -470,7 +470,6 @@
             targetTime: targetTime
         };
 
-        // 上傳至雲端資料庫
         database.ref('mushrooms').push(newItem);
         
         if(userEl) userEl.value = '';
