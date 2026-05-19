@@ -37,6 +37,14 @@
             font-size: 11px;
             font-weight: bold;
             border: 1px solid #c5e1a5;
+            text-align: right;
+        }
+
+        .version-tag {
+            font-size: 10px;
+            color: #757575;
+            margin-top: 3px;
+            font-family: monospace;
         }
 
         h2, h3 {
@@ -45,7 +53,7 @@
         }
         h2 {
             font-size: 20px;
-            padding-right: 120px; /* 避免標題撞到瀏覽次數 */
+            padding-right: 140px; /* 避免標題撞到瀏覽次數 */
         }
         h3 {
             margin-top: 25px;
@@ -85,7 +93,7 @@
             flex-direction: column;
             gap: 4px;
             flex: 1;
-            min-width: 120px; /* 調小最小寬度，讓手機版更好排 */
+            min-width: 120px;
         }
         
         .input-group label {
@@ -113,7 +121,7 @@
             display: flex;
             flex-direction: column;
             gap: 4px;
-            width: 50px; /* 稍微縮小時間輸入框 */
+            width: 50px;
         }
         .time-box label {
             font-size: 11px;
@@ -144,7 +152,6 @@
             background-color: #43a047;
         }
         
-        /* 撐開響應式表格容器，防止手機版表格死板 */
         .table-responsive {
             width: 100%;
             overflow-x: auto;
@@ -156,12 +163,12 @@
             border-collapse: collapse;
             text-align: left;
             margin-bottom: 10px;
-            font-size: 13px; /* 調小整體表格字體，更適合手機 */
+            font-size: 13px;
         }
         th, td {
-            padding: 8px 6px; /* 縮小內邊距 */
+            padding: 8px 6px;
             border-bottom: 1px solid #e0e0e0;
-            white-space: nowrap; /* 防止不必要換行 */
+            white-space: nowrap;
         }
         th {
             background-color: #f1f8e9;
@@ -169,11 +176,10 @@
             color: #33691e;
         }
         
-        /* 【核心修改】精簡並鎖定座標欄位寬度 */
         .col-coords {
-            max-width: 110px; /* 嚴格限制手機端座標寬度 */
+            max-width: 110px;
             overflow: hidden;
-            text-overflow: ellipsis; /* 超出字數變 ... */
+            text-overflow: ellipsis;
             white-space: nowrap;
             display: inline-block;
             vertical-align: middle;
@@ -187,6 +193,23 @@
             color: #8e8e93;
             font-style: italic;
         }
+
+        /* 【新功能】時間到整列反灰的 CSS 樣式 */
+        .row-expired {
+            background-color: #f5f5f5; /* 背景變為淡灰 */
+            color: #a1a1a1 !important; /* 文字變灰 */
+        }
+        .row-expired strong {
+            color: #a1a1a1 !important;
+        }
+        .row-expired .col-coords {
+            color: #a1a1a1 !important;
+        }
+        /* 時間到時，功能按鈕也跟著稍微變淡，保持畫面色調一致 */
+        .row-expired .copy-btn { background-color: #b0bec5; }
+        .row-expired .claim-btn { background-color: #b0bec5; }
+        .row-expired .edit-time-btn { background-color: #b0bec5; }
+
         .action-btns {
             display: flex;
             gap: 4px;
@@ -231,7 +254,6 @@
             font-size: 12px;
         }
 
-        /* 彈出視窗樣式 */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -256,6 +278,15 @@
             color: #2e7d32;
             font-size: 15px;
         }
+        .modal-box input[type="text"] {
+            padding: 6px 10px;
+            border: 1px solid #c5e1a5;
+            border-radius: 6px;
+            font-size: 13px;
+            box-sizing: border-box;
+            height: 36px;
+            width: 100%;
+        }
         .modal-buttons {
             display: flex;
             justify-content: flex-end;
@@ -272,21 +303,19 @@
         .modal-btn.confirm { background-color: #4caf50; color: white; }
         .modal-btn.cancel { background-color: #e0e0e0; color: #333; }
 
-        /* 【行動裝置專用 RWD 覆蓋】 */
         @media (max-width: 650px) {
             body { padding: 5px; }
             .container { padding: 10px; }
-            h2 { font-size: 18px; padding-right: 0; margin-bottom: 35px; }
+            h2 { font-size: 18px; padding-right: 0; margin-bottom: 45px; }
             .view-counter { top: 10px; right: 10px; }
             
-            /* 輸入表單在手機變雙列 */
             .form-row-top {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
                 gap: 8px;
             }
             .form-row-top .input-group:nth-child(3) {
-                grid-column: span 2; /* 讓座標輸入框單獨佔滿整行，打字方便 */
+                grid-column: span 2;
             }
             .form-row-bottom {
                 justify-content: space-between;
@@ -301,7 +330,10 @@
 <body>
 
 <div class="container">
-    <div class="view-counter" id="view-counter-text">雲端總瀏覽次數：0 次</div>
+    <div class="view-counter">
+        <div id="view-counter-text">雲端總瀏覽次數：0 次</div>
+        <div class="version-tag">Ver: 20260520-0401</div>
+    </div>
 
     <h2>皮克敏-巨菇-雲端同步追蹤器</h2>
     
@@ -351,8 +383,8 @@
                     <th style="width: 40px;">編號</th>
                     <th>使用者</th>
                     <th>名稱</th>
-                    <th>座標</th>
                     <th>剩餘時間</th>
+                    <th>座標</th>
                     <th>操作</th>
                 </tr>
             </thead>
@@ -369,8 +401,8 @@
                     <th style="width: 40px;">編號</th>
                     <th>使用者</th>
                     <th>名稱</th>
-                    <th>座標</th>
                     <th>剩餘時間</th>
+                    <th>座標</th>
                     <th>操作</th>
                 </tr>
             </thead>
@@ -413,9 +445,15 @@
 
 <div id="time-modal" class="modal-overlay" style="display: none;">
     <div class="modal-box">
-        <h4 id="time-modal-title">修改剩餘時間</h4>
+        <h4 id="time-modal-title">修改資料</h4>
+        
         <div class="input-group" style="min-width: 100%;">
-            <label>請重新設定剩餘時間：</label>
+            <label>修改名稱：</label>
+            <input type="text" id="edit-name" placeholder="請輸入新名稱">
+        </div>
+
+        <div class="input-group" style="min-width: 100%;">
+            <label>重新設定剩餘時間：</label>
             <div class="time-container" style="justify-content: center; margin-top: 10px;">
                 <div class="time-box">
                     <label>天</label>
@@ -433,13 +471,13 @@
         </div>
         <div class="modal-buttons">
             <button class="modal-btn cancel" onclick="closeTimeModal()">取消</button>
-            <button class="modal-btn confirm" id="time-modal-submit-btn">儲存時間</button>
+            <button class="modal-btn confirm" id="time-modal-submit-btn">儲存修改</button>
         </div>
     </div>
 </div>
 
 <script>
-    // 綁定專案的資料設定
+    // Firebase 設定
     const firebaseConfig = {
         apiKey: "AIzaSyBkmQhSKbiSTeHkbAnjSZTgYtGbmPySJbo",
         authDomain: "pikmin-tracker-3cf56.firebaseapp.com",
@@ -457,7 +495,6 @@
     let currentClaimingId = null;
     let currentEditingTimeId = null;
 
-    // 即時同步雲端資料庫
     database.ref('mushrooms').on('value', (snapshot) => {
         const cloudData = snapshot.val();
         dataList = [];
@@ -476,7 +513,6 @@
         updateTable();
     });
 
-    // 全網總瀏覽次數統計
     database.ref('views').transaction((currentViews) => {
         return (currentViews || 0) + 1;
     });
@@ -583,7 +619,8 @@
 
     function openTimeModal(id, currentName, currentTargetTime) {
         currentEditingTimeId = id;
-        document.getElementById('time-modal-title').innerText = `修改時間 - ${currentName}`;
+        document.getElementById('time-modal-title').innerText = `修改資料`;
+        document.getElementById('edit-name').value = currentName;
         
         let d = 0, h = 0, m = 0;
         if (currentTargetTime) {
@@ -603,7 +640,7 @@
         document.getElementById('edit-hours').value = h;
         document.getElementById('edit-minutes').value = m;
         
-        document.getElementById('time-modal-submit-btn').onclick = submitTimeEdit;
+        document.getElementById('time-modal-submit-btn').onclick = submitDataEdit;
         document.getElementById('time-modal').style.display = 'flex';
     }
 
@@ -612,7 +649,13 @@
         currentEditingTimeId = null;
     }
 
-    function submitTimeEdit() {
+    function submitDataEdit() {
+        const newName = document.getElementById('edit-name').value.trim();
+        if (!newName) {
+            alert('名稱不能為空！');
+            return;
+        }
+
         const d = parseInt(document.getElementById('edit-days').value, 10) || 0;
         const h = parseInt(document.getElementById('edit-hours').value, 10) || 0;
         const m = parseInt(document.getElementById('edit-minutes').value, 10) || 0;
@@ -624,6 +667,7 @@
         }
 
         database.ref('mushrooms/' + currentEditingTimeId).update({
+            name: newName,
             targetTime: targetTime
         });
         closeTimeModal();
@@ -670,6 +714,7 @@
         sortedList.forEach((item) => {
             const tr = document.createElement('tr');
             let timeText = '';
+            let isExpired = false; // 用來標記時間是否到了
 
             if (item.targetTime === null) {
                 timeText = '<span class="not-set">尚未設定</span>';
@@ -677,6 +722,7 @@
                 const remainingMs = item.targetTime - now;
                 if (remainingMs <= 0) {
                     timeText = '<span class="expired">已過期/可開打！</span>';
+                    isExpired = true; // 狀態標記為已到期
                 } else {
                     const totalSeconds = Math.floor(remainingMs / 1000);
                     const totalMinutes = Math.floor(totalSeconds / 60);
@@ -697,23 +743,27 @@
                 }
             }
 
+            // 【新功能】如果時間到了，就在 <tr> 標籤加上 row-expired 的 CSS 反灰類別
+            if (isExpired) {
+                tr.classList.add('row-expired');
+            }
+
             const rawCoords = item.coords;
             const safeCoords = escapeHtml(rawCoords);
             const safeName = escapeHtml(item.name);
             const itemTargetTime = item.targetTime || 'null';
 
-            // 組合內容，座標欄位使用 col-coords 進行手機端字數截斷與隱藏
             if (item.user === "") {
                 unclaimedCount++;
                 tr.innerHTML = `
                     <td>${item.sn}</td>
                     <td><span style="color:#8e8e93; font-style:italic;">無</span></td>
                     <td>${safeName}</td>
+                    <td>${timeText}</td>
                     <td>
                         <span class="col-coords">${safeCoords}</span>
                         <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
                     </td>
-                    <td>${timeText}</td>
                     <td>
                         <div class="action-btns">
                             <button class="claim-btn" onclick="openClaimModal('${item.id}', '${safeName.replace(/'/g, "\\'")}')">認領</button>
@@ -729,11 +779,11 @@
                     <td>${item.sn}</td>
                     <td><strong>${escapeHtml(item.user)}</strong></td>
                     <td>${safeName}</td>
+                    <td>${timeText}</td>
                     <td>
                         <span class="col-coords">${safeCoords}</span>
                         <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
                     </td>
-                    <td>${timeText}</td>
                     <td>
                         <div class="action-btns">
                             <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime})">修改</button>
