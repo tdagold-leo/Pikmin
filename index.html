@@ -181,6 +181,7 @@
         .action-btns {
             display: flex;
             gap: 5px;
+            flex-wrap: wrap;
         }
         .delete-btn {
             background-color: #e53935;
@@ -205,6 +206,18 @@
         }
         .claim-btn:hover {
             background-color: #0077ed;
+        }
+        .edit-time-btn {
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .edit-time-btn:hover {
+            background-color: #f57c00;
         }
         .copy-btn {
             background-color: #8bc34a;
@@ -329,7 +342,7 @@
                 <th>名稱</th>
                 <th>座標</th>
                 <th>剩餘時間</th>
-                <th style="width: 120px;">操作</th>
+                <th style="width: 160px;">操作</th>
             </tr>
         </thead>
         <tbody id="active-table-body"></tbody>
@@ -345,7 +358,7 @@
                 <th>名稱</th>
                 <th>座標</th>
                 <th>剩餘時間</th>
-                <th style="width: 120px;">操作</th>
+                <th style="width: 180px;">操作</th>
             </tr>
         </thead>
         <tbody id="unclaimed-table-body"></tbody>
@@ -384,8 +397,35 @@
     </div>
 </div>
 
+<div id="time-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-box">
+        <h4 id="time-modal-title">修改剩餘時間</h4>
+        <div class="input-group" style="min-width: 100%;">
+            <label>請重新設定剩餘時間：</label>
+            <div class="time-container" style="justify-content: center; margin-top: 10px;">
+                <div class="time-box">
+                    <label>天</label>
+                    <input type="number" id="edit-days" min="0" value="0">
+                </div>
+                <div class="time-box">
+                    <label>時</label>
+                    <input type="number" id="edit-hours" min="0" max="23" value="0">
+                </div>
+                <div class="time-box">
+                    <label>分</label>
+                    <input type="number" id="edit-minutes" min="0" max="59" value="0">
+                </div>
+            </div>
+        </div>
+        <div class="modal-buttons">
+            <button class="modal-btn cancel" onclick="closeTimeModal()">取消</button>
+            <button class="modal-btn confirm" id="time-modal-submit-btn">儲存時間</button>
+        </div>
+    </div>
+</div>
+
 <script>
-    // 綁定你專案的資料設定
+    // Firebase 金鑰設定
     const firebaseConfig = {
         apiKey: "AIzaSyBkmQhSKbiSTeHkbAnjSZTgYtGbmPySJbo",
         authDomain: "pikmin-tracker-3cf56.firebaseapp.com",
@@ -396,12 +436,12 @@
         appId: "1:848190561510:web:07ceb7fa8bc57a7004af27"
     };
 
-    // 初始化（相容高、不易被擋的舊語法格式）
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
     let dataList = [];
     let currentClaimingId = null;
+    let currentEditingTimeId = null;
 
     // 即時同步雲端資料庫
     database.ref('mushrooms').on('value', (snapshot) => {
@@ -527,6 +567,56 @@
         closeModal();
     }
 
+    // 開啟「修改時間」彈出視窗
+    function openTimeModal(id, currentName, currentTargetTime) {
+        currentEditingTimeId = id;
+        document.getElementById('time-modal-title').innerText = `修改時間 - ${currentName}`;
+        
+        let d = 0, h = 0, m = 0;
+        if (currentTargetTime) {
+            const remainingMs = currentTargetTime - Date.now();
+            if (remainingMs > 0) {
+                const totalSeconds = Math.floor(remainingMs / 1000);
+                const totalMinutes = Math.floor(totalSeconds / 60);
+                const totalHours = Math.floor(totalMinutes / 60);
+                
+                d = Math.floor(totalHours / 24);
+                h = totalHours % 24;
+                m = totalMinutes % 60;
+            }
+        }
+        
+        document.getElementById('edit-days').value = d;
+        document.getElementById('edit-hours').value = h;
+        document.getElementById('edit-minutes').value = m;
+        
+        document.getElementById('time-modal-submit-btn').onclick = submitTimeEdit;
+        document.getElementById('time-modal').style.display = 'flex';
+    }
+
+    function closeTimeModal() {
+        document.getElementById('time-modal').style.display = 'none';
+        currentEditingTimeId = null;
+    }
+
+    // 儲存修改後的時間
+    function submitTimeEdit() {
+        const d = parseInt(document.getElementById('edit-days').value, 10) || 0;
+        const h = parseInt(document.getElementById('edit-hours').value, 10) || 0;
+        const m = parseInt(document.getElementById('edit-minutes').value, 10) || 0;
+
+        let targetTime = null;
+        if (d > 0 || h > 0 || m > 0) {
+            const totalMs = ((d * 24 * 60) + (h * 60) + m) * 60 * 1000;
+            targetTime = Date.now() + totalMs;
+        }
+
+        database.ref('mushrooms/' + currentEditingTimeId).update({
+            targetTime: targetTime
+        });
+        closeTimeModal();
+    }
+
     function copyCoords(text, buttonElement) {
         navigator.clipboard.writeText(text).then(() => {
             const originalText = buttonElement.innerText;
@@ -597,6 +687,7 @@
 
             const safeCoords = escapeHtml(item.coords);
             const safeName = escapeHtml(item.name);
+            const itemTargetTime = item.targetTime;
 
             if (item.user === "") {
                 unclaimedCount++;
@@ -612,6 +703,7 @@
                     <td>
                         <div class="action-btns">
                             <button class="claim-btn" onclick="openClaimModal('${item.id}', '${safeName.replace(/'/g, "\\'")}')">認領</button>
+                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime})">修改時間</button>
                             <button class="delete-btn" onclick="deleteItem('${item.id}')">刪除</button>
                         </div>
                     </td>
@@ -630,6 +722,7 @@
                     <td>${timeText}</td>
                     <td>
                         <div class="action-btns">
+                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime})">修改時間</button>
                             <button class="delete-btn" onclick="deleteItem('${item.id}')">刪除</button>
                         </div>
                     </td>
