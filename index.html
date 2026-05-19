@@ -14,13 +14,13 @@
             background-color: #f4f9f4;
             color: #333;
             margin: 0;
-            padding: 20px;
+            padding: 10px; /* 手機版邊距稍微縮小 */
         }
         .container {
             max-width: 1000px;
             margin: 0 auto;
             background: #fff;
-            padding: 20px;
+            padding: 15px;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             position: relative;
@@ -28,13 +28,13 @@
         
         .view-counter {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 15px;
+            right: 15px;
             background-color: #e8f5e9;
             color: #2e7d32;
-            padding: 6px 12px;
+            padding: 4px 10px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             border: 1px solid #c5e1a5;
         }
@@ -43,34 +43,39 @@
             margin-top: 0;
             color: #2e7d32;
         }
+        h2 {
+            font-size: 20px;
+            padding-right: 120px; /* 避免標題撞到瀏覽次數 */
+        }
         h3 {
-            margin-top: 30px;
+            margin-top: 25px;
             border-bottom: 2px dashed #c5e1a5;
-            padding-bottom: 8px;
+            padding-bottom: 6px;
+            font-size: 16px;
             color: #558b2f;
         }
         
         .input-form {
             background: #f1f8e9;
-            padding: 15px;
+            padding: 12px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
         
         .form-row-top {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
+            gap: 10px;
             width: 100%;
         }
         
         .form-row-bottom {
             display: flex;
             flex-wrap: wrap;
-            gap: 16px;
+            gap: 12px;
             align-items: flex-end;
             width: 100%;
         }
@@ -80,45 +85,46 @@
             flex-direction: column;
             gap: 4px;
             flex: 1;
-            min-width: 200px;
+            min-width: 120px; /* 調小最小寬度，讓手機版更好排 */
         }
         
         .input-group label {
-            font-size: 12px;
+            font-size: 11px;
             color: #558b2f;
             font-weight: bold;
         }
         
         .input-form input {
-            padding: 8px 12px;
+            padding: 6px 10px;
             border: 1px solid #c5e1a5;
             border-radius: 6px;
-            font-size: 14px;
+            font-size: 13px;
             box-sizing: border-box;
-            height: 38px;
+            height: 36px;
             width: 100%;
         }
         
         .time-container {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             align-items: center;
         }
         .time-box {
             display: flex;
             flex-direction: column;
             gap: 4px;
-            width: 65px;
+            width: 50px; /* 稍微縮小時間輸入框 */
         }
         .time-box label {
-            font-size: 12px;
+            font-size: 11px;
             color: #558b2f;
             font-weight: bold;
             text-align: center;
         }
         .time-box input {
             text-align: center;
-            padding: 8px 4px;
+            padding: 6px 2px;
+            height: 36px;
         }
 
         .submit-btn {
@@ -128,31 +134,21 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 14px;
-            height: 38px;
-            padding: 0 24px;
-            min-width: 120px;
+            font-size: 13px;
+            height: 36px;
+            padding: 0 16px;
+            min-width: 100px;
             margin-left: auto;
         }
         .submit-btn:hover {
             background-color: #43a047;
         }
         
-        @media (max-width: 600px) {
-            .view-counter {
-                position: static;
-                display: inline-block;
-                margin-bottom: 15px;
-            }
-            .form-row-bottom {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-            }
-            .submit-btn {
-                width: 100%;
-                margin-left: 0;
-            }
+        /* 撐開響應式表格容器，防止手機版表格死板 */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         table {
@@ -160,16 +156,29 @@
             border-collapse: collapse;
             text-align: left;
             margin-bottom: 10px;
+            font-size: 13px; /* 調小整體表格字體，更適合手機 */
         }
         th, td {
-            padding: 12px;
+            padding: 8px 6px; /* 縮小內邊距 */
             border-bottom: 1px solid #e0e0e0;
+            white-space: nowrap; /* 防止不必要換行 */
         }
         th {
             background-color: #f1f8e9;
             font-weight: 600;
             color: #33691e;
         }
+        
+        /* 【核心修改】精簡並鎖定座標欄位寬度 */
+        .col-coords {
+            max-width: 110px; /* 嚴格限制手機端座標寬度 */
+            overflow: hidden;
+            text-overflow: ellipsis; /* 超出字數變 ... */
+            white-space: nowrap;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
         .expired {
             color: #d32f2f;
             font-weight: bold;
@@ -180,70 +189,49 @@
         }
         .action-btns {
             display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
+            gap: 4px;
         }
-        .delete-btn {
-            background-color: #e53935;
-            color: white;
+        .delete-btn, .claim-btn, .edit-time-btn {
             border: none;
-            padding: 5px 10px;
+            padding: 4px 8px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 12px;
-        }
-        .delete-btn:hover {
-            background-color: #c62828;
-        }
-        .claim-btn {
-            background-color: #0071e3;
+            font-size: 11px;
+            font-weight: bold;
             color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
         }
-        .claim-btn:hover {
-            background-color: #0077ed;
-        }
-        .edit-time-btn {
-            background-color: #ff9800;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        .edit-time-btn:hover {
-            background-color: #f57c00;
-        }
+        .delete-btn { background-color: #e53935; }
+        .delete-btn:hover { background-color: #c62828; }
+        
+        .claim-btn { background-color: #0071e3; }
+        .claim-btn:hover { background-color: #0077ed; }
+        
+        .edit-time-btn { background-color: #ff9800; }
+        .edit-time-btn:hover { background-color: #f57c00; }
+        
         .copy-btn {
             background-color: #8bc34a;
             color: white;
             border: none;
-            padding: 4px 8px;
-            margin-left: 8px;
+            padding: 3px 6px;
+            margin-left: 4px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 11px;
+            font-size: 10px;
             vertical-align: middle;
-            transition: background-color 0.2s;
         }
-        .copy-btn:hover {
-            background-color: #7cb342;
-        }
-        .copy-btn.copied {
-            background-color: #9e9e9e;
-        }
+        .copy-btn:hover { background-color: #7cb342; }
+        .copy-btn.copied { background-color: #9e9e9e; }
+
         .empty-message {
             color: #8e8e93;
             text-align: center;
-            padding: 20px;
+            padding: 15px;
             font-style: italic;
+            font-size: 12px;
         }
 
+        /* 彈出視窗樣式 */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -255,37 +243,59 @@
         }
         .modal-box {
             background: white;
-            padding: 20px;
+            padding: 15px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            width: 320px;
+            width: 290px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
         }
         .modal-box h4 {
             margin: 0;
             color: #2e7d32;
-            font-size: 16px;
+            font-size: 15px;
         }
         .modal-buttons {
             display: flex;
             justify-content: flex-end;
-            gap: 10px;
-            margin-top: 5px;
+            gap: 8px;
         }
         .modal-btn {
-            padding: 8px 16px;
+            padding: 6px 12px;
             border-radius: 6px;
             border: none;
             cursor: pointer;
             font-weight: bold;
-            font-size: 13px;
+            font-size: 12px;
         }
         .modal-btn.confirm { background-color: #4caf50; color: white; }
-        .modal-btn.confirm:hover { background-color: #43a047; }
         .modal-btn.cancel { background-color: #e0e0e0; color: #333; }
-        .modal-btn.cancel:hover { background-color: #d5d5d5; }
+
+        /* 【行動裝置專用 RWD 覆蓋】 */
+        @media (max-width: 650px) {
+            body { padding: 5px; }
+            .container { padding: 10px; }
+            h2 { font-size: 18px; padding-right: 0; margin-bottom: 35px; }
+            .view-counter { top: 10px; right: 10px; }
+            
+            /* 輸入表單在手機變雙列 */
+            .form-row-top {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .form-row-top .input-group:nth-child(3) {
+                grid-column: span 2; /* 讓座標輸入框單獨佔滿整行，打字方便 */
+            }
+            .form-row-bottom {
+                justify-content: space-between;
+            }
+            .submit-btn {
+                width: 100%;
+                margin-top: 5px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -298,8 +308,8 @@
     <div class="input-form">
         <div class="form-row-top">
             <div class="input-group">
-                <label>使用者 (留空則進入待認領區)</label>
-                <input type="text" id="user" placeholder="輸入使用者或留空">
+                <label>使用者 (留空待認領)</label>
+                <input type="text" id="user" placeholder="名字或留空">
             </div>
             
             <div class="input-group">
@@ -309,7 +319,7 @@
             
             <div class="input-group">
                 <label>座標</label>
-                <input type="text" id="coords" placeholder="輸入座標">
+                <input type="text" id="coords" placeholder="貼上或輸入座標">
             </div>
         </div>
         
@@ -334,35 +344,39 @@
     </div>
 
     <h3>正常追蹤中</h3>
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 60px;">編號</th>
-                <th>使用者</th>
-                <th>名稱</th>
-                <th>座標</th>
-                <th>剩餘時間</th>
-                <th style="width: 160px;">操作</th>
-            </tr>
-        </thead>
-        <tbody id="active-table-body"></tbody>
-    </table>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 40px;">編號</th>
+                    <th>使用者</th>
+                    <th>名稱</th>
+                    <th>座標</th>
+                    <th>剩餘時間</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="active-table-body"></tbody>
+        </table>
+    </div>
     <div id="active-empty" class="empty-message" style="display: none;">目前沒有正在追蹤的項目</div>
 
     <h3>待認領巨菇</h3>
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 60px;">編號</th>
-                <th>使用者</th>
-                <th>名稱</th>
-                <th>座標</th>
-                <th>剩餘時間</th>
-                <th style="width: 180px;">操作</th>
-            </tr>
-        </thead>
-        <tbody id="unclaimed-table-body"></tbody>
-    </table>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 40px;">編號</th>
+                    <th>使用者</th>
+                    <th>名稱</th>
+                    <th>座標</th>
+                    <th>剩餘時間</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="unclaimed-table-body"></tbody>
+        </table>
+    </div>
     <div id="unclaimed-empty" class="empty-message" style="display: none;">目前沒有待認領的項目</div>
 </div>
 
@@ -374,7 +388,7 @@
             <input type="text" id="modal-username" placeholder="請輸入名字">
         </div>
         <div class="input-group" style="min-width: 100%;">
-            <label>設定剩餘時間 (若不確定可皆保持 0)</label>
+            <label>設定剩餘時間 (不確定保持 0)</label>
             <div class="time-container" style="justify-content: center; margin-top: 5px;">
                 <div class="time-box">
                     <label>天</label>
@@ -425,7 +439,7 @@
 </div>
 
 <script>
-    // Firebase 金鑰設定
+    // 綁定專案的資料設定
     const firebaseConfig = {
         apiKey: "AIzaSyBkmQhSKbiSTeHkbAnjSZTgYtGbmPySJbo",
         authDomain: "pikmin-tracker-3cf56.firebaseapp.com",
@@ -521,7 +535,7 @@
     }
 
     function deleteItem(id) {
-        if(confirm('確定要刪除這筆巨菇資料嗎？（刪除後所有人畫面都會同步消失）')) {
+        if(confirm('確定要刪除這筆巨菇資料嗎？')) {
             database.ref('mushrooms/' + id).remove();
         }
     }
@@ -567,7 +581,6 @@
         closeModal();
     }
 
-    // 開啟「修改時間」彈出視窗
     function openTimeModal(id, currentName, currentTargetTime) {
         currentEditingTimeId = id;
         document.getElementById('time-modal-title').innerText = `修改時間 - ${currentName}`;
@@ -599,7 +612,6 @@
         currentEditingTimeId = null;
     }
 
-    // 儲存修改後的時間
     function submitTimeEdit() {
         const d = parseInt(document.getElementById('edit-days').value, 10) || 0;
         const h = parseInt(document.getElementById('edit-hours').value, 10) || 0;
@@ -620,7 +632,7 @@
     function copyCoords(text, buttonElement) {
         navigator.clipboard.writeText(text).then(() => {
             const originalText = buttonElement.innerText;
-            buttonElement.innerText = '已複製！';
+            buttonElement.innerText = '已複製';
             buttonElement.classList.add('copied');
             buttonElement.disabled = true;
 
@@ -628,7 +640,7 @@
                 buttonElement.innerText = originalText;
                 buttonElement.classList.remove('copied');
                 buttonElement.disabled = false;
-            }, 1500);
+            }, 1200);
         }).catch(err => {
             console.error('無法複製座標: ', err);
             alert('複製失敗，請手動複製。');
@@ -676,19 +688,21 @@
                     const secs = totalSeconds % 60;
 
                     if (days > 0) {
-                        timeText = `${days} 天 ${hours} 時 ${mins} 分`;
+                        timeText = `${days}天 ${hours}時 ${mins}分`;
                     } else if (hours > 0) {
-                        timeText = `${hours} 時 ${mins} 分 ${secs} 秒`;
+                        timeText = `${hours}時 ${mins}分 ${secs}秒`;
                     } else {
-                        timeText = `${mins} 分 ${secs} 秒`;
+                        timeText = `${mins}分 ${secs}秒`;
                     }
                 }
             }
 
-            const safeCoords = escapeHtml(item.coords);
+            const rawCoords = item.coords;
+            const safeCoords = escapeHtml(rawCoords);
             const safeName = escapeHtml(item.name);
-            const itemTargetTime = item.targetTime;
+            const itemTargetTime = item.targetTime || 'null';
 
+            // 組合內容，座標欄位使用 col-coords 進行手機端字數截斷與隱藏
             if (item.user === "") {
                 unclaimedCount++;
                 tr.innerHTML = `
@@ -696,14 +710,14 @@
                     <td><span style="color:#8e8e93; font-style:italic;">無</span></td>
                     <td>${safeName}</td>
                     <td>
-                        <span>${safeCoords}</span>
+                        <span class="col-coords">${safeCoords}</span>
                         <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
                     </td>
                     <td>${timeText}</td>
                     <td>
                         <div class="action-btns">
                             <button class="claim-btn" onclick="openClaimModal('${item.id}', '${safeName.replace(/'/g, "\\'")}')">認領</button>
-                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime})">修改時間</button>
+                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime})">修改</button>
                             <button class="delete-btn" onclick="deleteItem('${item.id}')">刪除</button>
                         </div>
                     </td>
@@ -716,13 +730,13 @@
                     <td><strong>${escapeHtml(item.user)}</strong></td>
                     <td>${safeName}</td>
                     <td>
-                        <span>${safeCoords}</span>
+                        <span class="col-coords">${safeCoords}</span>
                         <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
                     </td>
                     <td>${timeText}</td>
                     <td>
                         <div class="action-btns">
-                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime})">修改時間</button>
+                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime})">修改</button>
                             <button class="delete-btn" onclick="deleteItem('${item.id}')">刪除</button>
                         </div>
                     </td>
