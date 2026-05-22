@@ -445,7 +445,7 @@
 <div class="container">
     <div class="view-counter">
         <div id="view-counter-text">雲端總瀏覽次數：0 次</div>
-        <div class="version-tag">Ver: 20260522-2210</div>
+        <div class="version-tag">Ver: 20260522-2235</div>
     </div>
 
     <h2>皮克敏-巨菇-倒數追蹤器</h2>
@@ -714,7 +714,7 @@
     
     setInterval(updateClocks, 1000);
 
-    // 【iOS 重大相容性修復核心】
+    // 【核心優化點】重整 LINE 分享的文字格式，使座標能被單獨獨立長按複製
     function shareToLineWindow() {
         if (dataList.length === 0) {
             alert('目前雲端沒有任何菇菇資訊可以分享喔！');
@@ -741,35 +741,32 @@
             textOutput += `🟢【正常追蹤中】\n`;
             actives.forEach((item) => {
                 textOutput += `${item.sn}. [${item.user}] ${item.name}\n`;
-                textOutput += `   ⏳ 剩餘：${getRemainingText(item.targetTime, now)}\n`;
-                textOutput += `   📍 座標：${item.coords}\n`;
+                textOutput += `⏳ 剩餘：${getRemainingText(item.targetTime, now)}\n`;
+                // 座標自成獨立一行，不夾帶前置符號與空白，讓 LINE 原生觸發單行長按複製
+                textOutput += `${item.coords}\n\n`;
             });
-            textOutput += `\n`;
         }
 
         if (unclaimed.length > 0) {
             textOutput += `🟡【待認領巨菇】\n`;
             unclaimed.forEach((item) => {
                 textOutput += `${item.sn}. [待認領] ${item.name}\n`;
-                textOutput += `   ⏳ 剩餘：${getRemainingText(item.targetTime, now)}\n`;
-                textOutput += `   📍 座標：${item.coords}\n`;
+                textOutput += `⏳ 剩餘：${getRemainingText(item.targetTime, now)}\n`;
+                // 座標自成獨立一行，不夾帶前置符號與空白，讓 LINE 原生觸發單行長按複製
+                textOutput += `${item.coords}\n\n`;
             });
         }
 
-        // 防護 1：優先立刻寫入 iPhone 剪貼簿（就算跳轉失敗，使用者手動去 LINE 貼上也有完整文字）
         navigator.clipboard.writeText(textOutput.trim()).catch(err => console.log('備用複製失敗:', err));
 
-        // 防護 2：使用官方原生 App 深層連結 (Deep Link) 語法取代 https 網址，能穿透所有 iOS 內建瀏覽器的安全屏障
         const lineAppUrl = "line://msg/text/" + encodeURIComponent(textOutput.trim());
         
-        // 按鈕視覺效果提示
         const btn = document.getElementById('line-share-btn');
         const originalText = btn.innerText;
         btn.innerText = '✅ 已成功複製並喚醒 LINE...';
         
         setTimeout(() => { btn.innerText = originalText; }, 2500);
 
-        // 執行外部跳轉喚醒
         window.location.href = lineAppUrl;
     }
 
@@ -933,7 +930,7 @@
 
         let targetTime = null;
         if (d > 0 || h > 0 || m > 0) {
-            const totalMs = ((d * 24 * 60) + (h * 60) + m) * 60 * 1000;
+            const totalMs = ((days * 24 * 60) + (hours * 60) + minutes) * 60 * 1000;
             targetTime = Date.now() + totalMs;
         }
 
