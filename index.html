@@ -130,6 +130,37 @@
             font-family: monospace;
             margin-top: 2px;
         }
+
+        /* 【新功能】LINE 分享按鈕樣式 */
+        .share-section {
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        .line-share-btn {
+            background-color: #06c755; /* LINE 官方綠色 */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            box-shadow: 0 2px 4px rgba(6,199,85,0.2);
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        .line-share-btn:hover {
+            background-color: #05b04b;
+            box-shadow: 0 4px 6px rgba(6,199,85,0.3);
+        }
+        .line-share-btn.copied {
+            background-color: #78909c;
+            box-shadow: none;
+        }
         
         .input-form {
             background: #f1f8e9;
@@ -414,7 +445,7 @@
 <div class="container">
     <div class="view-counter">
         <div id="view-counter-text">雲端總瀏覽次數：0 次</div>
-        <div class="version-tag">Ver: 20260522-2015</div>
+        <div class="version-tag">Ver: 20260522-2145</div>
     </div>
 
     <h2>皮克敏-巨菇-倒數追蹤器</h2>
@@ -449,6 +480,12 @@
                 <div class="w-time" id="clock-custom-3">00:00</div>
             </div>
         </div>
+    </div>
+
+    <div class="share-section">
+        <button class="line-share-btn" id="line-share-btn" onclick="copyAllToLine()">
+            💚 複製所有菇資訊至 LINE
+        </button>
     </div>
     
     <div class="input-form">
@@ -661,23 +698,107 @@
         const offsetCustom2 = parseFloat(document.getElementById('tz-select-2').value) || 0;
         const offsetCustom3 = parseFloat(document.getElementById('tz-select-3').value) || 0;
 
-        function formatTime(utcTimeMs, offsetHours, includeSeconds = false) {
-            const targetDate = new Date(utcTimeMs + (3600000 * offsetHours));
-            const hh = String(targetDate.getHours()).padStart(2, '0');
-            const mm = String(targetDate.getMinutes()).padStart(2, '0');
-            if (includeSeconds) {
-                const ss = String(targetDate.getSeconds()).padStart(2, '0');
-                return `${hh}:${mm}:${ss}`;
-            }
-            return `${hh}:${mm}`;
+        if(document.getElementById('clock-taipei')) document.getElementById('clock-taipei').innerText = formatTimeStr(utcMs, offsetTaipei, true);
+        if(document.getElementById('clock-custom-1')) document.getElementById('clock-custom-1').innerText = formatTimeStr(utcMs, offsetCustom1, false);
+        if(document.getElementById('clock-custom-2')) document.getElementById('clock-custom-2').innerText = formatTimeStr(utcMs, offsetCustom2, false);
+        if(document.getElementById('clock-custom-3')) document.getElementById('clock-custom-3').innerText = formatTimeStr(utcMs, offsetCustom3, false);
+    }
+    
+    function formatTimeStr(utcTimeMs, offsetHours, includeSeconds = false) {
+        const targetDate = new Date(utcTimeMs + (3600000 * offsetHours));
+        const hh = String(targetDate.getHours()).padStart(2, '0');
+        const mm = String(targetDate.getMinutes()).padStart(2, '0');
+        if (includeSeconds) {
+            const ss = String(targetDate.getSeconds()).padStart(2, '0');
+            return `${hh}:${mm}:${ss}`;
+        }
+        return `${hh}:${mm}`;
+    }
+    
+    setInterval(updateClocks, 1000);
+
+    // 【新功能】一鍵打包所有菇資料並複製，方便貼到 LINE
+    function copyAllToLine() {
+        if (dataList.length === 0) {
+            alert('目前雲端沒有任何菇菇資訊可以分享喔！');
+            return;
         }
 
-        if(document.getElementById('clock-taipei')) document.getElementById('clock-taipei').innerText = formatTime(utcMs, offsetTaipei, true);
-        if(document.getElementById('clock-custom-1')) document.getElementById('clock-custom-1').innerText = formatTime(utcMs, offsetCustom1, false);
-        if(document.getElementById('clock-custom-2')) document.getElementById('clock-custom-2').innerText = formatTime(utcMs, offsetCustom2, false);
-        if(document.getElementById('clock-custom-3')) document.getElementById('clock-custom-3').innerText = formatTime(utcMs, offsetCustom3, false);
+        const now = Date.now();
+        const utcMs = now + (new Date().getTimezoneOffset() * 60000);
+        const taipeiTimeText = formatTimeStr(utcMs, 8, true);
+
+        // 排序規則：有時間的排前面，沒設定時間的排後面
+        const sortedList = [...dataList].sort((a, b) => {
+            if (a.targetTime === null && b.targetTime === null) return 0;
+            if (a.targetTime === null) return 1;
+            if (b.targetTime === null) return -1;
+            return a.targetTime - b.targetTime;
+        });
+
+        let textOutput = `🍄【皮克敏巨菇回報】🍄\n⏰ 台北時間：${taipeiTimeText}\n\n`;
+
+        // 分割正常與待認領
+        const actives = sortedList.filter(item => item.user !== "");
+        const unclaimed = sortedList.filter(item => item.user === "");
+
+        if (actives.length > 0) {
+            textOutput += `🟢【正常追蹤中】\n`;
+            actives.forEach((item) => {
+                textOutput += `${item.sn}. [${item.user}] ${item.name}\n`;
+                textOutput += `   ⏳ 剩餘：${getRemainingText(item.targetTime, now)}\n`;
+                textOutput += `   📍 座標：${item.coords}\n`;
+            });
+            textOutput += `\n`;
+        }
+
+        if (unclaimed.length > 0) {
+            textOutput += `🟡【待認領巨菇】\n`;
+            unclaimed.forEach((item) => {
+                textOutput += `${item.sn}. [待認領] ${item.name}\n`;
+                textOutput += `   ⏳ 剩餘：${getRemainingText(item.targetTime, now)}\n`;
+                textOutput += `   📍 座標：${item.coords}\n`;
+            });
+        }
+
+        // 執行複製動作
+        navigator.clipboard.writeText(textOutput.trim()).then(() => {
+            const btn = document.getElementById('line-share-btn');
+            const originalText = btn.innerText;
+            btn.innerText = '✅ 已複製！趕快去 LINE 貼上吧！';
+            btn.classList.add('copied');
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.remove('copied');
+                btn.disabled = false;
+            }, 2000);
+        }).catch(err => {
+            console.error('無法分享資料: ', err);
+            alert('複製失敗，請重試。');
+        });
     }
-    setInterval(updateClocks, 1000);
+
+    // 輔助函式：取得乾淨的純文字賸餘時間描述
+    function getRemainingText(targetTime, now) {
+        if (targetTime === null) return "尚未設定";
+        const remainingMs = targetTime - now;
+        if (remainingMs <= 0) return "已過期/可開打！";
+        
+        const totalSeconds = Math.floor(remainingMs / 1000);
+        const totalMinutes = Math.floor(totalSeconds / 60);
+        const totalHours = Math.floor(totalMinutes / 60);
+        
+        const days = Math.floor(totalHours / 24);
+        const hours = totalHours % 24;
+        const mins = totalMinutes % 60;
+        const secs = totalSeconds % 60;
+
+        if (days > 0) return `${days}天 ${hours}時 ${mins}分`;
+        if (hours > 0) return `${hours}時 ${mins}分 ${secs}秒`;
+        return `${mins}分 ${secs}秒`;
+    }
 
     function addItem() {
         const userEl = document.getElementById('user');
@@ -829,24 +950,6 @@
             targetTime: targetTime
         });
         closeTimeModal();
-    }
-
-    function copyCoords(text, buttonElement) {
-        navigator.clipboard.writeText(text).then(() => {
-            const originalText = buttonElement.innerText;
-            buttonElement.innerText = '已複製';
-            buttonElement.classList.add('copied');
-            buttonElement.disabled = true;
-
-            setTimeout(() => {
-                buttonElement.innerText = originalText;
-                buttonElement.classList.remove('copied');
-                buttonElement.disabled = false;
-            }, 1200);
-        }).catch(err => {
-            console.error('無法複製座標: ', err);
-            alert('複製失敗，請手動複製。');
-        });
     }
 
     function updateTable() {
