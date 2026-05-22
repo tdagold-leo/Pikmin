@@ -157,10 +157,6 @@
             background-color: #05b04b;
             box-shadow: 0 4px 6px rgba(6,199,85,0.3);
         }
-        .line-share-btn.copied {
-            background-color: #78909c;
-            box-shadow: none;
-        }
         
         .input-form {
             background: #f1f8e9;
@@ -445,7 +441,7 @@
 <div class="container">
     <div class="view-counter">
         <div id="view-counter-text">雲端總瀏覽次數：0 次</div>
-        <div class="version-tag">Ver: 20260522-2250</div>
+        <div class="version-tag">Ver: 20260523-0030</div>
     </div>
 
     <h2>皮克敏-巨菇-倒數追蹤器</h2>
@@ -714,6 +710,7 @@
     
     setInterval(updateClocks, 1000);
 
+    // 【修改點】在 LINE 分享的最上面，加入網頁專屬的傳送網址
     function shareToLineWindow() {
         if (dataList.length === 0) {
             alert('目前雲端沒有任何菇菇資訊可以分享喔！');
@@ -731,7 +728,8 @@
             return a.targetTime - b.targetTime;
         });
 
-        let textOutput = `🍄【皮克敏巨菇回報】🍄\n⏰ 台北時間：${taipeiTimeText}\n\n`;
+        // 建立輸出字串，並在最上方附加連結
+        let textOutput = `🍄【皮克敏巨菇追蹤器】🍄\n🔗 網址：https://tdagold-leo.github.io/Pikmin\n⏰ 台北時間：${taipeiTimeText}\n\n`;
 
         const actives = sortedList.filter(item => item.user !== "");
         const unclaimed = sortedList.filter(item => item.user === "");
@@ -1017,7 +1015,6 @@
             const safeName = escapeHtml(item.name);
             const itemTargetTime = item.targetTime || 'null';
 
-            // 【修復核心】補回按鈕中缺失的 onclick="copyCoords(...)" 事件
             if (item.user === "") {
                 unclaimedCount++;
                 tr.innerHTML = `
