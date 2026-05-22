@@ -38,6 +38,7 @@
             font-weight: bold;
             border: 1px solid #c5e1a5;
             text-align: right;
+            z-index: 10;
         }
 
         .version-tag {
@@ -54,6 +55,7 @@
         h2 {
             font-size: 20px;
             padding-right: 140px; /* 避免標題撞到瀏覽次數 */
+            margin-bottom: 15px;
         }
         h3 {
             margin-top: 25px;
@@ -61,6 +63,72 @@
             padding-bottom: 6px;
             font-size: 16px;
             color: #558b2f;
+        }
+
+        /* 時區對比小工具自選樣式 */
+        .timezone-widget {
+            background-color: #f9fbf9;
+            border: 1px solid #e2eee2;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .taipei-clock {
+            display: flex;
+            flex-direction: column;
+        }
+        .taipei-clock .label {
+            font-size: 11px;
+            color: #558b2f;
+            font-weight: bold;
+        }
+        .taipei-clock .time {
+            font-size: 22px;
+            font-weight: bold;
+            color: #2e7d32;
+            font-family: monospace;
+        }
+        .world-clocks {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .clock-item {
+            background: #ffffff;
+            border: 1px solid #e8f0e8;
+            padding: 6px 10px;
+            border-radius: 6px;
+            min-width: 140px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .clock-item select {
+            border: none;
+            background: transparent;
+            font-size: 11px;
+            color: #666;
+            font-weight: bold;
+            padding: 0;
+            cursor: pointer;
+            outline: none;
+            width: 100%;
+        }
+        .clock-item select:hover {
+            color: #2e7d32;
+        }
+        .clock-item .w-time {
+            font-size: 14px;
+            font-weight: bold;
+            color: #444;
+            font-family: monospace;
+            margin-top: 2px;
         }
         
         .input-form {
@@ -194,10 +262,10 @@
             font-style: italic;
         }
 
-        /* 【新功能】時間到整列反灰的 CSS 樣式 */
+        /* 時間到整列反灰的 CSS 樣式 */
         .row-expired {
-            background-color: #f5f5f5; /* 背景變為淡灰 */
-            color: #a1a1a1 !important; /* 文字變灰 */
+            background-color: #f5f5f5;
+            color: #a1a1a1 !important;
         }
         .row-expired strong {
             color: #a1a1a1 !important;
@@ -205,7 +273,6 @@
         .row-expired .col-coords {
             color: #a1a1a1 !important;
         }
-        /* 時間到時，功能按鈕也跟著稍微變淡，保持畫面色調一致 */
         .row-expired .copy-btn { background-color: #b0bec5; }
         .row-expired .claim-btn { background-color: #b0bec5; }
         .row-expired .edit-time-btn { background-color: #b0bec5; }
@@ -309,6 +376,21 @@
             h2 { font-size: 18px; padding-right: 0; margin-bottom: 45px; }
             .view-counter { top: 10px; right: 10px; }
             
+            .timezone-widget {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px;
+            }
+            .world-clocks {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+                width: 100%;
+            }
+            .clock-item {
+                min-width: unset;
+            }
+
             .form-row-top {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
@@ -332,10 +414,42 @@
 <div class="container">
     <div class="view-counter">
         <div id="view-counter-text">雲端總瀏覽次數：0 次</div>
-        <div class="version-tag">Ver: 20260520-0401</div>
+        <div class="version-tag">Ver: 20260522-2015</div>
     </div>
 
-    <h2>皮克敏-巨菇-雲端同步追蹤器</h2>
+    <h2>皮克敏-巨菇-倒數追蹤器</h2>
+
+    <div class="timezone-widget">
+        <div class="taipei-clock">
+            <span class="label">台北標準時間 (🇹🇼 Taipei)</span>
+            <span class="time" id="clock-taipei">00:00:00</span>
+        </div>
+        <div class="world-clocks">
+            <div class="clock-item">
+                <select id="tz-select-1" onchange="saveTimezonePref()">
+                    <option value="9" selected>日本/韓國 🇯🇵🇰🇷 (UTC+9)</option>
+                    <option value="8">港澳/北京 🇭🇰🇲🇴 (UTC+8)</option>
+                    <option value="7">泰國/越南 🇹🇭🇻🇳 (UTC+7)</option>
+                </select>
+                <div class="w-time" id="clock-custom-1">00:00</div>
+            </div>
+            <div class="clock-item">
+                <select id="tz-select-2" onchange="saveTimezonePref()">
+                    <option value="-5" selected>美國美東 🇺🇸 (UTC-5)</option>
+                    <option value="-8">美國美西 🇺🇸 (UTC-8)</option>
+                </select>
+                <div class="w-time" id="clock-custom-2">00:00</div>
+            </div>
+            <div class="clock-item">
+                <select id="tz-select-3" onchange="saveTimezonePref()">
+                    <option value="10" selected>澳洲雪梨 🇦🇺 (UTC+10)</option>
+                    <option value="1">英國倫敦 🇬🇧 (UTC+1)</option>
+                    <option value="2">歐陸時間 🇪🇺 (UTC+2)</option>
+                </select>
+                <div class="w-time" id="clock-custom-3">00:00</div>
+            </div>
+        </div>
+    </div>
     
     <div class="input-form">
         <div class="form-row-top">
@@ -520,6 +634,50 @@
         const views = snapshot.val() || 0;
         document.getElementById('view-counter-text').innerText = `雲端總瀏覽次數：${views} 次`;
     });
+
+    // 讀取瀏覽器儲存的時區喜好設定
+    window.addEventListener('DOMContentLoaded', () => {
+        if(localStorage.getItem('pikmin_tz_area_1')) document.getElementById('tz-select-1').value = localStorage.getItem('pikmin_tz_area_1');
+        if(localStorage.getItem('pikmin_tz_area_2')) document.getElementById('tz-select-2').value = localStorage.getItem('pikmin_tz_area_2');
+        if(localStorage.getItem('pikmin_tz_area_3')) document.getElementById('tz-select-3').value = localStorage.getItem('pikmin_tz_area_3');
+        updateClocks();
+    });
+
+    // 儲存選擇的區域時區
+    function saveTimezonePref() {
+        localStorage.setItem('pikmin_tz_area_1', document.getElementById('tz-select-1').value);
+        localStorage.setItem('pikmin_tz_area_2', document.getElementById('tz-select-2').value);
+        localStorage.setItem('pikmin_tz_area_3', document.getElementById('tz-select-3').value);
+        updateClocks();
+    }
+
+    // 計算自選區域時間
+    function updateClocks() {
+        const now = new Date();
+        const utcMs = now.getTime() + (now.getTimezoneOffset() * 60000);
+        
+        const offsetTaipei = 8;
+        const offsetCustom1 = parseFloat(document.getElementById('tz-select-1').value) || 0;
+        const offsetCustom2 = parseFloat(document.getElementById('tz-select-2').value) || 0;
+        const offsetCustom3 = parseFloat(document.getElementById('tz-select-3').value) || 0;
+
+        function formatTime(utcTimeMs, offsetHours, includeSeconds = false) {
+            const targetDate = new Date(utcTimeMs + (3600000 * offsetHours));
+            const hh = String(targetDate.getHours()).padStart(2, '0');
+            const mm = String(targetDate.getMinutes()).padStart(2, '0');
+            if (includeSeconds) {
+                const ss = String(targetDate.getSeconds()).padStart(2, '0');
+                return `${hh}:${mm}:${ss}`;
+            }
+            return `${hh}:${mm}`;
+        }
+
+        if(document.getElementById('clock-taipei')) document.getElementById('clock-taipei').innerText = formatTime(utcMs, offsetTaipei, true);
+        if(document.getElementById('clock-custom-1')) document.getElementById('clock-custom-1').innerText = formatTime(utcMs, offsetCustom1, false);
+        if(document.getElementById('clock-custom-2')) document.getElementById('clock-custom-2').innerText = formatTime(utcMs, offsetCustom2, false);
+        if(document.getElementById('clock-custom-3')) document.getElementById('clock-custom-3').innerText = formatTime(utcMs, offsetCustom3, false);
+    }
+    setInterval(updateClocks, 1000);
 
     function addItem() {
         const userEl = document.getElementById('user');
@@ -714,7 +872,7 @@
         sortedList.forEach((item) => {
             const tr = document.createElement('tr');
             let timeText = '';
-            let isExpired = false; // 用來標記時間是否到了
+            let isExpired = false;
 
             if (item.targetTime === null) {
                 timeText = '<span class="not-set">尚未設定</span>';
@@ -722,7 +880,7 @@
                 const remainingMs = item.targetTime - now;
                 if (remainingMs <= 0) {
                     timeText = '<span class="expired">已過期/可開打！</span>';
-                    isExpired = true; // 狀態標記為已到期
+                    isExpired = true;
                 } else {
                     const totalSeconds = Math.floor(remainingMs / 1000);
                     const totalMinutes = Math.floor(totalSeconds / 60);
@@ -743,7 +901,6 @@
                 }
             }
 
-            // 【新功能】如果時間到了，就在 <tr> 標籤加上 row-expired 的 CSS 反灰類別
             if (isExpired) {
                 tr.classList.add('row-expired');
             }
@@ -759,11 +916,11 @@
                     <td>${item.sn}</td>
                     <td><span style="color:#8e8e93; font-style:italic;">無</span></td>
                     <td>${safeName}</td>
-                    <td>${timeText}</td>
                     <td>
                         <span class="col-coords">${safeCoords}</span>
                         <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
                     </td>
+                    <td>${timeText}</td>
                     <td>
                         <div class="action-btns">
                             <button class="claim-btn" onclick="openClaimModal('${item.id}', '${safeName.replace(/'/g, "\\'")}')">認領</button>
@@ -779,11 +936,11 @@
                     <td>${item.sn}</td>
                     <td><strong>${escapeHtml(item.user)}</strong></td>
                     <td>${safeName}</td>
-                    <td>${timeText}</td>
                     <td>
                         <span class="col-coords">${safeCoords}</span>
                         <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
                     </td>
+                    <td>${timeText}</td>
                     <td>
                         <div class="action-btns">
                             <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime})">修改</button>
@@ -802,8 +959,6 @@
     function escapeHtml(str) {
         return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
-
-    setInterval(updateTable, 1000);
 </script>
 
 </body>
