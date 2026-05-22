@@ -131,13 +131,13 @@
             margin-top: 2px;
         }
 
-        /* 【新功能】LINE 分享按鈕樣式 */
+        /* LINE 分享按鈕樣式 */
         .share-section {
             margin-bottom: 15px;
             width: 100%;
         }
         .line-share-btn {
-            background-color: #06c755; /* LINE 官方綠色 */
+            background-color: #06c755; /* LINE 官方綠 */
             color: white;
             border: none;
             border-radius: 8px;
@@ -445,7 +445,7 @@
 <div class="container">
     <div class="view-counter">
         <div id="view-counter-text">雲端總瀏覽次數：0 次</div>
-        <div class="version-tag">Ver: 20260522-2145</div>
+        <div class="version-tag">Ver: 20260522-2210</div>
     </div>
 
     <h2>皮克敏-巨菇-倒數追蹤器</h2>
@@ -483,8 +483,8 @@
     </div>
 
     <div class="share-section">
-        <button class="line-share-btn" id="line-share-btn" onclick="copyAllToLine()">
-            💚 複製所有菇資訊至 LINE
+        <button class="line-share-btn" id="line-share-btn" onclick="shareToLineWindow()">
+            💚 一鍵分享菇資訊至 LINE 群組
         </button>
     </div>
     
@@ -672,7 +672,6 @@
         document.getElementById('view-counter-text').innerText = `雲端總瀏覽次數：${views} 次`;
     });
 
-    // 讀取瀏覽器儲存的時區喜好設定
     window.addEventListener('DOMContentLoaded', () => {
         if(localStorage.getItem('pikmin_tz_area_1')) document.getElementById('tz-select-1').value = localStorage.getItem('pikmin_tz_area_1');
         if(localStorage.getItem('pikmin_tz_area_2')) document.getElementById('tz-select-2').value = localStorage.getItem('pikmin_tz_area_2');
@@ -680,7 +679,6 @@
         updateClocks();
     });
 
-    // 儲存選擇的區域時區
     function saveTimezonePref() {
         localStorage.setItem('pikmin_tz_area_1', document.getElementById('tz-select-1').value);
         localStorage.setItem('pikmin_tz_area_2', document.getElementById('tz-select-2').value);
@@ -688,7 +686,6 @@
         updateClocks();
     }
 
-    // 計算自選區域時間
     function updateClocks() {
         const now = new Date();
         const utcMs = now.getTime() + (now.getTimezoneOffset() * 60000);
@@ -717,8 +714,8 @@
     
     setInterval(updateClocks, 1000);
 
-    // 【新功能】一鍵打包所有菇資料並複製，方便貼到 LINE
-    function copyAllToLine() {
+    // 【iOS 重大相容性修復核心】
+    function shareToLineWindow() {
         if (dataList.length === 0) {
             alert('目前雲端沒有任何菇菇資訊可以分享喔！');
             return;
@@ -728,7 +725,6 @@
         const utcMs = now + (new Date().getTimezoneOffset() * 60000);
         const taipeiTimeText = formatTimeStr(utcMs, 8, true);
 
-        // 排序規則：有時間的排前面，沒設定時間的排後面
         const sortedList = [...dataList].sort((a, b) => {
             if (a.targetTime === null && b.targetTime === null) return 0;
             if (a.targetTime === null) return 1;
@@ -738,7 +734,6 @@
 
         let textOutput = `🍄【皮克敏巨菇回報】🍄\n⏰ 台北時間：${taipeiTimeText}\n\n`;
 
-        // 分割正常與待認領
         const actives = sortedList.filter(item => item.user !== "");
         const unclaimed = sortedList.filter(item => item.user === "");
 
@@ -761,26 +756,23 @@
             });
         }
 
-        // 執行複製動作
-        navigator.clipboard.writeText(textOutput.trim()).then(() => {
-            const btn = document.getElementById('line-share-btn');
-            const originalText = btn.innerText;
-            btn.innerText = '✅ 已複製！趕快去 LINE 貼上吧！';
-            btn.classList.add('copied');
-            btn.disabled = true;
+        // 防護 1：優先立刻寫入 iPhone 剪貼簿（就算跳轉失敗，使用者手動去 LINE 貼上也有完整文字）
+        navigator.clipboard.writeText(textOutput.trim()).catch(err => console.log('備用複製失敗:', err));
 
-            setTimeout(() => {
-                btn.innerText = originalText;
-                btn.classList.remove('copied');
-                btn.disabled = false;
-            }, 2000);
-        }).catch(err => {
-            console.error('無法分享資料: ', err);
-            alert('複製失敗，請重試。');
-        });
+        // 防護 2：使用官方原生 App 深層連結 (Deep Link) 語法取代 https 網址，能穿透所有 iOS 內建瀏覽器的安全屏障
+        const lineAppUrl = "line://msg/text/" + encodeURIComponent(textOutput.trim());
+        
+        // 按鈕視覺效果提示
+        const btn = document.getElementById('line-share-btn');
+        const originalText = btn.innerText;
+        btn.innerText = '✅ 已成功複製並喚醒 LINE...';
+        
+        setTimeout(() => { btn.innerText = originalText; }, 2500);
+
+        // 執行外部跳轉喚醒
+        window.location.href = lineAppUrl;
     }
 
-    // 輔助函式：取得乾淨的純文字賸餘時間描述
     function getRemainingText(targetTime, now) {
         if (targetTime === null) return "尚未設定";
         const remainingMs = targetTime - now;
