@@ -38,6 +38,7 @@
             font-weight: bold;
             border: 1px solid #c5e1a5;
             text-align: right;
+            z-index: 10;
         }
 
         .version-tag {
@@ -54,6 +55,7 @@
         h2 {
             font-size: 20px;
             padding-right: 140px; /* 避免標題撞到瀏覽次數 */
+            margin-bottom: 15px;
         }
         h3 {
             margin-top: 25px;
@@ -61,6 +63,60 @@
             padding-bottom: 6px;
             font-size: 16px;
             color: #558b2f;
+        }
+
+        /* 【新功能】時區對比小工具樣式 */
+        .timezone-widget {
+            background-color: #f9fbf9;
+            border: 1px solid #e2eee2;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .taipei-clock {
+            display: flex;
+            flex-direction: column;
+        }
+        .taipei-clock .label {
+            font-size: 11px;
+            color: #558b2f;
+            font-weight: bold;
+        }
+        .taipei-clock .time {
+            font-size: 22px;
+            font-weight: bold;
+            color: #2e7d32;
+            font-family: monospace;
+        }
+        .world-clocks {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .clock-item {
+            background: #ffffff;
+            border: 1px solid #e8f0e8;
+            padding: 6px 12px;
+            border-radius: 6px;
+            min-width: 110px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+        .clock-item .city {
+            font-size: 11px;
+            color: #666;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        .clock-item .w-time {
+            font-size: 14px;
+            font-weight: bold;
+            color: #444;
+            font-family: monospace;
         }
         
         .input-form {
@@ -194,10 +250,10 @@
             font-style: italic;
         }
 
-        /* 【新功能】時間到整列反灰的 CSS 樣式 */
+        /* 時間到整列反灰的 CSS 樣式 */
         .row-expired {
-            background-color: #f5f5f5; /* 背景變為淡灰 */
-            color: #a1a1a1 !important; /* 文字變灰 */
+            background-color: #f5f5f5;
+            color: #a1a1a1 !important;
         }
         .row-expired strong {
             color: #a1a1a1 !important;
@@ -205,7 +261,6 @@
         .row-expired .col-coords {
             color: #a1a1a1 !important;
         }
-        /* 時間到時，功能按鈕也跟著稍微變淡，保持畫面色調一致 */
         .row-expired .copy-btn { background-color: #b0bec5; }
         .row-expired .claim-btn { background-color: #b0bec5; }
         .row-expired .edit-time-btn { background-color: #b0bec5; }
@@ -309,502 +364,12 @@
             h2 { font-size: 18px; padding-right: 0; margin-bottom: 45px; }
             .view-counter { top: 10px; right: 10px; }
             
-            .form-row-top {
+            .timezone-widget {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px;
+            }
+            .world-clocks {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 8px;
-            }
-            .form-row-top .input-group:nth-child(3) {
-                grid-column: span 2;
-            }
-            .form-row-bottom {
-                justify-content: space-between;
-            }
-            .submit-btn {
-                width: 100%;
-                margin-top: 5px;
-            }
-        }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <div class="view-counter">
-        <div id="view-counter-text">雲端總瀏覽次數：0 次</div>
-        <div class="version-tag">Ver: 20260520-0401</div>
-    </div>
-
-    <h2>皮克敏-巨菇-雲端同步追蹤器</h2>
-    
-    <div class="input-form">
-        <div class="form-row-top">
-            <div class="input-group">
-                <label>使用者 (留空待認領)</label>
-                <input type="text" id="user" placeholder="名字或留空">
-            </div>
-            
-            <div class="input-group">
-                <label>名稱</label>
-                <input type="text" id="name" placeholder="例如：巨型火菇">
-            </div>
-            
-            <div class="input-group">
-                <label>座標</label>
-                <input type="text" id="coords" placeholder="貼上或輸入座標">
-            </div>
-        </div>
-        
-        <div class="form-row-bottom">
-            <div class="time-container">
-                <div class="time-box">
-                    <label>天</label>
-                    <input type="number" id="days" min="0" value="0">
-                </div>
-                <div class="time-box">
-                    <label>時</label>
-                    <input type="number" id="hours" min="0" max="23" value="0">
-                </div>
-                <div class="time-box">
-                    <label>分</label>
-                    <input type="number" id="minutes" min="0" max="59" value="0">
-                </div>
-            </div>
-            
-            <button class="submit-btn" onclick="addItem()">新增資料</button>
-        </div>
-    </div>
-
-    <h3>正常追蹤中</h3>
-    <div class="table-responsive">
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 40px;">編號</th>
-                    <th>使用者</th>
-                    <th>名稱</th>
-                    <th>剩餘時間</th>
-                    <th>座標</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody id="active-table-body"></tbody>
-        </table>
-    </div>
-    <div id="active-empty" class="empty-message" style="display: none;">目前沒有正在追蹤的項目</div>
-
-    <h3>待認領巨菇</h3>
-    <div class="table-responsive">
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 40px;">編號</th>
-                    <th>使用者</th>
-                    <th>名稱</th>
-                    <th>剩餘時間</th>
-                    <th>座標</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody id="unclaimed-table-body"></tbody>
-        </table>
-    </div>
-    <div id="unclaimed-empty" class="empty-message" style="display: none;">目前沒有待認領的項目</div>
-</div>
-
-<div id="claim-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-box">
-        <h4 id="modal-title">認領巨菇</h4>
-        <div class="input-group" style="min-width: 100%;">
-            <label>認領人名字</label>
-            <input type="text" id="modal-username" placeholder="請輸入名字">
-        </div>
-        <div class="input-group" style="min-width: 100%;">
-            <label>設定剩餘時間 (不確定保持 0)</label>
-            <div class="time-container" style="justify-content: center; margin-top: 5px;">
-                <div class="time-box">
-                    <label>天</label>
-                    <input type="number" id="modal-days" min="0" value="0">
-                </div>
-                <div class="time-box">
-                    <label>時</label>
-                    <input type="number" id="modal-hours" min="0" max="23" value="0">
-                </div>
-                <div class="time-box">
-                    <label>分</label>
-                    <input type="number" id="modal-minutes" min="0" max="59" value="0">
-                </div>
-            </div>
-        </div>
-        <div class="modal-buttons">
-            <button class="modal-btn cancel" onclick="closeModal()">取消</button>
-            <button class="modal-btn confirm" id="modal-submit-btn">確定認領</button>
-        </div>
-    </div>
-</div>
-
-<div id="time-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-box">
-        <h4 id="time-modal-title">修改資料</h4>
-        
-        <div class="input-group" style="min-width: 100%;">
-            <label>修改名稱：</label>
-            <input type="text" id="edit-name" placeholder="請輸入新名稱">
-        </div>
-
-        <div class="input-group" style="min-width: 100%;">
-            <label>重新設定剩餘時間：</label>
-            <div class="time-container" style="justify-content: center; margin-top: 10px;">
-                <div class="time-box">
-                    <label>天</label>
-                    <input type="number" id="edit-days" min="0" value="0">
-                </div>
-                <div class="time-box">
-                    <label>時</label>
-                    <input type="number" id="edit-hours" min="0" max="23" value="0">
-                </div>
-                <div class="time-box">
-                    <label>分</label>
-                    <input type="number" id="edit-minutes" min="0" max="59" value="0">
-                </div>
-            </div>
-        </div>
-        <div class="modal-buttons">
-            <button class="modal-btn cancel" onclick="closeTimeModal()">取消</button>
-            <button class="modal-btn confirm" id="time-modal-submit-btn">儲存修改</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    // Firebase 設定
-    const firebaseConfig = {
-        apiKey: "AIzaSyBkmQhSKbiSTeHkbAnjSZTgYtGbmPySJbo",
-        authDomain: "pikmin-tracker-3cf56.firebaseapp.com",
-        databaseURL: "https://pikmin-tracker-3cf56-default-rtdb.firebaseio.com/",
-        projectId: "pikmin-tracker-3cf56",
-        storageBucket: "pikmin-tracker-3cf56.firebasestorage.app",
-        messagingSenderId: "848190561510",
-        appId: "1:848190561510:web:07ceb7fa8bc57a7004af27"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-
-    let dataList = [];
-    let currentClaimingId = null;
-    let currentEditingTimeId = null;
-
-    database.ref('mushrooms').on('value', (snapshot) => {
-        const cloudData = snapshot.val();
-        dataList = [];
-        if (cloudData) {
-            Object.keys(cloudData).forEach((key) => {
-                dataList.push({
-                    id: key, 
-                    sn: cloudData[key].sn,
-                    user: cloudData[key].user,
-                    name: cloudData[key].name,
-                    coords: cloudData[key].coords,
-                    targetTime: cloudData[key].targetTime
-                });
-            });
-        }
-        updateTable();
-    });
-
-    database.ref('views').transaction((currentViews) => {
-        return (currentViews || 0) + 1;
-    });
-    database.ref('views').on('value', (snapshot) => {
-        const views = snapshot.val() || 0;
-        document.getElementById('view-counter-text').innerText = `雲端總瀏覽次數：${views} 次`;
-    });
-
-    function addItem() {
-        const userEl = document.getElementById('user');
-        const nameEl = document.getElementById('name');
-        const coordsEl = document.getElementById('coords');
-        
-        const dVal = document.getElementById('days').value;
-        const hVal = document.getElementById('hours').value;
-        const mVal = document.getElementById('minutes').value;
-
-        const days = parseInt(dVal, 10) || 0;
-        const hours = parseInt(hVal, 10) || 0;
-        const minutes = parseInt(mVal, 10) || 0;
-
-        if (!nameEl || !nameEl.value.trim() || !coordsEl || !coordsEl.value.trim()) {
-            alert('請填寫名稱與座標欄位！');
-            return;
-        }
-
-        let targetTime = null;
-        if (days > 0 || hours > 0 || minutes > 0) {
-            const totalMs = ((days * 24 * 60) + (hours * 60) + minutes) * 60 * 1000;
-            targetTime = Date.now() + totalMs;
-        }
-
-        const processedUser = userEl ? userEl.value.trim() : "";
-
-        let nextSn = 1;
-        if (dataList.length > 0) {
-            nextSn = Math.max(...dataList.map(item => item.sn || 0)) + 1;
-        }
-
-        const newItem = {
-            sn: nextSn,
-            user: processedUser,
-            name: nameEl.value.trim(),
-            coords: coordsEl.value.trim(),
-            targetTime: targetTime
-        };
-
-        database.ref('mushrooms').push(newItem);
-        
-        if(userEl) userEl.value = '';
-        nameEl.value = '';
-        coordsEl.value = '';
-        document.getElementById('days').value = '0';
-        document.getElementById('hours').value = '0';
-        document.getElementById('minutes').value = '0';
-    }
-
-    function deleteItem(id) {
-        if(confirm('確定要刪除這筆巨菇資料嗎？')) {
-            database.ref('mushrooms/' + id).remove();
-        }
-    }
-
-    function openClaimModal(id, currentName) {
-        currentClaimingId = id;
-        document.getElementById('modal-title').innerText = `認領巨菇 - ${currentName}`;
-        document.getElementById('modal-username').value = '';
-        document.getElementById('modal-days').value = '0';
-        document.getElementById('modal-hours').value = '0';
-        document.getElementById('modal-minutes').value = '0';
-        
-        document.getElementById('modal-submit-btn').onclick = submitClaim;
-        document.getElementById('claim-modal').style.display = 'flex';
-    }
-
-    function closeModal() {
-        document.getElementById('claim-modal').style.display = 'none';
-        currentClaimingId = null;
-    }
-
-    function submitClaim() {
-        const usernameInput = document.getElementById('modal-username').value.trim();
-        if (!usernameInput) {
-            alert('請輸入認領人的名字！');
-            return;
-        }
-
-        const d = parseInt(document.getElementById('modal-days').value, 10) || 0;
-        const h = parseInt(document.getElementById('modal-hours').value, 10) || 0;
-        const m = parseInt(document.getElementById('modal-minutes').value, 10) || 0;
-
-        const updates = {
-            user: usernameInput
-        };
-        
-        if (d > 0 || h > 0 || m > 0) {
-            const totalMs = ((d * 24 * 60) + (h * 60) + m) * 60 * 1000;
-            updates.targetTime = Date.now() + totalMs;
-        }
-        
-        database.ref('mushrooms/' + currentClaimingId).update(updates);
-        closeModal();
-    }
-
-    function openTimeModal(id, currentName, currentTargetTime) {
-        currentEditingTimeId = id;
-        document.getElementById('time-modal-title').innerText = `修改資料`;
-        document.getElementById('edit-name').value = currentName;
-        
-        let d = 0, h = 0, m = 0;
-        if (currentTargetTime) {
-            const remainingMs = currentTargetTime - Date.now();
-            if (remainingMs > 0) {
-                const totalSeconds = Math.floor(remainingMs / 1000);
-                const totalMinutes = Math.floor(totalSeconds / 60);
-                const totalHours = Math.floor(totalMinutes / 60);
-                
-                d = Math.floor(totalHours / 24);
-                h = totalHours % 24;
-                m = totalMinutes % 60;
-            }
-        }
-        
-        document.getElementById('edit-days').value = d;
-        document.getElementById('edit-hours').value = h;
-        document.getElementById('edit-minutes').value = m;
-        
-        document.getElementById('time-modal-submit-btn').onclick = submitDataEdit;
-        document.getElementById('time-modal').style.display = 'flex';
-    }
-
-    function closeTimeModal() {
-        document.getElementById('time-modal').style.display = 'none';
-        currentEditingTimeId = null;
-    }
-
-    function submitDataEdit() {
-        const newName = document.getElementById('edit-name').value.trim();
-        if (!newName) {
-            alert('名稱不能為空！');
-            return;
-        }
-
-        const d = parseInt(document.getElementById('edit-days').value, 10) || 0;
-        const h = parseInt(document.getElementById('edit-hours').value, 10) || 0;
-        const m = parseInt(document.getElementById('edit-minutes').value, 10) || 0;
-
-        let targetTime = null;
-        if (d > 0 || h > 0 || m > 0) {
-            const totalMs = ((d * 24 * 60) + (h * 60) + m) * 60 * 1000;
-            targetTime = Date.now() + totalMs;
-        }
-
-        database.ref('mushrooms/' + currentEditingTimeId).update({
-            name: newName,
-            targetTime: targetTime
-        });
-        closeTimeModal();
-    }
-
-    function copyCoords(text, buttonElement) {
-        navigator.clipboard.writeText(text).then(() => {
-            const originalText = buttonElement.innerText;
-            buttonElement.innerText = '已複製';
-            buttonElement.classList.add('copied');
-            buttonElement.disabled = true;
-
-            setTimeout(() => {
-                buttonElement.innerText = originalText;
-                buttonElement.classList.remove('copied');
-                buttonElement.disabled = false;
-            }, 1200);
-        }).catch(err => {
-            console.error('無法複製座標: ', err);
-            alert('複製失敗，請手動複製。');
-        });
-    }
-
-    function updateTable() {
-        const activeTbody = document.getElementById('active-table-body');
-        const unclaimedTbody = document.getElementById('unclaimed-table-body');
-        if (!activeTbody || !unclaimedTbody) return;
-
-        const now = Date.now();
-
-        const sortedList = [...dataList].sort((a, b) => {
-            if (a.targetTime === null && b.targetTime === null) return 0;
-            if (a.targetTime === null) return 1;
-            if (b.targetTime === null) return -1;
-            return a.targetTime - b.targetTime;
-        });
-
-        activeTbody.innerHTML = '';
-        unclaimedTbody.innerHTML = '';
-
-        let activeCount = 0;
-        let unclaimedCount = 0;
-
-        sortedList.forEach((item) => {
-            const tr = document.createElement('tr');
-            let timeText = '';
-            let isExpired = false; // 用來標記時間是否到了
-
-            if (item.targetTime === null) {
-                timeText = '<span class="not-set">尚未設定</span>';
-            } else {
-                const remainingMs = item.targetTime - now;
-                if (remainingMs <= 0) {
-                    timeText = '<span class="expired">已過期/可開打！</span>';
-                    isExpired = true; // 狀態標記為已到期
-                } else {
-                    const totalSeconds = Math.floor(remainingMs / 1000);
-                    const totalMinutes = Math.floor(totalSeconds / 60);
-                    const totalHours = Math.floor(totalMinutes / 60);
-                    
-                    const days = Math.floor(totalHours / 24);
-                    const hours = totalHours % 24;
-                    const mins = totalMinutes % 60;
-                    const secs = totalSeconds % 60;
-
-                    if (days > 0) {
-                        timeText = `${days}天 ${hours}時 ${mins}分`;
-                    } else if (hours > 0) {
-                        timeText = `${hours}時 ${mins}分 ${secs}秒`;
-                    } else {
-                        timeText = `${mins}分 ${secs}秒`;
-                    }
-                }
-            }
-
-            // 【新功能】如果時間到了，就在 <tr> 標籤加上 row-expired 的 CSS 反灰類別
-            if (isExpired) {
-                tr.classList.add('row-expired');
-            }
-
-            const rawCoords = item.coords;
-            const safeCoords = escapeHtml(rawCoords);
-            const safeName = escapeHtml(item.name);
-            const itemTargetTime = item.targetTime || 'null';
-
-            if (item.user === "") {
-                unclaimedCount++;
-                tr.innerHTML = `
-                    <td>${item.sn}</td>
-                    <td><span style="color:#8e8e93; font-style:italic;">無</span></td>
-                    <td>${safeName}</td>
-                    <td>${timeText}</td>
-                    <td>
-                        <span class="col-coords">${safeCoords}</span>
-                        <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
-                    </td>
-                    <td>
-                        <div class="action-btns">
-                            <button class="claim-btn" onclick="openClaimModal('${item.id}', '${safeName.replace(/'/g, "\\'")}')">認領</button>
-                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime})">修改</button>
-                            <button class="delete-btn" onclick="deleteItem('${item.id}')">刪除</button>
-                        </div>
-                    </td>
-                `;
-                unclaimedTbody.appendChild(tr);
-            } else {
-                activeCount++;
-                tr.innerHTML = `
-                    <td>${item.sn}</td>
-                    <td><strong>${escapeHtml(item.user)}</strong></td>
-                    <td>${safeName}</td>
-                    <td>${timeText}</td>
-                    <td>
-                        <span class="col-coords">${safeCoords}</span>
-                        <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
-                    </td>
-                    <td>
-                        <div class="action-btns">
-                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime})">修改</button>
-                            <button class="delete-btn" onclick="deleteItem('${item.id}')">刪除</button>
-                        </div>
-                    </td>
-                `;
-                activeTbody.appendChild(tr);
-            }
-        });
-
-        document.getElementById('active-empty').style.display = activeCount === 0 ? 'block' : 'none';
-        document.getElementById('unclaimed-empty').style.display = unclaimedCount === 0 ? 'block' : 'none';
-    }
-
-    function escapeHtml(str) {
-        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-    }
-
-    setInterval(updateTable, 1000);
-</script>
-
-</body>
-</html>
+                gap: 8
