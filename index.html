@@ -372,7 +372,7 @@
             color: #2e7d32;
             font-size: 15px;
         }
-        .modal-box input[type="text"] {
+        .modal-box input[type=\"text\"] {
             padding: 6px 10px;
             border: 1px solid #c5e1a5;
             border-radius: 6px;
@@ -441,7 +441,7 @@
 <div class="container">
     <div class="view-counter">
         <div id="view-counter-text">雲端總瀏覽次數：0 次</div>
-        <div class="version-tag">Ver: 20260523-0030</div>
+        <div class="version-tag">Ver: 20260525-1130</div>
     </div>
 
     <h2>皮克敏-巨菇-倒數追蹤器</h2>
@@ -530,8 +530,7 @@
                     <th style="width: 40px;">編號</th>
                     <th>使用者</th>
                     <th>名稱</th>
-                    <th>剩餘時間</th>
-                    <th>座標</th>
+                    <th>剩餘時間</th> <th>座標</th>
                     <th>操作</th>
                 </tr>
             </thead>
@@ -548,8 +547,7 @@
                     <th style="width: 40px;">編號</th>
                     <th>使用者</th>
                     <th>名稱</th>
-                    <th>剩餘時間</th>
-                    <th>座標</th>
+                    <th>剩餘時間</th> <th>座標</th>
                     <th>操作</th>
                 </tr>
             </thead>
@@ -710,7 +708,6 @@
     
     setInterval(updateClocks, 1000);
 
-    // 【修改點】在 LINE 分享的最上面，加入網頁專屬的傳送網址
     function shareToLineWindow() {
         if (dataList.length === 0) {
             alert('目前雲端沒有任何菇菇資訊可以分享喔！');
@@ -728,7 +725,6 @@
             return a.targetTime - b.targetTime;
         });
 
-        // 建立輸出字串，並在最上方附加連結
         let textOutput = `🍄【皮克敏巨菇追蹤器】🍄\n🔗 網址：https://tdagold-leo.github.io/Pikmin\n⏰ 台北時間：${taipeiTimeText}\n\n`;
 
         const actives = sortedList.filter(item => item.user !== "");
@@ -1015,17 +1011,18 @@
             const safeName = escapeHtml(item.name);
             const itemTargetTime = item.targetTime || 'null';
 
+            // 【核心修正】將 <td> 的變數順序與標頭完全對齊：剩餘時間 (${timeText}) ➔ 座標 (${safeCoords})
             if (item.user === "") {
                 unclaimedCount++;
                 tr.innerHTML = `
                     <td>${item.sn}</td>
                     <td><span style="color:#8e8e93; font-style:italic;">無</span></td>
                     <td>${safeName}</td>
+                    <td>${timeText}</td>
                     <td>
                         <span class="col-coords">${safeCoords}</span>
                         <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
                     </td>
-                    <td>${timeText}</td>
                     <td>
                         <div class="action-btns">
                             <button class="claim-btn" onclick="openClaimModal('${item.id}', '${safeName.replace(/'/g, "\\'")}')">認領</button>
@@ -1041,11 +1038,11 @@
                     <td>${item.sn}</td>
                     <td><strong>${escapeHtml(item.user)}</strong></td>
                     <td>${safeName}</td>
+                    <td>${timeText}</td>
                     <td>
                         <span class="col-coords">${safeCoords}</span>
                         <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
                     </td>
-                    <td>${timeText}</td>
                     <td>
                         <div class="action-btns">
                             <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime})">修改</button>
@@ -1064,6 +1061,8 @@
     function escapeHtml(str) {
         return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
+
+    setInterval(updateTable, 1000);
 </script>
 
 </body>
