@@ -14,7 +14,7 @@
             background-color: #f4f9f4;
             color: #333;
             margin: 0;
-            padding: 10px; /* 手機版邊距稍微縮小 */
+            padding: 10px;
         }
         .container {
             max-width: 1000px;
@@ -54,7 +54,7 @@
         }
         h2 {
             font-size: 20px;
-            padding-right: 140px; /* 避免標題撞到瀏覽次數 */
+            padding-right: 140px;
             margin-bottom: 15px;
         }
         h3 {
@@ -120,9 +120,7 @@
             outline: none;
             width: 100%;
         }
-        .clock-item select:hover {
-            color: #2e7d32;
-        }
+        .clock-item select:hover { color: #2e7d32; }
         .clock-item .w-time {
             font-size: 14px;
             font-weight: bold;
@@ -137,7 +135,7 @@
             width: 100%;
         }
         .line-share-btn {
-            background-color: #06c755; /* LINE 官方綠 */
+            background-color: #06c755;
             color: white;
             border: none;
             border-radius: 8px;
@@ -158,14 +156,41 @@
             box-shadow: 0 4px 6px rgba(6,199,85,0.3);
         }
         
+        /* 表單切換頁籤樣式 */
+        .form-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: -1px;
+            z-index: 2;
+            position: relative;
+        }
+        .form-tab {
+            padding: 8px 16px;
+            background-color: #e8f5e9;
+            border: 1px solid #c5e1a5;
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            font-size: 12px;
+            font-weight: bold;
+            color: #558b2f;
+            cursor: pointer;
+        }
+        .form-tab.active {
+            background-color: #f1f8e9;
+            color: #2e7d32;
+            padding-bottom: 9px;
+            border-top: 3px solid #4caf50;
+        }
+
         .input-form {
             background: #f1f8e9;
             padding: 12px;
-            border-radius: 8px;
+            border-radius: 0 8px 8px 8px;
             margin-bottom: 15px;
             display: flex;
             flex-direction: column;
             gap: 10px;
+            border: 1px solid #c5e1a5;
         }
         
         .form-row-top {
@@ -197,7 +222,7 @@
             font-weight: bold;
         }
         
-        .input-form input {
+        .input-form input, .input-form select {
             padding: 6px 10px;
             border: 1px solid #c5e1a5;
             border-radius: 6px;
@@ -205,31 +230,9 @@
             box-sizing: border-box;
             height: 36px;
             width: 100%;
+            background-color: #fff;
         }
         
-        .time-container {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-        }
-        .time-box {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            width: 50px;
-        }
-        .time-box label {
-            font-size: 11px;
-            color: #558b2f;
-            font-weight: bold;
-            text-align: center;
-        }
-        .time-box input {
-            text-align: center;
-            padding: 6px 2px;
-            height: 36px;
-        }
-
         .submit-btn {
             background-color: #4caf50;
             color: white;
@@ -243,10 +246,31 @@
             min-width: 100px;
             margin-left: auto;
         }
-        .submit-btn:hover {
-            background-color: #43a047;
-        }
+        .submit-btn:hover { background-color: #43a047; }
         
+        /* 搜尋列樣式 */
+        .search-container {
+            margin: 10px 0;
+            width: 100%;
+        }
+        .search-input {
+            width: 100%;
+            height: 36px;
+            padding: 6px 12px;
+            border: 1px solid #c5e1a5;
+            border-radius: 8px;
+            font-size: 13px;
+            box-sizing: border-box;
+            background-color: #fafdfa;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-input:focus {
+            border-color: #4caf50;
+            box-shadow: 0 0 5px rgba(76,175,80,0.2);
+            background-color: #fff;
+        }
+
         .table-responsive {
             width: 100%;
             overflow-x: auto;
@@ -264,6 +288,7 @@
             padding: 8px 6px;
             border-bottom: 1px solid #e0e0e0;
             white-space: nowrap;
+            vertical-align: middle;
         }
         th {
             background-color: #f1f8e9;
@@ -280,34 +305,34 @@
             vertical-align: middle;
         }
 
-        .expired {
-            color: #d32f2f;
-            font-weight: bold;
+        /* 明信片小預覽圖樣式 */
+        .postcard-preview {
+            width: 45px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #dcdcdc;
+            cursor: pointer;
+            transition: transform 0.2s;
+            vertical-align: middle;
         }
-        .not-set {
-            color: #8e8e93;
-            font-style: italic;
-        }
+        .postcard-preview:hover { transform: scale(1.1); }
 
-        /* 時間到整列反灰的 CSS 樣式 */
+        .expired { color: #d32f2f; font-weight: bold; }
+        .not-set { color: #8e8e93; font-style: italic; }
+
+        /* 時間到整列反灰 */
         .row-expired {
             background-color: #f5f5f5;
             color: #a1a1a1 !important;
         }
-        .row-expired strong {
-            color: #a1a1a1 !important;
-        }
-        .row-expired .col-coords {
-            color: #a1a1a1 !important;
-        }
+        .row-expired strong { color: #a1a1a1 !important; }
+        .row-expired .col-coords { color: #a1a1a1 !important; }
         .row-expired .copy-btn { background-color: #b0bec5; }
         .row-expired .claim-btn { background-color: #b0bec5; }
         .row-expired .edit-time-btn { background-color: #b0bec5; }
 
-        .action-btns {
-            display: flex;
-            gap: 4px;
-        }
+        .action-btns { display: flex; gap: 4px; }
         .delete-btn, .claim-btn, .edit-time-btn {
             border: none;
             padding: 4px 8px;
@@ -319,10 +344,8 @@
         }
         .delete-btn { background-color: #e53935; }
         .delete-btn:hover { background-color: #c62828; }
-        
         .claim-btn { background-color: #0071e3; }
         .claim-btn:hover { background-color: #0077ed; }
-        
         .edit-time-btn { background-color: #ff9800; }
         .edit-time-btn:hover { background-color: #f57c00; }
         
@@ -348,6 +371,23 @@
             font-size: 12px;
         }
 
+        /* 大圖燈箱 (Lightbox) 樣式 */
+        .lightbox-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .lightbox-img {
+            max-width: 90%;
+            max-height: 85%;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -367,12 +407,8 @@
             flex-direction: column;
             gap: 12px;
         }
-        .modal-box h4 {
-            margin: 0;
-            color: #2e7d32;
-            font-size: 15px;
-        }
-        .modal-box input[type=\"text\"] {
+        .modal-box h4 { margin: 0; color: #2e7d32; font-size: 15px; }
+        .modal-box input[type="text"], .modal-box select {
             padding: 6px 10px;
             border: 1px solid #c5e1a5;
             border-radius: 6px;
@@ -380,20 +416,10 @@
             box-sizing: border-box;
             height: 36px;
             width: 100%;
+            background-color: #fff;
         }
-        .modal-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-        }
-        .modal-btn {
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 12px;
-        }
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 8px; }
+        .modal-btn { padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-size: 12px; }
         .modal-btn.confirm { background-color: #4caf50; color: white; }
         .modal-btn.cancel { background-color: #e0e0e0; color: #333; }
 
@@ -414,25 +440,16 @@
                 gap: 8px;
                 width: 100%;
             }
-            .clock-item {
-                min-width: unset;
-            }
+            .clock-item { min-width: unset; }
 
             .form-row-top {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
                 gap: 8px;
             }
-            .form-row-top .input-group:nth-child(3) {
-                grid-column: span 2;
-            }
-            .form-row-bottom {
-                justify-content: space-between;
-            }
-            .submit-btn {
-                width: 100%;
-                margin-top: 5px;
-            }
+            .form-row-top .input-group:nth-child(3) { grid-column: span 2; }
+            .form-row-bottom { justify-content: space-between; }
+            .submit-btn { width: 100%; margin-top: 5px; }
         }
     </style>
 </head>
@@ -441,10 +458,10 @@
 <div class="container">
     <div class="view-counter">
         <div id="view-counter-text">雲端總瀏覽次數：0 次</div>
-        <div class="version-tag">Ver: 20260525-1130</div>
+        <div class="version-tag">Ver: 20260527-1130</div>
     </div>
 
-    <h2>皮克敏-巨菇-倒數追蹤器</h2>
+    <h2>皮克敏-巨菇-雲端同步追蹤器</h2>
 
     <div class="timezone-widget">
         <div class="taipei-clock">
@@ -480,30 +497,60 @@
 
     <div class="share-section">
         <button class="line-share-btn" id="line-share-btn" onclick="shareToLineWindow()">
-            💚 一鍵分享菇資訊至 LINE 群組
+            💚 一鍵分享所有資訊至 LINE 群組
         </button>
     </div>
     
+    <div class="form-tabs">
+        <div class="form-tab active" id="tab-mushroom" onclick="switchFormMode('mushroom')">🍄 倒數巨菇登記</div>
+        <div class="form-tab" id="tab-postcard" onclick="switchFormMode('postcard')">🖼️ 美菇明信片收藏</div>
+    </div>
+
     <div class="input-form">
-        <div class="form-row-top">
+        <div class="form-row-top" id="fields-mushroom">
             <div class="input-group">
                 <label>使用者 (留空待認領)</label>
                 <input type="text" id="user" placeholder="名字或留空">
             </div>
-            
             <div class="input-group">
                 <label>名稱</label>
                 <input type="text" id="name" placeholder="例如：巨型火菇">
             </div>
-            
             <div class="input-group">
                 <label>座標</label>
                 <input type="text" id="coords" placeholder="貼上或輸入座標">
             </div>
         </div>
+
+        <div class="form-row-top" id="fields-postcard" style="display: none;">
+            <div class="input-group">
+                <label>種類</label>
+                <select id="post-type">
+                    <option value="菇" selected>菇</option>
+                    <option value="花">花</option>
+                    <option value="隱藏">隱藏</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>國家</label>
+                <input type="text" id="post-country" placeholder="例如：日本">
+            </div>
+            <div class="input-group">
+                <label>名稱</label>
+                <input type="text" id="post-name" placeholder="例如：櫻花美菇">
+            </div>
+            <div class="input-group">
+                <label>座標</label>
+                <input type="text" id="post-coords" placeholder="貼上點座標">
+            </div>
+            <div class="input-group">
+                <label>圖片網址</label>
+                <input type="text" id="post-image" placeholder="請貼上圖片連結或留空">
+            </div>
+        </div>
         
         <div class="form-row-bottom">
-            <div class="time-container">
+            <div class="time-container" id="fields-time">
                 <div class="time-box">
                     <label>天</label>
                     <input type="number" id="days" min="0" value="0">
@@ -518,7 +565,7 @@
                 </div>
             </div>
             
-            <button class="submit-btn" onclick="addItem()">新增資料</button>
+            <button class="submit-btn" id="submit-action-btn" onclick="addItem()">新增資料</button>
         </div>
     </div>
 
@@ -530,7 +577,8 @@
                     <th style="width: 40px;">編號</th>
                     <th>使用者</th>
                     <th>名稱</th>
-                    <th>剩餘時間</th> <th>座標</th>
+                    <th>剩餘時間</th>
+                    <th>座標</th>
                     <th>操作</th>
                 </tr>
             </thead>
@@ -547,7 +595,8 @@
                     <th style="width: 40px;">編號</th>
                     <th>使用者</th>
                     <th>名稱</th>
-                    <th>剩餘時間</th> <th>座標</th>
+                    <th>剩餘時間</th>
+                    <th>座標</th>
                     <th>操作</th>
                 </tr>
             </thead>
@@ -555,6 +604,30 @@
         </table>
     </div>
     <div id="unclaimed-empty" class="empty-message" style="display: none;">目前沒有待認領的項目</div>
+
+    <h3>美菇 - 明信片</h3>
+    
+    <div class="search-container">
+        <input type="text" id="postcard-search" class="search-input" oninput="updateTable()" placeholder="🔍 輸入關鍵字即時過濾（支援搜尋：種類、國家、名稱、座標）...">
+    </div>
+
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 40px;">編號</th>
+                    <th>種類</th>
+                    <th>國家</th>
+                    <th>名稱</th>
+                    <th>座標</th>
+                    <th style="width: 80px;">圖片</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="postcard-table-body"></tbody>
+        </table>
+    </div>
+    <div id="postcard-empty" class="empty-message" style="display: none;">目前沒有收藏的明信片項目</div>
 </div>
 
 <div id="claim-modal" class="modal-overlay" style="display: none;">
@@ -592,33 +665,62 @@
     <div class="modal-box">
         <h4 id="time-modal-title">修改資料</h4>
         
-        <div class="input-group" style="min-width: 100%;">
-            <label>修改名稱：</label>
-            <input type="text" id="edit-name" placeholder="請輸入新名稱">
-        </div>
-
-        <div class="input-group" style="min-width: 100%;">
-            <label>重新設定剩餘時間：</label>
-            <div class="time-container" style="justify-content: center; margin-top: 10px;">
-                <div class="time-box">
-                    <label>天</label>
-                    <input type="number" id="edit-days" min="0" value="0">
-                </div>
-                <div class="time-box">
-                    <label>時</label>
-                    <input type="number" id="edit-hours" min="0" max="23" value="0">
-                </div>
-                <div class="time-box">
-                    <label>分</label>
-                    <input type="number" id="edit-minutes" min="0" max="59" value="0">
+        <div id="edit-group-mushroom" style="display:none; flex-direction:column; gap:12px;">
+            <div class="input-group" style="min-width: 100%;">
+                <label>修改名稱：</label>
+                <input type="text" id="edit-name" placeholder="請輸入新名稱">
+            </div>
+            <div class="input-group" style="min-width: 100%;">
+                <label>重新設定剩餘時間：</label>
+                <div class="time-container" style="justify-content: center; margin-top: 10px;">
+                    <div class="time-box">
+                        <label>天</label>
+                        <input type="number" id="edit-days" min="0" value="0">
+                    </div>
+                    <div class="time-box">
+                        <label>時</label>
+                        <input type="number" id="edit-hours" min="0" max="23" value="0">
+                    </div>
+                    <div class="time-box">
+                        <label>分</label>
+                        <input type="number" id="edit-minutes" min="0" max="59" value="0">
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="modal-buttons">
+
+        <div id="edit-group-postcard" style="display:none; flex-direction:column; gap:12px;">
+            <div class="input-group" style="min-width: 100%;">
+                <label>修改種類：</label>
+                <select id="edit-post-type">
+                    <option value="菇">菇</option>
+                    <option value="花">花</option>
+                    <option value="隱藏">隱藏</option>
+                </select>
+            </div>
+            <div class="input-group" style="min-width: 100%;">
+                <label>修改國家：</label>
+                <input type="text" id="edit-post-country" placeholder="請輸入新國家">
+            </div>
+            <div class="input-group" style="min-width: 100%;">
+                <label>修改名稱：</label>
+                <input type="text" id="edit-post-name" placeholder="請輸入新名稱">
+            </div>
+            <div class="input-group" style="min-width: 100%;">
+                <label>修改圖片網址：</label>
+                <input type="text" id="edit-post-image" placeholder="請輸入新圖片網址">
+            </div>
+        </div>
+
+        <div class="modal-buttons" style="margin-top: 10px;">
             <button class="modal-btn cancel" onclick="closeTimeModal()">取消</button>
             <button class="modal-btn confirm" id="time-modal-submit-btn">儲存修改</button>
         </div>
     </div>
+</div>
+
+<div id="lightbox" class="lightbox-overlay" onclick="this.style.display='none'">
+    <img id="lightbox-img" class="lightbox-img" src="" alt="明信片大圖">
 </div>
 
 <script>
@@ -637,9 +739,13 @@
     const database = firebase.database();
 
     let dataList = [];
+    let postcardList = []; 
+    let currentMode = 'mushroom'; 
     let currentClaimingId = null;
     let currentEditingTimeId = null;
+    let currentEditingType = 'mushroom'; 
 
+    // 同步巨菇資料
     database.ref('mushrooms').on('value', (snapshot) => {
         const cloudData = snapshot.val();
         dataList = [];
@@ -658,6 +764,26 @@
         updateTable();
     });
 
+    // 即時同步明信片資料庫
+    database.ref('postcards').on('value', (snapshot) => {
+        const cloudData = snapshot.val();
+        postcardList = [];
+        if (cloudData) {
+            Object.keys(cloudData).forEach((key) => {
+                postcardList.push({
+                    id: key,
+                    type: cloudData[key].type,
+                    name: cloudData[key].name || "", 
+                    country: cloudData[key].country,
+                    coords: cloudData[key].coords,
+                    image: cloudData[key].image
+                });
+            });
+        }
+        updateTable();
+    });
+
+    // 瀏覽次數統計
     database.ref('views').transaction((currentViews) => {
         return (currentViews || 0) + 1;
     });
@@ -683,7 +809,6 @@
     function updateClocks() {
         const now = new Date();
         const utcMs = now.getTime() + (now.getTimezoneOffset() * 60000);
-        
         const offsetTaipei = 8;
         const offsetCustom1 = parseFloat(document.getElementById('tz-select-1').value) || 0;
         const offsetCustom2 = parseFloat(document.getElementById('tz-select-2').value) || 0;
@@ -705,20 +830,237 @@
         }
         return `${hh}:${mm}`;
     }
-    
     setInterval(updateClocks, 1000);
 
-    function shareToLineWindow() {
-        if (dataList.length === 0) {
-            alert('目前雲端沒有任何菇菇資訊可以分享喔！');
-            return;
-        }
+    function switchFormMode(mode) {
+        currentMode = mode;
+        document.getElementById('tab-mushroom').classList.toggle('active', mode === 'mushroom');
+        document.getElementById('tab-postcard').classList.toggle('active', mode === 'postcard');
+        
+        document.getElementById('fields-mushroom').style.display = mode === 'mushroom' ? 'flex' : 'none';
+        document.getElementById('fields-postcard').style.display = mode === 'postcard' ? 'flex' : 'none';
+        document.getElementById('fields-time').style.display = mode === 'mushroom' ? 'flex' : 'none';
+        
+        document.getElementById('submit-action-btn').innerText = mode === 'mushroom' ? '新增資料' : '收藏明信片';
+    }
 
+    function addItem() {
+        if (currentMode === 'mushroom') {
+            const userEl = document.getElementById('user');
+            const nameEl = document.getElementById('name');
+            const coordsEl = document.getElementById('coords');
+            
+            const dVal = document.getElementById('days').value;
+            const hVal = document.getElementById('hours').value;
+            const mVal = document.getElementById('minutes').value;
+
+            if (!nameEl || !nameEl.value.trim() || !coordsEl || !coordsEl.value.trim()) {
+                alert('請填寫名稱與座標欄位！');
+                return;
+            }
+
+            const days = parseInt(dVal, 10) || 0;
+            const hours = parseInt(hVal, 10) || 0;
+            const minutes = parseInt(mVal, 10) || 0;
+
+            let targetTime = null;
+            if (days > 0 || hours > 0 || minutes > 0) {
+                const totalMs = ((days * 24 * 60) + (hours * 60) + minutes) * 60 * 1000;
+                targetTime = Date.now() + totalMs;
+            }
+
+            const processedUser = userEl ? userEl.value.trim() : "";
+            let nextSn = 1;
+            if (dataList.length > 0) {
+                nextSn = Math.max(...dataList.map(item => item.sn || 0)) + 1;
+            }
+
+            database.ref('mushrooms').push({
+                sn: nextSn,
+                user: processedUser,
+                name: nameEl.value.trim(),
+                coords: coordsEl.value.trim(),
+                targetTime: targetTime
+            });
+            
+            if(userEl) userEl.value = '';
+            nameEl.value = '';
+            coordsEl.value = '';
+            document.getElementById('days').value = '0';
+            document.getElementById('hours').value = '0';
+            document.getElementById('minutes').value = '0';
+        } else {
+            const typeEl = document.getElementById('post-type');
+            const countryEl = document.getElementById('post-country');
+            const nameEl = document.getElementById('post-name');
+            const coordsEl = document.getElementById('post-coords');
+            const imageEl = document.getElementById('post-image');
+
+            if (!nameEl.value.trim() || !countryEl.value.trim() || !coordsEl.value.trim()) {
+                alert('請填寫名稱、國家與座標欄位！');
+                return;
+            }
+
+            database.ref('postcards').push({
+                type: typeEl.value,
+                country: countryEl.value.trim(),
+                name: nameEl.value.trim(),
+                coords: coordsEl.value.trim(),
+                image: imageEl.value.trim() || "無圖片"
+            });
+
+            countryEl.value = '';
+            nameEl.value = '';
+            coordsEl.value = '';
+            imageEl.value = '';
+        }
+    }
+
+    function deleteItem(id, mode = 'mushroom') {
+        if(confirm(`確定要刪除這筆${mode === 'mushroom' ? '巨菇' : '明信片'}資料嗎？`)) {
+            database.ref(mode === 'mushroom' ? 'mushrooms/' : 'postcards/' + id).remove();
+        }
+    }
+
+    function openClaimModal(id, currentName) {
+        currentClaimingId = id;
+        document.getElementById('modal-title').innerText = `認領巨菇 - ${currentName}`;
+        document.getElementById('modal-username').value = '';
+        document.getElementById('modal-days').value = '0';
+        document.getElementById('modal-hours').value = '0';
+        document.getElementById('modal-minutes').value = '0';
+        document.getElementById('modal-submit-btn').onclick = submitClaim;
+        document.getElementById('claim-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('claim-modal').style.display = 'none';
+        currentClaimingId = null;
+    }
+
+    function submitClaim() {
+        const usernameInput = document.getElementById('modal-username').value.trim();
+        if (!usernameInput) { alert('請輸入認領人的名字！'); return; }
+
+        const d = parseInt(document.getElementById('modal-days').value, 10) || 0;
+        const h = parseInt(document.getElementById('modal-hours').value, 10) || 0;
+        const m = parseInt(document.getElementById('modal-minutes').value, 10) || 0;
+
+        const updates = { user: usernameInput };
+        if (d > 0 || h > 0 || m > 0) {
+            const totalMs = ((d * 24 * 60) + (h * 60) + m) * 60 * 1000;
+            updates.targetTime = Date.now() + totalMs;
+        }
+        database.ref('mushrooms/' + currentClaimingId).update(updates);
+        closeModal();
+    }
+
+    function openTimeModal(id, p1, p2, mode = 'mushroom') {
+        currentEditingTimeId = id;
+        currentEditingType = mode;
+        
+        if (mode === 'mushroom') {
+            document.getElementById('edit-group-mushroom').style.display = 'flex';
+            document.getElementById('edit-group-postcard').style.display = 'none';
+            document.getElementById('edit-name').value = p1;
+            
+            let d = 0, h = 0, m = 0;
+            if (p2) {
+                const remainingMs = p2 - Date.now();
+                if (remainingMs > 0) {
+                    const totalSeconds = Math.floor(remainingMs / 1000);
+                    const totalMinutes = Math.floor(totalSeconds / 60);
+                    const totalHours = Math.floor(totalMinutes / 60);
+                    d = Math.floor(totalHours / 24);
+                    h = totalHours % 24;
+                    m = totalMinutes % 60;
+                }
+            }
+            document.getElementById('edit-days').value = d;
+            document.getElementById('edit-hours').value = h;
+            document.getElementById('edit-minutes').value = m;
+        } else {
+            document.getElementById('edit-group-mushroom').style.display = 'none';
+            document.getElementById('edit-group-postcard').style.display = 'flex';
+            
+            document.getElementById('edit-post-type').value = p1; 
+            document.getElementById('edit-post-country').value = p2;  
+            document.getElementById('edit-post-name').value = arguments[4] || ''; 
+            document.getElementById('edit-post-image').value = arguments[5] || ''; 
+        }
+        
+        document.getElementById('time-modal-submit-btn').onclick = submitDataEdit;
+        document.getElementById('time-modal').style.display = 'flex';
+    }
+
+    function closeTimeModal() {
+        document.getElementById('time-modal').style.display = 'none';
+        currentEditingTimeId = null;
+    }
+
+    function submitDataEdit() {
+        if (currentEditingType === 'mushroom') {
+            const newName = document.getElementById('edit-name').value.trim();
+            if (!newName) { alert('名稱不能為空！'); return; }
+
+            const d = parseInt(document.getElementById('edit-days').value, 10) || 0;
+            const h = parseInt(document.getElementById('edit-hours').value, 10) || 0;
+            const m = parseInt(document.getElementById('edit-minutes').value, 10) || 0;
+
+            let targetTime = null;
+            if (d > 0 || h > 0 || m > 0) {
+                const totalMs = ((d * 24 * 60) + (h * 60) + m) * 60 * 1000;
+                targetTime = Date.now() + totalMs;
+            }
+            database.ref('mushrooms/' + currentEditingTimeId).update({ name: newName, targetTime: targetTime });
+        } else {
+            const newType = document.getElementById('edit-post-type').value;
+            const newCountry = document.getElementById('edit-post-country').value.trim();
+            const newName = document.getElementById('edit-post-name').value.trim();
+            const newImage = document.getElementById('edit-post-image').value.trim();
+            if (!newName || !newCountry) { alert('名稱與國家不能為空！'); return; }
+
+            database.ref('postcards/' + currentEditingTimeId).update({
+                type: newType,
+                country: newCountry,
+                name: newName,
+                image: newImage || "無圖片"
+            });
+        }
+        closeTimeModal();
+    }
+
+    function copyCoords(text, buttonElement) {
+        navigator.clipboard.writeText(text).then(() => {
+            const originalText = buttonElement.innerText;
+            buttonElement.innerText = '已複製';
+            buttonElement.classList.add('copied');
+            buttonElement.disabled = true;
+            setTimeout(() => {
+                buttonElement.innerText = originalText;
+                buttonElement.classList.remove('copied');
+                buttonElement.disabled = false;
+            }, 1200);
+        }).catch(err => { alert('複製失敗，請手動複製。'); });
+    }
+
+    function openImageLightbox(src) {
+        if(src === '無圖片' || !src) return;
+        document.getElementById('lightbox-img').src = src;
+        document.getElementById('lightbox').style.display = 'flex';
+    }
+
+    function shareToLineWindow() {
         const now = Date.now();
         const utcMs = now + (new Date().getTimezoneOffset() * 60000);
         const taipeiTimeText = formatTimeStr(utcMs, 8, true);
 
-        const sortedList = [...dataList].sort((a, b) => {
+        if (dataList.length === 0 && postcardList.length === 0) {
+            alert('目前追蹤器中沒有任何資訊可以分享喔！');
+            return;
+        }
+
+        const sortedMushroomList = [...dataList].sort((a, b) => {
             if (a.targetTime === null && b.targetTime === null) return 0;
             if (a.targetTime === null) return 1;
             if (b.targetTime === null) return -1;
@@ -727,8 +1069,8 @@
 
         let textOutput = `🍄【皮克敏巨菇追蹤器】🍄\n🔗 網址：https://tdagold-leo.github.io/Pikmin\n⏰ 台北時間：${taipeiTimeText}\n\n`;
 
-        const actives = sortedList.filter(item => item.user !== "");
-        const unclaimed = sortedList.filter(item => item.user === "");
+        const actives = sortedMushroomList.filter(item => item.user !== "");
+        const unclaimed = sortedMushroomList.filter(item => item.user === "");
 
         if (actives.length > 0) {
             textOutput += `🟢【正常追蹤中】\n`;
@@ -748,16 +1090,29 @@
             });
         }
 
+        if (postcardList.length > 0) {
+            textOutput += `🖼️【美菇 - 明信片】\n`;
+            const sortedPostcards = [...postcardList].sort((a, b) => {
+                if (a.type !== b.type) return a.type.localeCompare(b.type, 'zh-TW');
+                return a.country.localeCompare(b.country, 'zh-TW');
+            });
+
+            let lineIndex = 1;
+            sortedPostcards.forEach((item) => {
+                textOutput += `${lineIndex++}. [${item.type}] (${item.country}) ${item.name}\n`;
+                textOutput += `🖼️ 圖片：${item.image}\n`;
+                textOutput += `${item.coords}\n\n`;
+            });
+        }
+
         navigator.clipboard.writeText(textOutput.trim()).catch(err => console.log('備用複製失敗:', err));
 
         const lineAppUrl = "line://msg/text/" + encodeURIComponent(textOutput.trim());
-        
         const btn = document.getElementById('line-share-btn');
         const originalText = btn.innerText;
         btn.innerText = '✅ 已成功複製並喚醒 LINE...';
         
         setTimeout(() => { btn.innerText = originalText; }, 2500);
-
         window.location.href = lineAppUrl;
     }
 
@@ -769,7 +1124,6 @@
         const totalSeconds = Math.floor(remainingMs / 1000);
         const totalMinutes = Math.floor(totalSeconds / 60);
         const totalHours = Math.floor(totalMinutes / 60);
-        
         const days = Math.floor(totalHours / 24);
         const hours = totalHours % 24;
         const mins = totalMinutes % 60;
@@ -780,184 +1134,16 @@
         return `${mins}分 ${secs}秒`;
     }
 
-    function addItem() {
-        const userEl = document.getElementById('user');
-        const nameEl = document.getElementById('name');
-        const coordsEl = document.getElementById('coords');
-        
-        const dVal = document.getElementById('days').value;
-        const hVal = document.getElementById('hours').value;
-        const mVal = document.getElementById('minutes').value;
-
-        const days = parseInt(dVal, 10) || 0;
-        const hours = parseInt(hVal, 10) || 0;
-        const minutes = parseInt(mVal, 10) || 0;
-
-        if (!nameEl || !nameEl.value.trim() || !coordsEl || !coordsEl.value.trim()) {
-            alert('請填寫名稱與座標欄位！');
-            return;
-        }
-
-        let targetTime = null;
-        if (days > 0 || hours > 0 || minutes > 0) {
-            const totalMs = ((days * 24 * 60) + (hours * 60) + minutes) * 60 * 1000;
-            targetTime = Date.now() + totalMs;
-        }
-
-        const processedUser = userEl ? userEl.value.trim() : "";
-
-        let nextSn = 1;
-        if (dataList.length > 0) {
-            nextSn = Math.max(...dataList.map(item => item.sn || 0)) + 1;
-        }
-
-        const newItem = {
-            sn: nextSn,
-            user: processedUser,
-            name: nameEl.value.trim(),
-            coords: coordsEl.value.trim(),
-            targetTime: targetTime
-        };
-
-        database.ref('mushrooms').push(newItem);
-        
-        if(userEl) userEl.value = '';
-        nameEl.value = '';
-        coordsEl.value = '';
-        document.getElementById('days').value = '0';
-        document.getElementById('hours').value = '0';
-        document.getElementById('minutes').value = '0';
-    }
-
-    function deleteItem(id) {
-        if(confirm('確定要刪除這筆巨菇資料嗎？')) {
-            database.ref('mushrooms/' + id).remove();
-        }
-    }
-
-    function openClaimModal(id, currentName) {
-        currentClaimingId = id;
-        document.getElementById('modal-title').innerText = `認領巨菇 - ${currentName}`;
-        document.getElementById('modal-username').value = '';
-        document.getElementById('modal-days').value = '0';
-        document.getElementById('modal-hours').value = '0';
-        document.getElementById('modal-minutes').value = '0';
-        
-        document.getElementById('modal-submit-btn').onclick = submitClaim;
-        document.getElementById('claim-modal').style.display = 'flex';
-    }
-
-    function closeModal() {
-        document.getElementById('claim-modal').style.display = 'none';
-        currentClaimingId = null;
-    }
-
-    function submitClaim() {
-        const usernameInput = document.getElementById('modal-username').value.trim();
-        if (!usernameInput) {
-            alert('請輸入認領人的名字！');
-            return;
-        }
-
-        const d = parseInt(document.getElementById('modal-days').value, 10) || 0;
-        const h = parseInt(document.getElementById('modal-hours').value, 10) || 0;
-        const m = parseInt(document.getElementById('modal-minutes').value, 10) || 0;
-
-        const updates = {
-            user: usernameInput
-        };
-        
-        if (d > 0 || h > 0 || m > 0) {
-            const totalMs = ((d * 24 * 60) + (h * 60) + m) * 60 * 1000;
-            updates.targetTime = Date.now() + totalMs;
-        }
-        
-        database.ref('mushrooms/' + currentClaimingId).update(updates);
-        closeModal();
-    }
-
-    function openTimeModal(id, currentName, currentTargetTime) {
-        currentEditingTimeId = id;
-        document.getElementById('time-modal-title').innerText = `修改資料`;
-        document.getElementById('edit-name').value = currentName;
-        
-        let d = 0, h = 0, m = 0;
-        if (currentTargetTime) {
-            const remainingMs = currentTargetTime - Date.now();
-            if (remainingMs > 0) {
-                const totalSeconds = Math.floor(remainingMs / 1000);
-                const totalMinutes = Math.floor(totalSeconds / 60);
-                const totalHours = Math.floor(totalMinutes / 60);
-                
-                d = Math.floor(totalHours / 24);
-                h = totalHours % 24;
-                m = totalMinutes % 60;
-            }
-        }
-        
-        document.getElementById('edit-days').value = d;
-        document.getElementById('edit-hours').value = h;
-        document.getElementById('edit-minutes').value = m;
-        
-        document.getElementById('time-modal-submit-btn').onclick = submitDataEdit;
-        document.getElementById('time-modal').style.display = 'flex';
-    }
-
-    function closeTimeModal() {
-        document.getElementById('time-modal').style.display = 'none';
-        currentEditingTimeId = null;
-    }
-
-    function submitDataEdit() {
-        const newName = document.getElementById('edit-name').value.trim();
-        if (!newName) {
-            alert('名稱不能為空！');
-            return;
-        }
-
-        const d = parseInt(document.getElementById('edit-days').value, 10) || 0;
-        const h = parseInt(document.getElementById('edit-hours').value, 10) || 0;
-        const m = parseInt(document.getElementById('edit-minutes').value, 10) || 0;
-
-        let targetTime = null;
-        if (d > 0 || h > 0 || m > 0) {
-            const totalMs = ((d * 24 * 60) + (h * 60) + m) * 60 * 1000;
-            targetTime = Date.now() + totalMs;
-        }
-
-        database.ref('mushrooms/' + currentEditingTimeId).update({
-            name: newName,
-            targetTime: targetTime
-        });
-        closeTimeModal();
-    }
-
-    function copyCoords(text, buttonElement) {
-        navigator.clipboard.writeText(text).then(() => {
-            const originalText = buttonElement.innerText;
-            buttonElement.innerText = '已複製';
-            buttonElement.classList.add('copied');
-            buttonElement.disabled = true;
-
-            setTimeout(() => {
-                buttonElement.innerText = originalText;
-                buttonElement.classList.remove('copied');
-                buttonElement.disabled = false;
-            }, 1200);
-        }).catch(err => {
-            console.error('無法複製座標: ', err);
-            alert('複製失敗，請手動複製。');
-        });
-    }
-
     function updateTable() {
         const activeTbody = document.getElementById('active-table-body');
         const unclaimedTbody = document.getElementById('unclaimed-table-body');
-        if (!activeTbody || !unclaimedTbody) return;
+        const postcardTbody = document.getElementById('postcard-table-body');
+        if (!activeTbody || !unclaimedTbody || !postcardTbody) return;
 
         const now = Date.now();
 
-        const sortedList = [...dataList].sort((a, b) => {
+        // 1. 渲染巨菇追蹤表格
+        const sortedMushroomList = [...dataList].sort((a, b) => {
             if (a.targetTime === null && b.targetTime === null) return 0;
             if (a.targetTime === null) return 1;
             if (b.targetTime === null) return -1;
@@ -966,11 +1152,10 @@
 
         activeTbody.innerHTML = '';
         unclaimedTbody.innerHTML = '';
-
         let activeCount = 0;
         let unclaimedCount = 0;
 
-        sortedList.forEach((item) => {
+        sortedMushroomList.forEach((item) => {
             const tr = document.createElement('tr');
             let timeText = '';
             let isExpired = false;
@@ -986,32 +1171,22 @@
                     const totalSeconds = Math.floor(remainingMs / 1000);
                     const totalMinutes = Math.floor(totalSeconds / 60);
                     const totalHours = Math.floor(totalMinutes / 60);
-                    
                     const days = Math.floor(totalHours / 24);
                     const hours = totalHours % 24;
                     const mins = totalMinutes % 60;
                     const secs = totalSeconds % 60;
-
-                    if (days > 0) {
-                        timeText = `${days}天 ${hours}時 ${mins}分`;
-                    } else if (hours > 0) {
-                        timeText = `${hours}時 ${mins}分 ${secs}秒`;
-                    } else {
-                        timeText = `${mins}分 ${secs}秒`;
-                    }
+                    if (days > 0) { timeText = `${days}天 ${hours}時 ${mins}分`; }
+                    else if (hours > 0) { timeText = `${hours}時 ${mins}分 ${secs}秒`; }
+                    else { timeText = `${mins}分 ${secs}秒`; }
                 }
             }
 
-            if (isExpired) {
-                tr.classList.add('row-expired');
-            }
+            if (isExpired) tr.classList.add('row-expired');
 
-            const rawCoords = item.coords;
-            const safeCoords = escapeHtml(rawCoords);
+            const safeCoords = escapeHtml(item.coords);
             const safeName = escapeHtml(item.name);
             const itemTargetTime = item.targetTime || 'null';
 
-            // 【核心修正】將 <td> 的變數順序與標頭完全對齊：剩餘時間 (${timeText}) ➔ 座標 (${safeCoords})
             if (item.user === "") {
                 unclaimedCount++;
                 tr.innerHTML = `
@@ -1026,8 +1201,8 @@
                     <td>
                         <div class="action-btns">
                             <button class="claim-btn" onclick="openClaimModal('${item.id}', '${safeName.replace(/'/g, "\\'")}')">認領</button>
-                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime})">修改</button>
-                            <button class="delete-btn" onclick="deleteItem('${item.id}')">刪除</button>
+                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime}, 'mushroom')">修改</button>
+                            <button class="delete-btn" onclick="deleteItem('${item.id}', 'mushroom')">刪除</button>
                         </div>
                     </td>
                 `;
@@ -1045,8 +1220,8 @@
                     </td>
                     <td>
                         <div class="action-btns">
-                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime})">修改</button>
-                            <button class="delete-btn" onclick="deleteItem('${item.id}')">刪除</button>
+                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime}, 'mushroom')">修改</button>
+                            <button class="delete-btn" onclick="deleteItem('${item.id}', 'mushroom')">刪除</button>
                         </div>
                     </td>
                 `;
@@ -1056,13 +1231,80 @@
 
         document.getElementById('active-empty').style.display = activeCount === 0 ? 'block' : 'none';
         document.getElementById('unclaimed-empty').style.display = unclaimedCount === 0 ? 'block' : 'none';
+
+        // 2. 渲染美菇明信片部分
+        postcardTbody.innerHTML = '';
+        let postcardCount = postcardList.length;
+
+        const searchKeyword = document.getElementById('postcard-search') ? document.getElementById('postcard-search').value.trim().toLowerCase() : '';
+
+        const sortedPostcardList = [...postcardList].sort((a, b) => {
+            if (a.type !== b.type) {
+                return a.type.localeCompare(b.type, 'zh-TW');
+            }
+            return a.country.localeCompare(b.country, 'zh-TW');
+        });
+
+        let renderIndex = 1; 
+        let visibleCount = 0; 
+
+        sortedPostcardList.forEach((item) => {
+            const safeType = escapeHtml(item.type);
+            const safeCountry = escapeHtml(item.country);
+            const safeName = escapeHtml(item.name);
+            const safeCoords = escapeHtml(item.coords);
+            const safeImage = escapeHtml(item.image);
+
+            const isMatch = searchKeyword === '' || 
+                            safeType.toLowerCase().includes(searchKeyword) ||
+                            safeCountry.toLowerCase().includes(searchKeyword) ||
+                            safeName.toLowerCase().includes(searchKeyword) ||
+                            safeCoords.toLowerCase().includes(searchKeyword);
+
+            if (isMatch) {
+                visibleCount++;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${renderIndex++}</td>
+                    <td><span class="not-set">[${safeType}]</span></td>
+                    <td>${safeCountry}</td>
+                    <td><strong>${safeName}</strong></td>
+                    <td>
+                        <span class="col-coords">${safeCoords}</span>
+                        <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
+                    </td>
+                    <td>
+                        ${safeImage !== "無圖片" && safeImage !== "" ? 
+                            `<img src="${safeImage}" class="postcard-preview" onclick="openImageLightbox('${safeImage}')" title="點擊放大查看">` : 
+                            `<span class="not-set">無圖片</span>`
+                        }
+                    </td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeType.replace(/'/g, "\\'")}', '${safeCountry.replace(/'/g, "\\'")}', 'postcard', '${safeName.replace(/'/g, "\\'")}', '${safeImage.replace(/'/g, "\\'")}')">修改</button>
+                            <button class="delete-btn" onclick="deleteItem('${item.id}', 'postcard')">刪除</button>
+                        </div>
+                    </td>
+                `;
+                // 【已修正】移除了錯誤的原生覆蓋，改為正確的附加子節點
+                postcardTbody.appendChild(tr);
+            }
+        });
+
+        if (postcardList.length === 0) {
+            document.getElementById('postcard-empty').innerText = "目前沒有收藏的明信片項目";
+            document.getElementById('postcard-empty').style.display = 'block';
+        } else if (visibleCount === 0 && searchKeyword !== '') {
+            document.getElementById('postcard-empty').innerText = "❌ 找不到符合搜尋條件的明信片項目";
+            document.getElementById('postcard-empty').style.display = 'block';
+        } else {
+            document.getElementById('postcard-empty').style.display = 'none';
+        }
     }
 
     function escapeHtml(str) {
         return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
-
-    setInterval(updateTable, 1000);
 </script>
 
 </body>
