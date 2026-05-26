@@ -14,7 +14,7 @@
             background-color: #f4f9f4;
             color: #333;
             margin: 0;
-            padding: 10px;
+            padding: 10px; /* 手機版邊距稍微縮小 */
         }
         .container {
             max-width: 1000px;
@@ -54,7 +54,7 @@
         }
         h2 {
             font-size: 20px;
-            padding-right: 140px;
+            padding-right: 140px; /* 避免標題撞到瀏覽次數 */
             margin-bottom: 15px;
         }
         h3 {
@@ -120,7 +120,9 @@
             outline: none;
             width: 100%;
         }
-        .clock-item select:hover { color: #2e7d32; }
+        .clock-item select:hover {
+            color: #2e7d32;
+        }
         .clock-item .w-time {
             font-size: 14px;
             font-weight: bold;
@@ -135,7 +137,7 @@
             width: 100%;
         }
         .line-share-btn {
-            background-color: #06c755;
+            background-color: #06c755; /* LINE 官方綠 */
             color: white;
             border: none;
             border-radius: 8px;
@@ -232,22 +234,7 @@
             width: 100%;
             background-color: #fff;
         }
-        
-        .submit-btn {
-            background-color: #4caf50;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 13px;
-            height: 36px;
-            padding: 0 16px;
-            min-width: 100px;
-            margin-left: auto;
-        }
-        .submit-btn:hover { background-color: #43a047; }
-        
+
         /* 搜尋列樣式 */
         .search-container {
             margin: 10px 0;
@@ -270,7 +257,7 @@
             box-shadow: 0 0 5px rgba(76,175,80,0.2);
             background-color: #fff;
         }
-
+        
         .table-responsive {
             width: 100%;
             overflow-x: auto;
@@ -458,7 +445,7 @@
 <div class="container">
     <div class="view-counter">
         <div id="view-counter-text">雲端總瀏覽次數：0 次</div>
-        <div class="version-tag">Ver: 20260527-1130</div>
+        <div class="version-tag">Ver: 20260527-1145</div>
     </div>
 
     <h2>皮克敏-巨菇-雲端同步追蹤器</h2>
@@ -497,7 +484,7 @@
 
     <div class="share-section">
         <button class="line-share-btn" id="line-share-btn" onclick="shareToLineWindow()">
-            💚 一鍵分享所有資訊至 LINE 群組
+            💚 一鍵分享巨菇倒數資訊至 LINE 群組
         </button>
     </div>
     
@@ -1050,15 +1037,16 @@
         document.getElementById('lightbox').style.display = 'flex';
     }
 
+    // 【修改核心邏輯】一鍵分享排除明信片收藏分區，只專注打包分享巨菇資訊
     function shareToLineWindow() {
+        if (dataList.length === 0) {
+            alert('目前雲端沒有任何倒數巨菇資訊可以分享喔！');
+            return;
+        }
+
         const now = Date.now();
         const utcMs = now + (new Date().getTimezoneOffset() * 60000);
         const taipeiTimeText = formatTimeStr(utcMs, 8, true);
-
-        if (dataList.length === 0 && postcardList.length === 0) {
-            alert('目前追蹤器中沒有任何資訊可以分享喔！');
-            return;
-        }
 
         const sortedMushroomList = [...dataList].sort((a, b) => {
             if (a.targetTime === null && b.targetTime === null) return 0;
@@ -1067,6 +1055,7 @@
             return a.targetTime - b.targetTime;
         });
 
+        // 打包字串置頂網址連結與台北時間
         let textOutput = `🍄【皮克敏巨菇追蹤器】🍄\n🔗 網址：https://tdagold-leo.github.io/Pikmin\n⏰ 台北時間：${taipeiTimeText}\n\n`;
 
         const actives = sortedMushroomList.filter(item => item.user !== "");
@@ -1090,20 +1079,7 @@
             });
         }
 
-        if (postcardList.length > 0) {
-            textOutput += `🖼️【美菇 - 明信片】\n`;
-            const sortedPostcards = [...postcardList].sort((a, b) => {
-                if (a.type !== b.type) return a.type.localeCompare(b.type, 'zh-TW');
-                return a.country.localeCompare(b.country, 'zh-TW');
-            });
-
-            let lineIndex = 1;
-            sortedPostcards.forEach((item) => {
-                textOutput += `${lineIndex++}. [${item.type}] (${item.country}) ${item.name}\n`;
-                textOutput += `🖼️ 圖片：${item.image}\n`;
-                textOutput += `${item.coords}\n\n`;
-            });
-        }
+        // 徹底移除原有的 postcardList 明信片打包區塊
 
         navigator.clipboard.writeText(textOutput.trim()).catch(err => console.log('備用複製失敗:', err));
 
@@ -1286,7 +1262,6 @@
                         </div>
                     </td>
                 `;
-                // 【已修正】移除了錯誤的原生覆蓋，改為正確的附加子節點
                 postcardTbody.appendChild(tr);
             }
         });
