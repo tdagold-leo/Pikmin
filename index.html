@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>皮克敏-巨菇-雲端同步追蹤器</title>
     
-    <!-- 核心相容性 SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
@@ -236,6 +235,43 @@
             background-color: #fff;
         }
 
+        /* 倒數時間選擇器的樣式 */
+        .time-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .time-box {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            width: 60px;
+        }
+        .time-box label {
+            font-size: 11px;
+            color: #558b2f;
+            text-align: center;
+            font-weight: bold;
+        }
+        .time-box input {
+            text-align: center;
+        }
+        .submit-btn {
+            height: 36px;
+            padding: 0 20px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .submit-btn:hover {
+            background-color: #43a047;
+        }
+
         /* 搜尋列與推薦連結樣式 */
         .search-container {
             margin: 10px 0;
@@ -311,6 +347,23 @@
             vertical-align: middle;
         }
 
+        /* 標籤小貼紙樣式 */
+        .tag-badge {
+            background-color: #e1f5fe;
+            color: #0288d1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            border: 1px solid #b3e5fc;
+            display: inline-block;
+            max-width: 90px;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+
         /* 明信片小預覽圖樣式 (4:3) */
         .postcard-preview {
             width: 60px; /* 4:3比例，高45px寬60px */
@@ -342,6 +395,7 @@
         }
         .row-expired strong { color: #a1a1a1 !important; }
         .row-expired .col-coords { color: #a1a1a1 !important; }
+        .row-expired .tag-badge { background-color: #cfd8dc; color: #607d8b; border-color: #b0bec5; }
         .row-expired .copy-btn { background-color: #b0bec5; }
         .row-expired .claim-btn { background-color: #b0bec5; }
         .row-expired .edit-time-btn { background-color: #b0bec5; }
@@ -480,6 +534,7 @@
                 gap: 8px;
             }
             .form-row-top .input-group:nth-child(3) { grid-column: span 2; }
+            .form-row-top .input-group:nth-child(4) { grid-column: span 2; }
             .form-row-bottom { justify-content: space-between; }
             .submit-btn { width: 100%; margin-top: 5px; }
         }
@@ -490,19 +545,17 @@
 <div class="container">
     <div class="view-counter">
         <div id="view-counter-text">雲端總瀏覽次數：0 次</div>
-        <div class="version-tag">Ver: 20260527-1830</div>
+        <div class="version-tag">Ver: 20260527-2130</div>
     </div>
 
     <h2>皮克敏-巨菇-雲端同步追蹤器</h2>
 
-    <!-- 時區對比小工具區塊 -->
     <div class="timezone-widget">
         <div class="taipei-clock">
             <span class="label">台北標準時間 (🇹🇼 Taipei)</span>
             <span class="time" id="clock-taipei">00:00:00</span>
         </div>
         <div class="world-clocks">
-            <!-- 欄位 1：亞洲時區群組 -->
             <div class="clock-item">
                 <select id="tz-select-1" onchange="saveTimezonePref()">
                     <option value="9" selected>日本/韓國 🇯🇵🇰🇷 (UTC+9)</option>
@@ -511,7 +564,6 @@
                 </select>
                 <div class="w-time" id="clock-custom-1">00:00</div>
             </div>
-            <!-- 欄位 2：美洲時區群組 -->
             <div class="clock-item">
                 <select id="tz-select-2" onchange="saveTimezonePref()">
                     <option value="-5" selected>美國美東 🇺🇸 (UTC-5)</option>
@@ -519,7 +571,6 @@
                 </select>
                 <div class="w-time" id="clock-custom-2">00:00</div>
             </div>
-            <!-- 欄位 3：歐洲與大洋洲時區群組 -->
             <div class="clock-item">
                 <select id="tz-select-3" onchange="saveTimezonePref()">
                     <option value="10" selected>澳洲雪梨 🇦🇺 (UTC+10)</option>
@@ -531,22 +582,18 @@
         </div>
     </div>
 
-    <!-- LINE分享功能按鈕 -->
     <div class="share-section">
         <button class="line-share-btn" id="line-share-btn" onclick="shareToLineWindow()">
             💚 一鍵分享巨菇倒數資訊至 LINE 群組
         </button>
     </div>
     
-    <!-- 表單切換頁籤 -->
     <div class="form-tabs">
         <div class="form-tab active" id="tab-mushroom" onclick="switchFormMode('mushroom')">🍄 倒數巨菇登記</div>
         <div class="form-tab" id="tab-postcard" onclick="switchFormMode('postcard')">🖼️ 美菇明信片收藏</div>
     </div>
 
-    <!-- 主輸入表單區域 -->
     <div class="input-form">
-        <!-- 模式 1：倒數巨菇欄位群組 -->
         <div class="form-row-top" id="fields-mushroom">
             <div class="input-group">
                 <label>使用者 (留空待認領)</label>
@@ -560,9 +607,12 @@
                 <label>座標</label>
                 <input type="text" id="coords" placeholder="貼上或輸入座標">
             </div>
+            <div class="input-group">
+                <label>標籤</label>
+                <input type="text" id="tag" placeholder="例如：大安區、五星">
+            </div>
         </div>
 
-        <!-- 模式 2：美菇明信片欄位群組 -->
         <div class="form-row-top" id="fields-postcard" style="display: none;">
             <div class="input-group">
                 <label>種類</label>
@@ -583,6 +633,10 @@
             <div class="input-group">
                 <label>座標</label>
                 <input type="text" id="post-coords" placeholder="貼上點座標">
+            </div>
+            <div class="input-group">
+                <label>標籤</label>
+                <input type="text" id="post-tag" placeholder="例如：2026櫻花季、稀有">
             </div>
             <div class="input-group">
                 <label>圖片網址</label>
@@ -610,7 +664,6 @@
         </div>
     </div>
 
-    <!-- 分區 1：正常追蹤中 -->
     <h3>正常追蹤中</h3>
     <div class="table-responsive">
         <table>
@@ -619,6 +672,7 @@
                     <th style="width: 40px;">編號</th>
                     <th>使用者</th>
                     <th>名稱</th>
+                    <th>標籤</th>
                     <th>剩餘時間</th>
                     <th>座標</th>
                     <th>操作</th>
@@ -629,7 +683,6 @@
     </div>
     <div id="active-empty" class="empty-message" style="display: none;">目前沒有正在追蹤的項目</div>
 
-    <!-- 分區 2：待認領巨菇 -->
     <h3>待認領巨菇</h3>
     <div class="table-responsive">
         <table>
@@ -638,6 +691,7 @@
                     <th style="width: 40px;">編號</th>
                     <th>使用者</th>
                     <th>名稱</th>
+                    <th>標籤</th>
                     <th>剩餘時間</th>
                     <th>座標</th>
                     <th>操作</th>
@@ -648,15 +702,13 @@
     </div>
     <div id="unclaimed-empty" class="empty-message" style="display: none;">目前沒有待認領的項目</div>
 
-    <!-- 分區 3：美菇 - 明信片 -->
     <h3>美菇 - 明信片</h3>
     
-    <!-- 即時關鍵字搜尋與上傳連結輸入框 -->
     <div class="search-container">
         <div class="upload-link-hint">
             🔗 推薦免費圖床：<a href="https://meee.com.tw/" target="_blank">點此前往 Meee 圖片上傳</a> (上傳後複製圖片網址貼入上方表單)
         </div>
-        <input type="text" id="postcard-search" class="search-input" oninput="updateTable()" placeholder="🔍 輸入關鍵字即時過濾（支援搜尋：種類、國家、名稱、座標）...">
+        <input type="text" id="postcard-search" class="search-input" oninput="updateTable()" placeholder="🔍 輸入關鍵字即時過濾（支援搜尋：種類、國家、名稱、座標、標籤）...">
     </div>
 
     <div class="table-responsive">
@@ -668,6 +720,7 @@
                     <th>國家</th>
                     <th style="width: 80px;">圖片</th>
                     <th>名稱</th>
+                    <th>標籤</th>
                     <th>座標</th>
                     <th>操作</th>
                 </tr>
@@ -678,7 +731,6 @@
     <div id="postcard-empty" class="empty-message" style="display: none;">目前沒有收藏的明信片項目</div>
 </div>
 
-<!-- 認領彈出視窗 -->
 <div id="claim-modal" class="modal-overlay" style="display: none;">
     <div class="modal-box">
         <h4 id="modal-title">認領巨菇</h4>
@@ -710,7 +762,6 @@
     </div>
 </div>
 
-<!-- 修改彈出視窗 -->
 <div id="time-modal" class="modal-overlay" style="display: none;">
     <div class="modal-box">
         <h4 id="time-modal-title">修改資料</h4>
@@ -719,6 +770,10 @@
             <div class="input-group" style="min-width: 100%;">
                 <label>修改名稱：</label>
                 <input type="text" id="edit-name" placeholder="請輸入新名稱">
+            </div>
+            <div class="input-group" style="min-width: 100%;">
+                <label>修改標籤：</label>
+                <input type="text" id="edit-tag" placeholder="請輸入新標籤">
             </div>
             <div class="input-group" style="min-width: 100%;">
                 <label>重新設定剩餘時間：</label>
@@ -757,6 +812,14 @@
                 <input type="text" id="edit-post-name" placeholder="請輸入新名稱">
             </div>
             <div class="input-group" style="min-width: 100%;">
+                <label>修改標籤：</label>
+                <input type="text" id="edit-post-tag" placeholder="請輸入新標籤">
+            </div>
+            <div class="input-group" style="min-width: 100%;">
+                <label>修改座標：</label>
+                <input type="text" id="edit-post-coords" placeholder="請輸入新座標">
+            </div>
+            <div class="input-group" style="min-width: 100%;">
                 <label>修改圖片網址：</label>
                 <input type="text" id="edit-post-image" placeholder="請輸入新圖片網址">
             </div>
@@ -769,7 +832,6 @@
     </div>
 </div>
 
-<!-- 圖片燈箱元件 -->
 <div id="lightbox" class="lightbox-overlay" onclick="this.style.display='none'">
     <img id="lightbox-img" class="lightbox-img" src="" alt="明信片大圖">
 </div>
@@ -808,6 +870,7 @@
                     user: cloudData[key].user,
                     name: cloudData[key].name,
                     coords: cloudData[key].coords,
+                    tag: cloudData[key].tag || "",
                     targetTime: cloudData[key].targetTime
                 });
             });
@@ -827,6 +890,7 @@
                     name: cloudData[key].name || "", 
                     country: cloudData[key].country,
                     coords: cloudData[key].coords,
+                    tag: cloudData[key].tag || "",
                     image: cloudData[key].image
                 });
             });
@@ -900,6 +964,7 @@
             const userEl = document.getElementById('user');
             const nameEl = document.getElementById('name');
             const coordsEl = document.getElementById('coords');
+            const tagEl = document.getElementById('tag');
             
             const dVal = document.getElementById('days').value;
             const hVal = document.getElementById('hours').value;
@@ -931,12 +996,14 @@
                 user: processedUser,
                 name: nameEl.value.trim(),
                 coords: coordsEl.value.trim(),
+                tag: tagEl ? tagEl.value.trim() : "",
                 targetTime: targetTime
             });
             
             if(userEl) userEl.value = '';
             nameEl.value = '';
             coordsEl.value = '';
+            if(tagEl) tagEl.value = '';
             document.getElementById('days').value = '0';
             document.getElementById('hours').value = '0';
             document.getElementById('minutes').value = '0';
@@ -945,6 +1012,7 @@
             const countryEl = document.getElementById('post-country');
             const nameEl = document.getElementById('post-name');
             const coordsEl = document.getElementById('post-coords');
+            const tagEl = document.getElementById('post-tag');
             const imageEl = document.getElementById('post-image');
 
             if (!nameEl.value.trim() || !countryEl.value.trim() || !coordsEl.value.trim()) {
@@ -957,19 +1025,21 @@
                 country: countryEl.value.trim(),
                 name: nameEl.value.trim(),
                 coords: coordsEl.value.trim(),
+                tag: tagEl ? tagEl.value.trim() : "",
                 image: imageEl.value.trim() || "無圖片"
             });
 
             countryEl.value = '';
             nameEl.value = '';
             coordsEl.value = '';
+            if(tagEl) tagEl.value = '';
             imageEl.value = '';
         }
     }
 
     function deleteItem(id, mode = 'mushroom') {
         if(confirm(`確定要刪除這筆${mode === 'mushroom' ? '巨菇' : '明信片'}資料嗎？`)) {
-            database.ref(mode === 'mushroom' ? 'mushrooms/' : 'postcards/' + id).remove();
+            database.ref(mode === 'mushroom' ? 'mushrooms/' + id : 'postcards/' + id).remove();
         }
     }
 
@@ -1014,6 +1084,7 @@
             document.getElementById('edit-group-mushroom').style.display = 'flex';
             document.getElementById('edit-group-postcard').style.display = 'none';
             document.getElementById('edit-name').value = p1;
+            document.getElementById('edit-tag').value = arguments[4] || '';
             
             let d = 0, h = 0, m = 0;
             if (p2) {
@@ -1037,7 +1108,9 @@
             document.getElementById('edit-post-type').value = p1; 
             document.getElementById('edit-post-country').value = p2;  
             document.getElementById('edit-post-name').value = arguments[4] || ''; 
-            document.getElementById('edit-post-image').value = arguments[5] || ''; 
+            document.getElementById('edit-post-tag').value = arguments[5] || '';
+            document.getElementById('edit-post-coords').value = arguments[6] || ''; 
+            document.getElementById('edit-post-image').value = arguments[7] || ''; 
         }
         
         document.getElementById('time-modal-submit-btn').onclick = submitDataEdit;
@@ -1052,6 +1125,7 @@
     function submitDataEdit() {
         if (currentEditingType === 'mushroom') {
             const newName = document.getElementById('edit-name').value.trim();
+            const newTag = document.getElementById('edit-tag').value.trim();
             if (!newName) { alert('名稱不能為空！'); return; }
 
             const d = parseInt(document.getElementById('edit-days').value, 10) || 0;
@@ -1063,18 +1137,22 @@
                 const totalMs = ((d * 24 * 60) + (h * 60) + m) * 60 * 1000;
                 targetTime = Date.now() + totalMs;
             }
-            database.ref('mushrooms/' + currentEditingTimeId).update({ name: newName, targetTime: targetTime });
+            database.ref('mushrooms/' + currentEditingTimeId).update({ name: newName, tag: newTag, targetTime: targetTime });
         } else {
             const newType = document.getElementById('edit-post-type').value;
             const newCountry = document.getElementById('edit-post-country').value.trim();
             const newName = document.getElementById('edit-post-name').value.trim();
+            const newTag = document.getElementById('edit-post-tag').value.trim();
+            const newCoords = document.getElementById('edit-post-coords').value.trim();
             const newImage = document.getElementById('edit-post-image').value.trim();
-            if (!newName || !newCountry) { alert('名稱與國家不能為空！'); return; }
+            if (!newName || !newCountry || !newCoords) { alert('種類、國家、名稱與座標不能為空！'); return; }
 
             database.ref('postcards/' + currentEditingTimeId).update({
                 type: newType,
                 country: newCountry,
                 name: newName,
+                tag: newTag,
+                coords: newCoords,
                 image: newImage || "無圖片"
             });
         }
@@ -1126,7 +1204,9 @@
         if (actives.length > 0) {
             textOutput += `🟢【正常追蹤中】\n`;
             actives.forEach((item) => {
-                textOutput += `${item.sn}. [${item.user}] ${item.name}\n`;
+                // LINE 分享加入標籤資訊
+                const tagInfo = item.tag ? ` #${item.tag}` : "";
+                textOutput += `${item.sn}. [${item.user}] ${item.name}${tagInfo}\n`;
                 textOutput += `⏳ 剩餘：${getRemainingText(item.targetTime, now)}\n`;
                 textOutput += `${item.coords}\n\n`;
             });
@@ -1135,7 +1215,9 @@
         if (unclaimed.length > 0) {
             textOutput += `🟡【待認領巨菇】\n`;
             unclaimed.forEach((item) => {
-                textOutput += `${item.sn}. [待認領] ${item.name}\n`;
+                // LINE 分享加入標籤資訊
+                const tagInfo = item.tag ? ` #${item.tag}` : "";
+                textOutput += `${item.sn}. [待認領] ${item.name}${tagInfo}\n`;
                 textOutput += `⏳ 剩餘：${getRemainingText(item.targetTime, now)}\n`;
                 textOutput += `${item.coords}\n\n`;
             });
@@ -1221,7 +1303,10 @@
 
             const safeCoords = escapeHtml(item.coords);
             const safeName = escapeHtml(item.name);
+            const safeTag = escapeHtml(item.tag);
             const itemTargetTime = item.targetTime || 'null';
+
+            const tagHtml = safeTag ? `<span class="tag-badge">${safeTag}</span>` : `<span class="not-set">-</span>`;
 
             if (item.user === "") {
                 unclaimedCount++;
@@ -1229,6 +1314,7 @@
                     <td>${item.sn}</td>
                     <td><span style="color:#8e8e93; font-style:italic;">無</span></td>
                     <td>${safeName}</td>
+                    <td>${tagHtml}</td>
                     <td>${timeText}</td>
                     <td>
                         <span class="col-coords">${safeCoords}</span>
@@ -1237,7 +1323,7 @@
                     <td>
                         <div class="action-btns">
                             <button class="claim-btn" onclick="openClaimModal('${item.id}', '${safeName.replace(/'/g, "\\'")}')">認領</button>
-                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime}, 'mushroom')">修改</button>
+                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime}, 'mushroom', '${safeTag.replace(/'/g, "\\'")}')">修改</button>
                             <button class="delete-btn" onclick="deleteItem('${item.id}', 'mushroom')">刪除</button>
                         </div>
                     </td>
@@ -1249,6 +1335,7 @@
                     <td>${item.sn}</td>
                     <td><strong>${escapeHtml(item.user)}</strong></td>
                     <td>${safeName}</td>
+                    <td>${tagHtml}</td>
                     <td>${timeText}</td>
                     <td>
                         <span class="col-coords">${safeCoords}</span>
@@ -1256,7 +1343,7 @@
                     </td>
                     <td>
                         <div class="action-btns">
-                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime}, 'mushroom')">修改</button>
+                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime}, 'mushroom', '${safeTag.replace(/'/g, "\\'")}')">修改</button>
                             <button class="delete-btn" onclick="deleteItem('${item.id}', 'mushroom')">刪除</button>
                         </div>
                     </td>
@@ -1289,19 +1376,22 @@
             const safeCountry = escapeHtml(item.country);
             const safeName = escapeHtml(item.name);
             const safeCoords = escapeHtml(item.coords);
+            const safeTag = escapeHtml(item.tag);
             const safeImage = escapeHtml(item.image);
 
-            // 搜尋條件比對
+            // 搜尋條件比對（加入標籤比對連動）
             const isMatch = searchKeyword === '' || 
                             safeType.toLowerCase().includes(searchKeyword) ||
                             safeCountry.toLowerCase().includes(searchKeyword) ||
                             safeName.toLowerCase().includes(searchKeyword) ||
+                            safeTag.toLowerCase().includes(searchKeyword) ||
                             safeCoords.toLowerCase().includes(searchKeyword);
 
             if (isMatch) {
                 visibleCount++;
                 const tr = document.createElement('tr');
-                // 【修改點】調整 <td> 順序為：種類 ➔ 國家 ➔ 圖片 ➔ 名稱 ➔ 座標
+                const cardTagHtml = safeTag ? `<span class="tag-badge">${safeTag}</span>` : `<span class="not-set">-</span>`;
+                
                 tr.innerHTML = `
                     <td>${renderIndex++}</td>
                     <td><span class="not-set">[${safeType}]</span></td>
@@ -1313,13 +1403,14 @@
                         }
                     </td>
                     <td><strong>${safeName}</strong></td>
+                    <td>${cardTagHtml}</td>
                     <td>
                         <span class="col-coords">${safeCoords}</span>
                         <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
                     </td>
                     <td>
                         <div class="action-btns">
-                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeType.replace(/'/g, "\\'")}', '${safeCountry.replace(/'/g, "\\'")}', 'postcard', '${safeName.replace(/'/g, "\\'")}', '${safeImage.replace(/'/g, "\\'")}')">修改</button>
+                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeType.replace(/'/g, "\\'")}', '${safeCountry.replace(/'/g, "\\'")}', 'postcard', '${safeName.replace(/'/g, "\\'")}', '${safeTag.replace(/'/g, "\\'")}', '${safeCoords.replace(/'/g, "\\'")}', '${safeImage.replace(/'/g, "\\'")}')">修改</button>
                             <button class="delete-btn" onclick="deleteItem('${item.id}', 'postcard')">刪除</button>
                         </div>
                     </td>
@@ -1338,6 +1429,9 @@
         } else {
             document.getElementById('postcard-empty').style.display = 'none';
         }
+
+        // 防止主提交按鈕文字重置
+        document.getElementById('submit-action-btn').innerText = currentMode === 'mushroom' ? '新增資料' : '收藏明信片';
     }
 
     function escapeHtml(str) {
