@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>皮克敏-巨菇-雲端同步追蹤器</title>
     
+    <!-- 核心相容性 SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
@@ -235,10 +236,28 @@
             background-color: #fff;
         }
 
-        /* 搜尋列樣式 */
+        /* 搜尋列與推薦連結樣式 */
         .search-container {
             margin: 10px 0;
             width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .upload-link-hint {
+            font-size: 13px;
+            color: #558b2f;
+            font-weight: bold;
+        }
+        .upload-link-hint a {
+            color: #0071e3;
+            text-decoration: none;
+            border-bottom: 1px dashed #0071e3;
+            padding-bottom: 1px;
+        }
+        .upload-link-hint a:hover {
+            color: #005bb5;
+            border-bottom: 1px solid #005bb5;
         }
         .search-input {
             width: 100%;
@@ -292,9 +311,9 @@
             vertical-align: middle;
         }
 
-        /* 明信片小預覽圖樣式 */
+        /* 明信片小預覽圖樣式 (4:3) */
         .postcard-preview {
-            width: 45px;
+            width: 60px; /* 4:3比例，高45px寬60px */
             height: 45px;
             object-fit: cover;
             border-radius: 6px;
@@ -303,10 +322,18 @@
             transition: transform 0.2s;
             vertical-align: middle;
         }
-        .postcard-preview:hover { transform: scale(1.1); }
+        .postcard-preview:hover {
+            transform: scale(1.1);
+        }
 
-        .expired { color: #d32f2f; font-weight: bold; }
-        .not-set { color: #8e8e93; font-style: italic; }
+        .expired {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+        .not-set {
+            color: #8e8e93;
+            font-style: italic;
+        }
 
         /* 時間到整列反灰 */
         .row-expired {
@@ -319,7 +346,10 @@
         .row-expired .claim-btn { background-color: #b0bec5; }
         .row-expired .edit-time-btn { background-color: #b0bec5; }
 
-        .action-btns { display: flex; gap: 4px; }
+        .action-btns {
+            display: flex;
+            gap: 4px;
+        }
         .delete-btn, .claim-btn, .edit-time-btn {
             border: none;
             padding: 4px 8px;
@@ -394,7 +424,11 @@
             flex-direction: column;
             gap: 12px;
         }
-        .modal-box h4 { margin: 0; color: #2e7d32; font-size: 15px; }
+        .modal-box h4 {
+            margin: 0;
+            color: #2e7d32;
+            font-size: 15px;
+        }
         .modal-box input[type="text"], .modal-box select {
             padding: 6px 10px;
             border: 1px solid #c5e1a5;
@@ -405,8 +439,19 @@
             width: 100%;
             background-color: #fff;
         }
-        .modal-buttons { display: flex; justify-content: flex-end; gap: 8px; }
-        .modal-btn { padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        .modal-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+        }
         .modal-btn.confirm { background-color: #4caf50; color: white; }
         .modal-btn.cancel { background-color: #e0e0e0; color: #333; }
 
@@ -445,17 +490,19 @@
 <div class="container">
     <div class="view-counter">
         <div id="view-counter-text">雲端總瀏覽次數：0 次</div>
-        <div class="version-tag">Ver: 20260527-1145</div>
+        <div class="version-tag">Ver: 20260527-1830</div>
     </div>
 
     <h2>皮克敏-巨菇-雲端同步追蹤器</h2>
 
+    <!-- 時區對比小工具區塊 -->
     <div class="timezone-widget">
         <div class="taipei-clock">
             <span class="label">台北標準時間 (🇹🇼 Taipei)</span>
             <span class="time" id="clock-taipei">00:00:00</span>
         </div>
         <div class="world-clocks">
+            <!-- 欄位 1：亞洲時區群組 -->
             <div class="clock-item">
                 <select id="tz-select-1" onchange="saveTimezonePref()">
                     <option value="9" selected>日本/韓國 🇯🇵🇰🇷 (UTC+9)</option>
@@ -464,6 +511,7 @@
                 </select>
                 <div class="w-time" id="clock-custom-1">00:00</div>
             </div>
+            <!-- 欄位 2：美洲時區群組 -->
             <div class="clock-item">
                 <select id="tz-select-2" onchange="saveTimezonePref()">
                     <option value="-5" selected>美國美東 🇺🇸 (UTC-5)</option>
@@ -471,6 +519,7 @@
                 </select>
                 <div class="w-time" id="clock-custom-2">00:00</div>
             </div>
+            <!-- 欄位 3：歐洲與大洋洲時區群組 -->
             <div class="clock-item">
                 <select id="tz-select-3" onchange="saveTimezonePref()">
                     <option value="10" selected>澳洲雪梨 🇦🇺 (UTC+10)</option>
@@ -482,18 +531,22 @@
         </div>
     </div>
 
+    <!-- LINE分享功能按鈕 -->
     <div class="share-section">
         <button class="line-share-btn" id="line-share-btn" onclick="shareToLineWindow()">
             💚 一鍵分享巨菇倒數資訊至 LINE 群組
         </button>
     </div>
     
+    <!-- 表單切換頁籤 -->
     <div class="form-tabs">
         <div class="form-tab active" id="tab-mushroom" onclick="switchFormMode('mushroom')">🍄 倒數巨菇登記</div>
         <div class="form-tab" id="tab-postcard" onclick="switchFormMode('postcard')">🖼️ 美菇明信片收藏</div>
     </div>
 
+    <!-- 主輸入表單區域 -->
     <div class="input-form">
+        <!-- 模式 1：倒數巨菇欄位群組 -->
         <div class="form-row-top" id="fields-mushroom">
             <div class="input-group">
                 <label>使用者 (留空待認領)</label>
@@ -509,6 +562,7 @@
             </div>
         </div>
 
+        <!-- 模式 2：美菇明信片欄位群組 -->
         <div class="form-row-top" id="fields-postcard" style="display: none;">
             <div class="input-group">
                 <label>種類</label>
@@ -556,6 +610,7 @@
         </div>
     </div>
 
+    <!-- 分區 1：正常追蹤中 -->
     <h3>正常追蹤中</h3>
     <div class="table-responsive">
         <table>
@@ -574,6 +629,7 @@
     </div>
     <div id="active-empty" class="empty-message" style="display: none;">目前沒有正在追蹤的項目</div>
 
+    <!-- 分區 2：待認領巨菇 -->
     <h3>待認領巨菇</h3>
     <div class="table-responsive">
         <table>
@@ -592,9 +648,14 @@
     </div>
     <div id="unclaimed-empty" class="empty-message" style="display: none;">目前沒有待認領的項目</div>
 
+    <!-- 分區 3：美菇 - 明信片 -->
     <h3>美菇 - 明信片</h3>
     
+    <!-- 即時關鍵字搜尋與上傳連結輸入框 -->
     <div class="search-container">
+        <div class="upload-link-hint">
+            🔗 推薦免費圖床：<a href="https://meee.com.tw/" target="_blank">點此前往 Meee 圖片上傳</a> (上傳後複製圖片網址貼入上方表單)
+        </div>
         <input type="text" id="postcard-search" class="search-input" oninput="updateTable()" placeholder="🔍 輸入關鍵字即時過濾（支援搜尋：種類、國家、名稱、座標）...">
     </div>
 
@@ -605,9 +666,9 @@
                     <th style="width: 40px;">編號</th>
                     <th>種類</th>
                     <th>國家</th>
+                    <th style="width: 80px;">圖片</th>
                     <th>名稱</th>
                     <th>座標</th>
-                    <th style="width: 80px;">圖片</th>
                     <th>操作</th>
                 </tr>
             </thead>
@@ -617,6 +678,7 @@
     <div id="postcard-empty" class="empty-message" style="display: none;">目前沒有收藏的明信片項目</div>
 </div>
 
+<!-- 認領彈出視窗 -->
 <div id="claim-modal" class="modal-overlay" style="display: none;">
     <div class="modal-box">
         <h4 id="modal-title">認領巨菇</h4>
@@ -648,6 +710,7 @@
     </div>
 </div>
 
+<!-- 修改彈出視窗 -->
 <div id="time-modal" class="modal-overlay" style="display: none;">
     <div class="modal-box">
         <h4 id="time-modal-title">修改資料</h4>
@@ -706,6 +769,7 @@
     </div>
 </div>
 
+<!-- 圖片燈箱元件 -->
 <div id="lightbox" class="lightbox-overlay" onclick="this.style.display='none'">
     <img id="lightbox-img" class="lightbox-img" src="" alt="明信片大圖">
 </div>
@@ -1037,7 +1101,6 @@
         document.getElementById('lightbox').style.display = 'flex';
     }
 
-    // 【修改核心邏輯】一鍵分享排除明信片收藏分區，只專注打包分享巨菇資訊
     function shareToLineWindow() {
         if (dataList.length === 0) {
             alert('目前雲端沒有任何倒數巨菇資訊可以分享喔！');
@@ -1055,8 +1118,7 @@
             return a.targetTime - b.targetTime;
         });
 
-        // 打包字串置頂網址連結與台北時間
-        let textOutput = `🍄【皮克敏巨菇追蹤器】🍄\n🔗 網址：https://tdagold-leo.github.io/Pikmin\n⏰ 台北時間：${taipeiTimeText}\n\n`;
+        let textOutput = `🍄【皮克敏巨菇追蹤器】🍄\n🔗 網址：https://tdagold-leo.github.io/Pikminn⏰ 台北時間：${taipeiTimeText}\n\n`;
 
         const actives = sortedMushroomList.filter(item => item.user !== "");
         const unclaimed = sortedMushroomList.filter(item => item.user === "");
@@ -1078,8 +1140,6 @@
                 textOutput += `${item.coords}\n\n`;
             });
         }
-
-        // 徹底移除原有的 postcardList 明信片打包區塊
 
         navigator.clipboard.writeText(textOutput.trim()).catch(err => console.log('備用複製失敗:', err));
 
@@ -1210,8 +1270,8 @@
 
         // 2. 渲染美菇明信片部分
         postcardTbody.innerHTML = '';
-        let postcardCount = postcardList.length;
-
+        
+        // 取得目前的搜尋關鍵字
         const searchKeyword = document.getElementById('postcard-search') ? document.getElementById('postcard-search').value.trim().toLowerCase() : '';
 
         const sortedPostcardList = [...postcardList].sort((a, b) => {
@@ -1231,6 +1291,7 @@
             const safeCoords = escapeHtml(item.coords);
             const safeImage = escapeHtml(item.image);
 
+            // 搜尋條件比對
             const isMatch = searchKeyword === '' || 
                             safeType.toLowerCase().includes(searchKeyword) ||
                             safeCountry.toLowerCase().includes(searchKeyword) ||
@@ -1240,20 +1301,21 @@
             if (isMatch) {
                 visibleCount++;
                 const tr = document.createElement('tr');
+                // 【修改點】調整 <td> 順序為：種類 ➔ 國家 ➔ 圖片 ➔ 名稱 ➔ 座標
                 tr.innerHTML = `
                     <td>${renderIndex++}</td>
                     <td><span class="not-set">[${safeType}]</span></td>
                     <td>${safeCountry}</td>
-                    <td><strong>${safeName}</strong></td>
-                    <td>
-                        <span class="col-coords">${safeCoords}</span>
-                        <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
-                    </td>
                     <td>
                         ${safeImage !== "無圖片" && safeImage !== "" ? 
                             `<img src="${safeImage}" class="postcard-preview" onclick="openImageLightbox('${safeImage}')" title="點擊放大查看">` : 
                             `<span class="not-set">無圖片</span>`
                         }
+                    </td>
+                    <td><strong>${safeName}</strong></td>
+                    <td>
+                        <span class="col-coords">${safeCoords}</span>
+                        <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
                     </td>
                     <td>
                         <div class="action-btns">
@@ -1266,6 +1328,7 @@
             }
         });
 
+        // 搜尋狀態回報與無結果提示
         if (postcardList.length === 0) {
             document.getElementById('postcard-empty').innerText = "目前沒有收藏的明信片項目";
             document.getElementById('postcard-empty').style.display = 'block';
