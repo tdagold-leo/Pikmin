@@ -545,7 +545,7 @@
 <div class="container">
     <div class="view-counter">
         <div id="view-counter-text">雲端總瀏覽次數：0 次</div>
-        <div class="version-tag">Ver: 20260527-2130</div>
+        <div class="version-tag">Ver: 20260528-2350</div>
     </div>
 
     <h2>皮克敏-巨菇-雲端同步追蹤器</h2>
@@ -1043,9 +1043,13 @@
         }
     }
 
-    function openClaimModal(id, currentName) {
+    // 透過 ID 彈出認領視窗 (免除字串跳脫出錯)
+    function openClaimModalById(id) {
+        const item = dataList.find(i => i.id === id);
+        if (!item) return;
+
         currentClaimingId = id;
-        document.getElementById('modal-title').innerText = `認領巨菇 - ${currentName}`;
+        document.getElementById('modal-title').innerText = `認領巨菇 - ${item.name}`;
         document.getElementById('modal-username').value = '';
         document.getElementById('modal-days').value = '0';
         document.getElementById('modal-hours').value = '0';
@@ -1076,19 +1080,32 @@
         closeModal();
     }
 
-    function openTimeModal(id, p1, p2, mode = 'mushroom') {
-        currentEditingTimeId = id;
+    // 核心修復：藉由對應的全域資料清單，直接以 ID 抓取物件，避開 onclick 內含引號出錯
+    function openTimeModalById(id, mode) {
+        let item;
+        if (mode === 'mushroom') {
+            item = dataList.find(i => i.id === id);
+        } else {
+            item = postcardList.find(i => i.id === id);
+        }
+
+        if (!item) {
+            alert("找不到該項目資料");
+            return;
+        }
+
+        currentEditingTimeId = item.id;
         currentEditingType = mode;
         
         if (mode === 'mushroom') {
             document.getElementById('edit-group-mushroom').style.display = 'flex';
             document.getElementById('edit-group-postcard').style.display = 'none';
-            document.getElementById('edit-name').value = p1;
-            document.getElementById('edit-tag').value = arguments[4] || '';
+            document.getElementById('edit-name').value = item.name || '';
+            document.getElementById('edit-tag').value = item.tag || '';
             
             let d = 0, h = 0, m = 0;
-            if (p2) {
-                const remainingMs = p2 - Date.now();
+            if (item.targetTime) {
+                const remainingMs = item.targetTime - Date.now();
                 if (remainingMs > 0) {
                     const totalSeconds = Math.floor(remainingMs / 1000);
                     const totalMinutes = Math.floor(totalSeconds / 60);
@@ -1105,12 +1122,12 @@
             document.getElementById('edit-group-mushroom').style.display = 'none';
             document.getElementById('edit-group-postcard').style.display = 'flex';
             
-            document.getElementById('edit-post-type').value = p1; 
-            document.getElementById('edit-post-country').value = p2;  
-            document.getElementById('edit-post-name').value = arguments[4] || ''; 
-            document.getElementById('edit-post-tag').value = arguments[5] || '';
-            document.getElementById('edit-post-coords').value = arguments[6] || ''; 
-            document.getElementById('edit-post-image').value = arguments[7] || ''; 
+            document.getElementById('edit-post-type').value = item.type || '菇'; 
+            document.getElementById('edit-post-country').value = item.country || '';  
+            document.getElementById('edit-post-name').value = item.name || ''; 
+            document.getElementById('edit-post-tag').value = item.tag || '';
+            document.getElementById('edit-post-coords').value = item.coords || ''; 
+            document.getElementById('edit-post-image').value = (item.image === "無圖片" ? "" : item.image) || ''; 
         }
         
         document.getElementById('time-modal-submit-btn').onclick = submitDataEdit;
@@ -1196,7 +1213,7 @@
             return a.targetTime - b.targetTime;
         });
 
-        let textOutput = `🍄【皮克敏巨菇追蹤器】🍄\n🔗 網址：https://tdagold-leo.github.io/Pikminn⏰ 台北時間：${taipeiTimeText}\n\n`;
+        let textOutput = `🍄【皮克敏巨菇追蹤器】🍄\n🔗 網址：https://tdagold-leo.github.io/Pikmin\n⏰ 台北時間：${taibeiTimeText}\n\n`;
 
         const actives = sortedMushroomList.filter(item => item.user !== "");
         const unclaimed = sortedMushroomList.filter(item => item.user === "");
@@ -1204,7 +1221,6 @@
         if (actives.length > 0) {
             textOutput += `🟢【正常追蹤中】\n`;
             actives.forEach((item) => {
-                // LINE 分享加入標籤資訊
                 const tagInfo = item.tag ? ` #${item.tag}` : "";
                 textOutput += `${item.sn}. [${item.user}] ${item.name}${tagInfo}\n`;
                 textOutput += `⏳ 剩餘：${getRemainingText(item.targetTime, now)}\n`;
@@ -1215,7 +1231,6 @@
         if (unclaimed.length > 0) {
             textOutput += `🟡【待認領巨菇】\n`;
             unclaimed.forEach((item) => {
-                // LINE 分享加入標籤資訊
                 const tagInfo = item.tag ? ` #${item.tag}` : "";
                 textOutput += `${item.sn}. [待認領] ${item.name}${tagInfo}\n`;
                 textOutput += `⏳ 剩餘：${getRemainingText(item.targetTime, now)}\n`;
@@ -1304,7 +1319,6 @@
             const safeCoords = escapeHtml(item.coords);
             const safeName = escapeHtml(item.name);
             const safeTag = escapeHtml(item.tag);
-            const itemTargetTime = item.targetTime || 'null';
 
             const tagHtml = safeTag ? `<span class="tag-badge">${safeTag}</span>` : `<span class="not-set">-</span>`;
 
@@ -1322,8 +1336,8 @@
                     </td>
                     <td>
                         <div class="action-btns">
-                            <button class="claim-btn" onclick="openClaimModal('${item.id}', '${safeName.replace(/'/g, "\\'")}')">認領</button>
-                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime}, 'mushroom', '${safeTag.replace(/'/g, "\\'")}')">修改</button>
+                            <button class="claim-btn" onclick="openClaimModalById('${item.id}')">認領</button>
+                            <button class="edit-time-btn" onclick="openTimeModalById('${item.id}', 'mushroom')">修改</button>
                             <button class="delete-btn" onclick="deleteItem('${item.id}', 'mushroom')">刪除</button>
                         </div>
                     </td>
@@ -1343,7 +1357,7 @@
                     </td>
                     <td>
                         <div class="action-btns">
-                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeName.replace(/'/g, "\\'")}', ${itemTargetTime}, 'mushroom', '${safeTag.replace(/'/g, "\\'")}')">修改</button>
+                            <button class="edit-time-btn" onclick="openTimeModalById('${item.id}', 'mushroom')">修改</button>
                             <button class="delete-btn" onclick="deleteItem('${item.id}', 'mushroom')">刪除</button>
                         </div>
                     </td>
@@ -1358,7 +1372,6 @@
         // 2. 渲染美菇明信片部分
         postcardTbody.innerHTML = '';
         
-        // 取得目前的搜尋關鍵字
         const searchKeyword = document.getElementById('postcard-search') ? document.getElementById('postcard-search').value.trim().toLowerCase() : '';
 
         const sortedPostcardList = [...postcardList].sort((a, b) => {
@@ -1379,7 +1392,6 @@
             const safeTag = escapeHtml(item.tag);
             const safeImage = escapeHtml(item.image);
 
-            // 搜尋條件比對（加入標籤比對連動）
             const isMatch = searchKeyword === '' || 
                             safeType.toLowerCase().includes(searchKeyword) ||
                             safeCountry.toLowerCase().includes(searchKeyword) ||
@@ -1410,7 +1422,7 @@
                     </td>
                     <td>
                         <div class="action-btns">
-                            <button class="edit-time-btn" onclick="openTimeModal('${item.id}', '${safeType.replace(/'/g, "\\'")}', '${safeCountry.replace(/'/g, "\\'")}', 'postcard', '${safeName.replace(/'/g, "\\'")}', '${safeTag.replace(/'/g, "\\'")}', '${safeCoords.replace(/'/g, "\\'")}', '${safeImage.replace(/'/g, "\\'")}')">修改</button>
+                            <button class="edit-time-btn" onclick="openTimeModalById('${item.id}', 'postcard')">修改</button>
                             <button class="delete-btn" onclick="deleteItem('${item.id}', 'postcard')">刪除</button>
                         </div>
                     </td>
@@ -1419,7 +1431,6 @@
             }
         });
 
-        // 搜尋狀態回報與無結果提示
         if (postcardList.length === 0) {
             document.getElementById('postcard-empty').innerText = "目前沒有收藏的明信片項目";
             document.getElementById('postcard-empty').style.display = 'block';
@@ -1430,7 +1441,6 @@
             document.getElementById('postcard-empty').style.display = 'none';
         }
 
-        // 防止主提交按鈕文字重置
         document.getElementById('submit-action-btn').innerText = currentMode === 'mushroom' ? '新增資料' : '收藏明信片';
     }
 
