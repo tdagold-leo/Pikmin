@@ -546,7 +546,7 @@
 <div class="container">
     <div class="view-counter">
         <div id="view-counter-text">雲端總瀏覽次數：0 次</div>
-        <div class="version-tag">Ver: 20260528-2350</div>
+        <div class="version-tag" id="version-tag">Ver: 讀取中...</div>
     </div>
 
     <h2>皮克敏-巨菇-雲端同步追蹤器</h2>
@@ -908,7 +908,24 @@
         document.getElementById('view-counter-text').innerText = `雲端總瀏覽次數：${views} 次`;
     });
 
+    // 自動更新版號邏輯（抓取檔案最後修改時間）
+    function updateVersionTag() {
+        const lastMod = new Date(document.lastModified);
+        const yyyy = lastMod.getFullYear();
+        const MM = String(lastMod.getMonth() + 1).padStart(2, '0');
+        const dd = String(lastMod.getDate()).padStart(2, '0');
+        const hh = String(lastMod.getHours()).padStart(2, '0');
+        const mm = String(lastMod.getMinutes()).padStart(2, '0');
+        
+        const versionEl = document.getElementById('version-tag');
+        if (versionEl) {
+            versionEl.innerText = `Ver: ${yyyy}${MM}${dd}-${hh}${mm}`;
+        }
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
+        updateVersionTag(); // 載入時自動刷新版號
+        
         if(localStorage.getItem('pikmin_tz_area_1')) document.getElementById('tz-select-1').value = localStorage.getItem('pikmin_tz_area_1');
         if(localStorage.getItem('pikmin_tz_area_2')) document.getElementById('tz-select-2').value = localStorage.getItem('pikmin_tz_area_2');
         if(localStorage.getItem('pikmin_tz_area_3')) document.getElementById('tz-select-3').value = localStorage.getItem('pikmin_tz_area_3');
@@ -1205,7 +1222,7 @@
 
         const now = Date.now();
         const utcMs = now + (new Date().getTimezoneOffset() * 60000);
-        const taipeiTimeText = formatTimeStr(utcMs, 8, true);
+        const taipeiTimeText = formatTimeStr(utcMs, 8, true); // 修正變數拼字拼錯的問題 (taibeiTimeText -> taipeiTimeText)
 
         const sortedMushroomList = [...dataList].sort((a, b) => {
             if (a.targetTime === null && b.targetTime === null) return 0;
@@ -1214,7 +1231,7 @@
             return a.targetTime - b.targetTime;
         });
 
-        let textOutput = `🍄【皮克敏巨菇追蹤器】🍄\n🔗 網址：https://tdagold-leo.github.io/Pikmin\n⏰ 台北時間：${taibeiTimeText}\n\n`;
+        let textOutput = `🍄【皮克敏巨菇追蹤器】🍄\n🔗 網址：https://tdagold-leo.github.io/Pikmin\n⏰ 台北時間：${taipeiTimeText}\n\n`;
 
         const actives = sortedMushroomList.filter(item => item.user !== "");
         const unclaimed = sortedMushroomList.filter(item => item.user === "");
