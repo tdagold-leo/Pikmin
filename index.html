@@ -26,21 +26,70 @@
             position: relative;
         }
         
-        .view-counter {
-            position: absolute;
-            top: 15px;
-            right: 15px;
+        .top-info-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* 雲端同步代號小工具 */
+        .sync-widget {
+            background-color: #fff8e1;
+            border: 1px solid #ffe082;
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .sync-widget label {
+            font-weight: bold;
+            color: #f57f17;
+        }
+        .sync-widget input {
+            padding: 4px 8px;
+            border: 1px solid #ffca28;
+            border-radius: 4px;
+            font-size: 13px;
+            width: 100px;
+            outline: none;
+            background-color: #fff;
+        }
+        .sync-widget input:focus {
+            border-color: #f57f17;
+            box-shadow: 0 0 4px rgba(245,127,23,0.3);
+        }
+        .sync-status {
+            font-size: 11px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background-color: #eeeeee;
+            color: #757575;
+        }
+        .sync-status.active {
             background-color: #e8f5e9;
             color: #2e7d32;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
+        }
+
+        .view-counter {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
             font-weight: bold;
             border: 1px solid #c5e1a5;
             text-align: right;
-            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
         }
-
         .version-tag {
             font-size: 10px;
             color: #757575;
@@ -54,8 +103,7 @@
         }
         h2 {
             font-size: 20px;
-            padding-right: 140px; /* 避免標題撞到瀏覽次數 */
-            margin-bottom: 15px;
+            margin-bottom: 0;
         }
         h3 {
             margin-top: 25px;
@@ -137,7 +185,7 @@
             width: 100%;
         }
         .line-share-btn {
-            background-color: #06c755; /* LINE 官方綠 */
+            background-color: #06c755;
             color: white;
             border: none;
             border-radius: 8px;
@@ -235,7 +283,6 @@
             background-color: #fff;
         }
 
-        /* 倒數時間選擇器的樣式 */
         .time-container {
             display: flex;
             gap: 8px;
@@ -295,8 +342,25 @@
             color: #005bb5;
             border-bottom: 1px solid #005bb5;
         }
-        .search-input {
+        .filter-row {
+            display: flex;
+            gap: 8px;
             width: 100%;
+        }
+        .filter-select {
+            padding: 6px 10px;
+            border: 1px solid #c5e1a5;
+            border-radius: 8px;
+            font-size: 13px;
+            background-color: #fafdfa;
+            outline: none;
+            flex-shrink: 0;
+            color: #2e7d32;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .search-input {
+            flex: 1;
             height: 36px;
             padding: 6px 12px;
             border: 1px solid #c5e1a5;
@@ -380,6 +444,28 @@
             transform: scale(1.1);
         }
 
+        /* 個人收藏星號按鈕樣式 */
+        .star-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+            margin: 0;
+            outline: none;
+            transition: transform 0.2s, color 0.2s;
+        }
+        .star-btn:hover {
+            transform: scale(1.25);
+        }
+        .star-active {
+            color: #ffb300;
+            text-shadow: 0 0 2px rgba(255,179,0,0.5);
+        }
+        .star-inactive {
+            color: #e0e0e0;
+        }
+
         .expired {
             color: #d32f2f;
             font-weight: bold;
@@ -389,7 +475,6 @@
             font-style: italic;
         }
 
-        /* 時間到整列反灰 */
         .row-expired {
             background-color: #f5f5f5;
             color: #a1a1a1 !important;
@@ -443,7 +528,6 @@
             font-size: 12px;
         }
 
-        /* 大圖燈箱 (Lightbox) 樣式 */
         .lightbox-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -513,8 +597,9 @@
         @media (max-width: 650px) {
             body { padding: 5px; }
             .container { padding: 10px; }
-            h2 { font-size: 18px; padding-right: 0; margin-bottom: 45px; }
-            .view-counter { top: 10px; right: 10px; }
+            .top-info-bar { flex-direction: column-reverse; gap: 15px; }
+            h2 { font-size: 18px; margin-bottom: 5px; }
+            .view-counter { align-items: flex-start; width: fit-content; }
             
             .timezone-widget {
                 flex-direction: column;
@@ -538,18 +623,32 @@
             .form-row-top .input-group:nth-child(4) { grid-column: span 2; }
             .form-row-bottom { justify-content: space-between; }
             .submit-btn { width: 100%; margin-top: 5px; }
+            
+            .filter-row {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="view-counter">
-        <div id="view-counter-text">雲端總瀏覽次數：0 次</div>
-        <div class="version-tag" id="version-tag">Ver: 讀取中...</div>
+    
+    <div class="top-info-bar">
+        <div>
+            <h2>皮克敏-巨菇-雲端同步追蹤器</h2>
+            <div class="sync-widget" style="margin-top: 10px;">
+                <label for="sync-user-id">☁️ 雲端收藏同步代號：</label>
+                <input type="text" id="sync-user-id" placeholder="例如：Leo" onchange="applySyncId()" title="輸入專屬代號，即可跨手機與電腦同步您的⭐收藏名單！">
+                <span id="sync-status" class="sync-status">未啟用</span>
+            </div>
+        </div>
+        
+        <div class="view-counter">
+            <div id="view-counter-text">雲端總瀏覽次數：0 次</div>
+            <div class="version-tag" id="version-tag">Ver: 讀取中...</div>
+        </div>
     </div>
-
-    <h2>皮克敏-巨菇-雲端同步追蹤器</h2>
 
     <div class="timezone-widget">
         <div class="taipei-clock">
@@ -709,13 +808,21 @@
         <div class="upload-link-hint">
             🔗 推薦免費圖床：<a href="https://meee.com.tw/" target="_blank">點此前往 Meee 圖片上傳</a> (上傳後複製圖片網址貼入上方表單)
         </div>
-        <input type="text" id="postcard-search" class="search-input" oninput="updateTable()" placeholder="🔍 輸入關鍵字即時過濾（支援搜尋：種類、國家、名稱、座標、標籤）...">
+        <div class="filter-row">
+            <select id="postcard-filter" class="filter-select" onchange="updateTable()">
+                <option value="all">全部明信片</option>
+                <option value="collected">⭐ 我的收藏</option>
+                <option value="uncollected">✰ 尚未收藏</option>
+            </select>
+            <input type="text" id="postcard-search" class="search-input" oninput="updateTable()" placeholder="🔍 支援多關鍵字搜尋 (請用空格隔開)...">
+        </div>
     </div>
 
     <div class="table-responsive">
         <table>
             <thead>
                 <tr>
+                    <th style="width: 35px; text-align: center;">個人</th>
                     <th style="width: 40px;">編號</th>
                     <th>種類</th>
                     <th>國家</th>
@@ -859,6 +966,64 @@
     let currentEditingTimeId = null;
     let currentEditingType = 'mushroom'; 
 
+    // 雲端收藏同步變數
+    let currentSyncId = '';
+    let cloudFavorites = [];
+    let favoritesListenerRef = null;
+
+    // 套用或變更雲端同步代號
+    function applySyncId() {
+        const inputId = document.getElementById('sync-user-id').value.trim();
+        const statusEl = document.getElementById('sync-status');
+        
+        // 儲存在本地，下次開啟網頁免重輸
+        localStorage.setItem('pikmin_sync_id', inputId);
+        currentSyncId = inputId;
+
+        // 如果之前有監聽器，先解除綁定
+        if (favoritesListenerRef) {
+            favoritesListenerRef.off();
+            favoritesListenerRef = null;
+        }
+
+        if (inputId) {
+            statusEl.innerText = '已連線🟢';
+            statusEl.classList.add('active');
+            
+            // 綁定該代號的 Firebase 即時監聽
+            favoritesListenerRef = database.ref('user_favorites/' + inputId);
+            favoritesListenerRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                cloudFavorites = data ? data : [];
+                updateTable(); // 資料有變更就重新渲染表格
+            });
+        } else {
+            statusEl.innerText = '未啟用';
+            statusEl.classList.remove('active');
+            cloudFavorites = [];
+            updateTable();
+        }
+    }
+
+    // 切換收藏狀態並上傳 Firebase
+    function toggleCollectPostcard(id) {
+        if (!currentSyncId) {
+            alert('請先在畫面上方輸入您的「雲端同步代號」，才能啟用跨裝置收藏功能喔！');
+            document.getElementById('sync-user-id').focus();
+            return;
+        }
+
+        let updatedFavorites = [...cloudFavorites];
+        if (updatedFavorites.includes(id)) {
+            updatedFavorites = updatedFavorites.filter(item => item !== id); // 取消收藏
+        } else {
+            updatedFavorites.push(id); // 加入收藏
+        }
+        
+        // 寫入雲端 (會自動觸發上方 applySyncId 內的 on('value') 更新表格)
+        database.ref('user_favorites/' + currentSyncId).set(updatedFavorites);
+    }
+
     // 同步巨菇資料
     database.ref('mushrooms').on('value', (snapshot) => {
         const cloudData = snapshot.val();
@@ -908,7 +1073,7 @@
         document.getElementById('view-counter-text').innerText = `雲端總瀏覽次數：${views} 次`;
     });
 
-    // 自動更新版號邏輯（抓取檔案最後修改時間）
+    // 自動更新版號邏輯
     function updateVersionTag() {
         const lastMod = new Date(document.lastModified);
         const yyyy = lastMod.getFullYear();
@@ -924,8 +1089,15 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-        updateVersionTag(); // 載入時自動刷新版號
+        updateVersionTag();
         
+        // 讀取上次存的同步代號並自動連線
+        const savedSyncId = localStorage.getItem('pikmin_sync_id');
+        if (savedSyncId) {
+            document.getElementById('sync-user-id').value = savedSyncId;
+            applySyncId();
+        }
+
         if(localStorage.getItem('pikmin_tz_area_1')) document.getElementById('tz-select-1').value = localStorage.getItem('pikmin_tz_area_1');
         if(localStorage.getItem('pikmin_tz_area_2')) document.getElementById('tz-select-2').value = localStorage.getItem('pikmin_tz_area_2');
         if(localStorage.getItem('pikmin_tz_area_3')) document.getElementById('tz-select-3').value = localStorage.getItem('pikmin_tz_area_3');
@@ -1061,7 +1233,6 @@
         }
     }
 
-    // 透過 ID 彈出認領視窗 (免除字串跳脫出錯)
     function openClaimModalById(id) {
         const item = dataList.find(i => i.id === id);
         if (!item) return;
@@ -1098,7 +1269,6 @@
         closeModal();
     }
 
-    // 核心修復：藉由對應的全域資料清單，直接以 ID 抓取物件，避開 onclick 內含引號出錯
     function openTimeModalById(id, mode) {
         let item;
         if (mode === 'mushroom') {
@@ -1222,7 +1392,7 @@
 
         const now = Date.now();
         const utcMs = now + (new Date().getTimezoneOffset() * 60000);
-        const taipeiTimeText = formatTimeStr(utcMs, 8, true); // 修正變數拼字拼錯的問題 (taibeiTimeText -> taipeiTimeText)
+        const taipeiTimeText = formatTimeStr(utcMs, 8, true); 
 
         const sortedMushroomList = [...dataList].sort((a, b) => {
             if (a.targetTime === null && b.targetTime === null) return 0;
@@ -1390,7 +1560,10 @@
         // 2. 渲染美菇明信片部分
         postcardTbody.innerHTML = '';
         
-        const searchKeyword = document.getElementById('postcard-search') ? document.getElementById('postcard-search').value.trim().toLowerCase() : '';
+        // 抓取搜尋關鍵字與篩選器狀態
+        const searchInputRaw = document.getElementById('postcard-search') ? document.getElementById('postcard-search').value.trim().toLowerCase() : '';
+        const searchKeywords = searchInputRaw === '' ? [] : searchInputRaw.split(/\s+/);
+        const filterState = document.getElementById('postcard-filter') ? document.getElementById('postcard-filter').value : 'all';
 
         const sortedPostcardList = [...postcardList].sort((a, b) => {
             if (a.type !== b.type) {
@@ -1403,6 +1576,13 @@
         let visibleCount = 0; 
 
         sortedPostcardList.forEach((item) => {
+            // 從雲端抓取的 cloudFavorites 陣列來判斷是否已收藏
+            const isCollected = cloudFavorites.includes(item.id);
+
+            // 如果不符合收藏篩選條件，直接跳過這筆資料
+            if (filterState === 'collected' && !isCollected) return;
+            if (filterState === 'uncollected' && isCollected) return;
+
             const safeType = escapeHtml(item.type);
             const safeCountry = escapeHtml(item.country);
             const safeName = escapeHtml(item.name);
@@ -1410,19 +1590,27 @@
             const safeTag = escapeHtml(item.tag);
             const safeImage = escapeHtml(item.image);
 
-            const isMatch = searchKeyword === '' || 
-                            safeType.toLowerCase().includes(searchKeyword) ||
-                            safeCountry.toLowerCase().includes(searchKeyword) ||
-                            safeName.toLowerCase().includes(searchKeyword) ||
-                            safeTag.toLowerCase().includes(searchKeyword) ||
-                            safeCoords.toLowerCase().includes(searchKeyword);
+            const isMatch = searchKeywords.length === 0 || searchKeywords.every(kw => 
+                safeType.toLowerCase().includes(kw) ||
+                safeCountry.toLowerCase().includes(kw) ||
+                safeName.toLowerCase().includes(kw) ||
+                safeTag.toLowerCase().includes(kw) ||
+                safeCoords.toLowerCase().includes(kw)
+            );
 
             if (isMatch) {
                 visibleCount++;
                 const tr = document.createElement('tr');
                 const cardTagHtml = safeTag ? `<span class="tag-badge">${safeTag}</span>` : `<span class="not-set">-</span>`;
                 
+                // 設定星號樣式
+                const starClass = isCollected ? 'star-active' : 'star-inactive';
+                const starSymbol = isCollected ? '⭐' : '✰';
+
                 tr.innerHTML = `
+                    <td style="text-align: center;">
+                        <button class="star-btn ${starClass}" onclick="toggleCollectPostcard('${item.id}')" title="點擊切換收藏">${starSymbol}</button>
+                    </td>
                     <td>${renderIndex++}</td>
                     <td><span class="not-set">[${safeType}]</span></td>
                     <td>${safeCountry}</td>
@@ -1452,8 +1640,8 @@
         if (postcardList.length === 0) {
             document.getElementById('postcard-empty').innerText = "目前沒有收藏的明信片項目";
             document.getElementById('postcard-empty').style.display = 'block';
-        } else if (visibleCount === 0 && searchKeyword !== '') {
-            document.getElementById('postcard-empty').innerText = "❌ 找不到符合搜尋條件的明信片項目";
+        } else if (visibleCount === 0 && (searchKeywords.length > 0 || filterState !== 'all')) {
+            document.getElementById('postcard-empty').innerText = "❌ 找不到符合搜尋或篩選條件的項目";
             document.getElementById('postcard-empty').style.display = 'block';
         } else {
             document.getElementById('postcard-empty').style.display = 'none';
