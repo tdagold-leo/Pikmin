@@ -719,6 +719,7 @@
                 <select id="post-type">
                     <option value="菇" selected>菇</option>
                     <option value="花">花</option>
+                    <option value="菇窩">菇窩</option> <!-- 新增類別 -->
                     <option value="隱藏">隱藏</option>
                 </select>
             </div>
@@ -908,6 +909,7 @@
                 <select id="edit-post-type">
                     <option value="菇">菇</option>
                     <option value="花">花</option>
+                    <option value="菇窩">菇窩</option> <!-- 新增類別 -->
                     <option value="隱藏">隱藏</option>
                 </select>
             </div>
@@ -1401,7 +1403,7 @@
             return a.targetTime - b.targetTime;
         });
 
-        let textOutput = `🍄【皮克敏巨菇追蹤器】🍄\n🔗 網址：https://tdagold-leo.github.io/Pikmin\n⏰ 台北時間：${taipeiTimeText}\n\n`;
+        let textOutput = `🍄【皮克敏巨菇追蹤器】🍄\n🔗 網址：https://tdagold-leo.github.io/Pikminn⏰ 台北時間：${taipeiTimeText}\n\n`;
 
         const actives = sortedMushroomList.filter(item => item.user !== "");
         const unclaimed = sortedMushroomList.filter(item => item.user === "");
