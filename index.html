@@ -205,6 +205,11 @@
             background-color: #05b04b;
             box-shadow: 0 4px 6px rgba(6,199,85,0.3);
         }
+        .line-share-btn:disabled {
+            background-color: #a5d6a7 !important;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
         
         /* 表單切換頁籤樣式 */
         .form-tabs {
@@ -719,7 +724,7 @@
                 <select id="post-type">
                     <option value="菇" selected>菇</option>
                     <option value="花">花</option>
-                    <option value="菇窩">菇窩</option> <!-- 新增類別 -->
+                    <option value="菇窩">菇窩</option>
                     <option value="隱藏">隱藏</option>
                 </select>
             </div>
@@ -909,7 +914,7 @@
                 <select id="edit-post-type">
                     <option value="菇">菇</option>
                     <option value="花">花</option>
-                    <option value="菇窩">菇窩</option> <!-- 新增類別 -->
+                    <option value="菇窩">菇窩</option>
                     <option value="隱藏">隱藏</option>
                 </select>
             </div>
@@ -978,11 +983,9 @@
         const inputId = document.getElementById('sync-user-id').value.trim();
         const statusEl = document.getElementById('sync-status');
         
-        // 儲存在本地，下次開啟網頁免重輸
         localStorage.setItem('pikmin_sync_id', inputId);
         currentSyncId = inputId;
 
-        // 如果之前有監聽器，先解除綁定
         if (favoritesListenerRef) {
             favoritesListenerRef.off();
             favoritesListenerRef = null;
@@ -992,12 +995,11 @@
             statusEl.innerText = '已連線🟢';
             statusEl.classList.add('active');
             
-            // 綁定該代號的 Firebase 即時監聽
             favoritesListenerRef = database.ref('user_favorites/' + inputId);
             favoritesListenerRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 cloudFavorites = data ? data : [];
-                updateTable(); // 資料有變更就重新渲染表格
+                updateTable(); 
             });
         } else {
             statusEl.innerText = '未啟用';
@@ -1017,12 +1019,11 @@
 
         let updatedFavorites = [...cloudFavorites];
         if (updatedFavorites.includes(id)) {
-            updatedFavorites = updatedFavorites.filter(item => item !== id); // 取消收藏
+            updatedFavorites = updatedFavorites.filter(item => item !== id);
         } else {
-            updatedFavorites.push(id); // 加入收藏
+            updatedFavorites.push(id);
         }
         
-        // 寫入雲端 (會自動觸發上方 applySyncId 內的 on('value') 更新表格)
         database.ref('user_favorites/' + currentSyncId).set(updatedFavorites);
     }
 
@@ -1075,7 +1076,6 @@
         document.getElementById('view-counter-text').innerText = `雲端總瀏覽次數：${views} 次`;
     });
 
-    // 自動更新版號邏輯
     function updateVersionTag() {
         const lastMod = new Date(document.lastModified);
         const yyyy = lastMod.getFullYear();
@@ -1093,7 +1093,6 @@
     window.addEventListener('DOMContentLoaded', () => {
         updateVersionTag();
         
-        // 讀取上次存的同步代號並自動連線
         const savedSyncId = localStorage.getItem('pikmin_sync_id');
         if (savedSyncId) {
             document.getElementById('sync-user-id').value = savedSyncId;
@@ -1386,15 +1385,35 @@
         document.getElementById('lightbox').style.display = 'flex';
     }
 
-    function shareToLineWindow() {
+    // ========== 核心更新：動態抓取真實網址 + 自動呼叫縮網址 API ==========
+    async function shareToLineWindow() {
         if (dataList.length === 0) {
             alert('目前雲端沒有任何倒數巨菇資訊可以分享喔！');
             return;
         }
 
+        const btn = document.getElementById('line-share-btn');
+        const originalText = btn.innerText;
+        btn.innerText = '⏳ 正在產生短網址與分享內容...';
+        btn.disabled = true;
+
         const now = Date.now();
         const utcMs = now + (new Date().getTimezoneOffset() * 60000);
         const taipeiTimeText = formatTimeStr(utcMs, 8, true); 
+
+        // 1. 動態抓取當前真實網址 (解決錯植問題，無視檔案存放位置)
+        let currentUrl = window.location.href.split('?')[0].split('#')[0];
+        let finalShareUrl = currentUrl;
+
+        // 2. 透過 TinyURL API 轉換為短網址
+        try {
+            const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(currentUrl)}`);
+            if (response.ok) {
+                finalShareUrl = await response.text();
+            }
+        } catch (err) {
+            console.log("短網址 API 暫時無法使用，改回使用原網址", err);
+        }
 
         const sortedMushroomList = [...dataList].sort((a, b) => {
             if (a.targetTime === null && b.targetTime === null) return 0;
@@ -1403,7 +1422,8 @@
             return a.targetTime - b.targetTime;
         });
 
-        let textOutput = `🍄【皮克敏巨菇追蹤器】🍄\n🔗 網址：https://tdagold-leo.github.io/Pikmin \n⏰台北時間：${taipeiTimeText}\n\n`;
+        // 3. 將產生出來的短網址放入文字模板中
+        let textOutput = `🍄【皮克敏巨菇追蹤器】🍄\n🔗 網址：${finalShareUrl}\n⏰ 台北時間：${taipeiTimeText}\n\n`;
 
         const actives = sortedMushroomList.filter(item => item.user !== "");
         const unclaimed = sortedMushroomList.filter(item => item.user === "");
@@ -1431,11 +1451,14 @@
         navigator.clipboard.writeText(textOutput.trim()).catch(err => console.log('備用複製失敗:', err));
 
         const lineAppUrl = "line://msg/text/" + encodeURIComponent(textOutput.trim());
-        const btn = document.getElementById('line-share-btn');
-        const originalText = btn.innerText;
+        
         btn.innerText = '✅ 已成功複製並喚醒 LINE...';
         
-        setTimeout(() => { btn.innerText = originalText; }, 2500);
+        setTimeout(() => { 
+            btn.innerText = originalText; 
+            btn.disabled = false;
+        }, 2500);
+        
         window.location.href = lineAppUrl;
     }
 
@@ -1562,7 +1585,6 @@
         // 2. 渲染美菇明信片部分
         postcardTbody.innerHTML = '';
         
-        // 抓取搜尋關鍵字與篩選器狀態
         const searchInputRaw = document.getElementById('postcard-search') ? document.getElementById('postcard-search').value.trim().toLowerCase() : '';
         const searchKeywords = searchInputRaw === '' ? [] : searchInputRaw.split(/\s+/);
         const filterState = document.getElementById('postcard-filter') ? document.getElementById('postcard-filter').value : 'all';
@@ -1578,10 +1600,8 @@
         let visibleCount = 0; 
 
         sortedPostcardList.forEach((item) => {
-            // 從雲端抓取的 cloudFavorites 陣列來判斷是否已收藏
             const isCollected = cloudFavorites.includes(item.id);
 
-            // 如果不符合收藏篩選條件，直接跳過這筆資料
             if (filterState === 'collected' && !isCollected) return;
             if (filterState === 'uncollected' && isCollected) return;
 
@@ -1605,7 +1625,6 @@
                 const tr = document.createElement('tr');
                 const cardTagHtml = safeTag ? `<span class="tag-badge">${safeTag}</span>` : `<span class="not-set">-</span>`;
                 
-                // 設定星號樣式
                 const starClass = isCollected ? 'star-active' : 'star-inactive';
                 const starSymbol = isCollected ? '⭐' : '✰';
 
