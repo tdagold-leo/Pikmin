@@ -14,7 +14,7 @@
             background-color: #f4f9f4;
             color: #333;
             margin: 0;
-            padding: 10px; /* 手機版邊距稍微縮小 */
+            padding: 10px;
         }
         .container {
             max-width: 1000px;
@@ -35,7 +35,6 @@
             gap: 10px;
         }
 
-        /* 雲端同步代號小工具 */
         .sync-widget {
             background-color: #fff8e1;
             border: 1px solid #ffe082;
@@ -113,7 +112,6 @@
             color: #558b2f;
         }
 
-        /* 時區對比小工具自選樣式 */
         .timezone-widget {
             background-color: #f9fbf9;
             border: 1px solid #e2eee2;
@@ -179,7 +177,6 @@
             margin-top: 2px;
         }
 
-        /* LINE 分享按鈕樣式 */
         .share-section {
             margin-bottom: 15px;
             width: 100%;
@@ -211,7 +208,6 @@
             box-shadow: none;
         }
         
-        /* 表單切換頁籤樣式 */
         .form-tabs {
             display: flex;
             gap: 5px;
@@ -277,7 +273,7 @@
             font-weight: bold;
         }
         
-        .input-form input, .input-form select {
+        .input-form input, .input-form select, .modal-box input, .modal-box select {
             padding: 6px 10px;
             border: 1px solid #c5e1a5;
             border-radius: 6px;
@@ -324,7 +320,6 @@
             background-color: #43a047;
         }
 
-        /* 搜尋列與推薦連結樣式 */
         .search-container {
             margin: 10px 0;
             width: 100%;
@@ -407,6 +402,20 @@
             color: #33691e;
         }
         
+        .group-header-row td {
+            background-color: #dcedc8;
+            color: #33691e;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            padding: 8px 12px;
+            border-bottom: 2px solid #fff;
+            transition: background-color 0.2s;
+        }
+        .group-header-row:hover td {
+            background-color: #c5e1a5;
+        }
+
         .col-coords {
             max-width: 110px;
             overflow: hidden;
@@ -416,7 +425,6 @@
             vertical-align: middle;
         }
 
-        /* 標籤小貼紙樣式 */
         .tag-badge {
             background-color: #e1f5fe;
             color: #0288d1;
@@ -432,8 +440,17 @@
             white-space: nowrap;
             vertical-align: middle;
         }
+        .tz-badge {
+            font-size: 10px;
+            color: #fff;
+            background-color: #ff9800;
+            padding: 1px 4px;
+            border-radius: 4px;
+            margin-left: 4px;
+            font-weight: bold;
+            display: inline-block;
+        }
 
-        /* 明信片小預覽圖樣式 (4:3) */
         .postcard-preview {
             width: clamp(50px, 10vw, 100px); 
             height: auto;            
@@ -449,7 +466,6 @@
             transform: scale(1.1);
         }
 
-        /* 個人收藏星號按鈕樣式 */
         .star-btn {
             background: none;
             border: none;
@@ -471,30 +487,19 @@
             color: #e0e0e0;
         }
 
-        .expired {
-            color: #d32f2f;
-            font-weight: bold;
-        }
-        .not-set {
-            color: #8e8e93;
-            font-style: italic;
-        }
+        .expired { color: #d32f2f; font-weight: bold; }
+        .not-set { color: #8e8e93; font-style: italic; }
 
-        .row-expired {
-            background-color: #f5f5f5;
-            color: #a1a1a1 !important;
-        }
+        .row-expired { background-color: #f5f5f5; color: #a1a1a1 !important; }
         .row-expired strong { color: #a1a1a1 !important; }
         .row-expired .col-coords { color: #a1a1a1 !important; }
         .row-expired .tag-badge { background-color: #cfd8dc; color: #607d8b; border-color: #b0bec5; }
         .row-expired .copy-btn { background-color: #b0bec5; }
         .row-expired .claim-btn { background-color: #b0bec5; }
         .row-expired .edit-time-btn { background-color: #b0bec5; }
+        .row-expired .tz-badge { background-color: #b0bec5; }
 
-        .action-btns {
-            display: flex;
-            gap: 4px;
-        }
+        .action-btns { display: flex; gap: 4px; }
         .delete-btn, .claim-btn, .edit-time-btn {
             border: none;
             padding: 4px 8px;
@@ -533,68 +538,40 @@
             font-size: 12px;
         }
 
-        .lightbox-overlay {
+        .lightbox-overlay, .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 2000;
         }
+        .lightbox-overlay { background: rgba(0,0,0,0.85); }
+        .modal-overlay { background: rgba(0,0,0,0.4); z-index: 1000; }
+        
         .lightbox-img {
-            max-width: 90%;
-            max-height: 85%;
+            max-width: 90%; max-height: 85%;
             border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
 
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
         .modal-box {
             background: white;
             padding: 15px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
             width: 290px;
+            max-height: 90vh;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 12px;
         }
-        .modal-box h4 {
-            margin: 0;
-            color: #2e7d32;
-            font-size: 15px;
-        }
-        .modal-box input[type="text"], .modal-box select {
-            padding: 6px 10px;
-            border: 1px solid #c5e1a5;
-            border-radius: 6px;
-            font-size: 13px;
-            box-sizing: border-box;
-            height: 36px;
-            width: 100%;
-            background-color: #fff;
-        }
-        .modal-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-        }
+        .modal-box h4 { margin: 0; color: #2e7d32; font-size: 15px; }
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 8px; }
         .modal-btn {
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 12px;
+            padding: 6px 12px; border-radius: 6px; border: none;
+            cursor: pointer; font-weight: bold; font-size: 12px;
         }
         .modal-btn.confirm { background-color: #4caf50; color: white; }
         .modal-btn.cancel { background-color: #e0e0e0; color: #333; }
@@ -606,32 +583,15 @@
             h2 { font-size: 18px; margin-bottom: 5px; }
             .view-counter { align-items: flex-start; width: fit-content; }
             
-            .timezone-widget {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 10px;
-            }
-            .world-clocks {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 8px;
-                width: 100%;
-            }
+            .timezone-widget { flex-direction: column; align-items: flex-start; padding: 10px; }
+            .world-clocks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
             .clock-item { min-width: unset; }
 
-            .form-row-top {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 8px;
-            }
-            .form-row-top .input-group:nth-child(3) { grid-column: span 2; }
-            .form-row-top .input-group:nth-child(4) { grid-column: span 2; }
+            .form-row-top { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+            .form-row-top .input-group:nth-child(5) { grid-column: span 2; }
             .form-row-bottom { justify-content: space-between; }
             .submit-btn { width: 100%; margin-top: 5px; }
-            
-            .filter-row {
-                flex-direction: column;
-            }
+            .filter-row { flex-direction: column; }
         }
     </style>
 </head>
@@ -705,6 +665,10 @@
                 <input type="text" id="user" placeholder="名字或留空">
             </div>
             <div class="input-group">
+                <label>國家 <span id="tz-hint" style="color:#e65100; font-size:10px;"></span></label>
+                <input type="text" id="country" placeholder="例如：日本" oninput="showTimeDiff(this.value, 'tz-hint')">
+            </div>
+            <div class="input-group">
                 <label>名稱</label>
                 <input type="text" id="name" placeholder="例如：巨型火菇">
             </div>
@@ -726,6 +690,7 @@
                     <option value="花">花</option>
                     <option value="菇窩">菇窩</option>
                     <option value="隱藏">隱藏</option>
+                    <option value="特殊金盆">特殊金盆</option>
                 </select>
             </div>
             <div class="input-group">
@@ -777,6 +742,7 @@
                 <tr>
                     <th style="width: 40px;">編號</th>
                     <th>使用者</th>
+                    <th>國家</th>
                     <th>名稱</th>
                     <th>標籤</th>
                     <th>剩餘時間</th>
@@ -796,6 +762,7 @@
                 <tr>
                     <th style="width: 40px;">編號</th>
                     <th>使用者</th>
+                    <th>國家</th>
                     <th>名稱</th>
                     <th>標籤</th>
                     <th>剩餘時間</th>
@@ -882,8 +849,20 @@
         
         <div id="edit-group-mushroom" style="display:none; flex-direction:column; gap:12px;">
             <div class="input-group" style="min-width: 100%;">
+                <label>修改使用者 (留空為待認領)：</label>
+                <input type="text" id="edit-user" placeholder="請輸入新使用者或留空">
+            </div>
+            <div class="input-group" style="min-width: 100%;">
+                <label>修改國家： <span id="edit-tz-hint" style="color:#e65100; font-size:10px;"></span></label>
+                <input type="text" id="edit-mushroom-country" placeholder="例如：日本" oninput="showTimeDiff(this.value, 'edit-tz-hint')">
+            </div>
+            <div class="input-group" style="min-width: 100%;">
                 <label>修改名稱：</label>
                 <input type="text" id="edit-name" placeholder="請輸入新名稱">
+            </div>
+            <div class="input-group" style="min-width: 100%;">
+                <label>修改座標：</label>
+                <input type="text" id="edit-coords" placeholder="請輸入新座標">
             </div>
             <div class="input-group" style="min-width: 100%;">
                 <label>修改標籤：</label>
@@ -916,6 +895,7 @@
                     <option value="花">花</option>
                     <option value="菇窩">菇窩</option>
                     <option value="隱藏">隱藏</option>
+                    <option value="特殊金盆">特殊金盆</option>
                 </select>
             </div>
             <div class="input-group" style="min-width: 100%;">
@@ -973,12 +953,70 @@
     let currentEditingTimeId = null;
     let currentEditingType = 'mushroom'; 
 
-    // 雲端收藏同步變數
     let currentSyncId = '';
     let cloudFavorites = [];
     let favoritesListenerRef = null;
+    
+    let collapsedGroups = new Set();
 
-    // 套用或變更雲端同步代號
+    // ==========================================
+    // 時差對照表 (新增委內瑞拉、愛沙尼亞、模里西斯等)
+    // ==========================================
+    const globalTzMap = {
+        "日本": 9, "韓國": 9, "南韓": 9, "首爾": 9, "東京": 9,
+        "台灣": 8, "臺灣": 8, "台北": 8, "香港": 8, "澳門": 8, "北京": 8, "中國": 8, "新加坡": 8, "馬來西亞": 8, "菲律賓": 8,
+        "泰國": 7, "越南": 7, "印尼": 7, "曼谷": 7, "雅加達": 7,
+        "模里西斯": 4, "阿聯酋": 4, "杜拜": 4,
+        "土耳其": 3, "沙烏地阿拉伯": 3,
+        "愛沙尼亞": 2, "拉脫維亞": 2, "立陶宛": 2, "烏克蘭": 2, "芬蘭": 2, "法國": 2, "德國": 2, "義大利": 2, "西班牙": 2, "歐洲": 2, "希臘": 2, 
+        "葡萄牙": 1, "瑞典": 1, "挪威": 1, "丹麥": 1, "波蘭": 1, "荷蘭": 1, "比利時": 1, "瑞士": 1, "英國": 1, "倫敦": 1, "UK": 1,
+        "雪梨": 10, "澳洲雪梨": 10, "關島": 10,
+        "紐西蘭": 12, "奧克蘭": 12,
+        "委內瑞拉": -4, "巴西": -3, "阿根廷": -3, "智利": -4, "哥倫比亞": -5, "秘魯": -5,
+        "美國美東": -4, "美東": -4, "紐約": -4, "加拿大東部": -4,
+        "美國美中": -5, "美中": -5, "芝加哥": -5, "墨西哥": -6,
+        "美國美西": -7, "美西": -7, "洛杉磯": -7, "舊金山": -7, "溫哥華": -7,
+        "夏威夷": -10
+    };
+
+    // 處理巨菇區塊的時差計算邏輯 (強化防呆)
+    function showTimeDiff(val, hintId) {
+        const hintEl = document.getElementById(hintId);
+        if (!hintEl) return;
+        if (!val || typeof val !== 'string' || !val.trim()) { hintEl.innerText = ''; return; }
+        
+        let matchedOffset = null;
+        for (let key in globalTzMap) {
+            if (val.includes(key)) {
+                matchedOffset = globalTzMap[key];
+                break;
+            }
+        }
+        
+        if (matchedOffset !== null) {
+            const diff = matchedOffset - 8; // 和台灣(UTC+8)比對
+            if (diff === 0) hintEl.innerText = '(無時差)';
+            else if (diff > 0) hintEl.innerText = `(快台灣 ${diff} 小時)`;
+            else hintEl.innerText = `(慢台灣 ${Math.abs(diff)} 小時)`;
+        } else {
+            hintEl.innerText = '';
+        }
+    }
+
+    // 取得用於表格的簡短時差字串 (僅巨菇)
+    function getTimeDiffString(val) {
+        if (!val || typeof val !== 'string') return '';
+        for (let key in globalTzMap) {
+            if (val.includes(key)) {
+                const diff = globalTzMap[key] - 8;
+                if (diff === 0) return ''; // 零時差不顯示
+                if (diff > 0) return `+${diff}h`;
+                return `${diff}h`;
+            }
+        }
+        return '';
+    }
+
     function applySyncId() {
         const inputId = document.getElementById('sync-user-id').value.trim();
         const statusEl = document.getElementById('sync-status');
@@ -1009,7 +1047,6 @@
         }
     }
 
-    // 切換收藏狀態並上傳 Firebase
     function toggleCollectPostcard(id) {
         if (!currentSyncId) {
             alert('請先在畫面上方輸入您的「雲端同步代號」，才能啟用跨裝置收藏功能喔！');
@@ -1027,7 +1064,6 @@
         database.ref('user_favorites/' + currentSyncId).set(updatedFavorites);
     }
 
-    // 同步巨菇資料
     database.ref('mushrooms').on('value', (snapshot) => {
         const cloudData = snapshot.val();
         dataList = [];
@@ -1036,7 +1072,8 @@
                 dataList.push({
                     id: key, 
                     sn: cloudData[key].sn,
-                    user: cloudData[key].user,
+                    user: cloudData[key].user || "",
+                    country: cloudData[key].country || "",
                     name: cloudData[key].name,
                     coords: cloudData[key].coords,
                     tag: cloudData[key].tag || "",
@@ -1047,7 +1084,6 @@
         updateTable();
     });
 
-    // 即時同步明信片資料庫
     database.ref('postcards').on('value', (snapshot) => {
         const cloudData = snapshot.val();
         postcardList = [];
@@ -1057,7 +1093,7 @@
                     id: key,
                     type: cloudData[key].type,
                     name: cloudData[key].name || "", 
-                    country: cloudData[key].country,
+                    country: cloudData[key].country || "",
                     coords: cloudData[key].coords,
                     tag: cloudData[key].tag || "",
                     image: cloudData[key].image
@@ -1067,7 +1103,6 @@
         updateTable();
     });
 
-    // 瀏覽次數統計
     database.ref('views').transaction((currentViews) => {
         return (currentViews || 0) + 1;
     });
@@ -1153,6 +1188,7 @@
     function addItem() {
         if (currentMode === 'mushroom') {
             const userEl = document.getElementById('user');
+            const countryEl = document.getElementById('country');
             const nameEl = document.getElementById('name');
             const coordsEl = document.getElementById('coords');
             const tagEl = document.getElementById('tag');
@@ -1177,6 +1213,7 @@
             }
 
             const processedUser = userEl ? userEl.value.trim() : "";
+            const processedCountry = countryEl ? countryEl.value.trim() : "";
             let nextSn = 1;
             if (dataList.length > 0) {
                 nextSn = Math.max(...dataList.map(item => item.sn || 0)) + 1;
@@ -1185,6 +1222,7 @@
             database.ref('mushrooms').push({
                 sn: nextSn,
                 user: processedUser,
+                country: processedCountry,
                 name: nameEl.value.trim(),
                 coords: coordsEl.value.trim(),
                 tag: tagEl ? tagEl.value.trim() : "",
@@ -1192,6 +1230,8 @@
             });
             
             if(userEl) userEl.value = '';
+            if(countryEl) countryEl.value = '';
+            document.getElementById('tz-hint').innerText = '';
             nameEl.value = '';
             coordsEl.value = '';
             if(tagEl) tagEl.value = '';
@@ -1289,9 +1329,14 @@
         if (mode === 'mushroom') {
             document.getElementById('edit-group-mushroom').style.display = 'flex';
             document.getElementById('edit-group-postcard').style.display = 'none';
+            document.getElementById('edit-user').value = item.user || '';
+            document.getElementById('edit-mushroom-country').value = item.country || '';
             document.getElementById('edit-name').value = item.name || '';
+            document.getElementById('edit-coords').value = item.coords || '';
             document.getElementById('edit-tag').value = item.tag || '';
             
+            showTimeDiff(item.country || '', 'edit-tz-hint');
+
             let d = 0, h = 0, m = 0;
             if (item.targetTime) {
                 const remainingMs = item.targetTime - Date.now();
@@ -1330,9 +1375,13 @@
 
     function submitDataEdit() {
         if (currentEditingType === 'mushroom') {
+            const newUser = document.getElementById('edit-user').value.trim();
+            const newCountry = document.getElementById('edit-mushroom-country').value.trim();
             const newName = document.getElementById('edit-name').value.trim();
+            const newCoords = document.getElementById('edit-coords').value.trim();
             const newTag = document.getElementById('edit-tag').value.trim();
-            if (!newName) { alert('名稱不能為空！'); return; }
+            
+            if (!newName || !newCoords) { alert('名稱與座標不能為空！'); return; }
 
             const d = parseInt(document.getElementById('edit-days').value, 10) || 0;
             const h = parseInt(document.getElementById('edit-hours').value, 10) || 0;
@@ -1343,7 +1392,14 @@
                 const totalMs = ((d * 24 * 60) + (h * 60) + m) * 60 * 1000;
                 targetTime = Date.now() + totalMs;
             }
-            database.ref('mushrooms/' + currentEditingTimeId).update({ name: newName, tag: newTag, targetTime: targetTime });
+            database.ref('mushrooms/' + currentEditingTimeId).update({ 
+                user: newUser, 
+                country: newCountry,
+                name: newName, 
+                coords: newCoords,
+                tag: newTag, 
+                targetTime: targetTime 
+            });
         } else {
             const newType = document.getElementById('edit-post-type').value;
             const newCountry = document.getElementById('edit-post-country').value.trim();
@@ -1385,7 +1441,6 @@
         document.getElementById('lightbox').style.display = 'flex';
     }
 
-    // ========== 核心更新：動態抓取真實網址 + 自動呼叫縮網址 API ==========
     async function shareToLineWindow() {
         if (dataList.length === 0) {
             alert('目前雲端沒有任何倒數巨菇資訊可以分享喔！');
@@ -1401,11 +1456,9 @@
         const utcMs = now + (new Date().getTimezoneOffset() * 60000);
         const taipeiTimeText = formatTimeStr(utcMs, 8, true); 
 
-        // 1. 動態抓取當前真實網址 (解決錯植問題，無視檔案存放位置)
         let currentUrl = window.location.href.split('?')[0].split('#')[0];
         let finalShareUrl = currentUrl;
 
-        // 2. 透過 TinyURL API 轉換為短網址
         try {
             const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(currentUrl)}`);
             if (response.ok) {
@@ -1422,7 +1475,6 @@
             return a.targetTime - b.targetTime;
         });
 
-        // 3. 將產生出來的短網址放入文字模板中
         let textOutput = `🍄【皮克敏巨菇追蹤器】🍄\n🔗 網址：${finalShareUrl}\n⏰ 台北時間：${taipeiTimeText}\n\n`;
 
         const actives = sortedMushroomList.filter(item => item.user !== "");
@@ -1432,7 +1484,8 @@
             textOutput += `🟢【正常追蹤中】\n`;
             actives.forEach((item) => {
                 const tagInfo = item.tag ? ` #${item.tag}` : "";
-                textOutput += `${item.sn}. [${item.user}] ${item.name}${tagInfo}\n`;
+                const countryInfo = item.country ? `[${item.country}] ` : "";
+                textOutput += `${item.sn}. [${item.user}] ${countryInfo}${item.name}${tagInfo}\n`;
                 textOutput += `⏳ 剩餘：${getRemainingText(item.targetTime, now)}\n`;
                 textOutput += `${item.coords}\n\n`;
             });
@@ -1442,7 +1495,8 @@
             textOutput += `🟡【待認領巨菇】\n`;
             unclaimed.forEach((item) => {
                 const tagInfo = item.tag ? ` #${item.tag}` : "";
-                textOutput += `${item.sn}. [待認領] ${item.name}${tagInfo}\n`;
+                const countryInfo = item.country ? `[${item.country}] ` : "";
+                textOutput += `${item.sn}. [待認領] ${countryInfo}${item.name}${tagInfo}\n`;
                 textOutput += `⏳ 剩餘：${getRemainingText(item.targetTime, now)}\n`;
                 textOutput += `${item.coords}\n\n`;
             });
@@ -1480,6 +1534,15 @@
         return `${mins}分 ${secs}秒`;
     }
 
+    function toggleGroup(groupId) {
+        if (collapsedGroups.has(groupId)) {
+            collapsedGroups.delete(groupId);
+        } else {
+            collapsedGroups.add(groupId);
+        }
+        updateTable();
+    }
+
     function updateTable() {
         const activeTbody = document.getElementById('active-table-body');
         const unclaimedTbody = document.getElementById('unclaimed-table-body');
@@ -1488,7 +1551,7 @@
 
         const now = Date.now();
 
-        // 1. 渲染巨菇追蹤表格
+        // 1. 處理巨菇追蹤表格
         const sortedMushroomList = [...dataList].sort((a, b) => {
             if (a.targetTime === null && b.targetTime === null) return 0;
             if (a.targetTime === null) return 1;
@@ -1529,17 +1592,30 @@
 
             if (isExpired) tr.classList.add('row-expired');
 
+            const safeCountry = escapeHtml(item.country || '');
             const safeCoords = escapeHtml(item.coords);
             const safeName = escapeHtml(item.name);
             const safeTag = escapeHtml(item.tag);
-
             const tagHtml = safeTag ? `<span class="tag-badge">${safeTag}</span>` : `<span class="not-set">-</span>`;
+            
+            const diffStr = getTimeDiffString(safeCountry);
+            
+            // 如果算不出時差（或是零時差），就不顯示橘色色塊
+            let countryHtml = `<span class="not-set">-</span>`;
+            if (safeCountry) {
+                if (diffStr !== '') {
+                    countryHtml = `${safeCountry} <br><span class="tz-badge">${diffStr}</span>`;
+                } else {
+                    countryHtml = `${safeCountry}`; // 只顯示文字，不加橘色 badge
+                }
+            }
 
             if (item.user === "") {
                 unclaimedCount++;
                 tr.innerHTML = `
                     <td>${item.sn}</td>
                     <td><span style="color:#8e8e93; font-style:italic;">無</span></td>
+                    <td>${countryHtml}</td>
                     <td>${safeName}</td>
                     <td>${tagHtml}</td>
                     <td>${timeText}</td>
@@ -1561,6 +1637,7 @@
                 tr.innerHTML = `
                     <td>${item.sn}</td>
                     <td><strong>${escapeHtml(item.user)}</strong></td>
+                    <td>${countryHtml}</td>
                     <td>${safeName}</td>
                     <td>${tagHtml}</td>
                     <td>${timeText}</td>
@@ -1582,7 +1659,7 @@
         document.getElementById('active-empty').style.display = activeCount === 0 ? 'block' : 'none';
         document.getElementById('unclaimed-empty').style.display = unclaimedCount === 0 ? 'block' : 'none';
 
-        // 2. 渲染美菇明信片部分
+        // 2. 處理美菇明信片部分
         postcardTbody.innerHTML = '';
         
         const searchInputRaw = document.getElementById('postcard-search') ? document.getElementById('postcard-search').value.trim().toLowerCase() : '';
