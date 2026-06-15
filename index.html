@@ -408,9 +408,10 @@
             font-weight: bold;
             cursor: pointer;
             user-select: none;
-            padding: 8px 12px;
+            padding: 10px 12px;
             border-bottom: 2px solid #fff;
             transition: background-color 0.2s;
+            -webkit-tap-highlight-color: transparent; /* 防止手機點擊閃爍 */
         }
         .group-header-row:hover td {
             background-color: #c5e1a5;
@@ -960,7 +961,7 @@
     let collapsedGroups = new Set();
 
     // ==========================================
-    // 時差對照表 (新增委內瑞拉、愛沙尼亞、模里西斯等)
+    // 時差對照表
     // ==========================================
     const globalTzMap = {
         "日本": 9, "韓國": 9, "南韓": 9, "首爾": 9, "東京": 9,
@@ -979,7 +980,6 @@
         "夏威夷": -10
     };
 
-    // 處理巨菇區塊的時差計算邏輯 (強化防呆)
     function showTimeDiff(val, hintId) {
         const hintEl = document.getElementById(hintId);
         if (!hintEl) return;
@@ -994,7 +994,7 @@
         }
         
         if (matchedOffset !== null) {
-            const diff = matchedOffset - 8; // 和台灣(UTC+8)比對
+            const diff = matchedOffset - 8; 
             if (diff === 0) hintEl.innerText = '(無時差)';
             else if (diff > 0) hintEl.innerText = `(快台灣 ${diff} 小時)`;
             else hintEl.innerText = `(慢台灣 ${Math.abs(diff)} 小時)`;
@@ -1003,13 +1003,12 @@
         }
     }
 
-    // 取得用於表格的簡短時差字串 (僅巨菇)
     function getTimeDiffString(val) {
         if (!val || typeof val !== 'string') return '';
         for (let key in globalTzMap) {
             if (val.includes(key)) {
                 const diff = globalTzMap[key] - 8;
-                if (diff === 0) return ''; // 零時差不顯示
+                if (diff === 0) return ''; 
                 if (diff > 0) return `+${diff}h`;
                 return `${diff}h`;
             }
@@ -1600,13 +1599,12 @@
             
             const diffStr = getTimeDiffString(safeCountry);
             
-            // 如果算不出時差（或是零時差），就不顯示橘色色塊
             let countryHtml = `<span class="not-set">-</span>`;
             if (safeCountry) {
                 if (diffStr !== '') {
                     countryHtml = `${safeCountry} <br><span class="tz-badge">${diffStr}</span>`;
                 } else {
-                    countryHtml = `${safeCountry}`; // 只顯示文字，不加橘色 badge
+                    countryHtml = `${safeCountry}`; 
                 }
             }
 
@@ -1673,12 +1671,9 @@
             return a.country.localeCompare(b.country, 'zh-TW');
         });
 
-        let renderIndex = 1; 
-        let visibleCount = 0; 
-
+        const filteredPostcards = [];
         sortedPostcardList.forEach((item) => {
             const isCollected = cloudFavorites.includes(item.id);
-
             if (filterState === 'collected' && !isCollected) return;
             if (filterState === 'uncollected' && isCollected) return;
 
@@ -1687,7 +1682,6 @@
             const safeName = escapeHtml(item.name);
             const safeCoords = escapeHtml(item.coords);
             const safeTag = escapeHtml(item.tag);
-            const safeImage = escapeHtml(item.image);
 
             const isMatch = searchKeywords.length === 0 || searchKeywords.every(kw => 
                 safeType.toLowerCase().includes(kw) ||
@@ -1698,47 +1692,101 @@
             );
 
             if (isMatch) {
-                visibleCount++;
-                const tr = document.createElement('tr');
-                const cardTagHtml = safeTag ? `<span class="tag-badge">${safeTag}</span>` : `<span class="not-set">-</span>`;
-                
-                const starClass = isCollected ? 'star-active' : 'star-inactive';
-                const starSymbol = isCollected ? '⭐' : '✰';
+                filteredPostcards.push(item);
+            }
+        });
 
-                tr.innerHTML = `
-                    <td style="text-align: center;">
-                        <button class="star-btn ${starClass}" onclick="toggleCollectPostcard('${item.id}')" title="點擊切換收藏">${starSymbol}</button>
-                    </td>
-                    <td>${renderIndex++}</td>
-                    <td><span class="not-set">[${safeType}]</span></td>
-                    <td>${safeCountry}</td>
-                    <td>
-                        ${safeImage !== "無圖片" && safeImage !== "" ? 
-                            `<img src="${safeImage}" class="postcard-preview" onclick="openImageLightbox('${safeImage}')" title="點擊放大查看">` : 
-                            `<span class="not-set">無圖片</span>`
-                        }
-                    </td>
-                    <td><strong>${safeName}</strong></td>
-                    <td>${cardTagHtml}</td>
-                    <td>
-                        <span class="col-coords">${safeCoords}</span>
-                        <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
-                    </td>
-                    <td>
-                        <div class="action-btns">
-                            <button class="edit-time-btn" onclick="openTimeModalById('${item.id}', 'postcard')">修改</button>
-                            <button class="delete-btn" onclick="deleteItem('${item.id}', 'postcard')">刪除</button>
-                        </div>
-                    </td>
-                `;
-                postcardTbody.appendChild(tr);
+        let renderIndex = 1; 
+
+        const postcardGroups = {};
+        filteredPostcards.forEach(item => {
+            const type = item.type ? item.type.trim() : '未分類';
+            if (!postcardGroups[type]) postcardGroups[type] = [];
+            postcardGroups[type].push(item);
+        });
+
+        const sortedPostKeys = Object.keys(postcardGroups).sort((a, b) => {
+            if (a === '未分類') return 1;
+            if (b === '未分類') return -1;
+            return a.localeCompare(b, 'zh-TW');
+        });
+
+        sortedPostKeys.forEach(type => {
+            const groupId = 'post-' + type;
+            const isCollapsed = collapsedGroups.has(groupId);
+            const arrow = isCollapsed ? '▶' : '▼';
+
+            const trGroup = document.createElement('tr');
+            trGroup.className = 'group-header-row';
+            
+            // --- 核心修正：改用原生事件監聽，解決 iPhone 點擊無效 ---
+            const tdGroup = document.createElement('td');
+            tdGroup.colSpan = 9;
+            tdGroup.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                    <span><strong>${arrow} 📂 種類群組：${escapeHtml(type)}</strong> <span style="font-size: 11px; color:#558b2f;">(${postcardGroups[type].length}筆)</span></span>
+                    <span style="font-size:10px; color:#689f38; font-weight:normal;">點此展開/收合</span>
+                </div>
+            `;
+            tdGroup.addEventListener('click', function() {
+                toggleGroup(groupId);
+            });
+            trGroup.appendChild(tdGroup);
+            postcardTbody.appendChild(trGroup);
+            // --------------------------------------------------------
+
+            if (!isCollapsed) {
+                postcardGroups[type].forEach(item => {
+                    const isCollected = cloudFavorites.includes(item.id);
+                    const safeType = escapeHtml(item.type);
+                    const safeCountry = escapeHtml(item.country);
+                    const safeName = escapeHtml(item.name);
+                    const safeCoords = escapeHtml(item.coords);
+                    const safeTag = escapeHtml(item.tag);
+                    const safeImage = escapeHtml(item.image);
+
+                    const tr = document.createElement('tr');
+                    const cardTagHtml = safeTag ? `<span class="tag-badge">${safeTag}</span>` : `<span class="not-set">-</span>`;
+                    const starClass = isCollected ? 'star-active' : 'star-inactive';
+                    const starSymbol = isCollected ? '⭐' : '✰';
+
+                    tr.innerHTML = `
+                        <td style="text-align: center;">
+                            <button class="star-btn ${starClass}" onclick="toggleCollectPostcard('${item.id}')" title="點擊切換收藏">${starSymbol}</button>
+                        </td>
+                        <td>${renderIndex++}</td>
+                        <td><span class="not-set">[${safeType}]</span></td>
+                        <td>${safeCountry}</td>
+                        <td>
+                            ${safeImage !== "無圖片" && safeImage !== "" ? 
+                                `<img src="${safeImage}" class="postcard-preview" onclick="openImageLightbox('${safeImage}')" title="點擊放大查看">` : 
+                                `<span class="not-set">無圖片</span>`
+                            }
+                        </td>
+                        <td><strong>${safeName}</strong></td>
+                        <td>${cardTagHtml}</td>
+                        <td>
+                            <span class="col-coords">${safeCoords}</span>
+                            <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
+                        </td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="edit-time-btn" onclick="openTimeModalById('${item.id}', 'postcard')">修改</button>
+                                <button class="delete-btn" onclick="deleteItem('${item.id}', 'postcard')">刪除</button>
+                            </div>
+                        </td>
+                    `;
+                    postcardTbody.appendChild(tr);
+                });
+            } else {
+                renderIndex += postcardGroups[type].length; 
             }
         });
 
         if (postcardList.length === 0) {
             document.getElementById('postcard-empty').innerText = "目前沒有收藏的明信片項目";
             document.getElementById('postcard-empty').style.display = 'block';
-        } else if (visibleCount === 0 && (searchKeywords.length > 0 || filterState !== 'all')) {
+        } else if (filteredPostcards.length === 0 && (searchKeywords.length > 0 || filterState !== 'all')) {
             document.getElementById('postcard-empty').innerText = "❌ 找不到符合搜尋或篩選條件的項目";
             document.getElementById('postcard-empty').style.display = 'block';
         } else {
