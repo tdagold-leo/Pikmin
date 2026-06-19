@@ -411,7 +411,7 @@
             padding: 10px 12px;
             border-bottom: 2px solid #fff;
             transition: background-color 0.2s;
-            -webkit-tap-highlight-color: transparent; /* 防止手機點擊閃爍 */
+            -webkit-tap-highlight-color: transparent; 
         }
         .group-header-row:hover td {
             background-color: #c5e1a5;
@@ -660,6 +660,7 @@
     </div>
 
     <div class="input-form">
+        <!-- 巨菇新增表單 -->
         <div class="form-row-top" id="fields-mushroom">
             <div class="input-group">
                 <label>使用者 (留空待認領)</label>
@@ -683,6 +684,7 @@
             </div>
         </div>
 
+        <!-- 明信片新增表單 -->
         <div class="form-row-top" id="fields-postcard" style="display: none;">
             <div class="input-group">
                 <label>種類</label>
@@ -848,6 +850,7 @@
     <div class="modal-box">
         <h4 id="time-modal-title">修改資料</h4>
         
+        <!-- 巨菇編輯表單 -->
         <div id="edit-group-mushroom" style="display:none; flex-direction:column; gap:12px;">
             <div class="input-group" style="min-width: 100%;">
                 <label>修改使用者 (留空為待認領)：</label>
@@ -888,6 +891,7 @@
             </div>
         </div>
 
+        <!-- 明信片編輯表單 -->
         <div id="edit-group-postcard" style="display:none; flex-direction:column; gap:12px;">
             <div class="input-group" style="min-width: 100%;">
                 <label>修改種類：</label>
@@ -971,7 +975,7 @@
         "土耳其": 3, "沙烏地阿拉伯": 3,
         "愛沙尼亞": 2, "拉脫維亞": 2, "立陶宛": 2, "烏克蘭": 2, "芬蘭": 2, "法國": 2, "德國": 2, "義大利": 2, "西班牙": 2, "歐洲": 2, "希臘": 2, 
         "葡萄牙": 1, "瑞典": 1, "挪威": 1, "丹麥": 1, "波蘭": 1, "荷蘭": 1, "比利時": 1, "瑞士": 1, "英國": 1, "倫敦": 1, "UK": 1,
-        "雪梨": 10, "澳洲雪梨": 10, "關島": 10,
+        "澳洲": 10, "澳大利亞": 10, "雪梨": 10, "澳洲雪梨": 10, "關島": 10,
         "紐西蘭": 12, "奧克蘭": 12,
         "委內瑞拉": -4, "巴西": -3, "阿根廷": -3, "智利": -4, "哥倫比亞": -5, "秘魯": -5,
         "美國美東": -4, "美東": -4, "紐約": -4, "加拿大東部": -4,
@@ -1719,7 +1723,6 @@
             const trGroup = document.createElement('tr');
             trGroup.className = 'group-header-row';
             
-            // --- 核心修正：改用原生事件監聽，解決 iPhone 點擊無效 ---
             const tdGroup = document.createElement('td');
             tdGroup.colSpan = 9;
             tdGroup.innerHTML = `
@@ -1733,7 +1736,6 @@
             });
             trGroup.appendChild(tdGroup);
             postcardTbody.appendChild(trGroup);
-            // --------------------------------------------------------
 
             if (!isCollapsed) {
                 postcardGroups[type].forEach(item => {
