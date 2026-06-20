@@ -2,942 +2,772 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>皮克敏-巨菇-雲端同步追蹤器</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
+        :root {
+            --primary: #10b981; /* 現代翡翠綠 */
+            --primary-dark: #059669;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f4f9f4;
-            color: #333;
+            background-color: var(--bg);
+            color: var(--text-main);
             margin: 0;
-            padding: 10px;
+            padding: 0;
+            padding-bottom: 70px; /* 預留給底部導覽列的空間 */
+            -webkit-font-smoothing: antialiased;
         }
-        .container {
+
+        /* 頂部導覽列 */
+        .app-header {
+            background-color: var(--card-bg);
+            padding: 12px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .app-header h2 {
+            margin: 0;
+            font-size: 18px;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .header-right {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: bold;
+        }
+
+        /* 主內容區 */
+        .app-content {
+            padding: 15px;
             max-width: 1000px;
             margin: 0 auto;
-            background: #fff;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            position: relative;
         }
-        
-        .top-info-bar {
+        .view-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .view-section.active {
+            display: block;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 底部導覽列 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--card-bg);
+            display: flex;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: var(--text-muted);
+            cursor: pointer;
+            border: none;
+            background: none;
+            outline: none;
+            transition: color 0.2s;
+        }
+        .nav-item.active {
+            color: var(--primary);
+            font-weight: bold;
+        }
+        .nav-icon {
+            font-size: 22px;
+            margin-bottom: 2px;
+            transition: transform 0.2s;
+        }
+        .nav-item.active .nav-icon {
+            transform: scale(1.15);
+        }
+
+        /* 懸浮新增按鈕 FAB */
+        .fab {
+            position: fixed;
+            bottom: 85px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            font-size: 28px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+            z-index: 90;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            outline: none;
+        }
+        .fab:active {
+            transform: scale(0.9);
+            background: var(--primary-dark);
+        }
+
+        /* 巨菇卡片列表樣式 */
+        .section-title {
+            font-size: 15px;
+            color: var(--primary-dark);
+            margin: 0 0 10px 0;
+            border-bottom: 2px dashed #d1d5db;
+            padding-bottom: 5px;
+        }
+        .list-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .list-card.row-expired {
+            background: #f9fafb;
+            opacity: 0.8;
+        }
+        .lc-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-            gap: 10px;
+            border-bottom: 1px solid #f3f4f6;
+            padding-bottom: 8px;
         }
-
-        .sync-widget {
-            background-color: #fff8e1;
-            border: 1px solid #ffe082;
-            padding: 8px 12px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-        .sync-widget label {
+        .lc-title {
             font-weight: bold;
-            color: #f57f17;
+            font-size: 15px;
+            color: var(--text-main);
         }
-        .sync-widget input {
-            padding: 4px 8px;
-            border: 1px solid #ffca28;
-            border-radius: 4px;
-            font-size: 13px;
-            width: 100px;
-            outline: none;
-            background-color: #fff;
-        }
-        .sync-widget input:focus {
-            border-color: #f57f17;
-            box-shadow: 0 0 4px rgba(245,127,23,0.3);
-        }
-        .sync-status {
-            font-size: 11px;
+        .lc-time {
+            font-family: monospace;
             font-weight: bold;
+            font-size: 12px;
             padding: 2px 6px;
-            border-radius: 10px;
-            background-color: #eeeeee;
-            color: #757575;
+            border-radius: 6px;
+            background: #fee2e2;
+            color: #ef4444;
+            white-space: nowrap;
         }
-        .sync-status.active {
-            background-color: #e8f5e9;
-            color: #2e7d32;
+        .lc-time.safe {
+            background: #d1fae5;
+            color: #059669;
         }
-
-        .view-counter {
-            background-color: #e8f5e9;
-            color: #2e7d32;
-            padding: 6px 12px;
-            border-radius: 8px;
+        .lc-body {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .lc-user-badge {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 2px 8px;
+            border-radius: 12px;
             font-size: 12px;
             font-weight: bold;
-            border: 1px solid #c5e1a5;
-            text-align: right;
+        }
+        .lc-info {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
             display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-        }
-        .version-tag {
-            font-size: 10px;
-            color: #757575;
-            margin-top: 3px;
-            font-family: monospace;
-        }
-
-        h2, h3 {
-            margin-top: 0;
-            color: #2e7d32;
-        }
-        h2 {
-            font-size: 20px;
-            margin-bottom: 0;
-        }
-        h3 {
-            margin-top: 25px;
-            border-bottom: 2px dashed #c5e1a5;
-            padding-bottom: 6px;
-            font-size: 16px;
-            color: #558b2f;
-        }
-
-        .timezone-widget {
-            background-color: #f9fbf9;
-            border: 1px solid #e2eee2;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 15px;
-            display: flex;
+            gap: 6px;
             align-items: center;
-            justify-content: space-between;
             flex-wrap: wrap;
+        }
+        .lc-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        /* 明信片網格卡片樣式 */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 12px;
         }
-        .taipei-clock {
+        .grid-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid var(--border);
             display: flex;
             flex-direction: column;
+            position: relative;
         }
-        .taipei-clock .label {
-            font-size: 11px;
-            color: #558b2f;
-            font-weight: bold;
-        }
-        .taipei-clock .time {
-            font-size: 22px;
-            font-weight: bold;
-            color: #2e7d32;
-            font-family: monospace;
-        }
-        .world-clocks {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .clock-item {
-            background: #ffffff;
-            border: 1px solid #e8f0e8;
-            padding: 6px 10px;
-            border-radius: 6px;
-            min-width: 140px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-        .clock-item select {
-            border: none;
-            background: transparent;
-            font-size: 11px;
-            color: #666;
-            font-weight: bold;
-            padding: 0;
-            cursor: pointer;
-            outline: none;
+        .card-img-box {
             width: 100%;
+            aspect-ratio: 4 / 3;
+            background: #e5e7eb;
+            position: relative;
+            cursor: pointer;
         }
-        .clock-item select:hover {
-            color: #2e7d32;
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
-        .clock-item .w-time {
+        .card-img-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+        .card-badge-type {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 6px;
+            backdrop-filter: blur(4px);
+        }
+        .card-star-btn {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: rgba(255,255,255,0.85);
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
             font-size: 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .card-star-btn.active { color: #f59e0b; text-shadow: 0 0 2px rgba(245,158,11,0.5); }
+        .card-star-btn.inactive { color: #d1d5db; }
+        
+        .card-body {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+        }
+        .card-title {
             font-weight: bold;
-            color: #444;
-            font-family: monospace;
-            margin-top: 2px;
+            font-size: 14px;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .card-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-actions {
+            display: flex;
+            gap: 4px;
+            margin-top: auto;
+            padding-top: 8px;
         }
 
-        .share-section {
-            margin-bottom: 15px;
-            width: 100%;
+        /* 標籤徽章 */
+        .tag-badge {
+            background-color: #f3f4f6;
+            color: #4b5563;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+            display: inline-block;
+            max-width: 80px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border: 1px solid #e5e7eb;
         }
+        .tz-badge {
+            font-size: 10px;
+            color: #fff;
+            background-color: #f59e0b;
+            padding: 1px 4px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        /* 按鈕共用設定 */
+        .btn-sm {
+            font-size: 11px;
+            padding: 5px 8px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+        .btn-sm:hover { opacity: 0.8; }
+        .btn-default { background: #f3f4f6; color: #4b5563; flex: 1; border: 1px solid #e5e7eb; }
+        .btn-claim { background: #3b82f6; color: white; }
+        .btn-edit { background: #f59e0b; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-block { width: 100%; padding: 10px; border-radius: 8px; font-size: 14px; }
+        
         .line-share-btn {
             background-color: #06c755;
             color: white;
             border: none;
             border-radius: 8px;
-            padding: 10px 16px;
-            font-size: 13px;
+            padding: 12px 16px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
             width: 100%;
-            box-shadow: 0 2px 4px rgba(6,199,85,0.2);
-            transition: background-color 0.2s, box-shadow 0.2s;
-        }
-        .line-share-btn:hover {
-            background-color: #05b04b;
-            box-shadow: 0 4px 6px rgba(6,199,85,0.3);
-        }
-        .line-share-btn:disabled {
-            background-color: #a5d6a7 !important;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-        
-        .form-tabs {
-            display: flex;
-            gap: 5px;
-            margin-bottom: -1px;
-            z-index: 2;
-            position: relative;
-        }
-        .form-tab {
-            padding: 8px 16px;
-            background-color: #e8f5e9;
-            border: 1px solid #c5e1a5;
-            border-bottom: none;
-            border-radius: 8px 8px 0 0;
-            font-size: 12px;
-            font-weight: bold;
-            color: #558b2f;
-            cursor: pointer;
-        }
-        .form-tab.active {
-            background-color: #f1f8e9;
-            color: #2e7d32;
-            padding-bottom: 9px;
-            border-top: 3px solid #4caf50;
+            box-shadow: 0 4px 6px rgba(6,199,85,0.2);
         }
 
-        .input-form {
-            background: #f1f8e9;
-            padding: 12px;
-            border-radius: 0 8px 8px 8px;
-            margin-bottom: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            border: 1px solid #c5e1a5;
-        }
-        
-        .form-row-top {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            width: 100%;
-        }
-        
-        .form-row-bottom {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            align-items: flex-end;
-            width: 100%;
-        }
-        
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            flex: 1;
-            min-width: 120px;
-        }
-        
-        .input-group label {
-            font-size: 11px;
-            color: #558b2f;
+        /* 群組標題 (明信片) */
+        .group-header {
+            grid-column: 1 / -1; /* 跨滿整個網格 */
+            background: #e0f2fe;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin: 10px 0 0 0;
             font-weight: bold;
-        }
-        
-        .input-form input, .input-form select, .modal-box input, .modal-box select {
-            padding: 6px 10px;
-            border: 1px solid #c5e1a5;
-            border-radius: 6px;
-            font-size: 13px;
-            box-sizing: border-box;
-            height: 36px;
-            width: 100%;
-            background-color: #fff;
-        }
-
-        .time-container {
+            color: #0284c7;
             display: flex;
-            gap: 8px;
+            justify-content: space-between;
             align-items: center;
-        }
-        .time-box {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            width: 60px;
-        }
-        .time-box label {
-            font-size: 11px;
-            color: #558b2f;
-            text-align: center;
-            font-weight: bold;
-        }
-        .time-box input {
-            text-align: center;
-        }
-        .submit-btn {
-            height: 36px;
-            padding: 0 20px;
-            background-color: #4caf50;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .submit-btn:hover {
-            background-color: #43a047;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .search-container {
-            margin: 10px 0;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .upload-link-hint {
-            font-size: 13px;
-            color: #558b2f;
-            font-weight: bold;
-        }
-        .upload-link-hint a {
-            color: #0071e3;
-            text-decoration: none;
-            border-bottom: 1px dashed #0071e3;
-            padding-bottom: 1px;
-        }
-        .upload-link-hint a:hover {
-            color: #005bb5;
-            border-bottom: 1px solid #005bb5;
-        }
-        .filter-row {
+        /* 搜尋與篩選列 */
+        .search-row {
             display: flex;
             gap: 8px;
-            width: 100%;
+            margin-bottom: 15px;
         }
-        .filter-select {
-            padding: 6px 10px;
-            border: 1px solid #c5e1a5;
+        .input-base {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
             border-radius: 8px;
             font-size: 13px;
-            background-color: #fafdfa;
+            background-color: var(--card-bg);
             outline: none;
-            flex-shrink: 0;
-            color: #2e7d32;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .search-input {
-            flex: 1;
-            height: 36px;
-            padding: 6px 12px;
-            border: 1px solid #c5e1a5;
-            border-radius: 8px;
-            font-size: 13px;
             box-sizing: border-box;
-            background-color: #fafdfa;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: border-color 0.2s;
         }
-        .search-input:focus {
-            border-color: #4caf50;
-            box-shadow: 0 0 5px rgba(76,175,80,0.2);
-            background-color: #fff;
-        }
-        
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
+        .input-base:focus { border-color: var(--primary); }
+        .search-input { flex: 1; }
+        .filter-select { flex-shrink: 0; color: var(--primary-dark); font-weight: bold; }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            margin-bottom: 10px;
-            font-size: 13px;
-        }
-        th, td {
-            padding: 8px 6px;
-            border-bottom: 1px solid #e0e0e0;
-            white-space: nowrap;
-            vertical-align: middle;
-        }
-        th {
-            background-color: #f1f8e9;
-            font-weight: 600;
-            color: #33691e;
-        }
-        
-        .group-header-row td {
-            background-color: #dcedc8;
-            color: #33691e;
-            font-weight: bold;
-            cursor: pointer;
-            user-select: none;
-            padding: 10px 12px;
-            border-bottom: 2px solid #fff;
-            transition: background-color 0.2s;
-            -webkit-tap-highlight-color: transparent; 
-        }
-        .group-header-row:hover td {
-            background-color: #c5e1a5;
-        }
-
-        .col-coords {
-            max-width: 110px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            display: inline-block;
-            vertical-align: middle;
-        }
-
-        .tag-badge {
-            background-color: #e1f5fe;
-            color: #0288d1;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: bold;
-            border: 1px solid #b3e5fc;
-            display: inline-block;
-            max-width: 90px;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            white-space: nowrap;
-            vertical-align: middle;
-        }
-        .tz-badge {
-            font-size: 10px;
-            color: #fff;
-            background-color: #ff9800;
-            padding: 1px 4px;
-            border-radius: 4px;
-            margin-left: 4px;
-            font-weight: bold;
-            display: inline-block;
-        }
-
-        .postcard-preview {
-            width: clamp(50px, 10vw, 100px); 
-            height: auto;            
-            aspect-ratio: 4 / 3;     
-            object-fit: cover;       
-            border-radius: 6px;
-            border: 1px solid #dcdcdc;
-            cursor: pointer;
-            transition: transform 0.2s;
-            vertical-align: middle;
-        }
-        .postcard-preview:hover {
-            transform: scale(1.1);
-        }
-
-        .star-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            padding: 4px;
-            margin: 0;
-            outline: none;
-            transition: transform 0.2s, color 0.2s;
-        }
-        .star-btn:hover {
-            transform: scale(1.25);
-        }
-        .star-active {
-            color: #ffb300;
-            text-shadow: 0 0 2px rgba(255,179,0,0.5);
-        }
-        .star-inactive {
-            color: #e0e0e0;
-        }
-
-        .expired { color: #d32f2f; font-weight: bold; }
-        .not-set { color: #8e8e93; font-style: italic; }
-
-        .row-expired { background-color: #f5f5f5; color: #a1a1a1 !important; }
-        .row-expired strong { color: #a1a1a1 !important; }
-        .row-expired .col-coords { color: #a1a1a1 !important; }
-        .row-expired .tag-badge { background-color: #cfd8dc; color: #607d8b; border-color: #b0bec5; }
-        .row-expired .copy-btn { background-color: #b0bec5; }
-        .row-expired .claim-btn { background-color: #b0bec5; }
-        .row-expired .edit-time-btn { background-color: #b0bec5; }
-        .row-expired .tz-badge { background-color: #b0bec5; }
-
-        .action-btns { display: flex; gap: 4px; }
-        .delete-btn, .claim-btn, .edit-time-btn {
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: bold;
-            color: white;
-        }
-        .delete-btn { background-color: #e53935; }
-        .delete-btn:hover { background-color: #c62828; }
-        .claim-btn { background-color: #0071e3; }
-        .claim-btn:hover { background-color: #0077ed; }
-        .edit-time-btn { background-color: #ff9800; }
-        .edit-time-btn:hover { background-color: #f57c00; }
-        
-        .copy-btn {
-            background-color: #8bc34a;
-            color: white;
-            border: none;
-            padding: 3px 6px;
-            margin-left: 4px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 10px;
-            vertical-align: middle;
-        }
-        .copy-btn:hover { background-color: #7cb342; }
-        .copy-btn.copied { background-color: #9e9e9e; }
-
-        .empty-message {
-            color: #8e8e93;
-            text-align: center;
+        /* 設定頁面卡片 */
+        .settings-card {
+            background: var(--card-bg);
+            border-radius: 12px;
             padding: 15px;
-            font-style: italic;
-            font-size: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid var(--border);
         }
+        .settings-card h3 {
+            margin: 0 0 12px 0;
+            font-size: 15px;
+            border-bottom: 1px solid #f3f4f6;
+            padding-bottom: 8px;
+            color: var(--primary-dark);
+        }
+        .sync-status { font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 6px; background-color: #f3f4f6; color: #9ca3af; }
+        .sync-status.active { background-color: #d1fae5; color: #059669; }
 
-        .lightbox-overlay, .modal-overlay {
+        /* 彈出視窗 (Modal) */
+        .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 2000;
+            z-index: 1000;
+            backdrop-filter: blur(2px);
         }
-        .lightbox-overlay { background: rgba(0,0,0,0.85); }
-        .modal-overlay { background: rgba(0,0,0,0.4); z-index: 1000; }
-        
-        .lightbox-img {
-            max-width: 90%; max-height: 85%;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-        }
-
         .modal-box {
             background: white;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            width: 290px;
-            max-height: 90vh;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            width: 90%;
+            max-width: 360px;
+            max-height: 85vh;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 12px;
         }
-        .modal-box h4 { margin: 0; color: #2e7d32; font-size: 15px; }
-        .modal-buttons { display: flex; justify-content: flex-end; gap: 8px; }
-        .modal-btn {
-            padding: 6px 12px; border-radius: 6px; border: none;
-            cursor: pointer; font-weight: bold; font-size: 12px;
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            border-bottom: 1px solid #f3f4f6;
+            padding-bottom: 10px;
         }
-        .modal-btn.confirm { background-color: #4caf50; color: white; }
-        .modal-btn.cancel { background-color: #e0e0e0; color: #333; }
+        .modal-header h4 { margin: 0; font-size: 16px; color: var(--text-main); }
+        .modal-close { background: none; border: none; font-size: 20px; color: #9ca3af; cursor: pointer; padding: 0;}
+        
+        .input-group { display: flex; flex-direction: column; gap: 4px; }
+        .input-group label { font-size: 11px; color: var(--text-muted); font-weight: bold; }
+        
+        .time-container { display: flex; gap: 8px; align-items: center; justify-content: center; }
+        .time-box { display: flex; flex-direction: column; gap: 2px; width: 60px; }
+        .time-box label { text-align: center; }
+        .time-box input { text-align: center; }
 
-        @media (max-width: 650px) {
-            body { padding: 5px; }
-            .container { padding: 10px; }
-            .top-info-bar { flex-direction: column-reverse; gap: 15px; }
-            h2 { font-size: 18px; margin-bottom: 5px; }
-            .view-counter { align-items: flex-start; width: fit-content; }
-            
-            .timezone-widget { flex-direction: column; align-items: flex-start; padding: 10px; }
-            .world-clocks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
-            .clock-item { min-width: unset; }
+        .empty-message {
+            color: #9ca3af;
+            text-align: center;
+            padding: 20px;
+            font-size: 13px;
+        }
 
-            .form-row-top { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-            .form-row-top .input-group:nth-child(5) { grid-column: span 2; }
-            .form-row-bottom { justify-content: space-between; }
-            .submit-btn { width: 100%; margin-top: 5px; }
-            .filter-row { flex-direction: column; }
+        /* 圖片放大 Lightbox */
+        .lightbox-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .lightbox-img {
+            max-width: 95%; max-height: 90%;
+            border-radius: 12px;
+        }
+        
+        /* 隱藏預設滾動條 (美化) */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        /* 時鐘樣式微調 */
+        .clock-item {
+            background: #f9fafb;
+            border: 1px solid var(--border);
+            padding: 8px;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+        .clock-item select {
+            width: 100%; border:none; background:transparent; font-size:11px; color:var(--text-muted); outline:none; text-align:center;
+        }
+        .clock-item .w-time {
+            font-size: 16px; font-weight:bold; color:var(--text-main); font-family:monospace; margin-top:4px;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    
-    <div class="top-info-bar">
-        <div>
-            <h2>皮克敏-巨菇-雲端同步追蹤器</h2>
-            <div class="sync-widget" style="margin-top: 10px;">
-                <label for="sync-user-id">☁️ 雲端收藏同步代號：</label>
-                <input type="text" id="sync-user-id" placeholder="例如：Leo" onchange="applySyncId()" title="輸入專屬代號，即可跨手機與電腦同步您的⭐收藏名單！">
-                <span id="sync-status" class="sync-status">未啟用</span>
-            </div>
-        </div>
-        
-        <div class="view-counter">
-            <div id="view-counter-text">雲端總瀏覽次數：0 次</div>
-            <div class="version-tag" id="version-tag">Ver: 讀取中...</div>
-        </div>
-    </div>
+    <header class="app-header">
+        <h2>🌱 Pickmin Tracker</h2>
+        <div class="header-right" id="sync-status-indicator">⚪ 未連線</div>
+    </header>
 
-    <div class="timezone-widget">
-        <div class="taipei-clock">
-            <span class="label">台北標準時間 (🇹🇼 Taipei)</span>
-            <span class="time" id="clock-taipei">00:00:00</span>
-        </div>
-        <div class="world-clocks">
-            <div class="clock-item">
-                <select id="tz-select-1" onchange="saveTimezonePref()">
-                    <option value="9" selected>日本/韓國 🇯🇵🇰🇷 (UTC+9)</option>
-                    <option value="8">港澳/北京 🇭🇰🇲🇴 (UTC+8)</option>
-                    <option value="7">泰國/越南 🇹🇭🇻🇳 (UTC+7)</option>
-                </select>
-                <div class="w-time" id="clock-custom-1">00:00</div>
-            </div>
-            <div class="clock-item">
-                <select id="tz-select-2" onchange="saveTimezonePref()">
-                    <option value="-5" selected>美國美東 🇺🇸 (UTC-5)</option>
-                    <option value="-8">美國美西 🇺🇸 (UTC-8)</option>
-                </select>
-                <div class="w-time" id="clock-custom-2">00:00</div>
-            </div>
-            <div class="clock-item">
-                <select id="tz-select-3" onchange="saveTimezonePref()">
-                    <option value="10" selected>澳洲雪梨 🇦🇺 (UTC+10)</option>
-                    <option value="1">英國倫敦 🇬🇧 (UTC+1)</option>
-                    <option value="2">歐陸時間 🇪🇺 (UTC+2)</option>
-                </select>
-                <div class="w-time" id="clock-custom-3">00:00</div>
-            </div>
-        </div>
-    </div>
+    <main class="app-content">
 
-    <div class="share-section">
-        <button class="line-share-btn" id="line-share-btn" onclick="shareToLineWindow()">
-            💚 一鍵分享巨菇倒數資訊至 LINE 群組
+        <section id="view-mushroom" class="view-section active">
+            <button class="line-share-btn" onclick="shareToLineWindow()" style="margin-bottom: 20px;">
+                💚 一鍵產生短網址分享至 LINE
+            </button>
+
+            <h3 class="section-title">🟢 正常追蹤中</h3>
+            <div id="active-list"></div>
+            <div id="active-empty" class="empty-message" style="display: none;">目前沒有正在追蹤的項目</div>
+
+            <h3 class="section-title" style="margin-top:25px;">🟡 待認領巨菇</h3>
+            <div id="unclaimed-list"></div>
+            <div id="unclaimed-empty" class="empty-message" style="display: none;">目前沒有待認領的項目</div>
+        </section>
+
+        <section id="view-postcard" class="view-section">
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+                🔗 推薦免費圖床：<a href="https://meee.com.tw/" target="_blank" style="color:var(--primary-dark);">Meee 圖片上傳</a>
+            </div>
+            
+            <div class="search-row">
+                <select id="postcard-filter" class="input-base filter-select" onchange="updateView()">
+                    <option value="all">全部明信片</option>
+                    <option value="collected">⭐ 我的收藏</option>
+                    <option value="uncollected">✰ 尚未收藏</option>
+                </select>
+                <input type="text" id="postcard-search" class="input-base search-input" oninput="updateView()" placeholder="🔍 支援多關鍵字搜尋...">
+            </div>
+
+            <div id="postcard-container" class="grid"></div>
+            <div id="postcard-empty" class="empty-message" style="display: none;">目前沒有收藏的明信片項目</div>
+        </section>
+
+        <section id="view-settings" class="view-section">
+            <div class="settings-card">
+                <h3>☁️ 跨裝置收藏同步</h3>
+                <div class="input-group">
+                    <label>綁定同步代號 (手機/電腦輸入相同代號即同步)</label>
+                    <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
+                        <input type="text" id="sync-user-id" class="input-base" placeholder="例如：Leo..." onchange="applySyncId()" style="flex:1;">
+                        <span id="sync-status" class="sync-status">未啟用</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <h3>⏰ 時區設定與系統時間</h3>
+                <div style="text-align:center; margin-bottom:15px;">
+                    <div style="font-size:11px; color:var(--text-muted); font-weight:bold;">🇹🇼 台北標準時間</div>
+                    <div id="clock-taipei" style="font-size:26px; font-weight:bold; color:var(--primary-dark); font-family:monospace;">00:00:00</div>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div class="clock-item">
+                        <select id="tz-select-1" onchange="saveTimezonePref()">
+                            <option value="9" selected>日本/韓國 (UTC+9)</option>
+                            <option value="8">港澳/北京 (UTC+8)</option>
+                            <option value="7">泰國/越南 (UTC+7)</option>
+                        </select>
+                        <div class="w-time" id="clock-custom-1">00:00</div>
+                    </div>
+                    <div class="clock-item">
+                        <select id="tz-select-2" onchange="saveTimezonePref()">
+                            <option value="-5" selected>美國美東 (UTC-5)</option>
+                            <option value="-8">美國美西 (UTC-8)</option>
+                        </select>
+                        <div class="w-time" id="clock-custom-2">00:00</div>
+                    </div>
+                    <div class="clock-item">
+                        <select id="tz-select-3" onchange="saveTimezonePref()">
+                            <option value="10" selected>澳洲雪梨 (UTC+10)</option>
+                            <option value="1">英國倫敦 (UTC+1)</option>
+                            <option value="2">歐陸時間 (UTC+2)</option>
+                        </select>
+                        <div class="w-time" id="clock-custom-3">00:00</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <h3>ℹ️ 系統資訊</h3>
+                <div id="view-counter-text" style="font-size:13px; font-weight:bold; color:var(--text-main);">雲端總瀏覽次數：0 次</div>
+                <div id="version-tag" style="font-size:11px; color:var(--text-muted); margin-top:4px;">Ver: 讀取中...</div>
+            </div>
+        </section>
+
+    </main>
+
+    <nav class="bottom-nav">
+        <button class="nav-item active" id="nav-mushroom" onclick="switchTab('mushroom')">
+            <span class="nav-icon">🍄</span>
+            <span>巨菇</span>
         </button>
-    </div>
-    
-    <div class="form-tabs">
-        <div class="form-tab active" id="tab-mushroom" onclick="switchFormMode('mushroom')">🍄 倒數巨菇登記</div>
-        <div class="form-tab" id="tab-postcard" onclick="switchFormMode('postcard')">🖼️ 美菇明信片收藏</div>
-    </div>
+        <button class="nav-item" id="nav-postcard" onclick="switchTab('postcard')">
+            <span class="nav-icon">🖼️</span>
+            <span>明信片</span>
+        </button>
+        <button class="nav-item" id="nav-settings" onclick="switchTab('settings')">
+            <span class="nav-icon">⚙️</span>
+            <span>設定</span>
+        </button>
+    </nav>
 
-    <div class="input-form">
-        <!-- 巨菇新增表單 -->
-        <div class="form-row-top" id="fields-mushroom">
-            <div class="input-group">
-                <label>使用者 (留空待認領)</label>
-                <input type="text" id="user" placeholder="名字或留空">
-            </div>
-            <div class="input-group">
-                <label>國家 <span id="tz-hint" style="color:#e65100; font-size:10px;"></span></label>
-                <input type="text" id="country" placeholder="例如：日本" oninput="showTimeDiff(this.value, 'tz-hint')">
-            </div>
-            <div class="input-group">
-                <label>名稱</label>
-                <input type="text" id="name" placeholder="例如：巨型火菇">
-            </div>
-            <div class="input-group">
-                <label>座標</label>
-                <input type="text" id="coords" placeholder="貼上或輸入座標">
-            </div>
-            <div class="input-group">
-                <label>標籤</label>
-                <input type="text" id="tag" placeholder="例如：大安區、五星">
-            </div>
-        </div>
+    <button id="main-fab" class="fab" onclick="openAddModal()">+</button>
 
-        <!-- 明信片新增表單 -->
-        <div class="form-row-top" id="fields-postcard" style="display: none;">
-            <div class="input-group">
-                <label>種類</label>
-                <select id="post-type">
-                    <option value="菇" selected>菇</option>
-                    <option value="花">花</option>
-                    <option value="菇窩">菇窩</option>
-                    <option value="隱藏">隱藏</option>
-                    <option value="特殊金盆">特殊金盆</option>
-                </select>
+
+    <div id="add-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h4 id="add-modal-title">新增資料</h4>
+                <button class="modal-close" onclick="closeModal('add-modal')">&times;</button>
             </div>
-            <div class="input-group">
-                <label>國家</label>
-                <input type="text" id="post-country" placeholder="例如：日本">
-            </div>
-            <div class="input-group">
-                <label>名稱</label>
-                <input type="text" id="post-name" placeholder="例如：櫻花美菇">
-            </div>
-            <div class="input-group">
-                <label>座標</label>
-                <input type="text" id="post-coords" placeholder="貼上點座標">
-            </div>
-            <div class="input-group">
-                <label>標籤</label>
-                <input type="text" id="post-tag" placeholder="例如：2026櫻花季、稀有">
-            </div>
-            <div class="input-group">
-                <label>圖片網址</label>
-                <input type="text" id="post-image" placeholder="請貼上圖片連結或留空">
-            </div>
-        </div>
-        
-        <div class="form-row-bottom">
-            <div class="time-container" id="fields-time">
-                <div class="time-box">
-                    <label>天</label>
-                    <input type="number" id="days" min="0" value="0">
+            
+            <div id="form-mushroom" style="display:none; flex-direction:column; gap:10px;">
+                <div class="input-group">
+                    <label>使用者 (留空待認領)</label>
+                    <input type="text" id="user" class="input-base" placeholder="名字或留空">
                 </div>
-                <div class="time-box">
-                    <label>時</label>
-                    <input type="number" id="hours" min="0" max="23" value="0">
+                <div class="input-group">
+                    <label>國家 <span id="tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
+                    <input type="text" id="country" class="input-base" placeholder="例如：日本" oninput="showTimeDiff(this.value, 'tz-hint')">
                 </div>
-                <div class="time-box">
-                    <label>分</label>
-                    <input type="number" id="minutes" min="0" max="59" value="0">
+                <div class="input-group">
+                    <label>名稱</label>
+                    <input type="text" id="name" class="input-base" placeholder="例如：巨型火菇">
+                </div>
+                <div class="input-group">
+                    <label>座標</label>
+                    <input type="text" id="coords" class="input-base" placeholder="貼上或輸入座標">
+                </div>
+                <div class="input-group">
+                    <label>標籤</label>
+                    <input type="text" id="tag" class="input-base" placeholder="例如：大安區、五星">
+                </div>
+            </div>
+
+            <div id="form-postcard" style="display:none; flex-direction:column; gap:10px;">
+                <div class="input-group">
+                    <label>種類</label>
+                    <select id="post-type" class="input-base">
+                        <option value="菇" selected>菇</option>
+                        <option value="花">花</option>
+                        <option value="菇窩">菇窩</option>
+                        <option value="隱藏">隱藏</option>
+                        <option value="特殊金盆">特殊金盆</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>國家 <span id="post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
+                    <input type="text" id="post-country" class="input-base" placeholder="例如：日本" oninput="showTimeDiff(this.value, 'post-tz-hint')">
+                </div>
+                <div class="input-group">
+                    <label>名稱</label>
+                    <input type="text" id="post-name" class="input-base" placeholder="例如：櫻花美菇">
+                </div>
+                <div class="input-group">
+                    <label>座標</label>
+                    <input type="text" id="post-coords" class="input-base" placeholder="貼上點座標">
+                </div>
+                <div class="input-group">
+                    <label>標籤</label>
+                    <input type="text" id="post-tag" class="input-base" placeholder="例如：2026櫻花季、稀有">
+                </div>
+                <div class="input-group">
+                    <label>圖片網址</label>
+                    <input type="text" id="post-image" class="input-base" placeholder="請貼上圖片連結或留空">
                 </div>
             </div>
             
-            <button class="submit-btn" id="submit-action-btn" onclick="addItem()">新增資料</button>
-        </div>
-    </div>
-
-    <h3>正常追蹤中</h3>
-    <div class="table-responsive">
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 40px;">編號</th>
-                    <th>使用者</th>
-                    <th>國家</th>
-                    <th>名稱</th>
-                    <th>標籤</th>
-                    <th>剩餘時間</th>
-                    <th>座標</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody id="active-table-body"></tbody>
-        </table>
-    </div>
-    <div id="active-empty" class="empty-message" style="display: none;">目前沒有正在追蹤的項目</div>
-
-    <h3>待認領巨菇</h3>
-    <div class="table-responsive">
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 40px;">編號</th>
-                    <th>使用者</th>
-                    <th>國家</th>
-                    <th>名稱</th>
-                    <th>標籤</th>
-                    <th>剩餘時間</th>
-                    <th>座標</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody id="unclaimed-table-body"></tbody>
-        </table>
-    </div>
-    <div id="unclaimed-empty" class="empty-message" style="display: none;">目前沒有待認領的項目</div>
-
-    <h3>美菇 - 明信片</h3>
-    
-    <div class="search-container">
-        <div class="upload-link-hint">
-            🔗 推薦免費圖床：<a href="https://meee.com.tw/" target="_blank">點此前往 Meee 圖片上傳</a> (上傳後複製圖片網址貼入上方表單)
-        </div>
-        <div class="filter-row">
-            <select id="postcard-filter" class="filter-select" onchange="updateTable()">
-                <option value="all">全部明信片</option>
-                <option value="collected">⭐ 我的收藏</option>
-                <option value="uncollected">✰ 尚未收藏</option>
-            </select>
-            <input type="text" id="postcard-search" class="search-input" oninput="updateTable()" placeholder="🔍 支援多關鍵字搜尋 (請用空格隔開)...">
-        </div>
-    </div>
-
-    <div class="table-responsive">
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 35px; text-align: center;">個人</th>
-                    <th style="width: 40px;">編號</th>
-                    <th>種類</th>
-                    <th>國家</th>
-                    <th>圖片</th>
-                    <th>名稱</th>
-                    <th>標籤</th>
-                    <th>座標</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody id="postcard-table-body"></tbody>
-        </table>
-    </div>
-    <div id="postcard-empty" class="empty-message" style="display: none;">目前沒有收藏的明信片項目</div>
-</div>
-
-<div id="claim-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-box">
-        <h4 id="modal-title">認領巨菇</h4>
-        <div class="input-group" style="min-width: 100%;">
-            <label>認領人名字</label>
-            <input type="text" id="modal-username" placeholder="請輸入名字">
-        </div>
-        <div class="input-group" style="min-width: 100%;">
-            <label>設定剩餘時間 (不確定保持 0)</label>
-            <div class="time-container" style="justify-content: center; margin-top: 5px;">
-                <div class="time-box">
-                    <label>天</label>
-                    <input type="number" id="modal-days" min="0" value="0">
-                </div>
-                <div class="time-box">
-                    <label>時</label>
-                    <input type="number" id="modal-hours" min="0" max="23" value="0">
-                </div>
-                <div class="time-box">
-                    <label>分</label>
-                    <input type="number" id="modal-minutes" min="0" max="59" value="0">
+            <div id="form-time" style="display:none; flex-direction:column; gap:10px; margin-top:5px;">
+                <label style="font-size:11px; color:var(--text-muted); font-weight:bold; text-align:center;">設定剩餘時間 (皆為0即未設定)</label>
+                <div class="time-container">
+                    <div class="time-box"><label>天</label><input type="number" id="days" class="input-base" min="0" value="0"></div>
+                    <div class="time-box"><label>時</label><input type="number" id="hours" class="input-base" min="0" max="23" value="0"></div>
+                    <div class="time-box"><label>分</label><input type="number" id="minutes" class="input-base" min="0" max="59" value="0"></div>
                 </div>
             </div>
-        </div>
-        <div class="modal-buttons">
-            <button class="modal-btn cancel" onclick="closeModal()">取消</button>
-            <button class="modal-btn confirm" id="modal-submit-btn">確定認領</button>
+            
+            <button class="btn-sm btn-primary btn-block" style="margin-top:10px;" onclick="addItem()">確定新增</button>
         </div>
     </div>
-</div>
 
-<div id="time-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-box">
-        <h4 id="time-modal-title">修改資料</h4>
-        
-        <!-- 巨菇編輯表單 -->
-        <div id="edit-group-mushroom" style="display:none; flex-direction:column; gap:12px;">
-            <div class="input-group" style="min-width: 100%;">
-                <label>修改使用者 (留空為待認領)：</label>
-                <input type="text" id="edit-user" placeholder="請輸入新使用者或留空">
+    <div id="claim-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h4 id="modal-title">認領巨菇</h4>
+                <button class="modal-close" onclick="closeModal('claim-modal')">&times;</button>
             </div>
-            <div class="input-group" style="min-width: 100%;">
-                <label>修改國家： <span id="edit-tz-hint" style="color:#e65100; font-size:10px;"></span></label>
-                <input type="text" id="edit-mushroom-country" placeholder="例如：日本" oninput="showTimeDiff(this.value, 'edit-tz-hint')">
+            <div class="input-group">
+                <label>認領人名字</label>
+                <input type="text" id="modal-username" class="input-base" placeholder="請輸入名字">
             </div>
-            <div class="input-group" style="min-width: 100%;">
-                <label>修改名稱：</label>
-                <input type="text" id="edit-name" placeholder="請輸入新名稱">
+            <div class="input-group" style="margin-top:10px;">
+                <label style="text-align:center;">設定剩餘時間 (不確定保持 0)</label>
+                <div class="time-container" style="margin-top: 5px;">
+                    <div class="time-box"><label>天</label><input type="number" id="modal-days" class="input-base" min="0" value="0"></div>
+                    <div class="time-box"><label>時</label><input type="number" id="modal-hours" class="input-base" min="0" max="23" value="0"></div>
+                    <div class="time-box"><label>分</label><input type="number" id="modal-minutes" class="input-base" min="0" max="59" value="0"></div>
+                </div>
             </div>
-            <div class="input-group" style="min-width: 100%;">
-                <label>修改座標：</label>
-                <input type="text" id="edit-coords" placeholder="請輸入新座標">
+            <button class="btn-sm btn-primary btn-block" style="margin-top:10px;" id="modal-submit-btn">確定認領</button>
+        </div>
+    </div>
+
+    <div id="time-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h4>修改資料</h4>
+                <button class="modal-close" onclick="closeModal('time-modal')">&times;</button>
             </div>
-            <div class="input-group" style="min-width: 100%;">
-                <label>修改標籤：</label>
-                <input type="text" id="edit-tag" placeholder="請輸入新標籤">
-            </div>
-            <div class="input-group" style="min-width: 100%;">
-                <label>重新設定剩餘時間：</label>
-                <div class="time-container" style="justify-content: center; margin-top: 10px;">
-                    <div class="time-box">
-                        <label>天</label>
-                        <input type="number" id="edit-days" min="0" value="0">
-                    </div>
-                    <div class="time-box">
-                        <label>時</label>
-                        <input type="number" id="edit-hours" min="0" max="23" value="0">
-                    </div>
-                    <div class="time-box">
-                        <label>分</label>
-                        <input type="number" id="edit-minutes" min="0" max="59" value="0">
+            
+            <div id="edit-group-mushroom" style="display:none; flex-direction:column; gap:10px;">
+                <div class="input-group"><label>修改使用者 (留空為待認領)：</label><input type="text" id="edit-user" class="input-base"></div>
+                <div class="input-group"><label>修改國家： <span id="edit-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label><input type="text" id="edit-mushroom-country" class="input-base" oninput="showTimeDiff(this.value, 'edit-tz-hint')"></div>
+                <div class="input-group"><label>修改名稱：</label><input type="text" id="edit-name" class="input-base"></div>
+                <div class="input-group"><label>修改座標：</label><input type="text" id="edit-coords" class="input-base"></div>
+                <div class="input-group"><label>修改標籤：</label><input type="text" id="edit-tag" class="input-base"></div>
+                <div class="input-group" style="margin-top:5px;">
+                    <label style="text-align:center;">重新設定剩餘時間：</label>
+                    <div class="time-container" style="margin-top: 5px;">
+                        <div class="time-box"><label>天</label><input type="number" id="edit-days" class="input-base" min="0" value="0"></div>
+                        <div class="time-box"><label>時</label><input type="number" id="edit-hours" class="input-base" min="0" max="23" value="0"></div>
+                        <div class="time-box"><label>分</label><input type="number" id="edit-minutes" class="input-base" min="0" max="59" value="0"></div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- 明信片編輯表單 -->
-        <div id="edit-group-postcard" style="display:none; flex-direction:column; gap:12px;">
-            <div class="input-group" style="min-width: 100%;">
-                <label>修改種類：</label>
-                <select id="edit-post-type">
-                    <option value="菇">菇</option>
-                    <option value="花">花</option>
-                    <option value="菇窩">菇窩</option>
-                    <option value="隱藏">隱藏</option>
-                    <option value="特殊金盆">特殊金盆</option>
-                </select>
+            <div id="edit-group-postcard" style="display:none; flex-direction:column; gap:10px;">
+                <div class="input-group">
+                    <label>修改種類：</label>
+                    <select id="edit-post-type" class="input-base">
+                        <option value="菇">菇</option><option value="花">花</option><option value="菇窩">菇窩</option><option value="隱藏">隱藏</option><option value="特殊金盆">特殊金盆</option>
+                    </select>
+                </div>
+                <div class="input-group"><label>修改國家： <span id="edit-post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label><input type="text" id="edit-post-country" class="input-base" oninput="showTimeDiff(this.value, 'edit-post-tz-hint')"></div>
+                <div class="input-group"><label>修改名稱：</label><input type="text" id="edit-post-name" class="input-base"></div>
+                <div class="input-group"><label>修改標籤：</label><input type="text" id="edit-post-tag" class="input-base"></div>
+                <div class="input-group"><label>修改座標：</label><input type="text" id="edit-post-coords" class="input-base"></div>
+                <div class="input-group"><label>修改圖片網址：</label><input type="text" id="edit-post-image" class="input-base"></div>
             </div>
-            <div class="input-group" style="min-width: 100%;">
-                <label>修改國家：</label>
-                <input type="text" id="edit-post-country" placeholder="請輸入新國家">
-            </div>
-            <div class="input-group" style="min-width: 100%;">
-                <label>修改名稱：</label>
-                <input type="text" id="edit-post-name" placeholder="請輸入新名稱">
-            </div>
-            <div class="input-group" style="min-width: 100%;">
-                <label>修改標籤：</label>
-                <input type="text" id="edit-post-tag" placeholder="請輸入新標籤">
-            </div>
-            <div class="input-group" style="min-width: 100%;">
-                <label>修改座標：</label>
-                <input type="text" id="edit-post-coords" placeholder="請輸入新座標">
-            </div>
-            <div class="input-group" style="min-width: 100%;">
-                <label>修改圖片網址：</label>
-                <input type="text" id="edit-post-image" placeholder="請輸入新圖片網址">
-            </div>
-        </div>
 
-        <div class="modal-buttons" style="margin-top: 10px;">
-            <button class="modal-btn cancel" onclick="closeTimeModal()">取消</button>
-            <button class="modal-btn confirm" id="time-modal-submit-btn">儲存修改</button>
+            <button class="btn-sm btn-edit btn-block" style="margin-top:10px;" id="time-modal-submit-btn">儲存修改</button>
         </div>
     </div>
-</div>
 
-<div id="lightbox" class="lightbox-overlay" onclick="this.style.display='none'">
-    <img id="lightbox-img" class="lightbox-img" src="" alt="明信片大圖">
-</div>
+    <div id="lightbox" class="lightbox-overlay" onclick="this.style.display='none'">
+        <img id="lightbox-img" class="lightbox-img" src="" alt="明信片大圖">
+    </div>
 
 <script>
-    // Firebase 設定
+    // ======= Firebase 設定 ==========
     const firebaseConfig = {
         apiKey: "AIzaSyBkmQhSKbiSTeHkbAnjSZTgYtGbmPySJbo",
         authDomain: "pikmin-tracker-3cf56.firebaseapp.com",
@@ -947,13 +777,12 @@
         messagingSenderId: "848190561510",
         appId: "1:848190561510:web:07ceb7fa8bc57a7004af27"
     };
-
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
     let dataList = [];
     let postcardList = []; 
-    let currentMode = 'mushroom'; 
+    let currentMode = 'mushroom'; // 'mushroom', 'postcard', 'settings'
     let currentClaimingId = null;
     let currentEditingTimeId = null;
     let currentEditingType = 'mushroom'; 
@@ -961,12 +790,52 @@
     let currentSyncId = '';
     let cloudFavorites = [];
     let favoritesListenerRef = null;
-    
     let collapsedGroups = new Set();
 
-    // ==========================================
-    // 時差對照表
-    // ==========================================
+    // ======= 頁籤切換邏輯 ==========
+    function switchTab(tab) {
+        currentMode = tab;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // 更新導覽列樣式
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        document.getElementById('nav-' + tab).classList.add('active');
+
+        // 更新畫面顯示
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        document.getElementById('view-' + tab).classList.add('active');
+
+        // 控制 FAB 新增按鈕顯示
+        if(tab === 'settings') {
+            document.getElementById('main-fab').style.display = 'none';
+        } else {
+            document.getElementById('main-fab').style.display = 'flex';
+        }
+    }
+
+    // ======= Modal 控制 ==========
+    function openAddModal() {
+        if(currentMode === 'mushroom') {
+            document.getElementById('add-modal-title').innerText = '🍄 新增倒數巨菇';
+            document.getElementById('form-mushroom').style.display = 'flex';
+            document.getElementById('form-postcard').style.display = 'none';
+            document.getElementById('form-time').style.display = 'flex';
+        } else if (currentMode === 'postcard') {
+            document.getElementById('add-modal-title').innerText = '🖼️ 新增明信片';
+            document.getElementById('form-mushroom').style.display = 'none';
+            document.getElementById('form-postcard').style.display = 'flex';
+            document.getElementById('form-time').style.display = 'none';
+        }
+        document.getElementById('add-modal').style.display = 'flex';
+    }
+    
+    function closeModal(id) {
+        document.getElementById(id).style.display = 'none';
+        if(id === 'claim-modal') currentClaimingId = null;
+        if(id === 'time-modal') currentEditingTimeId = null;
+    }
+
+    // ======= 時區對照表與計算 ==========
     const globalTzMap = {
         "日本": 9, "韓國": 9, "南韓": 9, "首爾": 9, "東京": 9,
         "台灣": 8, "臺灣": 8, "台北": 8, "香港": 8, "澳門": 8, "北京": 8, "中國": 8, "新加坡": 8, "馬來西亞": 8, "菲律賓": 8,
@@ -996,7 +865,6 @@
                 break;
             }
         }
-        
         if (matchedOffset !== null) {
             const diff = matchedOffset - 8; 
             if (diff === 0) hintEl.innerText = '(無時差)';
@@ -1020,49 +888,42 @@
         return '';
     }
 
+    // ======= 系統核心功能 ==========
     function applySyncId() {
         const inputId = document.getElementById('sync-user-id').value.trim();
         const statusEl = document.getElementById('sync-status');
+        const indicator = document.getElementById('sync-status-indicator');
         
         localStorage.setItem('pikmin_sync_id', inputId);
         currentSyncId = inputId;
 
-        if (favoritesListenerRef) {
-            favoritesListenerRef.off();
-            favoritesListenerRef = null;
-        }
+        if (favoritesListenerRef) { favoritesListenerRef.off(); favoritesListenerRef = null; }
 
         if (inputId) {
-            statusEl.innerText = '已連線🟢';
-            statusEl.classList.add('active');
-            
+            statusEl.innerText = '已連線🟢'; statusEl.classList.add('active');
+            if(indicator) indicator.innerText = '🟢 已連線';
             favoritesListenerRef = database.ref('user_favorites/' + inputId);
             favoritesListenerRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                cloudFavorites = data ? data : [];
-                updateTable(); 
+                cloudFavorites = snapshot.val() || [];
+                updateView(); 
             });
         } else {
-            statusEl.innerText = '未啟用';
-            statusEl.classList.remove('active');
-            cloudFavorites = [];
-            updateTable();
+            statusEl.innerText = '未啟用'; statusEl.classList.remove('active');
+            if(indicator) indicator.innerText = '⚪ 未連線';
+            cloudFavorites = []; updateView();
         }
     }
 
     function toggleCollectPostcard(id) {
         if (!currentSyncId) {
-            alert('請先在畫面上方輸入您的「雲端同步代號」，才能啟用跨裝置收藏功能喔！');
+            alert('請先切換到「設定」頁面輸入您的「同步代號」，才能啟用跨裝置收藏功能喔！');
+            switchTab('settings');
             document.getElementById('sync-user-id').focus();
             return;
         }
-
         let updatedFavorites = [...cloudFavorites];
-        if (updatedFavorites.includes(id)) {
-            updatedFavorites = updatedFavorites.filter(item => item !== id);
-        } else {
-            updatedFavorites.push(id);
-        }
+        if (updatedFavorites.includes(id)) updatedFavorites = updatedFavorites.filter(item => item !== id);
+        else updatedFavorites.push(id);
         
         database.ref('user_favorites/' + currentSyncId).set(updatedFavorites);
     }
@@ -1073,18 +934,13 @@
         if (cloudData) {
             Object.keys(cloudData).forEach((key) => {
                 dataList.push({
-                    id: key, 
-                    sn: cloudData[key].sn,
-                    user: cloudData[key].user || "",
-                    country: cloudData[key].country || "",
-                    name: cloudData[key].name,
-                    coords: cloudData[key].coords,
-                    tag: cloudData[key].tag || "",
-                    targetTime: cloudData[key].targetTime
+                    id: key, sn: cloudData[key].sn, user: cloudData[key].user || "",
+                    country: cloudData[key].country || "", name: cloudData[key].name,
+                    coords: cloudData[key].coords, tag: cloudData[key].tag || "", targetTime: cloudData[key].targetTime
                 });
             });
         }
-        updateTable();
+        updateView();
     });
 
     database.ref('postcards').on('value', (snapshot) => {
@@ -1093,241 +949,131 @@
         if (cloudData) {
             Object.keys(cloudData).forEach((key) => {
                 postcardList.push({
-                    id: key,
-                    type: cloudData[key].type,
-                    name: cloudData[key].name || "", 
-                    country: cloudData[key].country || "",
-                    coords: cloudData[key].coords,
-                    tag: cloudData[key].tag || "",
-                    image: cloudData[key].image
+                    id: key, type: cloudData[key].type, name: cloudData[key].name || "", 
+                    country: cloudData[key].country || "", coords: cloudData[key].coords,
+                    tag: cloudData[key].tag || "", image: cloudData[key].image
                 });
             });
         }
-        updateTable();
+        updateView();
     });
 
-    database.ref('views').transaction((currentViews) => {
-        return (currentViews || 0) + 1;
-    });
-    database.ref('views').on('value', (snapshot) => {
-        const views = snapshot.val() || 0;
-        document.getElementById('view-counter-text').innerText = `雲端總瀏覽次數：${views} 次`;
+    database.ref('views').transaction(curr => (curr || 0) + 1);
+    database.ref('views').on('value', snap => {
+        document.getElementById('view-counter-text').innerText = `雲端總瀏覽次數：${snap.val() || 0} 次`;
     });
 
     function updateVersionTag() {
-        const lastMod = new Date(document.lastModified);
-        const yyyy = lastMod.getFullYear();
-        const MM = String(lastMod.getMonth() + 1).padStart(2, '0');
-        const dd = String(lastMod.getDate()).padStart(2, '0');
-        const hh = String(lastMod.getHours()).padStart(2, '0');
-        const mm = String(lastMod.getMinutes()).padStart(2, '0');
-        
-        const versionEl = document.getElementById('version-tag');
-        if (versionEl) {
-            versionEl.innerText = `Ver: ${yyyy}${MM}${dd}-${hh}${mm}`;
-        }
+        const d = new Date(document.lastModified);
+        const pad = n => String(n).padStart(2, '0');
+        document.getElementById('version-tag').innerText = `Ver: ${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
     }
 
     window.addEventListener('DOMContentLoaded', () => {
         updateVersionTag();
-        
         const savedSyncId = localStorage.getItem('pikmin_sync_id');
-        if (savedSyncId) {
-            document.getElementById('sync-user-id').value = savedSyncId;
-            applySyncId();
-        }
-
-        if(localStorage.getItem('pikmin_tz_area_1')) document.getElementById('tz-select-1').value = localStorage.getItem('pikmin_tz_area_1');
-        if(localStorage.getItem('pikmin_tz_area_2')) document.getElementById('tz-select-2').value = localStorage.getItem('pikmin_tz_area_2');
-        if(localStorage.getItem('pikmin_tz_area_3')) document.getElementById('tz-select-3').value = localStorage.getItem('pikmin_tz_area_3');
+        if (savedSyncId) { document.getElementById('sync-user-id').value = savedSyncId; applySyncId(); }
+        
+        ['1','2','3'].forEach(i => {
+            const val = localStorage.getItem('pikmin_tz_area_' + i);
+            if(val) document.getElementById('tz-select-' + i).value = val;
+        });
         updateClocks();
     });
 
     function saveTimezonePref() {
-        localStorage.setItem('pikmin_tz_area_1', document.getElementById('tz-select-1').value);
-        localStorage.setItem('pikmin_tz_area_2', document.getElementById('tz-select-2').value);
-        localStorage.setItem('pikmin_tz_area_3', document.getElementById('tz-select-3').value);
+        ['1','2','3'].forEach(i => localStorage.setItem('pikmin_tz_area_'+i, document.getElementById('tz-select-'+i).value));
         updateClocks();
     }
 
     function updateClocks() {
         const now = new Date();
         const utcMs = now.getTime() + (now.getTimezoneOffset() * 60000);
-        const offsetTaipei = 8;
-        const offsetCustom1 = parseFloat(document.getElementById('tz-select-1').value) || 0;
-        const offsetCustom2 = parseFloat(document.getElementById('tz-select-2').value) || 0;
-        const offsetCustom3 = parseFloat(document.getElementById('tz-select-3').value) || 0;
-
-        if(document.getElementById('clock-taipei')) document.getElementById('clock-taipei').innerText = formatTimeStr(utcMs, offsetTaipei, true);
-        if(document.getElementById('clock-custom-1')) document.getElementById('clock-custom-1').innerText = formatTimeStr(utcMs, offsetCustom1, false);
-        if(document.getElementById('clock-custom-2')) document.getElementById('clock-custom-2').innerText = formatTimeStr(utcMs, offsetCustom2, false);
-        if(document.getElementById('clock-custom-3')) document.getElementById('clock-custom-3').innerText = formatTimeStr(utcMs, offsetCustom3, false);
+        document.getElementById('clock-taipei').innerText = formatTimeStr(utcMs, 8, true);
+        ['1','2','3'].forEach(i => {
+            document.getElementById('clock-custom-'+i).innerText = formatTimeStr(utcMs, parseFloat(document.getElementById('tz-select-'+i).value)||0, false);
+        });
     }
     
     function formatTimeStr(utcTimeMs, offsetHours, includeSeconds = false) {
-        const targetDate = new Date(utcTimeMs + (3600000 * offsetHours));
-        const hh = String(targetDate.getHours()).padStart(2, '0');
-        const mm = String(targetDate.getMinutes()).padStart(2, '0');
-        if (includeSeconds) {
-            const ss = String(targetDate.getSeconds()).padStart(2, '0');
-            return `${hh}:${mm}:${ss}`;
-        }
-        return `${hh}:${mm}`;
+        const d = new Date(utcTimeMs + (3600000 * offsetHours));
+        const pad = n => String(n).padStart(2, '0');
+        return pad(d.getHours()) + ':' + pad(d.getMinutes()) + (includeSeconds ? ':' + pad(d.getSeconds()) : '');
     }
     setInterval(updateClocks, 1000);
 
-    function switchFormMode(mode) {
-        currentMode = mode;
-        document.getElementById('tab-mushroom').classList.toggle('active', mode === 'mushroom');
-        document.getElementById('tab-postcard').classList.toggle('active', mode === 'postcard');
-        
-        document.getElementById('fields-mushroom').style.display = mode === 'mushroom' ? 'flex' : 'none';
-        document.getElementById('fields-postcard').style.display = mode === 'postcard' ? 'flex' : 'none';
-        document.getElementById('fields-time').style.display = mode === 'mushroom' ? 'flex' : 'none';
-        
-        document.getElementById('submit-action-btn').innerText = mode === 'mushroom' ? '新增資料' : '收藏明信片';
-    }
-
+    // ======= 新增 / 修改 / 刪除邏輯 ==========
     function addItem() {
         if (currentMode === 'mushroom') {
-            const userEl = document.getElementById('user');
-            const countryEl = document.getElementById('country');
-            const nameEl = document.getElementById('name');
-            const coordsEl = document.getElementById('coords');
-            const tagEl = document.getElementById('tag');
-            
-            const dVal = document.getElementById('days').value;
-            const hVal = document.getElementById('hours').value;
-            const mVal = document.getElementById('minutes').value;
+            const userEl = document.getElementById('user'), countryEl = document.getElementById('country');
+            const nameEl = document.getElementById('name'), coordsEl = document.getElementById('coords'), tagEl = document.getElementById('tag');
+            const dVal = document.getElementById('days').value, hVal = document.getElementById('hours').value, mVal = document.getElementById('minutes').value;
 
-            if (!nameEl || !nameEl.value.trim() || !coordsEl || !coordsEl.value.trim()) {
-                alert('請填寫名稱與座標欄位！');
-                return;
-            }
+            if (!nameEl.value.trim() || !coordsEl.value.trim()) { alert('請填寫名稱與座標欄位！'); return; }
 
-            const days = parseInt(dVal, 10) || 0;
-            const hours = parseInt(hVal, 10) || 0;
-            const minutes = parseInt(mVal, 10) || 0;
-
+            const d = parseInt(dVal, 10) || 0, h = parseInt(hVal, 10) || 0, m = parseInt(mVal, 10) || 0;
             let targetTime = null;
-            if (days > 0 || hours > 0 || minutes > 0) {
-                const totalMs = ((days * 24 * 60) + (hours * 60) + minutes) * 60 * 1000;
-                targetTime = Date.now() + totalMs;
-            }
+            if (d > 0 || h > 0 || m > 0) targetTime = Date.now() + (((d * 24 * 60) + (h * 60) + m) * 60 * 1000);
 
-            const processedUser = userEl ? userEl.value.trim() : "";
-            const processedCountry = countryEl ? countryEl.value.trim() : "";
             let nextSn = 1;
-            if (dataList.length > 0) {
-                nextSn = Math.max(...dataList.map(item => item.sn || 0)) + 1;
-            }
+            if (dataList.length > 0) nextSn = Math.max(...dataList.map(i => i.sn || 0)) + 1;
 
             database.ref('mushrooms').push({
-                sn: nextSn,
-                user: processedUser,
-                country: processedCountry,
-                name: nameEl.value.trim(),
-                coords: coordsEl.value.trim(),
-                tag: tagEl ? tagEl.value.trim() : "",
-                targetTime: targetTime
+                sn: nextSn, user: userEl.value.trim(), country: countryEl.value.trim(),
+                name: nameEl.value.trim(), coords: coordsEl.value.trim(), tag: tagEl.value.trim(), targetTime: targetTime
             });
             
-            if(userEl) userEl.value = '';
-            if(countryEl) countryEl.value = '';
+            userEl.value = ''; countryEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = '';
             document.getElementById('tz-hint').innerText = '';
-            nameEl.value = '';
-            coordsEl.value = '';
-            if(tagEl) tagEl.value = '';
-            document.getElementById('days').value = '0';
-            document.getElementById('hours').value = '0';
-            document.getElementById('minutes').value = '0';
+            document.getElementById('days').value = '0'; document.getElementById('hours').value = '0'; document.getElementById('minutes').value = '0';
         } else {
-            const typeEl = document.getElementById('post-type');
-            const countryEl = document.getElementById('post-country');
-            const nameEl = document.getElementById('post-name');
-            const coordsEl = document.getElementById('post-coords');
-            const tagEl = document.getElementById('post-tag');
-            const imageEl = document.getElementById('post-image');
+            const typeEl = document.getElementById('post-type'), countryEl = document.getElementById('post-country');
+            const nameEl = document.getElementById('post-name'), coordsEl = document.getElementById('post-coords');
+            const tagEl = document.getElementById('post-tag'), imageEl = document.getElementById('post-image');
 
-            if (!nameEl.value.trim() || !countryEl.value.trim() || !coordsEl.value.trim()) {
-                alert('請填寫名稱、國家與座標欄位！');
-                return;
-            }
+            if (!nameEl.value.trim() || !countryEl.value.trim() || !coordsEl.value.trim()) { alert('請填寫名稱、國家與座標欄位！'); return; }
 
             database.ref('postcards').push({
-                type: typeEl.value,
-                country: countryEl.value.trim(),
-                name: nameEl.value.trim(),
-                coords: coordsEl.value.trim(),
-                tag: tagEl ? tagEl.value.trim() : "",
-                image: imageEl.value.trim() || "無圖片"
+                type: typeEl.value, country: countryEl.value.trim(), name: nameEl.value.trim(),
+                coords: coordsEl.value.trim(), tag: tagEl.value.trim(), image: imageEl.value.trim() || "無圖片"
             });
-
-            countryEl.value = '';
-            nameEl.value = '';
-            coordsEl.value = '';
-            if(tagEl) tagEl.value = '';
-            imageEl.value = '';
+            countryEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = ''; imageEl.value = '';
+            document.getElementById('post-tz-hint').innerText = '';
         }
+        closeModal('add-modal');
     }
 
     function deleteItem(id, mode = 'mushroom') {
         if(confirm(`確定要刪除這筆${mode === 'mushroom' ? '巨菇' : '明信片'}資料嗎？`)) {
-            database.ref(mode === 'mushroom' ? 'mushrooms/' + id : 'postcards/' + id).remove();
+            database.ref((mode === 'mushroom' ? 'mushrooms/' : 'postcards/') + id).remove();
         }
     }
 
     function openClaimModalById(id) {
         const item = dataList.find(i => i.id === id);
         if (!item) return;
-
         currentClaimingId = id;
-        document.getElementById('modal-title').innerText = `認領巨菇 - ${item.name}`;
+        document.getElementById('modal-title').innerText = `🙋‍♂️ 認領 - ${item.name}`;
         document.getElementById('modal-username').value = '';
-        document.getElementById('modal-days').value = '0';
-        document.getElementById('modal-hours').value = '0';
-        document.getElementById('modal-minutes').value = '0';
+        document.getElementById('modal-days').value = '0'; document.getElementById('modal-hours').value = '0'; document.getElementById('modal-minutes').value = '0';
         document.getElementById('modal-submit-btn').onclick = submitClaim;
         document.getElementById('claim-modal').style.display = 'flex';
-    }
-
-    function closeModal() {
-        document.getElementById('claim-modal').style.display = 'none';
-        currentClaimingId = null;
     }
 
     function submitClaim() {
         const usernameInput = document.getElementById('modal-username').value.trim();
         if (!usernameInput) { alert('請輸入認領人的名字！'); return; }
-
-        const d = parseInt(document.getElementById('modal-days').value, 10) || 0;
-        const h = parseInt(document.getElementById('modal-hours').value, 10) || 0;
-        const m = parseInt(document.getElementById('modal-minutes').value, 10) || 0;
-
+        const d = parseInt(document.getElementById('modal-days').value, 10) || 0, h = parseInt(document.getElementById('modal-hours').value, 10) || 0, m = parseInt(document.getElementById('modal-minutes').value, 10) || 0;
         const updates = { user: usernameInput };
-        if (d > 0 || h > 0 || m > 0) {
-            const totalMs = ((d * 24 * 60) + (h * 60) + m) * 60 * 1000;
-            updates.targetTime = Date.now() + totalMs;
-        }
+        if (d > 0 || h > 0 || m > 0) updates.targetTime = Date.now() + (((d * 24 * 60) + (h * 60) + m) * 60 * 1000);
         database.ref('mushrooms/' + currentClaimingId).update(updates);
-        closeModal();
+        closeModal('claim-modal');
     }
 
     function openTimeModalById(id, mode) {
-        let item;
-        if (mode === 'mushroom') {
-            item = dataList.find(i => i.id === id);
-        } else {
-            item = postcardList.find(i => i.id === id);
-        }
-
-        if (!item) {
-            alert("找不到該項目資料");
-            return;
-        }
-
-        currentEditingTimeId = item.id;
-        currentEditingType = mode;
+        let item = (mode === 'mushroom') ? dataList.find(i => i.id === id) : postcardList.find(i => i.id === id);
+        if (!item) return;
+        currentEditingTimeId = item.id; currentEditingType = mode;
         
         if (mode === 'mushroom') {
             document.getElementById('edit-group-mushroom').style.display = 'flex';
@@ -1337,470 +1083,248 @@
             document.getElementById('edit-name').value = item.name || '';
             document.getElementById('edit-coords').value = item.coords || '';
             document.getElementById('edit-tag').value = item.tag || '';
-            
             showTimeDiff(item.country || '', 'edit-tz-hint');
-
+            
             let d = 0, h = 0, m = 0;
-            if (item.targetTime) {
-                const remainingMs = item.targetTime - Date.now();
-                if (remainingMs > 0) {
-                    const totalSeconds = Math.floor(remainingMs / 1000);
-                    const totalMinutes = Math.floor(totalSeconds / 60);
-                    const totalHours = Math.floor(totalMinutes / 60);
-                    d = Math.floor(totalHours / 24);
-                    h = totalHours % 24;
-                    m = totalMinutes % 60;
-                }
+            if (item.targetTime && (item.targetTime - Date.now() > 0)) {
+                let totalMins = Math.floor((item.targetTime - Date.now()) / 60000);
+                d = Math.floor(totalMins / 1440); h = Math.floor((totalMins % 1440) / 60); m = totalMins % 60;
             }
-            document.getElementById('edit-days').value = d;
-            document.getElementById('edit-hours').value = h;
-            document.getElementById('edit-minutes').value = m;
+            document.getElementById('edit-days').value = d; document.getElementById('edit-hours').value = h; document.getElementById('edit-minutes').value = m;
         } else {
             document.getElementById('edit-group-mushroom').style.display = 'none';
             document.getElementById('edit-group-postcard').style.display = 'flex';
-            
             document.getElementById('edit-post-type').value = item.type || '菇'; 
             document.getElementById('edit-post-country').value = item.country || '';  
             document.getElementById('edit-post-name').value = item.name || ''; 
             document.getElementById('edit-post-tag').value = item.tag || '';
             document.getElementById('edit-post-coords').value = item.coords || ''; 
             document.getElementById('edit-post-image').value = (item.image === "無圖片" ? "" : item.image) || ''; 
+            showTimeDiff(item.country || '', 'edit-post-tz-hint');
         }
-        
         document.getElementById('time-modal-submit-btn').onclick = submitDataEdit;
         document.getElementById('time-modal').style.display = 'flex';
     }
 
-    function closeTimeModal() {
-        document.getElementById('time-modal').style.display = 'none';
-        currentEditingTimeId = null;
-    }
-
     function submitDataEdit() {
         if (currentEditingType === 'mushroom') {
-            const newUser = document.getElementById('edit-user').value.trim();
-            const newCountry = document.getElementById('edit-mushroom-country').value.trim();
-            const newName = document.getElementById('edit-name').value.trim();
-            const newCoords = document.getElementById('edit-coords').value.trim();
-            const newTag = document.getElementById('edit-tag').value.trim();
-            
-            if (!newName || !newCoords) { alert('名稱與座標不能為空！'); return; }
-
-            const d = parseInt(document.getElementById('edit-days').value, 10) || 0;
-            const h = parseInt(document.getElementById('edit-hours').value, 10) || 0;
-            const m = parseInt(document.getElementById('edit-minutes').value, 10) || 0;
-
+            const d = parseInt(document.getElementById('edit-days').value, 10) || 0, h = parseInt(document.getElementById('edit-hours').value, 10) || 0, m = parseInt(document.getElementById('edit-minutes').value, 10) || 0;
             let targetTime = null;
-            if (d > 0 || h > 0 || m > 0) {
-                const totalMs = ((d * 24 * 60) + (h * 60) + m) * 60 * 1000;
-                targetTime = Date.now() + totalMs;
-            }
+            if (d > 0 || h > 0 || m > 0) targetTime = Date.now() + (((d * 24 * 60) + (h * 60) + m) * 60 * 1000);
+
             database.ref('mushrooms/' + currentEditingTimeId).update({ 
-                user: newUser, 
-                country: newCountry,
-                name: newName, 
-                coords: newCoords,
-                tag: newTag, 
-                targetTime: targetTime 
+                user: document.getElementById('edit-user').value.trim(), country: document.getElementById('edit-mushroom-country').value.trim(),
+                name: document.getElementById('edit-name').value.trim(), coords: document.getElementById('edit-coords').value.trim(),
+                tag: document.getElementById('edit-tag').value.trim(), targetTime: targetTime 
             });
         } else {
-            const newType = document.getElementById('edit-post-type').value;
-            const newCountry = document.getElementById('edit-post-country').value.trim();
-            const newName = document.getElementById('edit-post-name').value.trim();
-            const newTag = document.getElementById('edit-post-tag').value.trim();
-            const newCoords = document.getElementById('edit-post-coords').value.trim();
-            const newImage = document.getElementById('edit-post-image').value.trim();
-            if (!newName || !newCountry || !newCoords) { alert('種類、國家、名稱與座標不能為空！'); return; }
-
             database.ref('postcards/' + currentEditingTimeId).update({
-                type: newType,
-                country: newCountry,
-                name: newName,
-                tag: newTag,
-                coords: newCoords,
-                image: newImage || "無圖片"
+                type: document.getElementById('edit-post-type').value, country: document.getElementById('edit-post-country').value.trim(),
+                name: document.getElementById('edit-post-name').value.trim(), tag: document.getElementById('edit-post-tag').value.trim(),
+                coords: document.getElementById('edit-post-coords').value.trim(), image: document.getElementById('edit-post-image').value.trim() || "無圖片"
             });
         }
-        closeTimeModal();
+        closeModal('time-modal');
     }
 
     function copyCoords(text, buttonElement) {
         navigator.clipboard.writeText(text).then(() => {
             const originalText = buttonElement.innerText;
-            buttonElement.innerText = '已複製';
-            buttonElement.classList.add('copied');
-            buttonElement.disabled = true;
-            setTimeout(() => {
-                buttonElement.innerText = originalText;
-                buttonElement.classList.remove('copied');
-                buttonElement.disabled = false;
-            }, 1200);
-        }).catch(err => { alert('複製失敗，請手動複製。'); });
+            buttonElement.innerText = '✅ 成功'; buttonElement.style.background = '#e5e7eb';
+            setTimeout(() => { buttonElement.innerText = originalText; buttonElement.style.background = ''; }, 1200);
+        }).catch(err => alert('複製失敗，請手動複製。'));
     }
 
     function openImageLightbox(src) {
         if(src === '無圖片' || !src) return;
-        document.getElementById('lightbox-img').src = src;
-        document.getElementById('lightbox').style.display = 'flex';
+        document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').style.display = 'flex';
     }
 
     async function shareToLineWindow() {
-        if (dataList.length === 0) {
-            alert('目前雲端沒有任何倒數巨菇資訊可以分享喔！');
-            return;
-        }
-
-        const btn = document.getElementById('line-share-btn');
+        if (dataList.length === 0) { alert('目前沒有任何資訊可以分享喔！'); return; }
+        const btn = document.querySelector('.line-share-btn');
         const originalText = btn.innerText;
-        btn.innerText = '⏳ 正在產生短網址與分享內容...';
-        btn.disabled = true;
+        btn.innerText = '⏳ 正在產生短網址與內容...'; btn.disabled = true;
 
         const now = Date.now();
-        const utcMs = now + (new Date().getTimezoneOffset() * 60000);
-        const taipeiTimeText = formatTimeStr(utcMs, 8, true); 
-
-        let currentUrl = window.location.href.split('?')[0].split('#')[0];
-        let finalShareUrl = currentUrl;
-
+        const taipeiTimeText = formatTimeStr(now + (new Date().getTimezoneOffset() * 60000), 8, true); 
+        let finalShareUrl = window.location.href.split('?')[0].split('#')[0];
         try {
-            const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(currentUrl)}`);
-            if (response.ok) {
-                finalShareUrl = await response.text();
-            }
-        } catch (err) {
-            console.log("短網址 API 暫時無法使用，改回使用原網址", err);
-        }
+            const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(finalShareUrl)}`);
+            if (res.ok) finalShareUrl = await res.text();
+        } catch (err) { console.log(err); }
 
-        const sortedMushroomList = [...dataList].sort((a, b) => {
+        const sorted = [...dataList].sort((a, b) => {
             if (a.targetTime === null && b.targetTime === null) return 0;
-            if (a.targetTime === null) return 1;
-            if (b.targetTime === null) return -1;
+            if (a.targetTime === null) return 1; if (b.targetTime === null) return -1;
             return a.targetTime - b.targetTime;
         });
 
-        let textOutput = `🍄【皮克敏巨菇追蹤器】🍄\n🔗 網址：${finalShareUrl}\n⏰ 台北時間：${taipeiTimeText}\n\n`;
-
-        const actives = sortedMushroomList.filter(item => item.user !== "");
-        const unclaimed = sortedMushroomList.filter(item => item.user === "");
+        let out = `🍄【皮克敏巨菇追蹤器】🍄\n🔗 網址：${finalShareUrl}\n⏰ 台北時間：${taipeiTimeText}\n\n`;
+        const actives = sorted.filter(i => i.user !== ""), unclaimed = sorted.filter(i => i.user === "");
 
         if (actives.length > 0) {
-            textOutput += `🟢【正常追蹤中】\n`;
-            actives.forEach((item) => {
-                const tagInfo = item.tag ? ` #${item.tag}` : "";
-                const countryInfo = item.country ? `[${item.country}] ` : "";
-                textOutput += `${item.sn}. [${item.user}] ${countryInfo}${item.name}${tagInfo}\n`;
-                textOutput += `⏳ 剩餘：${getRemainingText(item.targetTime, now)}\n`;
-                textOutput += `${item.coords}\n\n`;
+            out += `🟢【正常追蹤中】\n`;
+            actives.forEach((i) => {
+                out += `${i.sn}. [${i.user}] ${i.country?`[${i.country}] `:""}${i.name}${i.tag?` #${i.tag}`:""}\n⏳ 剩餘：${getRemainingText(i.targetTime, now)}\n${i.coords}\n\n`;
             });
         }
-
         if (unclaimed.length > 0) {
-            textOutput += `🟡【待認領巨菇】\n`;
-            unclaimed.forEach((item) => {
-                const tagInfo = item.tag ? ` #${item.tag}` : "";
-                const countryInfo = item.country ? `[${item.country}] ` : "";
-                textOutput += `${item.sn}. [待認領] ${countryInfo}${item.name}${tagInfo}\n`;
-                textOutput += `⏳ 剩餘：${getRemainingText(item.targetTime, now)}\n`;
-                textOutput += `${item.coords}\n\n`;
+            out += `🟡【待認領巨菇】\n`;
+            unclaimed.forEach((i) => {
+                out += `${i.sn}. [待認領] ${i.country?`[${i.country}] `:""}${i.name}${i.tag?` #${i.tag}`:""}\n⏳ 剩餘：${getRemainingText(i.targetTime, now)}\n${i.coords}\n\n`;
             });
         }
-
-        navigator.clipboard.writeText(textOutput.trim()).catch(err => console.log('備用複製失敗:', err));
-
-        const lineAppUrl = "line://msg/text/" + encodeURIComponent(textOutput.trim());
-        
-        btn.innerText = '✅ 已成功複製並喚醒 LINE...';
-        
-        setTimeout(() => { 
-            btn.innerText = originalText; 
-            btn.disabled = false;
-        }, 2500);
-        
-        window.location.href = lineAppUrl;
+        navigator.clipboard.writeText(out.trim()).catch(e=>console.log(e));
+        btn.innerText = '✅ 已複製並喚醒 LINE...';
+        setTimeout(() => { btn.innerText = originalText; btn.disabled = false; }, 2500);
+        window.location.href = "line://msg/text/" + encodeURIComponent(out.trim());
     }
 
     function getRemainingText(targetTime, now) {
         if (targetTime === null) return "尚未設定";
-        const remainingMs = targetTime - now;
-        if (remainingMs <= 0) return "已過期/可開打！";
-        
-        const totalSeconds = Math.floor(remainingMs / 1000);
-        const totalMinutes = Math.floor(totalSeconds / 60);
-        const totalHours = Math.floor(totalMinutes / 60);
-        const days = Math.floor(totalHours / 24);
-        const hours = totalHours % 24;
-        const mins = totalMinutes % 60;
-        const secs = totalSeconds % 60;
-
-        if (days > 0) return `${days}天 ${hours}時 ${mins}分`;
-        if (hours > 0) return `${hours}時 ${mins}分 ${secs}秒`;
-        return `${mins}分 ${secs}秒`;
+        const rem = targetTime - now;
+        if (rem <= 0) return "已過期/可開打！";
+        const t = Math.floor(rem / 1000), m = Math.floor(t / 60), h = Math.floor(m / 60), d = Math.floor(h / 24);
+        if (d > 0) return `${d}天 ${h%24}時 ${m%60}分`;
+        if (h > 0) return `${h}時 ${m%60}分 ${t%60}秒`;
+        return `${m}分 ${t%60}秒`;
     }
 
     function toggleGroup(groupId) {
-        if (collapsedGroups.has(groupId)) {
-            collapsedGroups.delete(groupId);
-        } else {
-            collapsedGroups.add(groupId);
-        }
-        updateTable();
+        if (collapsedGroups.has(groupId)) collapsedGroups.delete(groupId);
+        else collapsedGroups.add(groupId);
+        updateView();
     }
 
-    function updateTable() {
-        const activeTbody = document.getElementById('active-table-body');
-        const unclaimedTbody = document.getElementById('unclaimed-table-body');
-        const postcardTbody = document.getElementById('postcard-table-body');
-        if (!activeTbody || !unclaimedTbody || !postcardTbody) return;
-
+    // ======= 核心畫面渲染引擎 (UI App化) ==========
+    function updateView() {
+        const activeEl = document.getElementById('active-list'), unclaimEl = document.getElementById('unclaimed-list'), pcEl = document.getElementById('postcard-container');
+        if (!activeEl || !unclaimEl || !pcEl) return;
         const now = Date.now();
 
-        // 1. 處理巨菇追蹤表格
-        const sortedMushroomList = [...dataList].sort((a, b) => {
+        // 1. 渲染巨菇 (卡片列表)
+        const sortedM = [...dataList].sort((a, b) => {
             if (a.targetTime === null && b.targetTime === null) return 0;
-            if (a.targetTime === null) return 1;
-            if (b.targetTime === null) return -1;
+            if (a.targetTime === null) return 1; if (b.targetTime === null) return -1;
             return a.targetTime - b.targetTime;
         });
 
-        activeTbody.innerHTML = '';
-        unclaimedTbody.innerHTML = '';
-        let activeCount = 0;
-        let unclaimedCount = 0;
+        activeEl.innerHTML = ''; unclaimEl.innerHTML = '';
+        let actCount = 0, uncCount = 0;
 
-        sortedMushroomList.forEach((item) => {
-            const tr = document.createElement('tr');
-            let timeText = '';
-            let isExpired = false;
-
-            if (item.targetTime === null) {
-                timeText = '<span class="not-set">尚未設定</span>';
-            } else {
-                const remainingMs = item.targetTime - now;
-                if (remainingMs <= 0) {
-                    timeText = '<span class="expired">已過期/可開打！</span>';
-                    isExpired = true;
-                } else {
-                    const totalSeconds = Math.floor(remainingMs / 1000);
-                    const totalMinutes = Math.floor(totalSeconds / 60);
-                    const totalHours = Math.floor(totalMinutes / 60);
-                    const days = Math.floor(totalHours / 24);
-                    const hours = totalHours % 24;
-                    const mins = totalMinutes % 60;
-                    const secs = totalSeconds % 60;
-                    if (days > 0) { timeText = `${days}天 ${hours}時 ${mins}分`; }
-                    else if (hours > 0) { timeText = `${hours}時 ${mins}分 ${secs}秒`; }
-                    else { timeText = `${mins}分 ${secs}秒`; }
-                }
+        sortedM.forEach(item => {
+            let timeText = '<span class="not-set">尚未設定</span>', isExp = false;
+            if (item.targetTime !== null) {
+                if (item.targetTime - now <= 0) { timeText = '已過期/可開打！'; isExp = true; } 
+                else { timeText = getRemainingText(item.targetTime, now); }
             }
 
-            if (isExpired) tr.classList.add('row-expired');
+            const safeC = escapeHtml(item.country||''), safeName = escapeHtml(item.name), safeTag = escapeHtml(item.tag);
+            const diffStr = getTimeDiffString(safeC);
+            const cHtml = safeC ? `${safeC} ${diffStr ? `<span class="tz-badge">${diffStr}</span>` : ''}` : '';
+            const tHtml = safeTag ? `<span class="tag-badge">${safeTag}</span>` : '';
 
-            const safeCountry = escapeHtml(item.country || '');
-            const safeCoords = escapeHtml(item.coords);
-            const safeName = escapeHtml(item.name);
-            const safeTag = escapeHtml(item.tag);
-            const tagHtml = safeTag ? `<span class="tag-badge">${safeTag}</span>` : `<span class="not-set">-</span>`;
+            const card = document.createElement('div');
+            card.className = `list-card ${isExp ? 'row-expired' : ''}`;
             
-            const diffStr = getTimeDiffString(safeCountry);
-            
-            let countryHtml = `<span class="not-set">-</span>`;
-            if (safeCountry) {
-                if (diffStr !== '') {
-                    countryHtml = `${safeCountry} <br><span class="tz-badge">${diffStr}</span>`;
-                } else {
-                    countryHtml = `${safeCountry}`; 
-                }
-            }
+            let actionHtml = item.user === "" ? `<button class="btn-sm btn-claim" onclick="openClaimModalById('${item.id}')">🙋‍♂️ 認領</button>` : '';
+            actionHtml += `<button class="btn-sm btn-edit" onclick="openTimeModalById('${item.id}', 'mushroom')">✏️ 修改</button><button class="btn-sm btn-danger" onclick="deleteItem('${item.id}', 'mushroom')">🗑️ 刪除</button>`;
 
-            if (item.user === "") {
-                unclaimedCount++;
-                tr.innerHTML = `
-                    <td>${item.sn}</td>
-                    <td><span style="color:#8e8e93; font-style:italic;">無</span></td>
-                    <td>${countryHtml}</td>
-                    <td>${safeName}</td>
-                    <td>${tagHtml}</td>
-                    <td>${timeText}</td>
-                    <td>
-                        <span class="col-coords">${safeCoords}</span>
-                        <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
-                    </td>
-                    <td>
-                        <div class="action-btns">
-                            <button class="claim-btn" onclick="openClaimModalById('${item.id}')">認領</button>
-                            <button class="edit-time-btn" onclick="openTimeModalById('${item.id}', 'mushroom')">修改</button>
-                            <button class="delete-btn" onclick="deleteItem('${item.id}', 'mushroom')">刪除</button>
-                        </div>
-                    </td>
-                `;
-                unclaimedTbody.appendChild(tr);
-            } else {
-                activeCount++;
-                tr.innerHTML = `
-                    <td>${item.sn}</td>
-                    <td><strong>${escapeHtml(item.user)}</strong></td>
-                    <td>${countryHtml}</td>
-                    <td>${safeName}</td>
-                    <td>${tagHtml}</td>
-                    <td>${timeText}</td>
-                    <td>
-                        <span class="col-coords">${safeCoords}</span>
-                        <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
-                    </td>
-                    <td>
-                        <div class="action-btns">
-                            <button class="edit-time-btn" onclick="openTimeModalById('${item.id}', 'mushroom')">修改</button>
-                            <button class="delete-btn" onclick="deleteItem('${item.id}', 'mushroom')">刪除</button>
-                        </div>
-                    </td>
-                `;
-                activeTbody.appendChild(tr);
-            }
-        });
-
-        document.getElementById('active-empty').style.display = activeCount === 0 ? 'block' : 'none';
-        document.getElementById('unclaimed-empty').style.display = unclaimedCount === 0 ? 'block' : 'none';
-
-        // 2. 處理美菇明信片部分
-        postcardTbody.innerHTML = '';
-        
-        const searchInputRaw = document.getElementById('postcard-search') ? document.getElementById('postcard-search').value.trim().toLowerCase() : '';
-        const searchKeywords = searchInputRaw === '' ? [] : searchInputRaw.split(/\s+/);
-        const filterState = document.getElementById('postcard-filter') ? document.getElementById('postcard-filter').value : 'all';
-
-        const sortedPostcardList = [...postcardList].sort((a, b) => {
-            if (a.type !== b.type) {
-                return a.type.localeCompare(b.type, 'zh-TW');
-            }
-            return a.country.localeCompare(b.country, 'zh-TW');
-        });
-
-        const filteredPostcards = [];
-        sortedPostcardList.forEach((item) => {
-            const isCollected = cloudFavorites.includes(item.id);
-            if (filterState === 'collected' && !isCollected) return;
-            if (filterState === 'uncollected' && isCollected) return;
-
-            const safeType = escapeHtml(item.type);
-            const safeCountry = escapeHtml(item.country);
-            const safeName = escapeHtml(item.name);
-            const safeCoords = escapeHtml(item.coords);
-            const safeTag = escapeHtml(item.tag);
-
-            const isMatch = searchKeywords.length === 0 || searchKeywords.every(kw => 
-                safeType.toLowerCase().includes(kw) ||
-                safeCountry.toLowerCase().includes(kw) ||
-                safeName.toLowerCase().includes(kw) ||
-                safeTag.toLowerCase().includes(kw) ||
-                safeCoords.toLowerCase().includes(kw)
-            );
-
-            if (isMatch) {
-                filteredPostcards.push(item);
-            }
-        });
-
-        let renderIndex = 1; 
-
-        const postcardGroups = {};
-        filteredPostcards.forEach(item => {
-            const type = item.type ? item.type.trim() : '未分類';
-            if (!postcardGroups[type]) postcardGroups[type] = [];
-            postcardGroups[type].push(item);
-        });
-
-        const sortedPostKeys = Object.keys(postcardGroups).sort((a, b) => {
-            if (a === '未分類') return 1;
-            if (b === '未分類') return -1;
-            return a.localeCompare(b, 'zh-TW');
-        });
-
-        sortedPostKeys.forEach(type => {
-            const groupId = 'post-' + type;
-            const isCollapsed = collapsedGroups.has(groupId);
-            const arrow = isCollapsed ? '▶' : '▼';
-
-            const trGroup = document.createElement('tr');
-            trGroup.className = 'group-header-row';
-            
-            const tdGroup = document.createElement('td');
-            tdGroup.colSpan = 9;
-            tdGroup.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                    <span><strong>${arrow} 📂 種類群組：${escapeHtml(type)}</strong> <span style="font-size: 11px; color:#558b2f;">(${postcardGroups[type].length}筆)</span></span>
-                    <span style="font-size:10px; color:#689f38; font-weight:normal;">點此展開/收合</span>
+            card.innerHTML = `
+                <div class="lc-header">
+                    <div class="lc-title"><span style="color:#9ca3af; font-size:12px; margin-right:4px;">#${item.sn}</span>${safeName}</div>
+                    <div class="lc-time ${!isExp && item.targetTime !== null ? 'safe' : ''}">${timeText}</div>
                 </div>
+                <div class="lc-body">
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        <div>${item.user ? `<span class="lc-user-badge">👤 ${escapeHtml(item.user)}</span>` : '<span style="color:#9ca3af; font-size:13px; font-style:italic;">待認領</span>'}</div>
+                        <div class="lc-info">${cHtml} ${tHtml}</div>
+                    </div>
+                    <button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製座標</button>
+                </div>
+                <div class="lc-actions">${actionHtml}</div>
             `;
-            tdGroup.addEventListener('click', function() {
-                toggleGroup(groupId);
-            });
-            trGroup.appendChild(tdGroup);
-            postcardTbody.appendChild(trGroup);
+            if (item.user === "") { uncCount++; unclaimEl.appendChild(card); } 
+            else { actCount++; activeEl.appendChild(card); }
+        });
 
-            if (!isCollapsed) {
-                postcardGroups[type].forEach(item => {
-                    const isCollected = cloudFavorites.includes(item.id);
-                    const safeType = escapeHtml(item.type);
-                    const safeCountry = escapeHtml(item.country);
-                    const safeName = escapeHtml(item.name);
-                    const safeCoords = escapeHtml(item.coords);
-                    const safeTag = escapeHtml(item.tag);
-                    const safeImage = escapeHtml(item.image);
+        document.getElementById('active-empty').style.display = actCount === 0 ? 'block' : 'none';
+        document.getElementById('unclaimed-empty').style.display = uncCount === 0 ? 'block' : 'none';
 
-                    const tr = document.createElement('tr');
-                    const cardTagHtml = safeTag ? `<span class="tag-badge">${safeTag}</span>` : `<span class="not-set">-</span>`;
-                    const starClass = isCollected ? 'star-active' : 'star-inactive';
-                    const starSymbol = isCollected ? '⭐' : '✰';
+        // 2. 渲染明信片 (圖片網格)
+        pcEl.innerHTML = '';
+        const searchKw = document.getElementById('postcard-search').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+        const filterState = document.getElementById('postcard-filter').value;
 
-                    tr.innerHTML = `
-                        <td style="text-align: center;">
-                            <button class="star-btn ${starClass}" onclick="toggleCollectPostcard('${item.id}')" title="點擊切換收藏">${starSymbol}</button>
-                        </td>
-                        <td>${renderIndex++}</td>
-                        <td><span class="not-set">[${safeType}]</span></td>
-                        <td>${safeCountry}</td>
-                        <td>
-                            ${safeImage !== "無圖片" && safeImage !== "" ? 
-                                `<img src="${safeImage}" class="postcard-preview" onclick="openImageLightbox('${safeImage}')" title="點擊放大查看">` : 
-                                `<span class="not-set">無圖片</span>`
-                            }
-                        </td>
-                        <td><strong>${safeName}</strong></td>
-                        <td>${cardTagHtml}</td>
-                        <td>
-                            <span class="col-coords">${safeCoords}</span>
-                            <button class="copy-btn" onclick="copyCoords('${safeCoords.replace(/'/g, "\\'")}', this)">複製</button>
-                        </td>
-                        <td>
-                            <div class="action-btns">
-                                <button class="edit-time-btn" onclick="openTimeModalById('${item.id}', 'postcard')">修改</button>
-                                <button class="delete-btn" onclick="deleteItem('${item.id}', 'postcard')">刪除</button>
+        const filteredPc = [...postcardList].sort((a,b) => a.type.localeCompare(b.type, 'zh-TW') || a.country.localeCompare(b.country, 'zh-TW')).filter(item => {
+            const isCol = cloudFavorites.includes(item.id);
+            if (filterState === 'collected' && !isCol) return false;
+            if (filterState === 'uncollected' && isCol) return false;
+            if (searchKw.length > 0) {
+                const text = `${item.type} ${item.country} ${item.name} ${item.tag} ${item.coords}`.toLowerCase();
+                if (!searchKw.every(kw => text.includes(kw))) return false;
+            }
+            return true;
+        });
+
+        let vCount = 0;
+        const pcGroups = {};
+        filteredPc.forEach(item => {
+            const type = item.type ? item.type.trim() : '未分類';
+            if (!pcGroups[type]) pcGroups[type] = [];
+            pcGroups[type].push(item);
+        });
+
+        Object.keys(pcGroups).sort((a,b) => a==='未分類'?1 : b==='未分類'?-1 : a.localeCompare(b,'zh-TW')).forEach(type => {
+            const groupId = 'post-' + type, isCol = collapsedGroups.has(groupId), arrow = isCol ? '▶' : '▼';
+            
+            const gHead = document.createElement('div');
+            gHead.className = 'group-header';
+            gHead.innerHTML = `<span>${arrow} 📂 ${escapeHtml(type)}</span> <span style="font-size:11px; color:#0369a1;">${pcGroups[type].length} 筆 (點擊收疊)</span>`;
+            gHead.onclick = () => toggleGroup(groupId);
+            pcEl.appendChild(gHead);
+
+            if (!isCol) {
+                pcGroups[type].forEach(item => {
+                    vCount++;
+                    const safeC = escapeHtml(item.country), safeT = escapeHtml(item.tag), safeI = escapeHtml(item.image);
+                    const isFav = cloudFavorites.includes(item.id);
+                    
+                    const card = document.createElement('div');
+                    card.className = 'grid-card';
+                    
+                    const imgHtml = (safeI && safeI !== "無圖片") ? `<img src="${safeI}" class="card-img" onclick="openImageLightbox('${safeI}')">` : `<div class="card-img-placeholder">無圖片</div>`;
+                    
+                    card.innerHTML = `
+                        <div class="card-img-box">
+                            ${imgHtml}
+                            <div class="card-badge-type">${escapeHtml(item.type)}</div>
+                            <button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-title">${escapeHtml(item.name)}</div>
+                            <div class="card-sub">
+                                <span>🌍 ${safeC}</span>
+                                ${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}
                             </div>
-                        </td>
+                            <div class="card-actions">
+                                <button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button>
+                                <button class="btn-sm btn-edit" style="flex:0;" onclick="openTimeModalById('${item.id}', 'postcard')">✏️</button>
+                                <button class="btn-sm btn-danger" style="flex:0;" onclick="deleteItem('${item.id}', 'postcard')">🗑️</button>
+                            </div>
+                        </div>
                     `;
-                    postcardTbody.appendChild(tr);
+                    pcEl.appendChild(card);
                 });
-            } else {
-                renderIndex += postcardGroups[type].length; 
             }
         });
 
-        if (postcardList.length === 0) {
-            document.getElementById('postcard-empty').innerText = "目前沒有收藏的明信片項目";
-            document.getElementById('postcard-empty').style.display = 'block';
-        } else if (filteredPostcards.length === 0 && (searchKeywords.length > 0 || filterState !== 'all')) {
-            document.getElementById('postcard-empty').innerText = "❌ 找不到符合搜尋或篩選條件的項目";
-            document.getElementById('postcard-empty').style.display = 'block';
-        } else {
-            document.getElementById('postcard-empty').style.display = 'none';
-        }
-
-        document.getElementById('submit-action-btn').innerText = currentMode === 'mushroom' ? '新增資料' : '收藏明信片';
+        document.getElementById('postcard-empty').style.display = (postcardList.length===0 || (vCount===0 && !collapsedGroups.size)) ? 'block' : 'none';
+        if(vCount===0 && postcardList.length>0) document.getElementById('postcard-empty').innerText = "❌ 找不到符合搜尋的項目";
     }
 
-    function escapeHtml(str) {
-        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-    }
+    function escapeHtml(str) { return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
 </script>
 
 </body>
