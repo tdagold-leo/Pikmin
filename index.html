@@ -561,20 +561,25 @@
 </head>
 <body>
 
+    <!-- 頂部導覽列 -->
     <header class="app-header">
         <h2>🌱 Pickmin Tracker</h2>
         <div class="header-right" id="sync-status-indicator">⚪ 未連線</div>
     </header>
 
+    <!-- 主內容區 -->
     <main class="app-content">
 
+        <!-- 視圖 1：巨菇頁面 -->
         <section id="view-mushroom" class="view-section active">
             <button class="line-share-btn" onclick="shareToLineWindow()" style="margin-bottom: 20px;">
                 💚 一鍵產生分享文字並喚醒 LINE
             </button>
 
+            <!-- 簡化版分類統計面板 -->
             <div id="mushroom-summary" class="summary-widget" style="display:none;"></div>
 
+            <!-- 巨菇列表容器 (動態渲染群組) -->
             <div id="active-list"></div>
             <div id="active-empty" class="empty-message" style="display: none;">目前沒有正在追蹤的項目</div>
 
@@ -583,6 +588,7 @@
             <div id="unclaimed-empty" class="empty-message" style="display: none;">目前沒有待認領的項目</div>
         </section>
 
+        <!-- 視圖 2：明信片頁面 -->
         <section id="view-postcard" class="view-section">
             <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
                 🔗 推薦免費圖床：<a href="https://meee.com.tw/" target="_blank" style="color:var(--primary-dark);">Meee 圖片上傳</a>
@@ -601,6 +607,7 @@
             <div id="postcard-empty" class="empty-message" style="display: none;">目前沒有收藏的明信片項目</div>
         </section>
 
+        <!-- 視圖 3：設定頁面 -->
         <section id="view-settings" class="view-section">
             <div class="settings-card">
                 <h3>☁️ 跨裝置收藏同步</h3>
@@ -655,6 +662,7 @@
 
     </main>
 
+    <!-- 底部導覽列 -->
     <nav class="bottom-nav">
         <button class="nav-item active" id="nav-mushroom" onclick="switchTab('mushroom')">
             <span class="nav-icon">🍄</span>
@@ -670,8 +678,12 @@
         </button>
     </nav>
 
+    <!-- 懸浮新增按鈕 -->
     <button id="main-fab" class="fab" onclick="openAddModal()">+</button>
 
+    <!-- ================= 彈出視窗區 (Modals) ================= -->
+
+    <!-- 新增資料 Modal -->
     <div id="add-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -748,6 +760,7 @@
         </div>
     </div>
 
+    <!-- 認領 Modal -->
     <div id="claim-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -770,6 +783,7 @@
         </div>
     </div>
 
+    <!-- 修改資料 Modal -->
     <div id="time-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -811,6 +825,7 @@
         </div>
     </div>
 
+    <!-- 圖片放大 Lightbox -->
     <div id="lightbox" class="lightbox-overlay" onclick="this.style.display='none'">
         <img id="lightbox-img" class="lightbox-img" src="" alt="明信片大圖">
     </div>
@@ -1292,8 +1307,8 @@
         let out = `🍄巨菇追蹤🍄\n🔗 ${finalShareUrl}\n\n`;
 
         // 格式：
-        // 編號.空位 <使用者>
-        // [剩餘時間]
+        // 01.空位4 <使用者>
+        //     [剩餘時間]
         const formatLineText = (i, userName) => {
             const currentSlots = i.slots || ['', '', '', '', ''];
             const filledCount = currentSlots.filter(s => s !== '').length;
@@ -1301,7 +1316,7 @@
             let slotInfo = emptyCount === 0 ? "🈵額滿" : `空位${emptyCount}`;
             const snPad = String(i.sn).padStart(2, '0');
             
-            return `${snPad}.${slotInfo} <${userName}>\n[${getShortRemainingText(i.targetTime, now)}]\n`;
+            return `${snPad}.${slotInfo} <${userName}>\n    [${getShortRemainingText(i.targetTime, now)}]\n`;
         };
 
         const actives = sorted.filter(i => i.user !== "");
