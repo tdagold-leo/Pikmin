@@ -706,7 +706,7 @@
                 <div class="input-group">
                     <label>種類</label>
                     <select id="post-type" class="input-base">
-                        <option value="菇">菇</option>
+                        <option value="菇" selected>菇</option>
                         <option value="花">花</option>
                         <option value="菇窩">菇窩</option>
                         <option value="隱藏">隱藏</option>
@@ -905,7 +905,7 @@
                     if(data && data.countryName) {
                         countryName = data.countryName;
                         const countryInput = document.getElementById(countryInputId);
-                        if(countryInput && countryInput.value.trim() === '') {
+                        if(countryInput) {
                             countryInput.value = countryName;
                         }
                     }
@@ -953,7 +953,7 @@
         "葡萄牙": 1, "瑞典": 1, "挪威": 1, "丹麥": 1, "波蘭": 1, "荷蘭": 1, "比利時": 1, "瑞士": 1, "英國": 1, "倫敦": 1, "UK": 1, "大不列顛": 1,
         "澳洲": 10, "澳大利亞": 10, "雪梨": 10, "澳洲雪梨": 10, "關島": 10, "Australia": 10,
         "紐西蘭": 12, "奧克蘭": 12, "New Zealand": 12,
-        "委內瑞拉": -4, "巴西": -3, "阿根廷": -3, "智利": -4, "哥倫比亞": -5, "秘魯": -5,
+        "委內內瑞拉": -4, "巴西": -3, "阿根廷": -3, "智利": -4, "哥倫比亞": -5, "秘魯": -5,
         "美國美東": -4, "美東": -4, "紐約": -4, "加拿大東部": -4, "美國": -4, "美利堅": -4, "United States": -4, "USA": -4, "加拿大": -4, "Canada": -4,
         "美國美中": -5, "美中": -5, "芝加哥": -5, "墨西哥": -6,
         "美國美西": -7, "美西": -7, "洛杉磯": -7, "舊金山": -7, "溫哥華": -7,
@@ -1297,8 +1297,10 @@
         closeModal('time-modal');
     }
 
+    // ======= 核心修正：複製時自動移除中間的逗號並優化空格 =======
     function copyCoords(text, buttonElement) {
-        navigator.clipboard.writeText(text).then(() => {
+        const cleanText = text.replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+        navigator.clipboard.writeText(cleanText).then(() => {
             const originalText = buttonElement.innerText;
             buttonElement.innerText = '✅ 成功'; buttonElement.style.background = '#e5e7eb';
             setTimeout(() => { buttonElement.innerText = originalText; buttonElement.style.background = ''; }, 1200);
@@ -1354,7 +1356,7 @@
 
         let out = `🍄巨菇追蹤🍄\n🔗 ${finalShareUrl}\n\n`;
 
-        // 格式要求：
+        // 格式：
         // 01.空位4 <使用者>
         //     [剩餘時間]
         const formatLineText = (i, userName) => {
@@ -1364,7 +1366,6 @@
             let slotInfo = emptyCount === 0 ? "🈵額滿" : `空位${emptyCount}`;
             const snPad = String(i.sn).padStart(2, '0');
             
-            // 加入 4 個半形空白作為縮排
             return `${snPad}.${slotInfo} <${userName}>\n    [${getShortRemainingText(i.targetTime, now)}]\n`;
         };
 
@@ -1417,7 +1418,7 @@
         let actionHtml = item.user === "" ? `<button class="btn-sm btn-claim" onclick="openClaimModalById('${item.id}')">🙋‍♂️ 認領</button>` : '';
         actionHtml += `<button class="btn-sm btn-edit" onclick="openTimeModalById('${item.id}', 'mushroom')">✏️ 修改</button><button class="btn-sm btn-danger" onclick="deleteItem('${item.id}', 'mushroom')">🗑️ 刪除</button>`;
 
-        // === 5 個參戰位子 UI (一鍵切換版) ===
+        // === 5 個參戰位子 UI ===
         const currentSlots = item.slots || ['', '', '', '', ''];
         const filledCount = currentSlots.filter(s => s !== '').length;
         const isFull = filledCount === 5;
@@ -1473,9 +1474,8 @@
         activeEl.innerHTML = ''; unclaimEl.innerHTML = '';
         let actCount = 0, uncCount = 0;
 
-        // 巨菇分群陣列 (正常追蹤)
-        const activeGroup1 = []; // 一天內
-        const activeGroup2 = []; // 一天後或未設定
+        const activeGroup1 = []; 
+        const activeGroup2 = []; 
 
         sortedM.forEach(item => {
             let timeText = '<span class="not-set">尚未設定</span>', isExp = false;
@@ -1488,24 +1488,22 @@
 
             if (item.user === "") { 
                 uncCount++; 
-                unclaimEl.appendChild(card); // 待認領不分群，直接顯示
+                unclaimEl.appendChild(card); 
             } else { 
                 actCount++; 
-                // 正常追蹤分群處理
                 if (item.targetTime === null) {
                     activeGroup2.push(card);
                 } else {
                     const diff = item.targetTime - now;
-                    if (diff <= 86400000) { // 一天內 (含過期)
+                    if (diff <= 86400000) { 
                         activeGroup1.push(card);
                     } else {
-                        activeGroup2.push(card); // 一天後
+                        activeGroup2.push(card); 
                     }
                 }
             }
         });
 
-        // 渲染巨菇分群標題與內容
         function renderMGroup(container, cards, groupId, title, defaultCollapsed) {
             if (cards.length === 0) return;
             
@@ -1536,7 +1534,6 @@
         document.getElementById('active-empty').style.display = actCount === 0 ? 'block' : 'none';
         document.getElementById('unclaimed-empty').style.display = uncCount === 0 ? 'block' : 'none';
 
-        // 巨菇統計資訊更新 (簡化版)
         const summaryEl = document.getElementById('mushroom-summary');
         if (sortedM.length > 0) {
             summaryEl.innerHTML = `<b>📊 巨菇總計：${sortedM.length} 筆</b> <span style="color:var(--text-muted);">(追蹤中: ${actCount} / 待認領: ${uncCount})</span>`;
@@ -1545,7 +1542,7 @@
             summaryEl.style.display = 'none';
         }
 
-        // 2. 渲染明信片 (圖片網格)
+        // 2. 渲染明信片
         pcEl.innerHTML = '';
         const searchKw = document.getElementById('postcard-search').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
         const filterState = document.getElementById('postcard-filter').value;
@@ -1572,7 +1569,6 @@
         Object.keys(pcGroups).sort((a,b) => a==='未分類'?1 : b==='未分類'?-1 : a.localeCompare(b,'zh-TW')).forEach(type => {
             const groupId = 'post-' + type;
             
-            // 明信片預設收合邏輯
             if (!knownPostcardGroups.has(groupId)) {
                 collapsedGroups.add(groupId);
                 knownPostcardGroups.add(groupId);
@@ -1584,7 +1580,6 @@
             const gHead = document.createElement('div');
             gHead.className = 'group-header';
             gHead.innerHTML = `<span>${arrow} 📂 種類群組：${escapeHtml(type)}</span> <span style="font-size:11px; color:#0369a1;">${pcGroups[type].length} 筆 (點擊收疊)</span>`;
-            // 使用 addEventListener 確保 iPhone 可以點擊
             gHead.addEventListener('click', () => toggleGroup(groupId));
             pcEl.appendChild(gHead);
 
