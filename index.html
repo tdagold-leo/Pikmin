@@ -1288,7 +1288,7 @@
         return `${m}分${t%60}秒`;
     }
 
-    // ====== LINE 格式分享 ======
+    // ====== LINE 極簡版分享格式 ======
     async function shareToLineWindow() {
         if (dataList.length === 0) { alert('目前沒有任何資訊可以分享喔！'); return; }
         const btn = document.querySelector('.line-share-btn');
@@ -1306,19 +1306,16 @@
 
         let out = `🍄巨菇追蹤🍄\n🔗 ${finalShareUrl}\n\n`;
 
-        // 格式：編號 (名稱) 參戰空位 
-        // ⏳ 剩餘時間
-        // 📍 座標
-        const formatLineText = (i) => {
+        // 全新極簡格式：
+        // 編號 使用者
+        // 空位 剩餘時間
+        const formatLineText = (i, userName) => {
             const currentSlots = i.slots || ['', '', '', '', ''];
             const filledCount = currentSlots.filter(s => s !== '').length;
             const emptyCount = 5 - filledCount;
             let slotInfo = emptyCount === 0 ? "🈵額滿" : `空位${emptyCount}`;
             
-            const cStr = i.country ? `${i.country}-` : "";
-            const tStr = i.tag ? ` #${i.tag}` : "";
-            
-            return `${i.sn}. (${cStr}${i.name}${tStr}) ${slotInfo}\n⏳ ${getShortRemainingText(i.targetTime, now)}\n📍 ${i.coords}\n`;
+            return `${i.sn} ${userName}\n${slotInfo} ${getShortRemainingText(i.targetTime, now)}\n`;
         };
 
         const actives = sorted.filter(i => i.user !== "");
@@ -1326,12 +1323,12 @@
 
         if (actives.length > 0) {
             out += `🟢追蹤中\n`;
-            actives.forEach((i) => { out += formatLineText(i); });
+            actives.forEach((i) => { out += formatLineText(i, i.user); });
             out += `\n`;
         }
         if (unclaimed.length > 0) {
             out += `🟡待認領\n`;
-            unclaimed.forEach((i) => { out += formatLineText(i); });
+            unclaimed.forEach((i) => { out += formatLineText(i, "待認領"); });
         }
         
         navigator.clipboard.writeText(out.trim()).catch(e=>console.log(e));
