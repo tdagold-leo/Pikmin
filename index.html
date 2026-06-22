@@ -561,25 +561,20 @@
 </head>
 <body>
 
-    <!-- 頂部導覽列 -->
     <header class="app-header">
         <h2>🌱 Pickmin Tracker</h2>
         <div class="header-right" id="sync-status-indicator">⚪ 未連線</div>
     </header>
 
-    <!-- 主內容區 -->
     <main class="app-content">
 
-        <!-- 視圖 1：巨菇頁面 -->
         <section id="view-mushroom" class="view-section active">
             <button class="line-share-btn" onclick="shareToLineWindow()" style="margin-bottom: 20px;">
                 💚 一鍵產生分享文字並喚醒 LINE
             </button>
 
-            <!-- 簡化版分類統計面板 -->
             <div id="mushroom-summary" class="summary-widget" style="display:none;"></div>
 
-            <!-- 巨菇列表容器 (動態渲染群組) -->
             <div id="active-list"></div>
             <div id="active-empty" class="empty-message" style="display: none;">目前沒有正在追蹤的項目</div>
 
@@ -588,7 +583,6 @@
             <div id="unclaimed-empty" class="empty-message" style="display: none;">目前沒有待認領的項目</div>
         </section>
 
-        <!-- 視圖 2：明信片頁面 -->
         <section id="view-postcard" class="view-section">
             <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
                 🔗 推薦免費圖床：<a href="https://meee.com.tw/" target="_blank" style="color:var(--primary-dark);">Meee 圖片上傳</a>
@@ -607,7 +601,6 @@
             <div id="postcard-empty" class="empty-message" style="display: none;">目前沒有收藏的明信片項目</div>
         </section>
 
-        <!-- 視圖 3：設定頁面 -->
         <section id="view-settings" class="view-section">
             <div class="settings-card">
                 <h3>☁️ 跨裝置收藏同步</h3>
@@ -662,7 +655,6 @@
 
     </main>
 
-    <!-- 底部導覽列 -->
     <nav class="bottom-nav">
         <button class="nav-item active" id="nav-mushroom" onclick="switchTab('mushroom')">
             <span class="nav-icon">🍄</span>
@@ -678,12 +670,8 @@
         </button>
     </nav>
 
-    <!-- 懸浮新增按鈕 -->
     <button id="main-fab" class="fab" onclick="openAddModal()">+</button>
 
-    <!-- ================= 彈出視窗區 (Modals) ================= -->
-
-    <!-- 新增資料 Modal -->
     <div id="add-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -697,16 +685,16 @@
                     <input type="text" id="user" class="input-base" placeholder="名字或留空">
                 </div>
                 <div class="input-group">
+                    <label>座標 (貼上經緯度將自動抓取國家)</label>
+                    <input type="text" id="coords" class="input-base" placeholder="貼上或輸入座標" onblur="autoDetectCountry(this.value, 'country', 'tz-hint')">
+                </div>
+                <div class="input-group">
                     <label>國家 <span id="tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
                     <input type="text" id="country" class="input-base" placeholder="例如：日本" oninput="showTimeDiff(this.value, 'tz-hint')">
                 </div>
                 <div class="input-group">
                     <label>名稱</label>
                     <input type="text" id="name" class="input-base" placeholder="例如：巨型火菇">
-                </div>
-                <div class="input-group">
-                    <label>座標</label>
-                    <input type="text" id="coords" class="input-base" placeholder="貼上或輸入座標">
                 </div>
                 <div class="input-group">
                     <label>標籤</label>
@@ -718,12 +706,16 @@
                 <div class="input-group">
                     <label>種類</label>
                     <select id="post-type" class="input-base">
-                        <option value="菇" selected>菇</option>
+                        <option value="菇">菇</option>
                         <option value="花">花</option>
                         <option value="菇窩">菇窩</option>
                         <option value="隱藏">隱藏</option>
                         <option value="特殊金盆">特殊金盆</option>
                     </select>
+                </div>
+                <div class="input-group">
+                    <label>座標 (貼上經緯度將自動抓取國家)</label>
+                    <input type="text" id="post-coords" class="input-base" placeholder="貼上點座標" onblur="autoDetectCountry(this.value, 'post-country', 'post-tz-hint')">
                 </div>
                 <div class="input-group">
                     <label>國家 <span id="post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
@@ -732,10 +724,6 @@
                 <div class="input-group">
                     <label>名稱</label>
                     <input type="text" id="post-name" class="input-base" placeholder="例如：櫻花美菇">
-                </div>
-                <div class="input-group">
-                    <label>座標</label>
-                    <input type="text" id="post-coords" class="input-base" placeholder="貼上點座標">
                 </div>
                 <div class="input-group">
                     <label>標籤</label>
@@ -760,7 +748,6 @@
         </div>
     </div>
 
-    <!-- 認領 Modal -->
     <div id="claim-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -783,7 +770,6 @@
         </div>
     </div>
 
-    <!-- 修改資料 Modal -->
     <div id="time-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -793,9 +779,9 @@
             
             <div id="edit-group-mushroom" style="display:none; flex-direction:column; gap:10px;">
                 <div class="input-group"><label>修改使用者 (留空為待認領)：</label><input type="text" id="edit-user" class="input-base"></div>
+                <div class="input-group"><label>修改座標：</label><input type="text" id="edit-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-mushroom-country', 'edit-tz-hint')"></div>
                 <div class="input-group"><label>修改國家： <span id="edit-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label><input type="text" id="edit-mushroom-country" class="input-base" oninput="showTimeDiff(this.value, 'edit-tz-hint')"></div>
                 <div class="input-group"><label>修改名稱：</label><input type="text" id="edit-name" class="input-base"></div>
-                <div class="input-group"><label>修改座標：</label><input type="text" id="edit-coords" class="input-base"></div>
                 <div class="input-group"><label>修改標籤：</label><input type="text" id="edit-tag" class="input-base"></div>
                 <div class="input-group" style="margin-top:5px;">
                     <label style="text-align:center;">重新設定剩餘時間：</label>
@@ -814,10 +800,10 @@
                         <option value="菇">菇</option><option value="花">花</option><option value="菇窩">菇窩</option><option value="隱藏">隱藏</option><option value="特殊金盆">特殊金盆</option>
                     </select>
                 </div>
+                <div class="input-group"><label>修改座標：</label><input type="text" id="edit-post-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint')"></div>
                 <div class="input-group"><label>修改國家： <span id="edit-post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label><input type="text" id="edit-post-country" class="input-base" oninput="showTimeDiff(this.value, 'edit-post-tz-hint')"></div>
                 <div class="input-group"><label>修改名稱：</label><input type="text" id="edit-post-name" class="input-base"></div>
                 <div class="input-group"><label>修改標籤：</label><input type="text" id="edit-post-tag" class="input-base"></div>
-                <div class="input-group"><label>修改座標：</label><input type="text" id="edit-post-coords" class="input-base"></div>
                 <div class="input-group"><label>修改圖片網址：</label><input type="text" id="edit-post-image" class="input-base"></div>
             </div>
 
@@ -825,7 +811,6 @@
         </div>
     </div>
 
-    <!-- 圖片放大 Lightbox -->
     <div id="lightbox" class="lightbox-overlay" onclick="this.style.display='none'">
         <img id="lightbox-img" class="lightbox-img" src="" alt="明信片大圖">
     </div>
@@ -898,21 +883,81 @@
         if(id === 'time-modal') currentEditingTimeId = null;
     }
 
+    // ==========================================
+    // 自動判斷國家與 API 時差計算
+    // ==========================================
+    async function autoDetectCountry(coordsStr, countryInputId, hintId) {
+        if(!coordsStr) return;
+        
+        // 升級版正規表達式：支援中間為逗號、空白，或逗號加空白 (如 "35.689 139.692")
+        const match = coordsStr.match(/(-?\d+(?:\.\d+)?)(?:[\s,]+)(-?\d+(?:\.\d+)?)/);
+        if(match) {
+            const lat = match[1];
+            const lon = match[2];
+            try {
+                let countryName = "";
+                let offsetHours = null;
+
+                // 1. 抓取國家名稱 (BigDataCloud API)
+                const resCountry = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh`);
+                if(resCountry.ok) {
+                    const data = await resCountry.json();
+                    if(data && data.countryName) {
+                        countryName = data.countryName;
+                        const countryInput = document.getElementById(countryInputId);
+                        if(countryInput && countryInput.value.trim() === '') {
+                            countryInput.value = countryName;
+                        }
+                    }
+                }
+
+                // 2. 抓取精準時區時差 (Open-Meteo API)
+                const resTz = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&timezone=auto&current_weather=true`);
+                if(resTz.ok) {
+                    const tzData = await resTz.json();
+                    if(tzData && tzData.utc_offset_seconds !== undefined) {
+                        offsetHours = tzData.utc_offset_seconds / 3600;
+                        const diff = offsetHours - 8; 
+                        
+                        const hintEl = document.getElementById(hintId);
+                        if(hintEl) {
+                            if (diff === 0) hintEl.innerText = '(精準定位: 無時差)';
+                            else if (diff > 0) hintEl.innerText = `(精準定位: 快台灣 ${diff} 小時)`;
+                            else hintEl.innerText = `(精準定位: 慢台灣 ${Math.abs(diff)} 小時)`;
+                        }
+                        
+                        if (countryName) {
+                            globalTzMap[countryName] = offsetHours;
+                        }
+                        return; 
+                    }
+                }
+                
+                if (countryName) {
+                    showTimeDiff(countryName, hintId);
+                }
+            } catch(e) {
+                console.log("API 抓取失敗", e);
+            }
+        }
+    }
+
+    // 系統時區字典
     const globalTzMap = {
-        "日本": 9, "韓國": 9, "南韓": 9, "首爾": 9, "東京": 9,
-        "台灣": 8, "臺灣": 8, "台北": 8, "香港": 8, "澳門": 8, "北京": 8, "中國": 8, "新加坡": 8, "馬來西亞": 8, "菲律賓": 8,
-        "泰國": 7, "越南": 7, "印尼": 7, "曼谷": 7, "雅加達": 7,
-        "模里西斯": 4, "阿聯酋": 4, "杜拜": 4, "阿拉伯聯合大公國": 4,
-        "土耳其": 3, "沙烏地阿拉伯": 3,
-        "愛沙尼亞": 2, "拉脫維亞": 2, "立陶宛": 2, "烏克蘭": 2, "芬蘭": 2, "法國": 2, "德國": 2, "義大利": 2, "西班牙": 2, "歐洲": 2, "希臘": 2, 
-        "葡萄牙": 1, "瑞典": 1, "挪威": 1, "丹麥": 1, "波蘭": 1, "荷蘭": 1, "比利時": 1, "瑞士": 1, "英國": 1, "倫敦": 1, "UK": 1,
-        "澳洲": 10, "澳大利亞": 10, "雪梨": 10, "澳洲雪梨": 10, "關島": 10,
-        "紐西蘭": 12, "奧克蘭": 12,
+        "日本": 9, "韓國": 9, "南韓": 9, "大韓民國": 9, "首爾": 9, "東京": 9, "Japan": 9, "Korea": 9,
+        "台灣": 8, "臺灣": 8, "台北": 8, "香港": 8, "澳門": 8, "北京": 8, "中國": 8, "中華人民共和國": 8, "中華民國": 8, "新加坡": 8, "馬來西亞": 8, "菲律賓": 8, "Taiwan": 8, "China": 8, "Hong Kong": 8, "Singapore": 8, "Malaysia": 8, "Philippines": 8,
+        "泰國": 7, "越南": 7, "印尼": 7, "曼谷": 7, "雅加達": 7, "Thailand": 7, "Vietnam": 7, "Indonesia": 7,
+        "模里西斯": 4, "阿聯酋": 4, "杜拜": 4, "阿拉伯聯合大公國": 4, "阿聯": 4,
+        "土耳其": 3, "沙烏地阿拉伯": 3, "卡達": 3, "科威特": 3,
+        "愛沙尼亞": 2, "拉脫維亞": 2, "立陶宛": 2, "烏克蘭": 2, "芬蘭": 2, "法國": 2, "法蘭西": 2, "德國": 2, "德意志": 2, "義大利": 2, "西班牙": 2, "歐洲": 2, "希臘": 2, "南非": 2, "埃及": 2,
+        "葡萄牙": 1, "瑞典": 1, "挪威": 1, "丹麥": 1, "波蘭": 1, "荷蘭": 1, "比利時": 1, "瑞士": 1, "英國": 1, "倫敦": 1, "UK": 1, "大不列顛": 1,
+        "澳洲": 10, "澳大利亞": 10, "雪梨": 10, "澳洲雪梨": 10, "關島": 10, "Australia": 10,
+        "紐西蘭": 12, "奧克蘭": 12, "New Zealand": 12,
         "委內瑞拉": -4, "巴西": -3, "阿根廷": -3, "智利": -4, "哥倫比亞": -5, "秘魯": -5,
-        "美國美東": -4, "美東": -4, "紐約": -4, "加拿大東部": -4,
+        "美國美東": -4, "美東": -4, "紐約": -4, "加拿大東部": -4, "美國": -4, "美利堅": -4, "United States": -4, "USA": -4, "加拿大": -4, "Canada": -4,
         "美國美中": -5, "美中": -5, "芝加哥": -5, "墨西哥": -6,
         "美國美西": -7, "美西": -7, "洛杉磯": -7, "舊金山": -7, "溫哥華": -7,
-        "夏威夷": -10
+        "夏威夷": -10, "Hawaii": -10
     };
 
     function showTimeDiff(val, hintId) {
@@ -921,12 +966,14 @@
         if (!val || typeof val !== 'string' || !val.trim()) { hintEl.innerText = ''; return; }
         
         let matchedOffset = null;
-        for (let key in globalTzMap) {
+        const keys = Object.keys(globalTzMap).sort((a, b) => b.length - a.length);
+        for (let key of keys) {
             if (val.includes(key)) {
                 matchedOffset = globalTzMap[key];
                 break;
             }
         }
+        
         if (matchedOffset !== null) {
             const diff = matchedOffset - 8; 
             if (diff === 0) hintEl.innerText = '(無時差)';
@@ -939,7 +986,8 @@
 
     function getTimeDiffString(val) {
         if (!val || typeof val !== 'string') return '';
-        for (let key in globalTzMap) {
+        const keys = Object.keys(globalTzMap).sort((a, b) => b.length - a.length);
+        for (let key of keys) {
             if (val.includes(key)) {
                 const diff = globalTzMap[key] - 8;
                 if (diff === 0) return ''; 
@@ -1288,7 +1336,7 @@
         return `${m}分${t%60}秒`;
     }
 
-    // ====== LINE 極簡版分享格式 ======
+    // ====== LINE 新版縮排極簡格式分享 ======
     async function shareToLineWindow() {
         if (dataList.length === 0) { alert('目前沒有任何資訊可以分享喔！'); return; }
         const btn = document.querySelector('.line-share-btn');
@@ -1306,7 +1354,7 @@
 
         let out = `🍄巨菇追蹤🍄\n🔗 ${finalShareUrl}\n\n`;
 
-        // 格式：
+        // 格式要求：
         // 01.空位4 <使用者>
         //     [剩餘時間]
         const formatLineText = (i, userName) => {
@@ -1316,6 +1364,7 @@
             let slotInfo = emptyCount === 0 ? "🈵額滿" : `空位${emptyCount}`;
             const snPad = String(i.sn).padStart(2, '0');
             
+            // 加入 4 個半形空白作為縮排
             return `${snPad}.${slotInfo} <${userName}>\n    [${getShortRemainingText(i.targetTime, now)}]\n`;
         };
 
@@ -1392,7 +1441,7 @@
 
         card.innerHTML = `
             <div class="lc-header">
-                <div class="lc-title"><span style="color:#9ca3af; font-size:12px; margin-right:4px;">#${item.sn}</span>${safeName}</div>
+                <div class="lc-title"><span style="color:#9ca3af; font-size:12px; margin-right:4px;">#${String(item.sn).padStart(2,'0')}</span>${safeName}</div>
                 <div class="lc-time ${!isExpired && item.targetTime !== null ? 'safe' : ''}">${timeText}</div>
             </div>
             <div class="lc-body">
