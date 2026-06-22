@@ -1288,7 +1288,7 @@
         return `${m}分${t%60}秒`;
     }
 
-    // ====== LINE 極簡版分享格式 ======
+    // ====== LINE 新版單行極簡格式分享 ======
     async function shareToLineWindow() {
         if (dataList.length === 0) { alert('目前沒有任何資訊可以分享喔！'); return; }
         const btn = document.querySelector('.line-share-btn');
@@ -1306,16 +1306,14 @@
 
         let out = `🍄巨菇追蹤🍄\n🔗 ${finalShareUrl}\n\n`;
 
-        // 全新極簡格式：
-        // 編號 使用者
-        // 空位 剩餘時間
+        // 格式：#編號-使用者-空位 (剩餘時間)
         const formatLineText = (i, userName) => {
             const currentSlots = i.slots || ['', '', '', '', ''];
             const filledCount = currentSlots.filter(s => s !== '').length;
             const emptyCount = 5 - filledCount;
             let slotInfo = emptyCount === 0 ? "🈵額滿" : `空位${emptyCount}`;
             
-            return `${i.sn} ${userName}\n${slotInfo} ${getShortRemainingText(i.targetTime, now)}\n`;
+            return `#${i.sn}-${userName}-${slotInfo} (${getShortRemainingText(i.targetTime, now)})\n`;
         };
 
         const actives = sorted.filter(i => i.user !== "");
