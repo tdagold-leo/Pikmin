@@ -561,20 +561,25 @@
 </head>
 <body>
 
+    <!-- 頂部導覽列 -->
     <header class="app-header">
         <h2>🌱 Pickmin Tracker</h2>
         <div class="header-right" id="sync-status-indicator">⚪ 未連線</div>
     </header>
 
+    <!-- 主內容區 -->
     <main class="app-content">
 
+        <!-- 視圖 1：巨菇頁面 -->
         <section id="view-mushroom" class="view-section active">
             <button class="line-share-btn" onclick="shareToLineWindow()" style="margin-bottom: 20px;">
                 💚 一鍵產生分享文字並喚醒 LINE
             </button>
 
+            <!-- 簡化版分類統計面板 -->
             <div id="mushroom-summary" class="summary-widget" style="display:none;"></div>
 
+            <!-- 巨菇列表容器 (動態渲染群組) -->
             <div id="active-list"></div>
             <div id="active-empty" class="empty-message" style="display: none;">目前沒有正在追蹤的項目</div>
 
@@ -583,6 +588,7 @@
             <div id="unclaimed-empty" class="empty-message" style="display: none;">目前沒有待認領的項目</div>
         </section>
 
+        <!-- 視圖 2：明信片頁面 -->
         <section id="view-postcard" class="view-section">
             <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
                 🔗 推薦免費圖床：<a href="https://meee.com.tw/" target="_blank" style="color:var(--primary-dark);">Meee 圖片上傳</a>
@@ -601,6 +607,7 @@
             <div id="postcard-empty" class="empty-message" style="display: none;">目前沒有收藏的明信片項目</div>
         </section>
 
+        <!-- 視圖 3：設定頁面 -->
         <section id="view-settings" class="view-section">
             <div class="settings-card">
                 <h3>☁️ 跨裝置收藏同步</h3>
@@ -655,6 +662,7 @@
 
     </main>
 
+    <!-- 底部導覽列 -->
     <nav class="bottom-nav">
         <button class="nav-item active" id="nav-mushroom" onclick="switchTab('mushroom')">
             <span class="nav-icon">🍄</span>
@@ -670,8 +678,12 @@
         </button>
     </nav>
 
+    <!-- 懸浮新增按鈕 -->
     <button id="main-fab" class="fab" onclick="openAddModal()">+</button>
 
+    <!-- ================= 彈出視窗區 (Modals) ================= -->
+
+    <!-- 新增資料 Modal -->
     <div id="add-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -748,6 +760,7 @@
         </div>
     </div>
 
+    <!-- 認領 Modal -->
     <div id="claim-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -770,6 +783,7 @@
         </div>
     </div>
 
+    <!-- 修改資料 Modal -->
     <div id="time-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -811,6 +825,7 @@
         </div>
     </div>
 
+    <!-- 圖片放大 Lightbox -->
     <div id="lightbox" class="lightbox-overlay" onclick="this.style.display='none'">
         <img id="lightbox-img" class="lightbox-img" src="" alt="明信片大圖">
     </div>
@@ -990,7 +1005,7 @@
                         id: key, sn: item.sn, user: item.user || "",
                         country: item.country || "", name: item.name,
                         coords: item.coords, tag: item.tag || "", targetTime: item.targetTime,
-                        slots: item.slots || ['', '', '', '', ''] // 讀取 5 個打菇位子資料
+                        slots: item.slots || ['', '', '', '', ''] 
                     });
                 }
             });
@@ -1056,11 +1071,10 @@
         return pad(d.getHours()) + ':' + pad(d.getMinutes()) + (includeSeconds ? ':' + pad(d.getSeconds()) : '');
     }
     
-    // 背景定時器：更新時鐘與每分鐘檢查過期資料
+    // 背景定時清理
     setInterval(() => {
         updateClocks();
         const now = Date.now();
-        // 如果網頁一直開著，也要定時清理超過2小時的巨菇
         dataList.forEach(item => {
             if (item.targetTime !== null && (now - item.targetTime >= 7200000)) {
                 database.ref('mushrooms/' + item.id).remove();
@@ -1240,19 +1254,24 @@
         return `${m}分${t%60}秒`;
     }
 
-    // ====== LINE 精簡版分享 ======
+    // ====== LINE 格式分享 ======
     async function shareToLineWindow() {
         if (dataList.length === 0) { alert('目前沒有任何資訊可以分享喔！'); return; }
         const btn = document.querySelector('.line-share-btn');
         const originalText = btn.innerText;
-        btn.innerText = '⏳ 正在產生短網址與內容...'; btn.disabled = true;
+        btn.innerText = '⏳ 正在產生分享內容...'; btn.disabled = true;
 
         const now = Date.now();
-        let finalShareUrl = window.location.href.split('?')[0].split('#')[0];
-        try {
-            const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(finalShareUrl)}`);
-            if (res.ok) finalShareUrl = await res.text();
-        } catch (err) { console.log(err); }
+        let currentUrl = window.location.href.split('?')[0].split('#')[0];
+        let finalShareUrl = currentUrl;
+
+        // 如果是本地檔案 (file://) 則跳過短網址產生
+        if (currentUrl.startsWith('http')) {
+            try {
+                const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(currentUrl)}`);
+                if (res.ok) finalShareUrl = await res.text();
+            } catch (err) { console.log(err); }
+        }
 
         const sorted = [...dataList].sort((a, b) => {
             if (a.targetTime === null && b.targetTime === null) return 0;
@@ -1261,33 +1280,35 @@
         });
 
         let out = `🍄巨菇追蹤🍄\n🔗 ${finalShareUrl}\n\n`;
-        const actives = sorted.filter(i => i.user !== ""), unclaimed = sorted.filter(i => i.user === "");
 
-        // 共用產生文字邏輯
-        const formatLineText = (i, typeStr) => {
-            const cStr = i.country ? `${i.country}-` : "";
-            const tStr = i.tag ? ` #${i.tag}` : "";
+        // 格式：編號 (名稱) 參戰空位 剩餘時間 \n 座標
+        const formatLineText = (i) => {
             const currentSlots = i.slots || ['', '', '', '', ''];
             const filledCount = currentSlots.filter(s => s !== '').length;
-            let slotInfo = filledCount === 5 ? " [🈵額滿]" : (filledCount > 0 ? ` [參戰:${filledCount}/5]` : "");
+            const emptyCount = 5 - filledCount;
+            let slotInfo = emptyCount === 0 ? "🈵額滿" : `空位${emptyCount}`;
             
-            return `${i.sn}.[${typeStr}] ${cStr}${i.name}${tStr}${slotInfo} ⏳${getShortRemainingText(i.targetTime, now)}\n📍 ${i.coords}\n`;
+            return `${i.sn}. ${i.name} ${slotInfo} ⏳${getShortRemainingText(i.targetTime, now)}\n${i.coords}\n`;
         };
+
+        const actives = sorted.filter(i => i.user !== "");
+        const unclaimed = sorted.filter(i => i.user === "");
 
         if (actives.length > 0) {
             out += `🟢追蹤中\n`;
-            actives.forEach((i) => { out += formatLineText(i, i.user); });
+            actives.forEach((i) => { out += formatLineText(i); });
             out += `\n`;
         }
         if (unclaimed.length > 0) {
             out += `🟡待認領\n`;
-            unclaimed.forEach((i) => { out += formatLineText(i, "待認領"); });
+            unclaimed.forEach((i) => { out += formatLineText(i); });
         }
         
         navigator.clipboard.writeText(out.trim()).catch(e=>console.log(e));
         btn.innerText = '✅ 已複製並喚醒 LINE...';
         setTimeout(() => { btn.innerText = originalText; btn.disabled = false; }, 2500);
-        window.location.href = "line://msg/text/" + encodeURIComponent(out.trim());
+        
+        window.location.href = "https://line.me/R/msg/text/?" + encodeURIComponent(out.trim());
     }
 
     function getRemainingText(targetTime, now) {
