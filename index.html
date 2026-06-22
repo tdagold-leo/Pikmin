@@ -1005,7 +1005,7 @@
                         id: key, sn: item.sn, user: item.user || "",
                         country: item.country || "", name: item.name,
                         coords: item.coords, tag: item.tag || "", targetTime: item.targetTime,
-                        slots: item.slots || ['', '', '', '', ''] 
+                        slots: item.slots || ['', '', '', '', ''] // 讀取 5 個打菇位子資料
                     });
                 }
             });
@@ -1095,13 +1095,22 @@
             let targetTime = null;
             if (d > 0 || h > 0 || m > 0) targetTime = Date.now() + (((d * 24 * 60) + (h * 60) + m) * 60 * 1000);
 
+            const processedUser = userEl ? userEl.value.trim() : "";
+            const processedCountry = countryEl ? countryEl.value.trim() : "";
+            
+            // 預設參戰者 1 位設定
+            let initSlots = ['', '', '', '', ''];
+            if (processedUser !== "") {
+                initSlots[0] = '✔️';
+            }
+
             let nextSn = 1;
             if (dataList.length > 0) nextSn = Math.max(...dataList.map(i => i.sn || 0)) + 1;
 
             database.ref('mushrooms').push({
-                sn: nextSn, user: userEl.value.trim(), country: countryEl.value.trim(),
+                sn: nextSn, user: processedUser, country: processedCountry,
                 name: nameEl.value.trim(), coords: coordsEl.value.trim(), tag: tagEl.value.trim(), 
-                targetTime: targetTime, slots: ['', '', '', '', ''] // 預設 5 個空位
+                targetTime: targetTime, slots: initSlots 
             });
             
             userEl.value = ''; countryEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = '';
@@ -1152,8 +1161,20 @@
         const usernameInput = document.getElementById('modal-username').value.trim();
         if (!usernameInput) { alert('請輸入認領人的名字！'); return; }
         const d = parseInt(document.getElementById('modal-days').value, 10) || 0, h = parseInt(document.getElementById('modal-hours').value, 10) || 0, m = parseInt(document.getElementById('modal-minutes').value, 10) || 0;
-        const updates = { user: usernameInput };
+        
+        let updates = { user: usernameInput };
         if (d > 0 || h > 0 || m > 0) updates.targetTime = Date.now() + (((d * 24 * 60) + (h * 60) + m) * 60 * 1000);
+        
+        // 自動幫認領者補上第一個打菇位子
+        const item = dataList.find(i => i.id === currentClaimingId);
+        if (item) {
+            let currentSlots = item.slots ? [...item.slots] : ['', '', '', '', ''];
+            if (!currentSlots.some(s => s !== '')) {
+                currentSlots[0] = '✔️';
+                updates.slots = currentSlots;
+            }
+        }
+
         database.ref('mushrooms/' + currentClaimingId).update(updates);
         closeModal('claim-modal');
     }
@@ -1196,15 +1217,28 @@
 
     function submitDataEdit() {
         if (currentEditingType === 'mushroom') {
+            const newUser = document.getElementById('edit-user').value.trim();
             const d = parseInt(document.getElementById('edit-days').value, 10) || 0, h = parseInt(document.getElementById('edit-hours').value, 10) || 0, m = parseInt(document.getElementById('edit-minutes').value, 10) || 0;
             let targetTime = null;
             if (d > 0 || h > 0 || m > 0) targetTime = Date.now() + (((d * 24 * 60) + (h * 60) + m) * 60 * 1000);
 
-            database.ref('mushrooms/' + currentEditingTimeId).update({ 
-                user: document.getElementById('edit-user').value.trim(), country: document.getElementById('edit-mushroom-country').value.trim(),
+            let updates = { 
+                user: newUser, 
+                country: document.getElementById('edit-mushroom-country').value.trim(),
                 name: document.getElementById('edit-name').value.trim(), coords: document.getElementById('edit-coords').value.trim(),
                 tag: document.getElementById('edit-tag').value.trim(), targetTime: targetTime 
-            });
+            };
+
+            const item = dataList.find(i => i.id === currentEditingTimeId);
+            if (item) {
+                let currentSlots = item.slots ? [...item.slots] : ['', '', '', '', ''];
+                if (newUser !== "" && item.user === "" && !currentSlots.some(s => s !== '')) {
+                    currentSlots[0] = '✔️';
+                    updates.slots = currentSlots;
+                }
+            }
+
+            database.ref('mushrooms/' + currentEditingTimeId).update(updates);
         } else {
             database.ref('postcards/' + currentEditingTimeId).update({
                 type: document.getElementById('edit-post-type').value, country: document.getElementById('edit-post-country').value.trim(),
@@ -1262,16 +1296,7 @@
         btn.innerText = '⏳ 正在產生分享內容...'; btn.disabled = true;
 
         const now = Date.now();
-        let currentUrl = window.location.href.split('?')[0].split('#')[0];
-        let finalShareUrl = currentUrl;
-
-        // 如果是本地檔案 (file://) 則跳過短網址產生
-        if (currentUrl.startsWith('http')) {
-            try {
-                const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(currentUrl)}`);
-                if (res.ok) finalShareUrl = await res.text();
-            } catch (err) { console.log(err); }
-        }
+        const finalShareUrl = "https://tdagold-leo.github.io/Pikmin/";
 
         const sorted = [...dataList].sort((a, b) => {
             if (a.targetTime === null && b.targetTime === null) return 0;
@@ -1281,14 +1306,19 @@
 
         let out = `🍄巨菇追蹤🍄\n🔗 ${finalShareUrl}\n\n`;
 
-        // 格式：編號 (名稱) 參戰空位 剩餘時間 \n 座標
+        // 格式：編號 (名稱) 參戰空位 
+        // ⏳ 剩餘時間
+        // 📍 座標
         const formatLineText = (i) => {
             const currentSlots = i.slots || ['', '', '', '', ''];
             const filledCount = currentSlots.filter(s => s !== '').length;
             const emptyCount = 5 - filledCount;
             let slotInfo = emptyCount === 0 ? "🈵額滿" : `空位${emptyCount}`;
             
-            return `${i.sn}. ${i.name} ${slotInfo} ⏳${getShortRemainingText(i.targetTime, now)}\n${i.coords}\n`;
+            const cStr = i.country ? `${i.country}-` : "";
+            const tStr = i.tag ? ` #${i.tag}` : "";
+            
+            return `${i.sn}. (${cStr}${i.name}${tStr}) ${slotInfo}\n⏳ ${getShortRemainingText(i.targetTime, now)}\n📍 ${i.coords}\n`;
         };
 
         const actives = sorted.filter(i => i.user !== "");
