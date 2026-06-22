@@ -10,7 +10,7 @@
 
     <style>
         :root {
-            --primary: #10b981; /* 現代翡翠綠 */
+            --primary: #10b981; 
             --primary-dark: #059669;
             --bg: #f3f4f6;
             --card-bg: #ffffff;
@@ -25,7 +25,7 @@
             color: var(--text-main);
             margin: 0;
             padding: 0;
-            padding-bottom: 70px; /* 預留給底部導覽列的空間 */
+            padding-bottom: 70px; 
             -webkit-font-smoothing: antialiased;
         }
 
@@ -136,14 +136,20 @@
             background: var(--primary-dark);
         }
 
-        /* 巨菇卡片列表樣式 */
-        .section-title {
-            font-size: 15px;
-            color: var(--primary-dark);
-            margin: 0 0 10px 0;
-            border-bottom: 2px dashed #d1d5db;
-            padding-bottom: 5px;
+        /* 巨菇統計資訊面板 */
+        .summary-widget {
+            background-color: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #065f46;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            line-height: 1.5;
         }
+
+        /* 巨菇卡片列表樣式 */
         .list-card {
             background: var(--card-bg);
             border-radius: 12px;
@@ -207,6 +213,48 @@
             align-items: center;
             flex-wrap: wrap;
         }
+        
+        /* 參戰 5 個位子的 UI 樣式 */
+        .slots-wrapper {
+            margin-top: 4px;
+            background: #f9fafb;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .slot-btn {
+            flex: 1;
+            min-width: 0;
+            padding: 4px 2px;
+            font-size: 11px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .slot-btn.empty {
+            border: 1px dashed #9ca3af;
+            background: transparent;
+            color: #9ca3af;
+        }
+        .slot-btn.empty:hover {
+            background: #e5e7eb;
+            color: #4b5563;
+        }
+        .slot-btn.filled {
+            border: 1px solid #10b981;
+            background: #ecfdf5;
+            color: #059669;
+            font-weight: bold;
+        }
+        .slot-btn.filled:hover {
+            background: #d1fae5;
+            border-color: #059669;
+        }
+
         .lc-actions {
             display: flex;
             gap: 6px;
@@ -355,7 +403,7 @@
             background-color: #06c755;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 12px 16px;
             font-size: 14px;
             font-weight: bold;
@@ -367,13 +415,12 @@
             box-shadow: 0 4px 6px rgba(6,199,85,0.2);
         }
 
-        /* 群組標題 (明信片) */
+        /* 群組標題 (通用) */
         .group-header {
-            grid-column: 1 / -1; /* 跨滿整個網格 */
             background: #e0f2fe;
-            padding: 8px 12px;
+            padding: 10px 14px;
             border-radius: 8px;
-            margin: 10px 0 0 0;
+            margin: 10px 0;
             font-weight: bold;
             color: #0284c7;
             display: flex;
@@ -381,6 +428,10 @@
             align-items: center;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
+        }
+        .grid .group-header {
+            grid-column: 1 / -1; 
+            margin: 10px 0 0 0;
         }
 
         /* 搜尋與篩選列 */
@@ -487,12 +538,10 @@
             border-radius: 12px;
         }
         
-        /* 隱藏預設滾動條 (美化) */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
-        /* 時鐘樣式微調 */
         .clock-item {
             background: #f9fafb;
             border: 1px solid var(--border);
@@ -521,14 +570,15 @@
 
         <section id="view-mushroom" class="view-section active">
             <button class="line-share-btn" onclick="shareToLineWindow()" style="margin-bottom: 20px;">
-                💚 一鍵產生短網址分享至 LINE
+                💚 一鍵產生分享文字並喚醒 LINE
             </button>
 
-            <h3 class="section-title">🟢 正常追蹤中</h3>
+            <div id="mushroom-summary" class="summary-widget" style="display:none;"></div>
+
             <div id="active-list"></div>
             <div id="active-empty" class="empty-message" style="display: none;">目前沒有正在追蹤的項目</div>
 
-            <h3 class="section-title" style="margin-top:25px;">🟡 待認領巨菇</h3>
+            <h3 style="font-size:15px; color:var(--primary-dark); border-bottom:2px dashed #d1d5db; padding-bottom:5px; margin:25px 0 10px 0;">🟡 待認領巨菇</h3>
             <div id="unclaimed-list"></div>
             <div id="unclaimed-empty" class="empty-message" style="display: none;">目前沒有待認領的項目</div>
         </section>
@@ -622,7 +672,6 @@
 
     <button id="main-fab" class="fab" onclick="openAddModal()">+</button>
 
-
     <div id="add-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -695,7 +744,7 @@
                 </div>
             </div>
             
-            <button class="btn-sm btn-primary btn-block" style="margin-top:10px;" onclick="addItem()">確定新增</button>
+            <button class="btn-sm btn-primary btn-block" style="margin-top:10px; padding:12px; background:var(--primary); color:white; border:none; font-size:14px; font-weight:bold; border-radius:8px;" onclick="addItem()">確定新增</button>
         </div>
     </div>
 
@@ -717,7 +766,7 @@
                     <div class="time-box"><label>分</label><input type="number" id="modal-minutes" class="input-base" min="0" max="59" value="0"></div>
                 </div>
             </div>
-            <button class="btn-sm btn-primary btn-block" style="margin-top:10px;" id="modal-submit-btn">確定認領</button>
+            <button class="btn-sm btn-claim btn-block" style="margin-top:10px;" id="modal-submit-btn">確定認領</button>
         </div>
     </div>
 
@@ -782,7 +831,7 @@
 
     let dataList = [];
     let postcardList = []; 
-    let currentMode = 'mushroom'; // 'mushroom', 'postcard', 'settings'
+    let currentMode = 'mushroom'; 
     let currentClaimingId = null;
     let currentEditingTimeId = null;
     let currentEditingType = 'mushroom'; 
@@ -790,22 +839,22 @@
     let currentSyncId = '';
     let cloudFavorites = [];
     let favoritesListenerRef = null;
+    
+    // 用於記錄群組收合狀態
     let collapsedGroups = new Set();
+    let knownPostcardGroups = new Set(); 
+    let knownMushroomGroups = new Set();
 
-    // ======= 頁籤切換邏輯 ==========
     function switchTab(tab) {
         currentMode = tab;
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        // 更新導覽列樣式
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
         document.getElementById('nav-' + tab).classList.add('active');
 
-        // 更新畫面顯示
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         document.getElementById('view-' + tab).classList.add('active');
 
-        // 控制 FAB 新增按鈕顯示
         if(tab === 'settings') {
             document.getElementById('main-fab').style.display = 'none';
         } else {
@@ -813,7 +862,6 @@
         }
     }
 
-    // ======= Modal 控制 ==========
     function openAddModal() {
         if(currentMode === 'mushroom') {
             document.getElementById('add-modal-title').innerText = '🍄 新增倒數巨菇';
@@ -835,12 +883,11 @@
         if(id === 'time-modal') currentEditingTimeId = null;
     }
 
-    // ======= 時區對照表與計算 ==========
     const globalTzMap = {
         "日本": 9, "韓國": 9, "南韓": 9, "首爾": 9, "東京": 9,
         "台灣": 8, "臺灣": 8, "台北": 8, "香港": 8, "澳門": 8, "北京": 8, "中國": 8, "新加坡": 8, "馬來西亞": 8, "菲律賓": 8,
         "泰國": 7, "越南": 7, "印尼": 7, "曼谷": 7, "雅加達": 7,
-        "模里西斯": 4, "阿聯酋": 4, "杜拜": 4,
+        "模里西斯": 4, "阿聯酋": 4, "杜拜": 4, "阿拉伯聯合大公國": 4,
         "土耳其": 3, "沙烏地阿拉伯": 3,
         "愛沙尼亞": 2, "拉脫維亞": 2, "立陶宛": 2, "烏克蘭": 2, "芬蘭": 2, "法國": 2, "德國": 2, "義大利": 2, "西班牙": 2, "歐洲": 2, "希臘": 2, 
         "葡萄牙": 1, "瑞典": 1, "挪威": 1, "丹麥": 1, "波蘭": 1, "荷蘭": 1, "比利時": 1, "瑞士": 1, "英國": 1, "倫敦": 1, "UK": 1,
@@ -888,7 +935,6 @@
         return '';
     }
 
-    // ======= 系統核心功能 ==========
     function applySyncId() {
         const inputId = document.getElementById('sync-user-id').value.trim();
         const statusEl = document.getElementById('sync-status');
@@ -928,16 +974,25 @@
         database.ref('user_favorites/' + currentSyncId).set(updatedFavorites);
     }
 
+    // 資料同步與自動刪除機制 (過期滿 2 小時)
     database.ref('mushrooms').on('value', (snapshot) => {
         const cloudData = snapshot.val();
         dataList = [];
+        const now = Date.now();
         if (cloudData) {
             Object.keys(cloudData).forEach((key) => {
-                dataList.push({
-                    id: key, sn: cloudData[key].sn, user: cloudData[key].user || "",
-                    country: cloudData[key].country || "", name: cloudData[key].name,
-                    coords: cloudData[key].coords, tag: cloudData[key].tag || "", targetTime: cloudData[key].targetTime
-                });
+                const item = cloudData[key];
+                if (item.targetTime !== null && (now - item.targetTime >= 7200000)) {
+                    // 超過2小時自動刪除
+                    database.ref('mushrooms/' + key).remove();
+                } else {
+                    dataList.push({
+                        id: key, sn: item.sn, user: item.user || "",
+                        country: item.country || "", name: item.name,
+                        coords: item.coords, tag: item.tag || "", targetTime: item.targetTime,
+                        slots: item.slots || ['', '', '', '', ''] // 讀取 5 個打菇位子資料
+                    });
+                }
             });
         }
         updateView();
@@ -1000,7 +1055,18 @@
         const pad = n => String(n).padStart(2, '0');
         return pad(d.getHours()) + ':' + pad(d.getMinutes()) + (includeSeconds ? ':' + pad(d.getSeconds()) : '');
     }
-    setInterval(updateClocks, 1000);
+    
+    // 背景定時器：更新時鐘與每分鐘檢查過期資料
+    setInterval(() => {
+        updateClocks();
+        const now = Date.now();
+        // 如果網頁一直開著，也要定時清理超過2小時的巨菇
+        dataList.forEach(item => {
+            if (item.targetTime !== null && (now - item.targetTime >= 7200000)) {
+                database.ref('mushrooms/' + item.id).remove();
+            }
+        });
+    }, 1000);
 
     // ======= 新增 / 修改 / 刪除邏輯 ==========
     function addItem() {
@@ -1020,7 +1086,8 @@
 
             database.ref('mushrooms').push({
                 sn: nextSn, user: userEl.value.trim(), country: countryEl.value.trim(),
-                name: nameEl.value.trim(), coords: coordsEl.value.trim(), tag: tagEl.value.trim(), targetTime: targetTime
+                name: nameEl.value.trim(), coords: coordsEl.value.trim(), tag: tagEl.value.trim(), 
+                targetTime: targetTime, slots: ['', '', '', '', ''] // 預設 5 個空位
             });
             
             userEl.value = ''; countryEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = '';
@@ -1044,7 +1111,14 @@
     }
 
     function deleteItem(id, mode = 'mushroom') {
-        if(confirm(`確定要刪除這筆${mode === 'mushroom' ? '巨菇' : '明信片'}資料嗎？`)) {
+        if (mode === 'postcard') {
+            const pwd = prompt("⚠️ 刪除明信片需要同意。\n請輸入刪除密碼：");
+            if (pwd !== "1215") {
+                if (pwd !== null) alert("❌ 密碼錯誤，無法刪除！");
+                return;
+            }
+        }
+        if (confirm(`確定要刪除這筆${mode === 'mushroom' ? '巨菇' : '明信片'}資料嗎？`)) {
             database.ref((mode === 'mushroom' ? 'mushrooms/' : 'postcards/') + id).remove();
         }
     }
@@ -1140,6 +1214,33 @@
         document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').style.display = 'flex';
     }
 
+    // ======= 參戰 5 個位子 一鍵切換邏輯 =======
+    function toggleSlot(id, index) {
+        const item = dataList.find(i => i.id === id);
+        if (!item) return;
+        let currentSlots = item.slots ? [...item.slots] : ['', '', '', '', ''];
+        
+        // 直接切換狀態，不需輸入名字或確認
+        if (currentSlots[index]) {
+            currentSlots[index] = '';
+        } else {
+            currentSlots[index] = '✔️';
+        }
+        database.ref('mushrooms/' + id + '/slots').set(currentSlots);
+    }
+
+    // 將時間轉換為非常簡短的版本 (適用於 LINE 分享)
+    function getShortRemainingText(targetTime, now) {
+        if (targetTime === null) return "未設";
+        const rem = targetTime - now;
+        if (rem <= 0) return "可開打!";
+        const t = Math.floor(rem / 1000), m = Math.floor(t / 60), h = Math.floor(m / 60), d = Math.floor(h / 24);
+        if (d > 0) return `${d}天${h%24}時${m%60}分`;
+        if (h > 0) return `${h}時${m%60}分`;
+        return `${m}分${t%60}秒`;
+    }
+
+    // ====== LINE 精簡版分享 ======
     async function shareToLineWindow() {
         if (dataList.length === 0) { alert('目前沒有任何資訊可以分享喔！'); return; }
         const btn = document.querySelector('.line-share-btn');
@@ -1147,7 +1248,6 @@
         btn.innerText = '⏳ 正在產生短網址與內容...'; btn.disabled = true;
 
         const now = Date.now();
-        const taipeiTimeText = formatTimeStr(now + (new Date().getTimezoneOffset() * 60000), 8, true); 
         let finalShareUrl = window.location.href.split('?')[0].split('#')[0];
         try {
             const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(finalShareUrl)}`);
@@ -1160,21 +1260,30 @@
             return a.targetTime - b.targetTime;
         });
 
-        let out = `🍄【皮克敏巨菇追蹤器】🍄\n🔗 網址：${finalShareUrl}\n⏰ 台北時間：${taipeiTimeText}\n\n`;
+        let out = `🍄巨菇追蹤🍄\n🔗 ${finalShareUrl}\n\n`;
         const actives = sorted.filter(i => i.user !== ""), unclaimed = sorted.filter(i => i.user === "");
 
+        // 共用產生文字邏輯
+        const formatLineText = (i, typeStr) => {
+            const cStr = i.country ? `${i.country}-` : "";
+            const tStr = i.tag ? ` #${i.tag}` : "";
+            const currentSlots = i.slots || ['', '', '', '', ''];
+            const filledCount = currentSlots.filter(s => s !== '').length;
+            let slotInfo = filledCount === 5 ? " [🈵額滿]" : (filledCount > 0 ? ` [參戰:${filledCount}/5]` : "");
+            
+            return `${i.sn}.[${typeStr}] ${cStr}${i.name}${tStr}${slotInfo} ⏳${getShortRemainingText(i.targetTime, now)}\n📍 ${i.coords}\n`;
+        };
+
         if (actives.length > 0) {
-            out += `🟢【正常追蹤中】\n`;
-            actives.forEach((i) => {
-                out += `${i.sn}. [${i.user}] ${i.country?`[${i.country}] `:""}${i.name}${i.tag?` #${i.tag}`:""}\n⏳ 剩餘：${getRemainingText(i.targetTime, now)}\n${i.coords}\n\n`;
-            });
+            out += `🟢追蹤中\n`;
+            actives.forEach((i) => { out += formatLineText(i, i.user); });
+            out += `\n`;
         }
         if (unclaimed.length > 0) {
-            out += `🟡【待認領巨菇】\n`;
-            unclaimed.forEach((i) => {
-                out += `${i.sn}. [待認領] ${i.country?`[${i.country}] `:""}${i.name}${i.tag?` #${i.tag}`:""}\n⏳ 剩餘：${getRemainingText(i.targetTime, now)}\n${i.coords}\n\n`;
-            });
+            out += `🟡待認領\n`;
+            unclaimed.forEach((i) => { out += formatLineText(i, "待認領"); });
         }
+        
         navigator.clipboard.writeText(out.trim()).catch(e=>console.log(e));
         btn.innerText = '✅ 已複製並喚醒 LINE...';
         setTimeout(() => { btn.innerText = originalText; btn.disabled = false; }, 2500);
@@ -1197,13 +1306,66 @@
         updateView();
     }
 
+    // ====== 卡片產生器 (巨菇) ======
+    function createMushroomCard(item, now, isExpired, timeText) {
+        const safeC = escapeHtml(item.country||''), safeName = escapeHtml(item.name), safeTag = escapeHtml(item.tag);
+        const diffStr = getTimeDiffString(safeC);
+        const cHtml = safeC ? `${safeC} ${diffStr ? `<span class="tz-badge">${diffStr}</span>` : ''}` : '';
+        const tHtml = safeTag ? `<span class="tag-badge">${safeTag}</span>` : '';
+
+        const card = document.createElement('div');
+        card.className = `list-card ${isExpired ? 'row-expired' : ''}`;
+        
+        let actionHtml = item.user === "" ? `<button class="btn-sm btn-claim" onclick="openClaimModalById('${item.id}')">🙋‍♂️ 認領</button>` : '';
+        actionHtml += `<button class="btn-sm btn-edit" onclick="openTimeModalById('${item.id}', 'mushroom')">✏️ 修改</button><button class="btn-sm btn-danger" onclick="deleteItem('${item.id}', 'mushroom')">🗑️ 刪除</button>`;
+
+        // === 5 個參戰位子 UI (一鍵切換版) ===
+        const currentSlots = item.slots || ['', '', '', '', ''];
+        const filledCount = currentSlots.filter(s => s !== '').length;
+        const isFull = filledCount === 5;
+        
+        let slotsHtml = `<div class="slots-wrapper">`;
+        slotsHtml += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">`;
+        slotsHtml += `<span style="font-size: 11px; font-weight: bold; color: #4b5563;">⚔️ 參戰空位 (${filledCount}/5)</span>`;
+        if (isFull) {
+            slotsHtml += `<span style="font-size: 10px; background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">🈵 額滿</span>`;
+        }
+        slotsHtml += `</div><div style="display: flex; gap: 4px;">`;
+        
+        for (let i = 0; i < 5; i++) {
+            if (currentSlots[i]) {
+                slotsHtml += `<button class="slot-btn filled" onclick="toggleSlot('${item.id}', ${i})" title="點擊取消卡位">✔️</button>`;
+            } else {
+                slotsHtml += `<button class="slot-btn empty" onclick="toggleSlot('${item.id}', ${i})" title="點擊卡位">+</button>`;
+            }
+        }
+        slotsHtml += `</div></div>`;
+
+        card.innerHTML = `
+            <div class="lc-header">
+                <div class="lc-title"><span style="color:#9ca3af; font-size:12px; margin-right:4px;">#${item.sn}</span>${safeName}</div>
+                <div class="lc-time ${!isExpired && item.targetTime !== null ? 'safe' : ''}">${timeText}</div>
+            </div>
+            <div class="lc-body">
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <div>${item.user ? `<span class="lc-user-badge">👤 ${escapeHtml(item.user)}</span>` : '<span style="color:#9ca3af; font-size:13px; font-style:italic;">待認領</span>'}</div>
+                    <div class="lc-info">${cHtml} ${tHtml}</div>
+                </div>
+                <button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製座標</button>
+            </div>
+            ${slotsHtml}
+            <div class="lc-actions">${actionHtml}</div>
+        `;
+        return card;
+    }
+
     // ======= 核心畫面渲染引擎 (UI App化) ==========
     function updateView() {
         const activeEl = document.getElementById('active-list'), unclaimEl = document.getElementById('unclaimed-list'), pcEl = document.getElementById('postcard-container');
         if (!activeEl || !unclaimEl || !pcEl) return;
         const now = Date.now();
 
-        // 1. 渲染巨菇 (卡片列表)
+        // 1. 渲染巨菇
         const sortedM = [...dataList].sort((a, b) => {
             if (a.targetTime === null && b.targetTime === null) return 0;
             if (a.targetTime === null) return 1; if (b.targetTime === null) return -1;
@@ -1213,6 +1375,10 @@
         activeEl.innerHTML = ''; unclaimEl.innerHTML = '';
         let actCount = 0, uncCount = 0;
 
+        // 巨菇分群陣列 (正常追蹤)
+        const activeGroup1 = []; // 一天內
+        const activeGroup2 = []; // 一天後或未設定
+
         sortedM.forEach(item => {
             let timeText = '<span class="not-set">尚未設定</span>', isExp = false;
             if (item.targetTime !== null) {
@@ -1220,37 +1386,66 @@
                 else { timeText = getRemainingText(item.targetTime, now); }
             }
 
-            const safeC = escapeHtml(item.country||''), safeName = escapeHtml(item.name), safeTag = escapeHtml(item.tag);
-            const diffStr = getTimeDiffString(safeC);
-            const cHtml = safeC ? `${safeC} ${diffStr ? `<span class="tz-badge">${diffStr}</span>` : ''}` : '';
-            const tHtml = safeTag ? `<span class="tag-badge">${safeTag}</span>` : '';
+            const card = createMushroomCard(item, now, isExp, timeText);
 
-            const card = document.createElement('div');
-            card.className = `list-card ${isExp ? 'row-expired' : ''}`;
-            
-            let actionHtml = item.user === "" ? `<button class="btn-sm btn-claim" onclick="openClaimModalById('${item.id}')">🙋‍♂️ 認領</button>` : '';
-            actionHtml += `<button class="btn-sm btn-edit" onclick="openTimeModalById('${item.id}', 'mushroom')">✏️ 修改</button><button class="btn-sm btn-danger" onclick="deleteItem('${item.id}', 'mushroom')">🗑️ 刪除</button>`;
-
-            card.innerHTML = `
-                <div class="lc-header">
-                    <div class="lc-title"><span style="color:#9ca3af; font-size:12px; margin-right:4px;">#${item.sn}</span>${safeName}</div>
-                    <div class="lc-time ${!isExp && item.targetTime !== null ? 'safe' : ''}">${timeText}</div>
-                </div>
-                <div class="lc-body">
-                    <div style="display:flex; flex-direction:column; gap:4px;">
-                        <div>${item.user ? `<span class="lc-user-badge">👤 ${escapeHtml(item.user)}</span>` : '<span style="color:#9ca3af; font-size:13px; font-style:italic;">待認領</span>'}</div>
-                        <div class="lc-info">${cHtml} ${tHtml}</div>
-                    </div>
-                    <button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製座標</button>
-                </div>
-                <div class="lc-actions">${actionHtml}</div>
-            `;
-            if (item.user === "") { uncCount++; unclaimEl.appendChild(card); } 
-            else { actCount++; activeEl.appendChild(card); }
+            if (item.user === "") { 
+                uncCount++; 
+                unclaimEl.appendChild(card); // 待認領不分群，直接顯示
+            } else { 
+                actCount++; 
+                // 正常追蹤分群處理
+                if (item.targetTime === null) {
+                    activeGroup2.push(card);
+                } else {
+                    const diff = item.targetTime - now;
+                    if (diff <= 86400000) { // 一天內 (含過期)
+                        activeGroup1.push(card);
+                    } else {
+                        activeGroup2.push(card); // 一天後
+                    }
+                }
+            }
         });
+
+        // 渲染巨菇分群標題與內容
+        function renderMGroup(container, cards, groupId, title, defaultCollapsed) {
+            if (cards.length === 0) return;
+            
+            if (!knownMushroomGroups.has(groupId)) {
+                knownMushroomGroups.add(groupId);
+                if (defaultCollapsed) collapsedGroups.add(groupId);
+            }
+            
+            const isCol = collapsedGroups.has(groupId);
+            const arrow = isCol ? '▶' : '▼';
+            
+            const gHead = document.createElement('div');
+            gHead.className = 'group-header';
+            gHead.style.backgroundColor = '#dcedc8'; 
+            gHead.style.color = '#33691e';
+            gHead.innerHTML = `<span>${arrow} 📂 ${title}</span> <span style="font-size:11px; color:#558b2f;">${cards.length} 筆 (點擊收疊)</span>`;
+            gHead.addEventListener('click', () => toggleGroup(groupId));
+            container.appendChild(gHead);
+
+            if (!isCol) {
+                cards.forEach(c => container.appendChild(c));
+            }
+        }
+
+        renderMGroup(activeEl, activeGroup1, 'm-group-1', '⏳ 一天內 (含可開打)', false);
+        renderMGroup(activeEl, activeGroup2, 'm-group-2', '⏳ 一天後 (或未設定)', true);
 
         document.getElementById('active-empty').style.display = actCount === 0 ? 'block' : 'none';
         document.getElementById('unclaimed-empty').style.display = uncCount === 0 ? 'block' : 'none';
+
+        // 巨菇統計資訊更新 (簡化版)
+        const summaryEl = document.getElementById('mushroom-summary');
+        if (sortedM.length > 0) {
+            summaryEl.innerHTML = `<b>📊 巨菇總計：${sortedM.length} 筆</b> <span style="color:var(--text-muted);">(追蹤中: ${actCount} / 待認領: ${uncCount})</span>`;
+            summaryEl.style.display = 'block';
+        } else {
+            summaryEl.style.display = 'none';
+        }
 
         // 2. 渲染明信片 (圖片網格)
         pcEl.innerHTML = '';
@@ -1277,12 +1472,22 @@
         });
 
         Object.keys(pcGroups).sort((a,b) => a==='未分類'?1 : b==='未分類'?-1 : a.localeCompare(b,'zh-TW')).forEach(type => {
-            const groupId = 'post-' + type, isCol = collapsedGroups.has(groupId), arrow = isCol ? '▶' : '▼';
+            const groupId = 'post-' + type;
+            
+            // 明信片預設收合邏輯
+            if (!knownPostcardGroups.has(groupId)) {
+                collapsedGroups.add(groupId);
+                knownPostcardGroups.add(groupId);
+            }
+
+            const isCol = collapsedGroups.has(groupId);
+            const arrow = isCol ? '▶' : '▼';
             
             const gHead = document.createElement('div');
             gHead.className = 'group-header';
-            gHead.innerHTML = `<span>${arrow} 📂 ${escapeHtml(type)}</span> <span style="font-size:11px; color:#0369a1;">${pcGroups[type].length} 筆 (點擊收疊)</span>`;
-            gHead.onclick = () => toggleGroup(groupId);
+            gHead.innerHTML = `<span>${arrow} 📂 種類群組：${escapeHtml(type)}</span> <span style="font-size:11px; color:#0369a1;">${pcGroups[type].length} 筆 (點擊收疊)</span>`;
+            // 使用 addEventListener 確保 iPhone 可以點擊
+            gHead.addEventListener('click', () => toggleGroup(groupId));
             pcEl.appendChild(gHead);
 
             if (!isCol) {
