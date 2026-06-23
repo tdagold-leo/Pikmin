@@ -7,6 +7,7 @@
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
 
     <style>
         :root {
@@ -237,6 +238,7 @@
             font-size: 14px;
             color: var(--text-main);
             line-height: 1.4;
+            word-break: break-all;
         }
         .card-sub {
             font-size: 11px;
@@ -378,7 +380,7 @@
             box-shadow: 0 4px 6px rgba(6,199,85,0.2);
         }
 
-        /* ======= 核心升級：群組高對比度標題樣式 ======= */
+        /* 群組高對比度標題樣式 */
         .group-header {
             grid-column: 1 / -1; 
             padding: 10px 14px;
@@ -392,15 +394,34 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.08);
             -webkit-tap-highlight-color: transparent;
         }
-        /* 明信片群組：高對比深藍底 */
         .group-header.postcard-header {
             background: #0284c7;
             color: #ffffff;
         }
-        /* 巨菇群組：高對比深綠底 */
         .group-header.mushroom-header {
             background: #2e7d32;
             color: #ffffff;
+        }
+
+        /* 圖片識別區 UI */
+        .ocr-upload-box {
+            border: 2px dashed var(--primary);
+            background: #f0fdf4;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: var(--primary-dark);
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+        }
+        .ocr-upload-box input {
+            position: absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer;
+        }
+        #ocr-loading-text {
+            font-size: 11px; color: #b45309; font-weight: normal; margin-top: 4px; display: none;
         }
 
         /* 搜尋與篩選列 */
@@ -530,25 +551,20 @@
 </head>
 <body>
 
-    <!-- 頂部導覽列 -->
     <header class="app-header">
         <h2>🌱 Pickmin Tracker</h2>
         <div class="header-right" id="sync-status-indicator">⚪ 未連線</div>
     </header>
 
-    <!-- 主內容區 -->
     <main class="app-content">
 
-        <!-- 視圖 1：巨菇頁面 -->
         <section id="view-mushroom" class="view-section active">
             <button class="line-share-btn" onclick="shareToLineWindow()" style="margin-bottom: 20px;">
                 💚 一鍵產生分享文字並喚醒 LINE
             </button>
 
-            <!-- 分類統計面板 -->
             <div id="mushroom-summary" class="summary-widget" style="display:none;"></div>
 
-            <!-- 巨菇網格列表容器 (改為 grid 佈局) -->
             <div id="active-list" class="grid"></div>
             <div id="active-empty" class="empty-message" style="display: none;">目前沒有正在追蹤的項目</div>
 
@@ -557,7 +573,6 @@
             <div id="unclaimed-empty" class="empty-message" style="display: none;">目前沒有待認領的項目</div>
         </section>
 
-        <!-- 視圖 2：明信片頁面 -->
         <section id="view-postcard" class="view-section">
             <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
                 🔗 推薦免費圖床：<a href="https://meee.com.tw/" target="_blank" style="color:var(--primary-dark);">Meee 圖片上傳</a>
@@ -576,7 +591,6 @@
             <div id="postcard-empty" class="empty-message" style="display: none;">目前沒有收藏的明信片項目</div>
         </section>
 
-        <!-- 視圖 3：設定頁面 -->
         <section id="view-settings" class="view-section">
             <div class="settings-card">
                 <h3>☁️ 跨裝置收藏同步</h3>
@@ -631,7 +645,6 @@
 
     </main>
 
-    <!-- 底部導覽列 -->
     <nav class="bottom-nav">
         <button class="nav-item active" id="nav-mushroom" onclick="switchTab('mushroom')">
             <span class="nav-icon">🍄</span>
@@ -647,17 +660,19 @@
         </button>
     </nav>
 
-    <!-- 懸浮新增按鈕 -->
     <button id="main-fab" class="fab" onclick="openAddModal()">+</button>
 
-    <!-- ================= 彈出視窗區 (Modals) ================= -->
-
-    <!-- 新增資料 Modal -->
     <div id="add-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
                 <h4 id="add-modal-title">新增資料</h4>
                 <button class="modal-close" onclick="closeModal('add-modal')">&times;</button>
+            </div>
+            
+            <div id="ocr-upload-container" class="ocr-upload-box" style="display:none;">
+                📸 點擊選擇「巨菇截圖」智慧識別填表
+                <input type="file" id="ocr-image-input" accept="image/*" onchange="processOcrImage(event)">
+                <div id="ocr-loading-text">正在分析截圖中，請稍候... <span id="ocr-progress">0%</span></div>
             </div>
             
             <div id="form-mushroom" style="display:none; flex-direction:column; gap:10px;">
@@ -729,7 +744,6 @@
         </div>
     </div>
 
-    <!-- 認領 Modal -->
     <div id="claim-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -752,7 +766,6 @@
         </div>
     </div>
 
-    <!-- 修改資料 Modal -->
     <div id="time-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -794,12 +807,17 @@
         </div>
     </div>
 
-    <!-- 圖片放大 Lightbox -->
     <div id="lightbox" class="lightbox-overlay" onclick="this.style.display='none'">
         <img id="lightbox-img" class="lightbox-img" src="" alt="明信片大圖">
     </div>
 
 <script>
+    // ======= 防呆機制：如果字串不存在，回傳空字串防止程式崩潰 =======
+    function escapeHtml(str) { 
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); 
+    }
+
     // ======= Firebase 設定 ==========
     const firebaseConfig = {
         apiKey: "AIzaSyBkmQhSKbiSTeHkbAnjSZTgYtGbmPySJbo",
@@ -851,11 +869,13 @@
             document.getElementById('form-mushroom').style.display = 'flex';
             document.getElementById('form-postcard').style.display = 'none';
             document.getElementById('form-time').style.display = 'flex';
+            document.getElementById('ocr-upload-container').style.display = 'block';
         } else if (currentMode === 'postcard') {
             document.getElementById('add-modal-title').innerText = '🖼️ 新增明信片';
             document.getElementById('form-mushroom').style.display = 'none';
             document.getElementById('form-postcard').style.display = 'flex';
             document.getElementById('form-time').style.display = 'none';
+            document.getElementById('ocr-upload-container').style.display = 'none';
         }
         document.getElementById('add-modal').style.display = 'flex';
     }
@@ -866,9 +886,108 @@
         if(id === 'time-modal') currentEditingTimeId = null;
     }
 
+    // ==========================================
+    // 📸 智慧截圖識別填表 (核心 OCR 引擎)
+    // ==========================================
+    async function processOcrImage(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const loadingText = document.getElementById('ocr-loading-text');
+        const progressEl = document.getElementById('ocr-progress');
+        loadingText.style.display = 'block';
+        progressEl.innerText = '0%';
+
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = async () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+
+            const getCropBase64 = (xRel, yRel, wRel, hRel) => {
+                const cropCanvas = document.createElement('canvas');
+                const cropCtx = cropCanvas.getContext('2d');
+                const cx = canvas.width * xRel;
+                const cy = canvas.height * yRel;
+                const cw = canvas.width * wRel;
+                const ch = canvas.height * hRel;
+                cropCanvas.width = cw;
+                cropCanvas.height = ch;
+                cropCtx.drawImage(canvas, cx, cy, cw, ch, 0, 0, cw, ch);
+                return cropCanvas.toDataURL();
+            };
+
+            const topNameImg = getCropBase64(0.32, 0.01, 0.36, 0.08);    
+            const midSizeImg = getCropBase64(0.20, 0.55, 0.60, 0.15);    
+            const timeImg = getCropBase64(0.02, 0.44, 0.45, 0.06);       
+            const bottomUserImg = getCropBase64(0.05, 0.85, 0.20, 0.12);  
+
+            try {
+                const scheduler = Tesseract.createScheduler();
+                const workerChi = await Tesseract.createWorker('chi_sim+chi_tra');
+                const workerEng = await Tesseract.createWorker('eng');
+                scheduler.addWorker(workerChi);
+                scheduler.addWorker(workerEng);
+
+                progressEl.innerText = '30%';
+
+                const [resTop, resMid, resTime, resUser] = await Promise.all([
+                    Tesseract.recognize(topNameImg, 'eng'),
+                    Tesseract.recognize(midSizeImg, 'chi_tra+chi_sim'),
+                    Tesseract.recognize(timeImg, 'chi_tra+chi_sim+eng'),
+                    Tesseract.recognize(bottomUserImg, 'chi_tra+chi_sim+eng')
+                ]);
+
+                progressEl.innerText = '90%';
+
+                let topText = resTop.data.text.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+                let midText = resMid.data.text.trim();
+                let prefix = "巨大";
+                if (midText.includes("大") || midText.includes("巨")) prefix = "巨大";
+                
+                document.getElementById('name').value = `${prefix} ${topText || 'Mousqe'}`;
+
+                let timeText = resTime.data.text.replace(/\s+/g, '');
+                let parsedDays = 0, parsedHours = 0, parsedMinutes = 0;
+                
+                const dayMatch = timeText.match(/(\d+)天/);
+                const hourMatch = timeText.match(/(\d+)時/);
+                const minMatch = timeText.match(/(\d+)分/);
+
+                if (dayMatch) parsedDays = parseInt(dayMatch[1], 10);
+                if (hourMatch) parsedHours = parseInt(hourMatch[1], 10);
+                if (minMatch) parsedMinutes = parseInt(minMatch[1], 10);
+
+                if (!dayMatch && !hourMatch && !minMatch) {
+                    const fallbackMatch = timeText.match(/(\d+)/);
+                    if (fallbackMatch) parsedMinutes = parseInt(fallbackMatch[1], 10);
+                }
+
+                document.getElementById('days').value = parsedDays;
+                document.getElementById('hours').value = parsedHours;
+                document.getElementById('minutes').value = parsedMinutes;
+
+                let userText = resUser.data.text.replace(/[\s\W]+/g, '').trim();
+                if (!userText || userText.length > 4) userText = "你"; 
+                document.getElementById('user').value = userText;
+
+                progressEl.innerText = '100% 辨識完成！';
+                setTimeout(() => { loadingText.style.display = 'none'; }, 1000);
+
+                await scheduler.terminate();
+            } catch (err) {
+                console.error("智慧識別發生錯誤:", err);
+                alert("智慧識別失敗，請嘗試手動填寫表單。");
+                loadingText.style.display = 'none';
+            }
+        };
+    }
+
     async function autoDetectCountry(coordsStr, countryInputId, hintId) {
         if(!coordsStr) return;
-        
         const match = coordsStr.match(/(-?\d+(?:\.\d+)?)(?:[\s,]+)(-?\d+(?:\.\d+)?)/);
         if(match) {
             const lat = match[1];
@@ -1013,6 +1132,7 @@
         database.ref('user_favorites/' + currentSyncId).set(updatedFavorites);
     }
 
+    // 資料同步與自動刪除機制 (過期滿 2 小時)
     database.ref('mushrooms').on('value', (snapshot) => {
         const cloudData = snapshot.val();
         dataList = [];
@@ -1026,8 +1146,8 @@
                     dataList.push({
                         id: key, sn: item.sn, user: item.user || "",
                         country: item.country || "", name: item.name,
-                        coords: item.coords, tag: item.tag || "", targetTime: item.targetTime,
-                        slots: item.slots || ['', '', '', '', ''] 
+                        coords: item.coords || "", tag: item.tag || "", targetTime: item.targetTime,
+                        slots: item.slots || ['', '', '', '', '']
                     });
                 }
             });
@@ -1042,7 +1162,7 @@
             Object.keys(cloudData).forEach((key) => {
                 postcardList.push({
                     id: key, type: cloudData[key].type, name: cloudData[key].name || "", 
-                    country: cloudData[key].country || "", coords: cloudData[key].coords,
+                    country: cloudData[key].country || "", coords: cloudData[key].coords || "",
                     tag: cloudData[key].tag || "", image: cloudData[key].image
                 });
             });
@@ -1093,6 +1213,7 @@
         return pad(d.getHours()) + ':' + pad(d.getMinutes()) + (includeSeconds ? ':' + pad(d.getSeconds()) : '');
     }
     
+    // 背景定時清理
     setInterval(() => {
         updateClocks();
         const now = Date.now();
@@ -1268,7 +1389,7 @@
     }
 
     function copyCoords(text, buttonElement) {
-        const cleanText = text.replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+        const cleanText = String(text).replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
         navigator.clipboard.writeText(cleanText).then(() => {
             const originalText = buttonElement.innerText;
             buttonElement.innerText = '✅ 成功'; buttonElement.style.background = '#e5e7eb';
@@ -1367,7 +1488,6 @@
         updateView();
     }
 
-    // ======= 核心升級 1：巨菇卡片列表結構網格卡片化（對齊明信片排版） =======
     function createMushroomCard(item, now, isExpired, timeText) {
         const safeC = escapeHtml(item.country||''), safeName = escapeHtml(item.name), safeTag = escapeHtml(item.tag);
         const diffStr = getTimeDiffString(safeC);
@@ -1401,7 +1521,6 @@
         }
         slotsHtml += `</div></div>`;
 
-        // 採用與明信片高度相似的 CardUI 架構分層
         card.innerHTML = `
             <div style="background: ${isExpired ? '#f3f4f6' : '#ecfdf5'}; padding: 8px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-size: 11px; font-weight: bold; color: var(--text-muted);">#${String(item.sn).padStart(2,'0')}</span>
@@ -1421,13 +1540,11 @@
         return card;
     }
 
-    // ======= 核心畫面渲染引擎 ==========
     function updateView() {
         const activeEl = document.getElementById('active-list'), unclaimEl = document.getElementById('unclaimed-list'), pcEl = document.getElementById('postcard-container');
         if (!activeEl || !unclaimEl || !pcEl) return;
         const now = Date.now();
 
-        // 1. 處理巨菇追蹤
         const sortedM = [...dataList].sort((a, b) => {
             if (a.targetTime === null && b.targetTime === null) return 0;
             if (a.targetTime === null) return 1; if (b.targetTime === null) return -1;
@@ -1467,7 +1584,6 @@
             }
         });
 
-        // ======= 核心升級 2：群組標題對比拉高調整 =======
         function renderMGroup(container, cards, groupId, title, defaultCollapsed) {
             if (cards.length === 0) return;
             
@@ -1480,7 +1596,6 @@
             const arrow = isCol ? '▶' : '▼';
             
             const gHead = document.createElement('div');
-            // 套用深綠底高對比類別
             gHead.className = 'group-header mushroom-header';
             gHead.innerHTML = `<span>${arrow} 📂 ${title}</span> <span style="font-size:11px; color:#e8f5e9; font-weight:normal;">${cards.length} 筆 (點擊收疊)</span>`;
             gHead.addEventListener('click', () => toggleGroup(groupId));
@@ -1505,7 +1620,6 @@
             summaryEl.style.display = 'none';
         }
 
-        // 2. 處理明信片牆
         pcEl.innerHTML = '';
         const searchKw = document.getElementById('postcard-search').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
         const filterState = document.getElementById('postcard-filter').value;
@@ -1541,7 +1655,6 @@
             const arrow = isCol ? '▶' : '▼';
             
             const gHead = document.createElement('div');
-            // 套用深藍底高對比類別
             gHead.className = 'group-header postcard-header';
             gHead.innerHTML = `<span>${arrow} 📂 種類群組：${escapeHtml(type)}</span> <span style="font-size:11px; color:#e0f2fe; font-weight:normal;">${pcGroups[type].length} 筆 (點擊收疊)</span>`;
             gHead.addEventListener('click', () => toggleGroup(groupId));
@@ -1586,7 +1699,6 @@
         if(vCount===0 && postcardList.length>0) document.getElementById('postcard-empty').innerText = "❌ 找不到符合搜尋的項目";
     }
 
-    function escapeHtml(str) { return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
 </script>
 
 </body>
