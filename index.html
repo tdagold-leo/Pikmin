@@ -149,124 +149,14 @@
             line-height: 1.5;
         }
 
-        /* 巨菇卡片列表樣式 */
-        .list-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            border: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .list-card.row-expired {
-            background: #f9fafb;
-            opacity: 0.8;
-        }
-        .lc-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            border-bottom: 1px solid #f3f4f6;
-            padding-bottom: 8px;
-        }
-        .lc-title {
-            font-weight: bold;
-            font-size: 15px;
-            color: var(--text-main);
-        }
-        .lc-time {
-            font-family: monospace;
-            font-weight: bold;
-            font-size: 12px;
-            padding: 2px 6px;
-            border-radius: 6px;
-            background: #fee2e2;
-            color: #ef4444;
-            white-space: nowrap;
-        }
-        .lc-time.safe {
-            background: #d1fae5;
-            color: #059669;
-        }
-        .lc-body {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .lc-user-badge {
-            background: #e0f2fe;
-            color: #0369a1;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        .lc-info {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-top: 4px;
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        
-        /* 參戰 5 個位子的 UI 樣式 */
-        .slots-wrapper {
-            margin-top: 4px;
-            background: #f9fafb;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #e5e7eb;
-        }
-        .slot-btn {
-            flex: 1;
-            min-width: 0;
-            padding: 4px 2px;
-            font-size: 11px;
-            border-radius: 4px;
-            cursor: pointer;
-            text-align: center;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            transition: all 0.2s;
-        }
-        .slot-btn.empty {
-            border: 1px dashed #9ca3af;
-            background: transparent;
-            color: #9ca3af;
-        }
-        .slot-btn.empty:hover {
-            background: #e5e7eb;
-            color: #4b5563;
-        }
-        .slot-btn.filled {
-            border: 1px solid #10b981;
-            background: #ecfdf5;
-            color: #059669;
-            font-weight: bold;
-        }
-        .slot-btn.filled:hover {
-            background: #d1fae5;
-            border-color: #059669;
-        }
-
-        .lc-actions {
-            display: flex;
-            gap: 6px;
-            margin-top: 4px;
-        }
-
-        /* 明信片網格卡片樣式 */
+        /* 統一卡片網格佈局 */
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 12px;
         }
+        
+        /* 統一卡片基礎樣式 */
         .grid-card {
             background: var(--card-bg);
             border-radius: 12px;
@@ -277,6 +167,12 @@
             flex-direction: column;
             position: relative;
         }
+        .grid-card.row-expired {
+            background: #f9fafb;
+            opacity: 0.85;
+        }
+
+        /* 明信片專用圖片樣式 */
         .card-img-box {
             width: 100%;
             aspect-ratio: 4 / 3;
@@ -330,19 +226,17 @@
         .card-star-btn.inactive { color: #d1d5db; }
         
         .card-body {
-            padding: 10px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
             flex: 1;
         }
         .card-title {
             font-weight: bold;
             font-size: 14px;
             color: var(--text-main);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            line-height: 1.4;
         }
         .card-sub {
             font-size: 11px;
@@ -350,12 +244,81 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 4px;
         }
-        .card-actions {
+
+        /* 參戰 5 個位子的 UI 樣式 */
+        .slots-wrapper {
+            margin-top: 2px;
+            background: #f9fafb;
+            padding: 6px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .slot-btn {
+            flex: 1;
+            min-width: 0;
+            padding: 4px 2px;
+            font-size: 11px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .slot-btn.empty {
+            border: 1px dashed #9ca3af;
+            background: transparent;
+            color: #9ca3af;
+        }
+        .slot-btn.empty:hover {
+            background: #e5e7eb;
+            color: #4b5563;
+        }
+        .slot-btn.filled {
+            border: 1px solid #10b981;
+            background: #ecfdf5;
+            color: #059669;
+            font-weight: bold;
+        }
+        .slot-btn.filled:hover {
+            background: #d1fae5;
+            border-color: #059669;
+        }
+
+        .lc-time {
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 6px;
+            background: #fee2e2;
+            color: #ef4444;
+            white-space: nowrap;
+            display: inline-block;
+        }
+        .lc-time.safe {
+            background: #d1fae5;
+            color: #059669;
+        }
+        .lc-user-badge {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .lc-actions {
             display: flex;
             gap: 4px;
             margin-top: auto;
-            padding-top: 8px;
+            padding-top: 4px;
         }
 
         /* 標籤徽章 */
@@ -385,7 +348,7 @@
         /* 按鈕共用設定 */
         .btn-sm {
             font-size: 11px;
-            padding: 5px 8px;
+            padding: 5px 6px;
             border-radius: 6px;
             border: none;
             cursor: pointer;
@@ -394,9 +357,9 @@
         }
         .btn-sm:hover { opacity: 0.8; }
         .btn-default { background: #f3f4f6; color: #4b5563; flex: 1; border: 1px solid #e5e7eb; }
-        .btn-claim { background: #3b82f6; color: white; }
-        .btn-edit { background: #f59e0b; color: white; }
-        .btn-danger { background: #ef4444; color: white; }
+        .btn-claim { background: #3b82f6; color: white; flex: 1; }
+        .btn-edit { background: #f59e0b; color: white; flex: 1; }
+        .btn-danger { background: #ef4444; color: white; flex: 1; }
         .btn-block { width: 100%; padding: 10px; border-radius: 8px; font-size: 14px; }
         
         .line-share-btn {
@@ -415,23 +378,29 @@
             box-shadow: 0 4px 6px rgba(6,199,85,0.2);
         }
 
-        /* 群組標題 (通用) */
+        /* ======= 核心升級：群組高對比度標題樣式 ======= */
         .group-header {
-            background: #e0f2fe;
+            grid-column: 1 / -1; 
             padding: 10px 14px;
             border-radius: 8px;
-            margin: 10px 0;
+            margin: 12px 0 4px 0;
             font-weight: bold;
-            color: #0284c7;
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
             -webkit-tap-highlight-color: transparent;
         }
-        .grid .group-header {
-            grid-column: 1 / -1; 
-            margin: 10px 0 0 0;
+        /* 明信片群組：高對比深藍底 */
+        .group-header.postcard-header {
+            background: #0284c7;
+            color: #ffffff;
+        }
+        /* 巨菇群組：高對比深綠底 */
+        .group-header.mushroom-header {
+            background: #2e7d32;
+            color: #ffffff;
         }
 
         /* 搜尋與篩選列 */
@@ -561,28 +530,34 @@
 </head>
 <body>
 
+    <!-- 頂部導覽列 -->
     <header class="app-header">
         <h2>🌱 Pickmin Tracker</h2>
         <div class="header-right" id="sync-status-indicator">⚪ 未連線</div>
     </header>
 
+    <!-- 主內容區 -->
     <main class="app-content">
 
+        <!-- 視圖 1：巨菇頁面 -->
         <section id="view-mushroom" class="view-section active">
             <button class="line-share-btn" onclick="shareToLineWindow()" style="margin-bottom: 20px;">
                 💚 一鍵產生分享文字並喚醒 LINE
             </button>
 
+            <!-- 分類統計面板 -->
             <div id="mushroom-summary" class="summary-widget" style="display:none;"></div>
 
-            <div id="active-list"></div>
+            <!-- 巨菇網格列表容器 (改為 grid 佈局) -->
+            <div id="active-list" class="grid"></div>
             <div id="active-empty" class="empty-message" style="display: none;">目前沒有正在追蹤的項目</div>
 
             <h3 style="font-size:15px; color:var(--primary-dark); border-bottom:2px dashed #d1d5db; padding-bottom:5px; margin:25px 0 10px 0;">🟡 待認領巨菇</h3>
-            <div id="unclaimed-list"></div>
+            <div id="unclaimed-list" class="grid"></div>
             <div id="unclaimed-empty" class="empty-message" style="display: none;">目前沒有待認領的項目</div>
         </section>
 
+        <!-- 視圖 2：明信片頁面 -->
         <section id="view-postcard" class="view-section">
             <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
                 🔗 推薦免費圖床：<a href="https://meee.com.tw/" target="_blank" style="color:var(--primary-dark);">Meee 圖片上傳</a>
@@ -601,6 +576,7 @@
             <div id="postcard-empty" class="empty-message" style="display: none;">目前沒有收藏的明信片項目</div>
         </section>
 
+        <!-- 視圖 3：設定頁面 -->
         <section id="view-settings" class="view-section">
             <div class="settings-card">
                 <h3>☁️ 跨裝置收藏同步</h3>
@@ -655,6 +631,7 @@
 
     </main>
 
+    <!-- 底部導覽列 -->
     <nav class="bottom-nav">
         <button class="nav-item active" id="nav-mushroom" onclick="switchTab('mushroom')">
             <span class="nav-icon">🍄</span>
@@ -670,8 +647,12 @@
         </button>
     </nav>
 
+    <!-- 懸浮新增按鈕 -->
     <button id="main-fab" class="fab" onclick="openAddModal()">+</button>
 
+    <!-- ================= 彈出視窗區 (Modals) ================= -->
+
+    <!-- 新增資料 Modal -->
     <div id="add-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -748,6 +729,7 @@
         </div>
     </div>
 
+    <!-- 認領 Modal -->
     <div id="claim-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -770,6 +752,7 @@
         </div>
     </div>
 
+    <!-- 修改資料 Modal -->
     <div id="time-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
@@ -811,6 +794,7 @@
         </div>
     </div>
 
+    <!-- 圖片放大 Lightbox -->
     <div id="lightbox" class="lightbox-overlay" onclick="this.style.display='none'">
         <img id="lightbox-img" class="lightbox-img" src="" alt="明信片大圖">
     </div>
@@ -840,7 +824,6 @@
     let cloudFavorites = [];
     let favoritesListenerRef = null;
     
-    // 用於記錄群組收合狀態
     let collapsedGroups = new Set();
     let knownPostcardGroups = new Set(); 
     let knownMushroomGroups = new Set();
@@ -883,13 +866,9 @@
         if(id === 'time-modal') currentEditingTimeId = null;
     }
 
-    // ==========================================
-    // 自動判斷國家與 API 時差計算
-    // ==========================================
     async function autoDetectCountry(coordsStr, countryInputId, hintId) {
         if(!coordsStr) return;
         
-        // 升級版正規表達式：支援中間為逗號、空白，或逗號加空白 (如 "35.689 139.692")
         const match = coordsStr.match(/(-?\d+(?:\.\d+)?)(?:[\s,]+)(-?\d+(?:\.\d+)?)/);
         if(match) {
             const lat = match[1];
@@ -898,7 +877,6 @@
                 let countryName = "";
                 let offsetHours = null;
 
-                // 1. 抓取國家名稱 (BigDataCloud API)
                 const resCountry = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh`);
                 if(resCountry.ok) {
                     const data = await resCountry.json();
@@ -911,7 +889,6 @@
                     }
                 }
 
-                // 2. 抓取精準時區時差 (Open-Meteo API)
                 const resTz = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&timezone=auto&current_weather=true`);
                 if(resTz.ok) {
                     const tzData = await resTz.json();
@@ -942,7 +919,6 @@
         }
     }
 
-    // 系統時區字典
     const globalTzMap = {
         "日本": 9, "韓國": 9, "南韓": 9, "大韓民國": 9, "首爾": 9, "東京": 9, "Japan": 9, "Korea": 9,
         "台灣": 8, "臺灣": 8, "台北": 8, "香港": 8, "澳門": 8, "北京": 8, "中國": 8, "中華人民共和國": 8, "中華民國": 8, "新加坡": 8, "馬來西亞": 8, "菲律賓": 8, "Taiwan": 8, "China": 8, "Hong Kong": 8, "Singapore": 8, "Malaysia": 8, "Philippines": 8,
@@ -953,7 +929,7 @@
         "葡萄牙": 1, "瑞典": 1, "挪威": 1, "丹麥": 1, "波蘭": 1, "荷蘭": 1, "比利時": 1, "瑞士": 1, "英國": 1, "倫敦": 1, "UK": 1, "大不列顛": 1,
         "澳洲": 10, "澳大利亞": 10, "雪梨": 10, "澳洲雪梨": 10, "關島": 10, "Australia": 10,
         "紐西蘭": 12, "奧克蘭": 12, "New Zealand": 12,
-        "委內內瑞拉": -4, "巴西": -3, "阿根廷": -3, "智利": -4, "哥倫比亞": -5, "秘魯": -5,
+        "委內瑞拉": -4, "巴西": -3, "阿根廷": -3, "智利": -4, "哥倫比亞": -5, "秘魯": -5,
         "美國美東": -4, "美東": -4, "紐約": -4, "加拿大東部": -4, "美國": -4, "美利堅": -4, "United States": -4, "USA": -4, "加拿大": -4, "Canada": -4,
         "美國美中": -5, "美中": -5, "芝加哥": -5, "墨西哥": -6,
         "美國美西": -7, "美西": -7, "洛杉磯": -7, "舊金山": -7, "溫哥華": -7,
@@ -1037,7 +1013,6 @@
         database.ref('user_favorites/' + currentSyncId).set(updatedFavorites);
     }
 
-    // 資料同步與自動刪除機制 (過期滿 2 小時)
     database.ref('mushrooms').on('value', (snapshot) => {
         const cloudData = snapshot.val();
         dataList = [];
@@ -1046,14 +1021,13 @@
             Object.keys(cloudData).forEach((key) => {
                 const item = cloudData[key];
                 if (item.targetTime !== null && (now - item.targetTime >= 7200000)) {
-                    // 超過2小時自動刪除
                     database.ref('mushrooms/' + key).remove();
                 } else {
                     dataList.push({
                         id: key, sn: item.sn, user: item.user || "",
                         country: item.country || "", name: item.name,
                         coords: item.coords, tag: item.tag || "", targetTime: item.targetTime,
-                        slots: item.slots || ['', '', '', '', ''] // 讀取 5 個打菇位子資料
+                        slots: item.slots || ['', '', '', '', ''] 
                     });
                 }
             });
@@ -1119,7 +1093,6 @@
         return pad(d.getHours()) + ':' + pad(d.getMinutes()) + (includeSeconds ? ':' + pad(d.getSeconds()) : '');
     }
     
-    // 背景定時清理
     setInterval(() => {
         updateClocks();
         const now = Date.now();
@@ -1130,7 +1103,6 @@
         });
     }, 1000);
 
-    // ======= 新增 / 修改 / 刪除邏輯 ==========
     function addItem() {
         if (currentMode === 'mushroom') {
             const userEl = document.getElementById('user'), countryEl = document.getElementById('country');
@@ -1146,7 +1118,6 @@
             const processedUser = userEl ? userEl.value.trim() : "";
             const processedCountry = countryEl ? countryEl.value.trim() : "";
             
-            // 預設參戰者 1 位設定
             let initSlots = ['', '', '', '', ''];
             if (processedUser !== "") {
                 initSlots[0] = '✔️';
@@ -1213,7 +1184,6 @@
         let updates = { user: usernameInput };
         if (d > 0 || h > 0 || m > 0) updates.targetTime = Date.now() + (((d * 24 * 60) + (h * 60) + m) * 60 * 1000);
         
-        // 自動幫認領者補上第一個打菇位子
         const item = dataList.find(i => i.id === currentClaimingId);
         if (item) {
             let currentSlots = item.slots ? [...item.slots] : ['', '', '', '', ''];
@@ -1297,7 +1267,6 @@
         closeModal('time-modal');
     }
 
-    // ======= 核心修正：複製時自動移除中間的逗號並優化空格 =======
     function copyCoords(text, buttonElement) {
         const cleanText = text.replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
         navigator.clipboard.writeText(cleanText).then(() => {
@@ -1312,13 +1281,11 @@
         document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').style.display = 'flex';
     }
 
-    // ======= 參戰 5 個位子 一鍵切換邏輯 =======
     function toggleSlot(id, index) {
         const item = dataList.find(i => i.id === id);
         if (!item) return;
         let currentSlots = item.slots ? [...item.slots] : ['', '', '', '', ''];
         
-        // 直接切換狀態，不需輸入名字或確認
         if (currentSlots[index]) {
             currentSlots[index] = '';
         } else {
@@ -1327,7 +1294,6 @@
         database.ref('mushrooms/' + id + '/slots').set(currentSlots);
     }
 
-    // 將時間轉換為非常簡短的版本 (適用於 LINE 分享)
     function getShortRemainingText(targetTime, now) {
         if (targetTime === null) return "未設";
         const rem = targetTime - now;
@@ -1338,7 +1304,6 @@
         return `${m}分${t%60}秒`;
     }
 
-    // ====== LINE 新版縮排極簡格式分享 ======
     async function shareToLineWindow() {
         if (dataList.length === 0) { alert('目前沒有任何資訊可以分享喔！'); return; }
         const btn = document.querySelector('.line-share-btn');
@@ -1356,9 +1321,6 @@
 
         let out = `🍄巨菇追蹤🍄\n🔗 ${finalShareUrl}\n\n`;
 
-        // 格式：
-        // 01.空位4 <使用者>
-        //     [剩餘時間]
         const formatLineText = (i, userName) => {
             const currentSlots = i.slots || ['', '', '', '', ''];
             const filledCount = currentSlots.filter(s => s !== '').length;
@@ -1405,7 +1367,7 @@
         updateView();
     }
 
-    // ====== 卡片產生器 (巨菇) ======
+    // ======= 核心升級 1：巨菇卡片列表結構網格卡片化（對齊明信片排版） =======
     function createMushroomCard(item, now, isExpired, timeText) {
         const safeC = escapeHtml(item.country||''), safeName = escapeHtml(item.name), safeTag = escapeHtml(item.tag);
         const diffStr = getTimeDiffString(safeC);
@@ -1413,58 +1375,59 @@
         const tHtml = safeTag ? `<span class="tag-badge">${safeTag}</span>` : '';
 
         const card = document.createElement('div');
-        card.className = `list-card ${isExpired ? 'row-expired' : ''}`;
+        card.className = `grid-card ${isExpired ? 'row-expired' : ''}`;
         
-        let actionHtml = item.user === "" ? `<button class="btn-sm btn-claim" onclick="openClaimModalById('${item.id}')">🙋‍♂️ 認領</button>` : '';
-        actionHtml += `<button class="btn-sm btn-edit" onclick="openTimeModalById('${item.id}', 'mushroom')">✏️ 修改</button><button class="btn-sm btn-danger" onclick="deleteItem('${item.id}', 'mushroom')">🗑️ 刪除</button>`;
+        let actionHtml = item.user === "" ? `<button class="btn-sm btn-claim" onclick="openClaimModalById('${item.id}')">認領</button>` : '';
+        actionHtml += `<button class="btn-sm btn-edit" onclick="openTimeModalById('${item.id}', 'mushroom')">修改</button><button class="btn-sm btn-danger" onclick="deleteItem('${item.id}', 'mushroom')">刪除</button>`;
 
-        // === 5 個參戰位子 UI ===
         const currentSlots = item.slots || ['', '', '', '', ''];
         const filledCount = currentSlots.filter(s => s !== '').length;
         const isFull = filledCount === 5;
         
         let slotsHtml = `<div class="slots-wrapper">`;
-        slotsHtml += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">`;
-        slotsHtml += `<span style="font-size: 11px; font-weight: bold; color: #4b5563;">⚔️ 參戰空位 (${filledCount}/5)</span>`;
+        slotsHtml += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">`;
+        slotsHtml += `<span style="font-size: 10px; font-weight: bold; color: #4b5563;">⚔️ 參戰空位 (${filledCount}/5)</span>`;
         if (isFull) {
-            slotsHtml += `<span style="font-size: 10px; background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">🈵 額滿</span>`;
+            slotsHtml += `<span style="font-size: 9px; background: #ef4444; color: white; padding: 1px 4px; border-radius: 4px; font-weight: bold;">🈵 額滿</span>`;
         }
         slotsHtml += `</div><div style="display: flex; gap: 4px;">`;
         
         for (let i = 0; i < 5; i++) {
             if (currentSlots[i]) {
-                slotsHtml += `<button class="slot-btn filled" onclick="toggleSlot('${item.id}', ${i})" title="點擊取消卡位">✔️</button>`;
+                slotsHtml += `<button class="slot-btn filled" onclick="toggleSlot('${item.id}', ${i})">✔️</button>`;
             } else {
-                slotsHtml += `<button class="slot-btn empty" onclick="toggleSlot('${item.id}', ${i})" title="點擊卡位">+</button>`;
+                slotsHtml += `<button class="slot-btn empty" onclick="toggleSlot('${item.id}', ${i})">+</button>`;
             }
         }
         slotsHtml += `</div></div>`;
 
+        // 採用與明信片高度相似的 CardUI 架構分層
         card.innerHTML = `
-            <div class="lc-header">
-                <div class="lc-title"><span style="color:#9ca3af; font-size:12px; margin-right:4px;">#${String(item.sn).padStart(2,'0')}</span>${safeName}</div>
-                <div class="lc-time ${!isExpired && item.targetTime !== null ? 'safe' : ''}">${timeText}</div>
+            <div style="background: ${isExpired ? '#f3f4f6' : '#ecfdf5'}; padding: 8px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 11px; font-weight: bold; color: var(--text-muted);">#${String(item.sn).padStart(2,'0')}</span>
+                <span class="lc-time ${!isExpired && item.targetTime !== null ? 'safe' : ''}" style="margin: 0; font-size: 11px;">${timeText}</span>
             </div>
-            <div class="lc-body">
-                <div style="display:flex; flex-direction:column; gap:4px;">
-                    <div>${item.user ? `<span class="lc-user-badge">👤 ${escapeHtml(item.user)}</span>` : '<span style="color:#9ca3af; font-size:13px; font-style:italic;">待認領</span>'}</div>
-                    <div class="lc-info">${cHtml} ${tHtml}</div>
+            <div class="card-body">
+                <div class="card-title" style="font-size: 14px; margin-bottom: 2px;">${safeName}</div>
+                <div class="card-sub" style="margin-bottom: 2px;">
+                    <div>${item.user ? `<span class="lc-user-badge">👤 ${escapeHtml(item.user)}</span>` : '<span style="color:#9ca3af; font-style:italic;">待認領</span>'}</div>
+                    <button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)" style="padding: 3px 6px; font-size: 10px; flex: none;">📍 複製座標</button>
                 </div>
-                <button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製座標</button>
+                <div class="lc-info" style="margin: 0;">${cHtml} ${tHtml}</div>
+                ${slotsHtml}
+                <div class="lc-actions">${actionHtml}</div>
             </div>
-            ${slotsHtml}
-            <div class="lc-actions">${actionHtml}</div>
         `;
         return card;
     }
 
-    // ======= 核心畫面渲染引擎 (UI App化) ==========
+    // ======= 核心畫面渲染引擎 ==========
     function updateView() {
         const activeEl = document.getElementById('active-list'), unclaimEl = document.getElementById('unclaimed-list'), pcEl = document.getElementById('postcard-container');
         if (!activeEl || !unclaimEl || !pcEl) return;
         const now = Date.now();
 
-        // 1. 渲染巨菇
+        // 1. 處理巨菇追蹤
         const sortedM = [...dataList].sort((a, b) => {
             if (a.targetTime === null && b.targetTime === null) return 0;
             if (a.targetTime === null) return 1; if (b.targetTime === null) return -1;
@@ -1504,6 +1467,7 @@
             }
         });
 
+        // ======= 核心升級 2：群組標題對比拉高調整 =======
         function renderMGroup(container, cards, groupId, title, defaultCollapsed) {
             if (cards.length === 0) return;
             
@@ -1516,10 +1480,9 @@
             const arrow = isCol ? '▶' : '▼';
             
             const gHead = document.createElement('div');
-            gHead.className = 'group-header';
-            gHead.style.backgroundColor = '#dcedc8'; 
-            gHead.style.color = '#33691e';
-            gHead.innerHTML = `<span>${arrow} 📂 ${title}</span> <span style="font-size:11px; color:#558b2f;">${cards.length} 筆 (點擊收疊)</span>`;
+            // 套用深綠底高對比類別
+            gHead.className = 'group-header mushroom-header';
+            gHead.innerHTML = `<span>${arrow} 📂 ${title}</span> <span style="font-size:11px; color:#e8f5e9; font-weight:normal;">${cards.length} 筆 (點擊收疊)</span>`;
             gHead.addEventListener('click', () => toggleGroup(groupId));
             container.appendChild(gHead);
 
@@ -1542,7 +1505,7 @@
             summaryEl.style.display = 'none';
         }
 
-        // 2. 渲染明信片
+        // 2. 處理明信片牆
         pcEl.innerHTML = '';
         const searchKw = document.getElementById('postcard-search').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
         const filterState = document.getElementById('postcard-filter').value;
@@ -1578,8 +1541,9 @@
             const arrow = isCol ? '▶' : '▼';
             
             const gHead = document.createElement('div');
-            gHead.className = 'group-header';
-            gHead.innerHTML = `<span>${arrow} 📂 種類群組：${escapeHtml(type)}</span> <span style="font-size:11px; color:#0369a1;">${pcGroups[type].length} 筆 (點擊收疊)</span>`;
+            // 套用深藍底高對比類別
+            gHead.className = 'group-header postcard-header';
+            gHead.innerHTML = `<span>${arrow} 📂 種類群組：${escapeHtml(type)}</span> <span style="font-size:11px; color:#e0f2fe; font-weight:normal;">${pcGroups[type].length} 筆 (點擊收疊)</span>`;
             gHead.addEventListener('click', () => toggleGroup(groupId));
             pcEl.appendChild(gHead);
 
