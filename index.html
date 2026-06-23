@@ -292,6 +292,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            cursor: zoom-in;
         }
         .card-img-placeholder {
             width: 100%;
@@ -535,7 +536,7 @@
 <body>
 
     <header class="app-header">
-        <h2>🌱 Pickmin Tracker</h2>
+        <h2 style="align-items: baseline;">🌱 Pickmin Tracker <span id="header-version-tag" style="font-size: 10px; color: #9ca3af; font-weight: normal; margin-left: 6px;"></span></h2>
         <div class="header-right" id="sync-status-indicator">⚪ 未連線</div>
     </header>
 
@@ -623,7 +624,6 @@
             <div class="settings-card">
                 <h3>ℹ️ 系統資訊</h3>
                 <div id="view-counter-text" style="font-size:13px; font-weight:bold; color:var(--text-main);">雲端總瀏覽次數：0 次</div>
-                <div id="version-tag" style="font-size:11px; color:var(--text-muted); margin-top:4px;">Ver: 讀取中...</div>
             </div>
         </section>
 
@@ -668,7 +668,7 @@
                 </div>
                 <div class="input-group">
                     <label>名稱</label>
-                    <input type="text" id="name" class="input-base" placeholder="例如：巨型火菇">
+                    <input type="text" id="name" class="input-base" placeholder="例如：巨大火菇">
                 </div>
                 <div class="input-group">
                     <label>標籤</label>
@@ -820,7 +820,6 @@
     let cloudFavorites = [];
     let favoritesListenerRef = null;
     
-    // 用於記錄群組收合狀態
     let collapsedGroups = new Set();
     let knownPostcardGroups = new Set(); 
     let knownMushroomGroups = new Set();
@@ -863,6 +862,33 @@
         if(id === 'time-modal') currentEditingTimeId = null;
     }
 
+    // ==========================================
+    // 全球時區記憶與擴充字典系統
+    // ==========================================
+    let globalTzMap = {
+        "日本": 9, "韓國": 9, "南韓": 9, "大韓民國": 9, "首爾": 9, "東京": 9, "Japan": 9, "Korea": 9,
+        "台灣": 8, "臺灣": 8, "台北": 8, "香港": 8, "澳門": 8, "北京": 8, "中國": 8, "中華人民共和國": 8, "中華民國": 8, "新加坡": 8, "馬來西亞": 8, "菲律賓": 8, "Taiwan": 8, "China": 8, "Hong Kong": 8, "Singapore": 8, "Malaysia": 8, "Philippines": 8,
+        "泰國": 7, "越南": 7, "印尼": 7, "曼谷": 7, "雅加達": 7, "Thailand": 7, "Vietnam": 7, "Indonesia": 7,
+        "印度": 5.5, "斯里蘭卡": 5.5,
+        "模里西斯": 4, "阿聯酋": 4, "杜拜": 4, "阿拉伯聯合大公國": 4, "阿聯": 4,
+        "土耳其": 3, "沙烏地阿拉伯": 3, "卡達": 3, "科威特": 3, "莫斯科": 3, "俄羅斯": 3,
+        "愛沙尼亞": 2, "拉脫維亞": 2, "立陶宛": 2, "烏克蘭": 2, "芬蘭": 2, "法國": 2, "法蘭西": 2, "德國": 2, "德意志": 2, "義大利": 2, "西班牙": 2, "歐洲": 2, "希臘": 2, "南非": 2, "埃及": 2, "瑞士": 2, "瑞典": 2, "波蘭": 2, "荷蘭": 2,
+        "葡萄牙": 1, "挪威": 1, "丹麥": 1, "比利時": 1, "英國": 1, "倫敦": 1, "UK": 1, "大不列顛": 1,
+        "澳洲": 10, "澳大利亞": 10, "雪梨": 10, "澳洲雪梨": 10, "關島": 10, "Australia": 10,
+        "紐西蘭": 12, "奧克蘭": 12, "New Zealand": 12,
+        "委內瑞拉": -4, "巴西": -3, "阿根廷": -3, "智利": -4, "哥倫比亞": -5, "秘魯": -5,
+        "美國美東": -4, "美東": -4, "紐約": -4, "加拿大東部": -4, "美國": -4, "美利堅": -4, "United States": -4, "USA": -4, "加拿大": -4, "Canada": -4, "多倫多": -4,
+        "美國美中": -5, "美中": -5, "芝加哥": -5, "墨西哥": -6,
+        "美國美西": -7, "美西": -7, "洛杉磯": -7, "舊金山": -7, "溫哥華": -7, "加州": -7,
+        "夏威夷": -10, "Hawaii": -10
+    };
+
+    // 啟動時載入本機永久記憶的時區，與內建字典合併
+    try {
+        const learnedTz = JSON.parse(localStorage.getItem('pikmin_learned_tz') || '{}');
+        Object.assign(globalTzMap, learnedTz);
+    } catch(e) {}
+
     async function autoDetectCountry(coordsStr, countryInputId, hintId) {
         if(!coordsStr) return;
         const match = coordsStr.match(/(-?\d+(?:\.\d+)?)(?:[\s,]+)(-?\d+(?:\.\d+)?)/);
@@ -897,7 +923,19 @@
                             else if (diff > 0) hintEl.innerText = `(精準定位: 快台灣 ${diff} 小時)`;
                             else hintEl.innerText = `(精準定位: 慢台灣 ${Math.abs(diff)} 小時)`;
                         }
-                        if (countryName) globalTzMap[countryName] = offsetHours;
+                        
+                        if (countryName) {
+                            // 存入當前變數
+                            globalTzMap[countryName] = offsetHours;
+                            // 永久寫入瀏覽器記憶體
+                            try {
+                                const learned = JSON.parse(localStorage.getItem('pikmin_learned_tz') || '{}');
+                                learned[countryName] = offsetHours;
+                                localStorage.setItem('pikmin_learned_tz', JSON.stringify(learned));
+                            } catch(e){}
+                            // 重新渲染畫面，讓新抓到的時差立刻顯示出來！
+                            updateView(); 
+                        }
                         return; 
                     }
                 }
@@ -905,23 +943,6 @@
             } catch(e) { console.log(e); }
         }
     }
-
-    const globalTzMap = {
-        "日本": 9, "韓國": 9, "南韓": 9, "大韓民國": 9, "首爾": 9, "東京": 9, "Japan": 9, "Korea": 9,
-        "台灣": 8, "臺灣": 8, "台北": 8, "香港": 8, "澳門": 8, "北京": 8, "中國": 8, "中華人民共和國": 8, "中華民國": 8, "新加坡": 8, "馬來西亞": 8, "菲律賓": 8, "Taiwan": 8, "China": 8, "Hong Kong": 8, "Singapore": 8, "Malaysia": 8, "Philippines": 8,
-        "泰國": 7, "越南": 7, "印尼": 7, "曼谷": 7, "雅加達": 7, "Thailand": 7, "Vietnam": 7, "Indonesia": 7,
-        "模里西斯": 4, "阿聯酋": 4, "杜拜": 4, "阿拉伯聯合大公國": 4, "阿聯": 4,
-        "土耳其": 3, "沙烏地阿拉伯": 3, "卡達": 3, "科威特": 3,
-        "愛沙尼亞": 2, "拉脫維亞": 2, "立陶宛": 2, "烏克蘭": 2, "芬蘭": 2, "法國": 2, "法蘭西": 2, "德國": 2, "德意志": 2, "義大利": 2, "西班牙": 2, "歐洲": 2, "希臘": 2, "南非": 2, "埃及": 2,
-        "葡萄牙": 1, "瑞典": 1, "挪威": 1, "丹麥": 1, "波蘭": 1, "荷蘭": 1, "比利時": 1, "瑞士": 1, "英國": 1, "倫敦": 1, "UK": 1, "大不列顛": 1,
-        "澳洲": 10, "澳大利亞": 10, "雪梨": 10, "澳洲雪梨": 10, "關島": 10, "Australia": 10,
-        "紐西蘭": 12, "奧克蘭": 12, "New Zealand": 12,
-        "委內瑞拉": -4, "巴西": -3, "阿根廷": -3, "智利": -4, "哥倫比亞": -5, "秘魯": -5,
-        "美國美東": -4, "美東": -4, "紐約": -4, "加拿大東部": -4, "美國": -4, "美利堅": -4, "United States": -4, "USA": -4, "加拿大": -4, "Canada": -4,
-        "美國美中": -5, "美中": -5, "芝加哥": -5, "墨西哥": -6,
-        "美國美西": -7, "美西": -7, "洛杉磯": -7, "舊金山": -7, "溫哥華": -7,
-        "夏威夷": -10, "Hawaii": -10
-    };
 
     function showTimeDiff(val, hintId) {
         const hintEl = document.getElementById(hintId);
@@ -1029,7 +1050,10 @@
     function updateVersionTag() {
         const d = new Date(document.lastModified);
         const pad = n => String(n).padStart(2, '0');
-        document.getElementById('version-tag').innerText = `Ver: ${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
+        const verStr = `Ver: ${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
+        
+        if (document.getElementById('version-tag')) document.getElementById('version-tag').innerText = verStr;
+        if (document.getElementById('header-version-tag')) document.getElementById('header-version-tag').innerText = verStr;
     }
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -1231,13 +1255,21 @@
             const originalText = buttonElement.innerText;
             buttonElement.innerText = '✅ 成功'; buttonElement.style.background = '#e5e7eb';
             setTimeout(() => { buttonElement.innerText = originalText; buttonElement.style.background = ''; }, 1200);
-        }).catch(err => alert('複製失敗，請手手動複製。'));
+        }).catch(err => alert('複製失敗，請手動複製。'));
+    }
+
+    // 點擊明信片放大
+    function openImageLightbox(src) {
+        if(!src || src.includes('無圖片')) return;
+        document.getElementById('lightbox-img').src = src; 
+        document.getElementById('lightbox').style.display = 'flex';
     }
 
     function toggleSlot(id, index) {
         const item = dataList.find(i => i.id === id);
         if (!item) return;
         let currentSlots = item.slots ? [...item.slots] : ['', '', '', '', ''];
+        
         if (currentSlots[index]) currentSlots[index] = '';
         else currentSlots[index] = '✔️';
         database.ref('mushrooms/' + id + '/slots').set(currentSlots);
@@ -1275,7 +1307,9 @@
             const emptyCount = 5 - filledCount;
             let slotInfo = emptyCount === 0 ? "🈵額滿" : `空位${emptyCount}`;
             const snPad = String(i.sn).padStart(2, '0');
-            return `${snPad}.${slotInfo} <${userName}>\n    [${getShortRemainingText(i.targetTime, now)}]\n`;
+            const itemName = i.name || "未命名";
+            
+            return `${snPad}.${slotInfo} <${userName}> ${itemName}\n    [${getShortRemainingText(i.targetTime, now)}]\n`;
         };
 
         const actives = sorted.filter(i => i.user !== "");
@@ -1393,7 +1427,6 @@
             }
         });
 
-        // ======= 核心修改：移除 space-between 原有效果，改靠左並將筆數放大 =======
         function renderMGroup(container, cards, groupId, title, defaultCollapsed) {
             if (cards.length === 0) return;
             if (!knownMushroomGroups.has(groupId)) { knownMushroomGroups.add(groupId); if (defaultCollapsed) collapsedGroups.add(groupId); }
@@ -1448,7 +1481,14 @@
             const arrow = isCol ? '▶' : '▼';
             const gHead = document.createElement('div');
             gHead.className = 'group-header postcard-header';
-            gHead.innerHTML = `<span>${arrow} 📂 種類群組：${escapeHtml(type)}</span> <span style="font-size:11px; color:#e0f2fe; font-weight:normal;">${pcGroups[type].length} 筆</span>`;
+            
+            gHead.style.justifyContent = 'flex-start';
+            gHead.style.gap = '12px';
+            gHead.innerHTML = `
+                <span style="font-size:18px; font-weight:900; background:rgba(255,255,255,0.25); padding:4px 12px; border-radius:16px;">${pcGroups[type].length} 筆</span> 
+                <span>${arrow} 📂 種類群組：${escapeHtml(type)}</span>
+            `;
+
             gHead.addEventListener('click', () => toggleGroup(groupId));
             pcEl.appendChild(gHead);
 
@@ -1458,7 +1498,9 @@
                     const favList = Array.isArray(cloudFavorites) ? cloudFavorites : [];
                     const isFav = favList.includes(item.id); 
                     const card = document.createElement('div'); card.className = 'grid-card';
-                    const imgHtml = (safeI && safeI !== "無圖片") ? `<img src="${safeI}" class="card-img" onclick="openImageLightbox('${safeI}')">` : `<div class="card-img-placeholder">無圖片</div>`;
+                    
+                    const imgHtml = (safeI && safeI !== "無圖片") ? `<img src="${safeI}" class="card-img" onclick="openImageLightbox(this.src)">` : `<div class="card-img-placeholder">無圖片</div>`;
+                    
                     card.innerHTML = `
                         <div class="card-img-box">${imgHtml}<div class="card-badge-type">${escapeHtml(item.type)}</div><button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button></div>
                         <div class="card-body"><div class="card-title">${escapeHtml(item.name)}</div><div class="card-sub"><span>🌍 ${safeC}</span>${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}</div>
