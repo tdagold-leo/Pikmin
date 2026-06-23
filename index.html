@@ -7,7 +7,6 @@
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
 
     <style>
         :root {
@@ -153,7 +152,7 @@
         /* 統一卡片網格佈局 */
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 12px;
         }
         
@@ -173,59 +172,6 @@
             opacity: 0.85;
         }
 
-        /* 明信片專用圖片樣式 */
-        .card-img-box {
-            width: 100%;
-            aspect-ratio: 4 / 3;
-            background: #e5e7eb;
-            position: relative;
-            cursor: pointer;
-        }
-        .card-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .card-img-placeholder {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #9ca3af;
-            font-size: 12px;
-        }
-        .card-badge-type {
-            position: absolute;
-            top: 6px;
-            left: 6px;
-            background: rgba(0,0,0,0.6);
-            color: white;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 6px;
-            backdrop-filter: blur(4px);
-        }
-        .card-star-btn {
-            position: absolute;
-            top: 6px;
-            right: 6px;
-            background: rgba(255,255,255,0.85);
-            border: none;
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            backdrop-filter: blur(4px);
-            font-size: 14px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .card-star-btn.active { color: #f59e0b; text-shadow: 0 0 2px rgba(245,158,11,0.5); }
-        .card-star-btn.inactive { color: #d1d5db; }
-        
         .card-body {
             padding: 12px;
             display: flex;
@@ -238,7 +184,11 @@
             font-size: 14px;
             color: var(--text-main);
             line-height: 1.4;
-            word-break: break-all;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .card-sub {
             font-size: 11px;
@@ -315,13 +265,73 @@
             font-weight: bold;
             display: inline-block;
         }
-
+        .lc-info {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
         .lc-actions {
             display: flex;
             gap: 4px;
             margin-top: auto;
             padding-top: 4px;
         }
+
+        /* 明信片專用圖片樣式 */
+        .card-img-box {
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            background: #e5e7eb;
+            position: relative;
+            cursor: pointer;
+        }
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .card-img-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+        .card-badge-type {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 6px;
+            backdrop-filter: blur(4px);
+        }
+        .card-star-btn {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: rgba(255,255,255,0.85);
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            font-size: 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .card-star-btn.active { color: #f59e0b; text-shadow: 0 0 2px rgba(245,158,11,0.5); }
+        .card-star-btn.inactive { color: #d1d5db; }
 
         /* 標籤徽章 */
         .tag-badge {
@@ -394,35 +404,8 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.08);
             -webkit-tap-highlight-color: transparent;
         }
-        .group-header.postcard-header {
-            background: #0284c7;
-            color: #ffffff;
-        }
-        .group-header.mushroom-header {
-            background: #2e7d32;
-            color: #ffffff;
-        }
-
-        /* 圖片識別區 UI */
-        .ocr-upload-box {
-            border: 2px dashed var(--primary);
-            background: #f0fdf4;
-            padding: 10px;
-            border-radius: 10px;
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 12px;
-            color: var(--primary-dark);
-            font-weight: bold;
-            cursor: pointer;
-            position: relative;
-        }
-        .ocr-upload-box input {
-            position: absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer;
-        }
-        #ocr-loading-text {
-            font-size: 11px; color: #b45309; font-weight: normal; margin-top: 4px; display: none;
-        }
+        .group-header.postcard-header { background: #0284c7; color: #ffffff; }
+        .group-header.mushroom-header { background: #2e7d32; color: #ffffff; }
 
         /* 搜尋與篩選列 */
         .search-row {
@@ -592,6 +575,7 @@
         </section>
 
         <section id="view-settings" class="view-section">
+
             <div class="settings-card">
                 <h3>☁️ 跨裝置收藏同步</h3>
                 <div class="input-group">
@@ -669,12 +653,6 @@
                 <button class="modal-close" onclick="closeModal('add-modal')">&times;</button>
             </div>
             
-            <div id="ocr-upload-container" class="ocr-upload-box" style="display:none;">
-                📸 點擊選擇「巨菇截圖」智慧識別填表
-                <input type="file" id="ocr-image-input" accept="image/*" onchange="processOcrImage(event)">
-                <div id="ocr-loading-text">正在分析截圖中，請稍候... <span id="ocr-progress">0%</span></div>
-            </div>
-            
             <div id="form-mushroom" style="display:none; flex-direction:column; gap:10px;">
                 <div class="input-group">
                     <label>使用者 (留空待認領)</label>
@@ -702,7 +680,7 @@
                 <div class="input-group">
                     <label>種類</label>
                     <select id="post-type" class="input-base">
-                        <option value="菇" selected>菇</option>
+                        <option value="菇">菇</option>
                         <option value="花">花</option>
                         <option value="菇窩">菇窩</option>
                         <option value="隱藏">隱藏</option>
@@ -812,9 +790,9 @@
     </div>
 
 <script>
-    // ======= 防呆機制：如果字串不存在，回傳空字串防止程式崩潰 =======
+    // ======= 防呆機制：確保文字取代與跳脫不會崩潰 =======
     function escapeHtml(str) { 
-        if (str === null || str === undefined) return '';
+        if (str == null) return '';
         return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); 
     }
 
@@ -842,6 +820,7 @@
     let cloudFavorites = [];
     let favoritesListenerRef = null;
     
+    // 用於記錄群組收合狀態
     let collapsedGroups = new Set();
     let knownPostcardGroups = new Set(); 
     let knownMushroomGroups = new Set();
@@ -869,13 +848,11 @@
             document.getElementById('form-mushroom').style.display = 'flex';
             document.getElementById('form-postcard').style.display = 'none';
             document.getElementById('form-time').style.display = 'flex';
-            document.getElementById('ocr-upload-container').style.display = 'block';
         } else if (currentMode === 'postcard') {
             document.getElementById('add-modal-title').innerText = '🖼️ 新增明信片';
             document.getElementById('form-mushroom').style.display = 'none';
             document.getElementById('form-postcard').style.display = 'flex';
             document.getElementById('form-time').style.display = 'none';
-            document.getElementById('ocr-upload-container').style.display = 'none';
         }
         document.getElementById('add-modal').style.display = 'flex';
     }
@@ -884,106 +861,6 @@
         document.getElementById(id).style.display = 'none';
         if(id === 'claim-modal') currentClaimingId = null;
         if(id === 'time-modal') currentEditingTimeId = null;
-    }
-
-    // ==========================================
-    // 📸 智慧截圖識別填表 (核心 OCR 引擎)
-    // ==========================================
-    async function processOcrImage(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const loadingText = document.getElementById('ocr-loading-text');
-        const progressEl = document.getElementById('ocr-progress');
-        loadingText.style.display = 'block';
-        progressEl.innerText = '0%';
-
-        const img = new Image();
-        img.src = URL.createObjectURL(file);
-        img.onload = async () => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0);
-
-            const getCropBase64 = (xRel, yRel, wRel, hRel) => {
-                const cropCanvas = document.createElement('canvas');
-                const cropCtx = cropCanvas.getContext('2d');
-                const cx = canvas.width * xRel;
-                const cy = canvas.height * yRel;
-                const cw = canvas.width * wRel;
-                const ch = canvas.height * hRel;
-                cropCanvas.width = cw;
-                cropCanvas.height = ch;
-                cropCtx.drawImage(canvas, cx, cy, cw, ch, 0, 0, cw, ch);
-                return cropCanvas.toDataURL();
-            };
-
-            const topNameImg = getCropBase64(0.32, 0.01, 0.36, 0.08);    
-            const midSizeImg = getCropBase64(0.20, 0.55, 0.60, 0.15);    
-            const timeImg = getCropBase64(0.02, 0.44, 0.45, 0.06);       
-            const bottomUserImg = getCropBase64(0.05, 0.85, 0.20, 0.12);  
-
-            try {
-                const scheduler = Tesseract.createScheduler();
-                const workerChi = await Tesseract.createWorker('chi_sim+chi_tra');
-                const workerEng = await Tesseract.createWorker('eng');
-                scheduler.addWorker(workerChi);
-                scheduler.addWorker(workerEng);
-
-                progressEl.innerText = '30%';
-
-                const [resTop, resMid, resTime, resUser] = await Promise.all([
-                    Tesseract.recognize(topNameImg, 'eng'),
-                    Tesseract.recognize(midSizeImg, 'chi_tra+chi_sim'),
-                    Tesseract.recognize(timeImg, 'chi_tra+chi_sim+eng'),
-                    Tesseract.recognize(bottomUserImg, 'chi_tra+chi_sim+eng')
-                ]);
-
-                progressEl.innerText = '90%';
-
-                let topText = resTop.data.text.replace(/[^a-zA-Z0-9\s]/g, '').trim();
-                let midText = resMid.data.text.trim();
-                let prefix = "巨大";
-                if (midText.includes("大") || midText.includes("巨")) prefix = "巨大";
-                
-                document.getElementById('name').value = `${prefix} ${topText || 'Mousqe'}`;
-
-                let timeText = resTime.data.text.replace(/\s+/g, '');
-                let parsedDays = 0, parsedHours = 0, parsedMinutes = 0;
-                
-                const dayMatch = timeText.match(/(\d+)天/);
-                const hourMatch = timeText.match(/(\d+)時/);
-                const minMatch = timeText.match(/(\d+)分/);
-
-                if (dayMatch) parsedDays = parseInt(dayMatch[1], 10);
-                if (hourMatch) parsedHours = parseInt(hourMatch[1], 10);
-                if (minMatch) parsedMinutes = parseInt(minMatch[1], 10);
-
-                if (!dayMatch && !hourMatch && !minMatch) {
-                    const fallbackMatch = timeText.match(/(\d+)/);
-                    if (fallbackMatch) parsedMinutes = parseInt(fallbackMatch[1], 10);
-                }
-
-                document.getElementById('days').value = parsedDays;
-                document.getElementById('hours').value = parsedHours;
-                document.getElementById('minutes').value = parsedMinutes;
-
-                let userText = resUser.data.text.replace(/[\s\W]+/g, '').trim();
-                if (!userText || userText.length > 4) userText = "你"; 
-                document.getElementById('user').value = userText;
-
-                progressEl.innerText = '100% 辨識完成！';
-                setTimeout(() => { loadingText.style.display = 'none'; }, 1000);
-
-                await scheduler.terminate();
-            } catch (err) {
-                console.error("智慧識別發生錯誤:", err);
-                alert("智慧識別失敗，請嘗試手動填寫表單。");
-                loadingText.style.display = 'none';
-            }
-        };
     }
 
     async function autoDetectCountry(coordsStr, countryInputId, hintId) {
@@ -1014,27 +891,18 @@
                     if(tzData && tzData.utc_offset_seconds !== undefined) {
                         offsetHours = tzData.utc_offset_seconds / 3600;
                         const diff = offsetHours - 8; 
-                        
                         const hintEl = document.getElementById(hintId);
                         if(hintEl) {
                             if (diff === 0) hintEl.innerText = '(精準定位: 無時差)';
                             else if (diff > 0) hintEl.innerText = `(精準定位: 快台灣 ${diff} 小時)`;
                             else hintEl.innerText = `(精準定位: 慢台灣 ${Math.abs(diff)} 小時)`;
                         }
-                        
-                        if (countryName) {
-                            globalTzMap[countryName] = offsetHours;
-                        }
+                        if (countryName) globalTzMap[countryName] = offsetHours;
                         return; 
                     }
                 }
-                
-                if (countryName) {
-                    showTimeDiff(countryName, hintId);
-                }
-            } catch(e) {
-                console.log("API 抓取失敗", e);
-            }
+                if (countryName) showTimeDiff(countryName, hintId);
+            } catch(e) { console.log(e); }
         }
     }
 
@@ -1059,24 +927,17 @@
         const hintEl = document.getElementById(hintId);
         if (!hintEl) return;
         if (!val || typeof val !== 'string' || !val.trim()) { hintEl.innerText = ''; return; }
-        
         let matchedOffset = null;
         const keys = Object.keys(globalTzMap).sort((a, b) => b.length - a.length);
         for (let key of keys) {
-            if (val.includes(key)) {
-                matchedOffset = globalTzMap[key];
-                break;
-            }
+            if (val.includes(key)) { matchedOffset = globalTzMap[key]; break; }
         }
-        
         if (matchedOffset !== null) {
             const diff = matchedOffset - 8; 
             if (diff === 0) hintEl.innerText = '(無時差)';
             else if (diff > 0) hintEl.innerText = `(快台灣 ${diff} 小時)`;
             else hintEl.innerText = `(慢台灣 ${Math.abs(diff)} 小時)`;
-        } else {
-            hintEl.innerText = '';
-        }
+        } else { hintEl.innerText = ''; }
     }
 
     function getTimeDiffString(val) {
@@ -1097,18 +958,16 @@
         const inputId = document.getElementById('sync-user-id').value.trim();
         const statusEl = document.getElementById('sync-status');
         const indicator = document.getElementById('sync-status-indicator');
-        
         localStorage.setItem('pikmin_sync_id', inputId);
         currentSyncId = inputId;
-
         if (favoritesListenerRef) { favoritesListenerRef.off(); favoritesListenerRef = null; }
-
         if (inputId) {
             statusEl.innerText = '已連線🟢'; statusEl.classList.add('active');
             if(indicator) indicator.innerText = '🟢 已連線';
             favoritesListenerRef = database.ref('user_favorites/' + inputId);
-            favoritesListenerRef.on('value', (snapshot) => {
-                cloudFavorites = snapshot.val() || [];
+            favoritesListenerRef.on('value', (snapshot) => { 
+                const data = snapshot.val();
+                cloudFavorites = Array.isArray(data) ? data : (data ? Object.values(data) : []); 
                 updateView(); 
             });
         } else {
@@ -1119,20 +978,13 @@
     }
 
     function toggleCollectPostcard(id) {
-        if (!currentSyncId) {
-            alert('請先切換到「設定」頁面輸入您的「同步代號」，才能啟用跨裝置收藏功能喔！');
-            switchTab('settings');
-            document.getElementById('sync-user-id').focus();
-            return;
-        }
+        if (!currentSyncId) { alert('請先切換到「設定」頁面輸入您的「同步代號」，才能啟用跨裝置收藏功能喔！'); switchTab('settings'); document.getElementById('sync-user-id').focus(); return; }
         let updatedFavorites = [...cloudFavorites];
         if (updatedFavorites.includes(id)) updatedFavorites = updatedFavorites.filter(item => item !== id);
         else updatedFavorites.push(id);
-        
         database.ref('user_favorites/' + currentSyncId).set(updatedFavorites);
     }
 
-    // 資料同步與自動刪除機制 (過期滿 2 小時)
     database.ref('mushrooms').on('value', (snapshot) => {
         const cloudData = snapshot.val();
         dataList = [];
@@ -1140,14 +992,14 @@
         if (cloudData) {
             Object.keys(cloudData).forEach((key) => {
                 const item = cloudData[key];
-                if (item.targetTime !== null && (now - item.targetTime >= 7200000)) {
+                if (item.targetTime != null && (now - item.targetTime >= 7200000)) {
                     database.ref('mushrooms/' + key).remove();
                 } else {
                     dataList.push({
                         id: key, sn: item.sn, user: item.user || "",
-                        country: item.country || "", name: item.name,
-                        coords: item.coords || "", tag: item.tag || "", targetTime: item.targetTime,
-                        slots: item.slots || ['', '', '', '', '']
+                        country: item.country || "", name: item.name || "未命名",
+                        coords: item.coords || "", tag: item.tag || "", targetTime: item.targetTime != null ? item.targetTime : null,
+                        slots: item.slots || ['', '', '', '', ''] 
                     });
                 }
             });
@@ -1160,10 +1012,11 @@
         postcardList = [];
         if (cloudData) {
             Object.keys(cloudData).forEach((key) => {
+                const typeVal = cloudData[key].type;
                 postcardList.push({
-                    id: key, type: cloudData[key].type, name: cloudData[key].name || "", 
+                    id: key, type: typeVal ? String(typeVal) : "菇", name: cloudData[key].name || "未命名", 
                     country: cloudData[key].country || "", coords: cloudData[key].coords || "",
-                    tag: cloudData[key].tag || "", image: cloudData[key].image
+                    tag: cloudData[key].tag || "", image: cloudData[key].image || "無圖片"
                 });
             });
         }
@@ -1171,9 +1024,7 @@
     });
 
     database.ref('views').transaction(curr => (curr || 0) + 1);
-    database.ref('views').on('value', snap => {
-        document.getElementById('view-counter-text').innerText = `雲端總瀏覽次數：${snap.val() || 0} 次`;
-    });
+    database.ref('views').on('value', snap => { document.getElementById('view-counter-text').innerText = `雲端總瀏覽次數：${snap.val() || 0} 次`; });
 
     function updateVersionTag() {
         const d = new Date(document.lastModified);
@@ -1185,7 +1036,7 @@
         updateVersionTag();
         const savedSyncId = localStorage.getItem('pikmin_sync_id');
         if (savedSyncId) { document.getElementById('sync-user-id').value = savedSyncId; applySyncId(); }
-        
+
         ['1','2','3'].forEach(i => {
             const val = localStorage.getItem('pikmin_tz_area_' + i);
             if(val) document.getElementById('tz-select-' + i).value = val;
@@ -1213,12 +1064,11 @@
         return pad(d.getHours()) + ':' + pad(d.getMinutes()) + (includeSeconds ? ':' + pad(d.getSeconds()) : '');
     }
     
-    // 背景定時清理
     setInterval(() => {
         updateClocks();
         const now = Date.now();
         dataList.forEach(item => {
-            if (item.targetTime !== null && (now - item.targetTime >= 7200000)) {
+            if (item.targetTime != null && (now - item.targetTime >= 7200000)) {
                 database.ref('mushrooms/' + item.id).remove();
             }
         });
@@ -1240,9 +1090,7 @@
             const processedCountry = countryEl ? countryEl.value.trim() : "";
             
             let initSlots = ['', '', '', '', ''];
-            if (processedUser !== "") {
-                initSlots[0] = '✔️';
-            }
+            if (processedUser !== "") { initSlots[0] = '✔️'; }
 
             let nextSn = 1;
             if (dataList.length > 0) nextSn = Math.max(...dataList.map(i => i.sn || 0)) + 1;
@@ -1276,10 +1124,7 @@
     function deleteItem(id, mode = 'mushroom') {
         if (mode === 'postcard') {
             const pwd = prompt("⚠️ 刪除明信片需要同意。\n請輸入刪除密碼：");
-            if (pwd !== "1215") {
-                if (pwd !== null) alert("❌ 密碼錯誤，無法刪除！");
-                return;
-            }
+            if (pwd !== "1215") { if (pwd !== null) alert("❌ 密碼錯誤，無法刪除！"); return; }
         }
         if (confirm(`確定要刪除這筆${mode === 'mushroom' ? '巨菇' : '明信片'}資料嗎？`)) {
             database.ref((mode === 'mushroom' ? 'mushrooms/' : 'postcards/') + id).remove();
@@ -1301,19 +1146,14 @@
         const usernameInput = document.getElementById('modal-username').value.trim();
         if (!usernameInput) { alert('請輸入認領人的名字！'); return; }
         const d = parseInt(document.getElementById('modal-days').value, 10) || 0, h = parseInt(document.getElementById('modal-hours').value, 10) || 0, m = parseInt(document.getElementById('modal-minutes').value, 10) || 0;
-        
         let updates = { user: usernameInput };
         if (d > 0 || h > 0 || m > 0) updates.targetTime = Date.now() + (((d * 24 * 60) + (h * 60) + m) * 60 * 1000);
         
         const item = dataList.find(i => i.id === currentClaimingId);
         if (item) {
             let currentSlots = item.slots ? [...item.slots] : ['', '', '', '', ''];
-            if (!currentSlots.some(s => s !== '')) {
-                currentSlots[0] = '✔️';
-                updates.slots = currentSlots;
-            }
+            if (!currentSlots.some(s => s !== '')) { currentSlots[0] = '✔️'; updates.slots = currentSlots; }
         }
-
         database.ref('mushrooms/' + currentClaimingId).update(updates);
         closeModal('claim-modal');
     }
@@ -1334,8 +1174,9 @@
             showTimeDiff(item.country || '', 'edit-tz-hint');
             
             let d = 0, h = 0, m = 0;
-            if (item.targetTime && (item.targetTime - Date.now() > 0)) {
-                let totalMins = Math.floor((item.targetTime - Date.now()) / 60000);
+            const t = Number(item.targetTime);
+            if (!isNaN(t) && t - Date.now() > 0) {
+                let totalMins = Math.floor((t - Date.now()) / 60000);
                 d = Math.floor(totalMins / 1440); h = Math.floor((totalMins % 1440) / 60); m = totalMins % 60;
             }
             document.getElementById('edit-days').value = d; document.getElementById('edit-hours').value = h; document.getElementById('edit-minutes').value = m;
@@ -1362,21 +1203,17 @@
             if (d > 0 || h > 0 || m > 0) targetTime = Date.now() + (((d * 24 * 60) + (h * 60) + m) * 60 * 1000);
 
             let updates = { 
-                user: newUser, 
-                country: document.getElementById('edit-mushroom-country').value.trim(),
+                user: newUser, country: document.getElementById('edit-mushroom-country').value.trim(),
                 name: document.getElementById('edit-name').value.trim(), coords: document.getElementById('edit-coords').value.trim(),
                 tag: document.getElementById('edit-tag').value.trim(), targetTime: targetTime 
             };
-
             const item = dataList.find(i => i.id === currentEditingTimeId);
             if (item) {
                 let currentSlots = item.slots ? [...item.slots] : ['', '', '', '', ''];
                 if (newUser !== "" && item.user === "" && !currentSlots.some(s => s !== '')) {
-                    currentSlots[0] = '✔️';
-                    updates.slots = currentSlots;
+                    currentSlots[0] = '✔️'; updates.slots = currentSlots;
                 }
             }
-
             database.ref('mushrooms/' + currentEditingTimeId).update(updates);
         } else {
             database.ref('postcards/' + currentEditingTimeId).update({
@@ -1394,29 +1231,20 @@
             const originalText = buttonElement.innerText;
             buttonElement.innerText = '✅ 成功'; buttonElement.style.background = '#e5e7eb';
             setTimeout(() => { buttonElement.innerText = originalText; buttonElement.style.background = ''; }, 1200);
-        }).catch(err => alert('複製失敗，請手動複製。'));
-    }
-
-    function openImageLightbox(src) {
-        if(src === '無圖片' || !src) return;
-        document.getElementById('lightbox-img').src = src; document.getElementById('lightbox').style.display = 'flex';
+        }).catch(err => alert('複製失敗，請手手動複製。'));
     }
 
     function toggleSlot(id, index) {
         const item = dataList.find(i => i.id === id);
         if (!item) return;
         let currentSlots = item.slots ? [...item.slots] : ['', '', '', '', ''];
-        
-        if (currentSlots[index]) {
-            currentSlots[index] = '';
-        } else {
-            currentSlots[index] = '✔️';
-        }
+        if (currentSlots[index]) currentSlots[index] = '';
+        else currentSlots[index] = '✔️';
         database.ref('mushrooms/' + id + '/slots').set(currentSlots);
     }
 
     function getShortRemainingText(targetTime, now) {
-        if (targetTime === null) return "未設";
+        if (targetTime == null) return "未設";
         const rem = targetTime - now;
         if (rem <= 0) return "可開打!";
         const t = Math.floor(rem / 1000), m = Math.floor(t / 60), h = Math.floor(m / 60), d = Math.floor(h / 24);
@@ -1433,10 +1261,9 @@
 
         const now = Date.now();
         const finalShareUrl = "https://tdagold-leo.github.io/Pikmin/";
-
         const sorted = [...dataList].sort((a, b) => {
-            if (a.targetTime === null && b.targetTime === null) return 0;
-            if (a.targetTime === null) return 1; if (b.targetTime === null) return -1;
+            if (a.targetTime == null && b.targetTime == null) return 0;
+            if (a.targetTime == null) return 1; if (b.targetTime == null) return -1;
             return a.targetTime - b.targetTime;
         });
 
@@ -1448,7 +1275,6 @@
             const emptyCount = 5 - filledCount;
             let slotInfo = emptyCount === 0 ? "🈵額滿" : `空位${emptyCount}`;
             const snPad = String(i.sn).padStart(2, '0');
-            
             return `${snPad}.${slotInfo} <${userName}>\n    [${getShortRemainingText(i.targetTime, now)}]\n`;
         };
 
@@ -1456,24 +1282,20 @@
         const unclaimed = sorted.filter(i => i.user === "");
 
         if (actives.length > 0) {
-            out += `🟢追蹤中\n`;
-            actives.forEach((i) => { out += formatLineText(i, i.user); });
-            out += `\n`;
+            out += `🟢追蹤中\n`; actives.forEach((i) => { out += formatLineText(i, i.user); }); out += `\n`;
         }
         if (unclaimed.length > 0) {
-            out += `🟡待認領\n`;
-            unclaimed.forEach((i) => { out += formatLineText(i, "待認領"); });
+            out += `🟡待認領\n`; unclaimed.forEach((i) => { out += formatLineText(i, "待認領"); });
         }
         
         navigator.clipboard.writeText(out.trim()).catch(e=>console.log(e));
         btn.innerText = '✅ 已複製並喚醒 LINE...';
         setTimeout(() => { btn.innerText = originalText; btn.disabled = false; }, 2500);
-        
         window.location.href = "https://line.me/R/msg/text/?" + encodeURIComponent(out.trim());
     }
 
     function getRemainingText(targetTime, now) {
-        if (targetTime === null) return "尚未設定";
+        if (targetTime == null) return "尚未設定";
         const rem = targetTime - now;
         if (rem <= 0) return "已過期/可開打！";
         const t = Math.floor(rem / 1000), m = Math.floor(t / 60), h = Math.floor(m / 60), d = Math.floor(h / 24);
@@ -1507,9 +1329,7 @@
         let slotsHtml = `<div class="slots-wrapper">`;
         slotsHtml += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">`;
         slotsHtml += `<span style="font-size: 10px; font-weight: bold; color: #4b5563;">⚔️ 參戰空位 (${filledCount}/5)</span>`;
-        if (isFull) {
-            slotsHtml += `<span style="font-size: 9px; background: #ef4444; color: white; padding: 1px 4px; border-radius: 4px; font-weight: bold;">🈵 額滿</span>`;
-        }
+        if (isFull) slotsHtml += `<span style="font-size: 9px; background: #ef4444; color: white; padding: 1px 4px; border-radius: 4px; font-weight: bold;">🈵 額滿</span>`;
         slotsHtml += `</div><div style="display: flex; gap: 4px;">`;
         
         for (let i = 0; i < 5; i++) {
@@ -1524,7 +1344,7 @@
         card.innerHTML = `
             <div style="background: ${isExpired ? '#f3f4f6' : '#ecfdf5'}; padding: 8px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-size: 11px; font-weight: bold; color: var(--text-muted);">#${String(item.sn).padStart(2,'0')}</span>
-                <span class="lc-time ${!isExpired && item.targetTime !== null ? 'safe' : ''}" style="margin: 0; font-size: 11px;">${timeText}</span>
+                <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin: 0; font-size: 11px;">${timeText}</span>
             </div>
             <div class="card-body">
                 <div class="card-title" style="font-size: 14px; margin-bottom: 2px;">${safeName}</div>
@@ -1546,64 +1366,50 @@
         const now = Date.now();
 
         const sortedM = [...dataList].sort((a, b) => {
-            if (a.targetTime === null && b.targetTime === null) return 0;
-            if (a.targetTime === null) return 1; if (b.targetTime === null) return -1;
+            if (a.targetTime == null && b.targetTime == null) return 0;
+            if (a.targetTime == null) return 1; if (b.targetTime == null) return -1;
             return a.targetTime - b.targetTime;
         });
 
         activeEl.innerHTML = ''; unclaimEl.innerHTML = '';
         let actCount = 0, uncCount = 0;
-
-        const activeGroup1 = []; 
-        const activeGroup2 = []; 
+        const activeGroup1 = []; const activeGroup2 = []; 
 
         sortedM.forEach(item => {
             let timeText = '<span class="not-set">尚未設定</span>', isExp = false;
-            if (item.targetTime !== null) {
+            if (item.targetTime != null) {
                 if (item.targetTime - now <= 0) { timeText = '已過期/可開打！'; isExp = true; } 
                 else { timeText = getRemainingText(item.targetTime, now); }
             }
-
             const card = createMushroomCard(item, now, isExp, timeText);
-
-            if (item.user === "") { 
-                uncCount++; 
-                unclaimEl.appendChild(card); 
-            } else { 
+            if (item.user === "") { uncCount++; unclaimEl.appendChild(card); } 
+            else { 
                 actCount++; 
-                if (item.targetTime === null) {
-                    activeGroup2.push(card);
-                } else {
-                    const diff = item.targetTime - now;
-                    if (diff <= 86400000) { 
-                        activeGroup1.push(card);
-                    } else {
-                        activeGroup2.push(card); 
-                    }
+                if (item.targetTime == null) activeGroup2.push(card);
+                else {
+                    if (item.targetTime - now <= 86400000) activeGroup1.push(card);
+                    else activeGroup2.push(card);
                 }
             }
         });
 
+        // ======= 核心修改：移除 space-between 原有效果，改靠左並將筆數放大 =======
         function renderMGroup(container, cards, groupId, title, defaultCollapsed) {
             if (cards.length === 0) return;
-            
-            if (!knownMushroomGroups.has(groupId)) {
-                knownMushroomGroups.add(groupId);
-                if (defaultCollapsed) collapsedGroups.add(groupId);
-            }
-            
+            if (!knownMushroomGroups.has(groupId)) { knownMushroomGroups.add(groupId); if (defaultCollapsed) collapsedGroups.add(groupId); }
             const isCol = collapsedGroups.has(groupId);
             const arrow = isCol ? '▶' : '▼';
-            
             const gHead = document.createElement('div');
             gHead.className = 'group-header mushroom-header';
-            gHead.innerHTML = `<span>${arrow} 📂 ${title}</span> <span style="font-size:11px; color:#e8f5e9; font-weight:normal;">${cards.length} 筆 (點擊收疊)</span>`;
+            gHead.style.justifyContent = 'flex-start';
+            gHead.style.gap = '12px';
+            gHead.innerHTML = `
+                <span style="font-size:18px; font-weight:900; background:rgba(255,255,255,0.25); padding:4px 12px; border-radius:16px;">${cards.length} 筆</span> 
+                <span>${arrow} 📂 ${title}</span>
+            `;
             gHead.addEventListener('click', () => toggleGroup(groupId));
             container.appendChild(gHead);
-
-            if (!isCol) {
-                cards.forEach(c => container.appendChild(c));
-            }
+            if (!isCol) cards.forEach(c => container.appendChild(c));
         }
 
         renderMGroup(activeEl, activeGroup1, 'm-group-1', '⏳ 一天內 (含可開打)', false);
@@ -1616,16 +1422,14 @@
         if (sortedM.length > 0) {
             summaryEl.innerHTML = `<b>📊 巨菇總計：${sortedM.length} 筆</b> <span style="color:var(--text-muted);">(追蹤中: ${actCount} / 待認領: ${uncCount})</span>`;
             summaryEl.style.display = 'block';
-        } else {
-            summaryEl.style.display = 'none';
-        }
+        } else { summaryEl.style.display = 'none'; }
 
         pcEl.innerHTML = '';
         const searchKw = document.getElementById('postcard-search').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
         const filterState = document.getElementById('postcard-filter').value;
-
-        const filteredPc = [...postcardList].sort((a,b) => a.type.localeCompare(b.type, 'zh-TW') || a.country.localeCompare(b.country, 'zh-TW')).filter(item => {
-            const isCol = cloudFavorites.includes(item.id);
+        const filteredPc = [...postcardList].sort((a,b) => String(a.type).localeCompare(String(b.type), 'zh-TW') || String(a.country).localeCompare(String(b.country), 'zh-TW')).filter(item => {
+            const favList = Array.isArray(cloudFavorites) ? cloudFavorites : [];
+            const isCol = favList.includes(item.id);
             if (filterState === 'collected' && !isCol) return false;
             if (filterState === 'uncollected' && isCol) return false;
             if (searchKw.length > 0) {
@@ -1635,71 +1439,38 @@
             return true;
         });
 
-        let vCount = 0;
-        const pcGroups = {};
-        filteredPc.forEach(item => {
-            const type = item.type ? item.type.trim() : '未分類';
-            if (!pcGroups[type]) pcGroups[type] = [];
-            pcGroups[type].push(item);
-        });
-
+        let vCount = 0; const pcGroups = {};
+        filteredPc.forEach(item => { const type = item.type ? String(item.type).trim() : '未分類'; if (!pcGroups[type]) pcGroups[type] = []; pcGroups[type].push(item); });
         Object.keys(pcGroups).sort((a,b) => a==='未分類'?1 : b==='未分類'?-1 : a.localeCompare(b,'zh-TW')).forEach(type => {
             const groupId = 'post-' + type;
-            
-            if (!knownPostcardGroups.has(groupId)) {
-                collapsedGroups.add(groupId);
-                knownPostcardGroups.add(groupId);
-            }
-
+            if (!knownPostcardGroups.has(groupId)) { collapsedGroups.add(groupId); knownPostcardGroups.add(groupId); }
             const isCol = collapsedGroups.has(groupId);
             const arrow = isCol ? '▶' : '▼';
-            
             const gHead = document.createElement('div');
             gHead.className = 'group-header postcard-header';
-            gHead.innerHTML = `<span>${arrow} 📂 種類群組：${escapeHtml(type)}</span> <span style="font-size:11px; color:#e0f2fe; font-weight:normal;">${pcGroups[type].length} 筆 (點擊收疊)</span>`;
+            gHead.innerHTML = `<span>${arrow} 📂 種類群組：${escapeHtml(type)}</span> <span style="font-size:11px; color:#e0f2fe; font-weight:normal;">${pcGroups[type].length} 筆</span>`;
             gHead.addEventListener('click', () => toggleGroup(groupId));
             pcEl.appendChild(gHead);
 
             if (!isCol) {
                 pcGroups[type].forEach(item => {
-                    vCount++;
-                    const safeC = escapeHtml(item.country), safeT = escapeHtml(item.tag), safeI = escapeHtml(item.image);
-                    const isFav = cloudFavorites.includes(item.id);
-                    
-                    const card = document.createElement('div');
-                    card.className = 'grid-card';
-                    
+                    vCount++; const safeC = escapeHtml(item.country), safeT = escapeHtml(item.tag), safeI = escapeHtml(item.image);
+                    const favList = Array.isArray(cloudFavorites) ? cloudFavorites : [];
+                    const isFav = favList.includes(item.id); 
+                    const card = document.createElement('div'); card.className = 'grid-card';
                     const imgHtml = (safeI && safeI !== "無圖片") ? `<img src="${safeI}" class="card-img" onclick="openImageLightbox('${safeI}')">` : `<div class="card-img-placeholder">無圖片</div>`;
-                    
                     card.innerHTML = `
-                        <div class="card-img-box">
-                            ${imgHtml}
-                            <div class="card-badge-type">${escapeHtml(item.type)}</div>
-                            <button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button>
-                        </div>
-                        <div class="card-body">
-                            <div class="card-title">${escapeHtml(item.name)}</div>
-                            <div class="card-sub">
-                                <span>🌍 ${safeC}</span>
-                                ${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}
-                            </div>
-                            <div class="card-actions">
-                                <button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button>
-                                <button class="btn-sm btn-edit" style="flex:0;" onclick="openTimeModalById('${item.id}', 'postcard')">✏️</button>
-                                <button class="btn-sm btn-danger" style="flex:0;" onclick="deleteItem('${item.id}', 'postcard')">🗑️</button>
-                            </div>
-                        </div>
+                        <div class="card-img-box">${imgHtml}<div class="card-badge-type">${escapeHtml(item.type)}</div><button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button></div>
+                        <div class="card-body"><div class="card-title">${escapeHtml(item.name)}</div><div class="card-sub"><span>🌍 ${safeC}</span>${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}</div>
+                        <div class="card-actions"><button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button><button class="btn-sm btn-edit" style="flex:0;" onclick="openTimeModalById('${item.id}', 'postcard')">✏️</button><button class="btn-sm btn-danger" style="flex:0;" onclick="deleteItem('${item.id}', 'postcard')">🗑️</button></div></div>
                     `;
                     pcEl.appendChild(card);
                 });
             }
         });
-
         document.getElementById('postcard-empty').style.display = (postcardList.length===0 || (vCount===0 && !collapsedGroups.size)) ? 'block' : 'none';
-        if(vCount===0 && postcardList.length>0) document.getElementById('postcard-empty').innerText = "❌ 找不到符合搜尋的項目";
     }
 
 </script>
-
 </body>
 </html>
