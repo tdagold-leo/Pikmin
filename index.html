@@ -413,6 +413,7 @@
             display: flex;
             gap: 8px;
             margin-bottom: 15px;
+            flex-wrap: wrap; 
         }
         .input-base {
             padding: 8px 12px;
@@ -425,7 +426,7 @@
             transition: border-color 0.2s;
         }
         .input-base:focus { border-color: var(--primary); }
-        .search-input { flex: 1; }
+        .search-input { flex: 1; min-width: 150px; }
         .filter-select { flex-shrink: 0; color: var(--primary-dark); font-weight: bold; }
 
         /* 設定頁面卡片 */
@@ -567,6 +568,10 @@
                     <option value="all">全部明信片</option>
                     <option value="collected">⭐ 我的收藏</option>
                     <option value="uncollected">✰ 尚未收藏</option>
+                </select>
+                <select id="search-logic" class="input-base filter-select" onchange="updateView()">
+                    <option value="and">且 (全部符合)</option>
+                    <option value="or">或 (任一符合)</option>
                 </select>
                 <input type="text" id="postcard-search" class="input-base search-input" oninput="updateView()" placeholder="🔍 支援多關鍵字搜尋...">
             </div>
@@ -790,7 +795,26 @@
     </div>
 
 <script>
-    // ======= 防呆機制：確保文字取代與跳脫不會崩潰 =======
+    // ======= 每次修改程式碼時，請變更此版本號以觸發所有使用者的自動更新 =======
+    const APP_VERSION = "2026.06.25.01";
+
+    function checkForUpdate() {
+        fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
+            .then(res => res.text())
+            .then(html => {
+                const match = html.match(/const APP_VERSION = ['"]([^'"]+)['"]/);
+                if (match && match[1] !== APP_VERSION) {
+                    console.log('發現新版本，正在重新載入...', match[1]);
+                    window.location.replace(window.location.pathname + '?v=' + match[1]);
+                }
+            })
+            .catch(err => console.log('檢查更新失敗:', err));
+    }
+
+    window.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') checkForUpdate();
+    });
+
     function escapeHtml(str) { 
         if (str == null) return '';
         return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); 
@@ -823,6 +847,14 @@
     let collapsedGroups = new Set();
     let knownPostcardGroups = new Set(); 
     let knownMushroomGroups = new Set();
+
+    // Firebase 專用 ID 時間戳轉換器
+    const PUSH_CHARS = '-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz';
+    function getCreatedAt(id) {
+        let time = 0;
+        for (let i = 0; i < 8; i++) { time = time * 64 + PUSH_CHARS.indexOf(id.charAt(i)); }
+        return time || Date.now();
+    }
 
     function switchTab(tab) {
         currentMode = tab;
@@ -862,9 +894,6 @@
         if(id === 'time-modal') currentEditingTimeId = null;
     }
 
-    // ==========================================
-    // 全球時區記憶與擴充字典系統
-    // ==========================================
     let globalTzMap = {
         "日本": 9, "韓國": 9, "南韓": 9, "大韓民國": 9, "首爾": 9, "東京": 9, "Japan": 9, "Korea": 9,
         "台灣": 8, "臺灣": 8, "台北": 8, "香港": 8, "澳門": 8, "北京": 8, "中國": 8, "中華人民共和國": 8, "中華民國": 8, "新加坡": 8, "馬來西亞": 8, "菲律賓": 8, "Taiwan": 8, "China": 8, "Hong Kong": 8, "Singapore": 8, "Malaysia": 8, "Philippines": 8,
@@ -883,11 +912,19 @@
         "夏威夷": -10, "Hawaii": -10
     };
 
-    // 啟動時載入本機永久記憶的時區，與內建字典合併
     try {
         const learnedTz = JSON.parse(localStorage.getItem('pikmin_learned_tz') || '{}');
         Object.assign(globalTzMap, learnedTz);
     } catch(e) {}
+
+    function getOffsetByCountry(countryStr) {
+        if (!countryStr) return 8; 
+        const keys = Object.keys(globalTzMap).sort((a, b) => b.length - a.length);
+        for (let key of keys) {
+            if (countryStr.includes(key)) return globalTzMap[key];
+        }
+        return 8; 
+    }
 
     async function autoDetectCountry(coordsStr, countryInputId, hintId) {
         if(!coordsStr) return;
@@ -904,6 +941,10 @@
                     const data = await resCountry.json();
                     if(data && data.countryName) {
                         countryName = data.countryName;
+                        // ======= 自動校正：中華民國改為台灣 =======
+                        if (countryName.includes("中華民國")) {
+                            countryName = "台灣";
+                        }
                         const countryInput = document.getElementById(countryInputId);
                         if(countryInput) {
                             countryInput.value = countryName;
@@ -925,15 +966,12 @@
                         }
                         
                         if (countryName) {
-                            // 存入當前變數
                             globalTzMap[countryName] = offsetHours;
-                            // 永久寫入瀏覽器記憶體
                             try {
                                 const learned = JSON.parse(localStorage.getItem('pikmin_learned_tz') || '{}');
                                 learned[countryName] = offsetHours;
                                 localStorage.setItem('pikmin_learned_tz', JSON.stringify(learned));
                             } catch(e){}
-                            // 重新渲染畫面，讓新抓到的時差立刻顯示出來！
                             updateView(); 
                         }
                         return; 
@@ -1048,15 +1086,11 @@
     database.ref('views').on('value', snap => { document.getElementById('view-counter-text').innerText = `雲端總瀏覽次數：${snap.val() || 0} 次`; });
 
     function updateVersionTag() {
-        const d = new Date(document.lastModified);
-        const pad = n => String(n).padStart(2, '0');
-        const verStr = `Ver: ${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
-        
-        if (document.getElementById('version-tag')) document.getElementById('version-tag').innerText = verStr;
-        if (document.getElementById('header-version-tag')) document.getElementById('header-version-tag').innerText = verStr;
+        if (document.getElementById('header-version-tag')) document.getElementById('header-version-tag').innerText = `Ver: ${APP_VERSION}`;
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+        checkForUpdate(); 
         updateVersionTag();
         const savedSyncId = localStorage.getItem('pikmin_sync_id');
         if (savedSyncId) { document.getElementById('sync-user-id').value = savedSyncId; applySyncId(); }
@@ -1092,8 +1126,26 @@
         updateClocks();
         const now = Date.now();
         dataList.forEach(item => {
+            // 原有的 targetTime 過期兩小時刪除邏輯
             if (item.targetTime != null && (now - item.targetTime >= 7200000)) {
                 database.ref('mushrooms/' + item.id).remove();
+            }
+            
+            // ======= 待認領巨菇 換日自動刪除邏輯 =======
+            if (item.user === "") {
+                const createdUTC = getCreatedAt(item.id);
+                const offset = getOffsetByCountry(item.country);
+                const createdLocal = new Date(createdUTC + offset * 3600000);
+                
+                const midnightLocal = new Date(createdLocal);
+                midnightLocal.setUTCDate(midnightLocal.getUTCDate() + 1);
+                midnightLocal.setUTCHours(0, 0, 0, 0);
+                const midnightUTC = midnightLocal.getTime() - offset * 3600000;
+
+                // 若超過當地晚上 00:00 後一小時 (01:00) 則刪除
+                if (now >= midnightUTC + 3600000) {
+                    database.ref('mushrooms/' + item.id).remove();
+                }
             }
         });
     }, 1000);
@@ -1111,7 +1163,11 @@
             if (d > 0 || h > 0 || m > 0) targetTime = Date.now() + (((d * 24 * 60) + (h * 60) + m) * 60 * 1000);
 
             const processedUser = userEl ? userEl.value.trim() : "";
-            const processedCountry = countryEl ? countryEl.value.trim() : "";
+            let processedCountry = countryEl ? countryEl.value.trim() : "";
+            
+            if (processedCountry.includes("中華民國")) {
+                processedCountry = "台灣";
+            }
             
             let initSlots = ['', '', '', '', ''];
             if (processedUser !== "") { initSlots[0] = '✔️'; }
@@ -1135,8 +1191,13 @@
 
             if (!nameEl.value.trim() || !countryEl.value.trim() || !coordsEl.value.trim()) { alert('請填寫名稱、國家與座標欄位！'); return; }
 
+            let processedCountry = countryEl ? countryEl.value.trim() : "";
+            if (processedCountry.includes("中華民國")) {
+                processedCountry = "台灣";
+            }
+
             database.ref('postcards').push({
-                type: typeEl.value, country: countryEl.value.trim(), name: nameEl.value.trim(),
+                type: typeEl.value, country: processedCountry, name: nameEl.value.trim(),
                 coords: coordsEl.value.trim(), tag: tagEl.value.trim(), image: imageEl.value.trim() || "無圖片"
             });
             countryEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = ''; imageEl.value = '';
@@ -1226,8 +1287,13 @@
             let targetTime = null;
             if (d > 0 || h > 0 || m > 0) targetTime = Date.now() + (((d * 24 * 60) + (h * 60) + m) * 60 * 1000);
 
+            let processedCountry = document.getElementById('edit-mushroom-country').value.trim();
+            if (processedCountry.includes("中華民國")) {
+                processedCountry = "台灣";
+            }
+
             let updates = { 
-                user: newUser, country: document.getElementById('edit-mushroom-country').value.trim(),
+                user: newUser, country: processedCountry,
                 name: document.getElementById('edit-name').value.trim(), coords: document.getElementById('edit-coords').value.trim(),
                 tag: document.getElementById('edit-tag').value.trim(), targetTime: targetTime 
             };
@@ -1240,8 +1306,13 @@
             }
             database.ref('mushrooms/' + currentEditingTimeId).update(updates);
         } else {
+            let processedCountry = document.getElementById('edit-post-country').value.trim();
+            if (processedCountry.includes("中華民國")) {
+                processedCountry = "台灣";
+            }
+
             database.ref('postcards/' + currentEditingTimeId).update({
-                type: document.getElementById('edit-post-type').value, country: document.getElementById('edit-post-country').value.trim(),
+                type: document.getElementById('edit-post-type').value, country: processedCountry,
                 name: document.getElementById('edit-post-name').value.trim(), tag: document.getElementById('edit-post-tag').value.trim(),
                 coords: document.getElementById('edit-post-coords').value.trim(), image: document.getElementById('edit-post-image').value.trim() || "無圖片"
             });
@@ -1258,7 +1329,6 @@
         }).catch(err => alert('複製失敗，請手動複製。'));
     }
 
-    // 點擊明信片放大
     function openImageLightbox(src) {
         if(!src || src.includes('無圖片')) return;
         document.getElementById('lightbox-img').src = src; 
@@ -1309,7 +1379,9 @@
             const snPad = String(i.sn).padStart(2, '0');
             const itemName = i.name || "未命名";
             
-            return `${snPad}.${slotInfo} <${userName}> ${itemName}\n    [${getShortRemainingText(i.targetTime, now)}]\n`;
+            const shortUserName = userName ? String(userName).substring(0, 8) : '';
+
+            return `${snPad}.${slotInfo} <${shortUserName}> ${itemName}\n    [${getShortRemainingText(i.targetTime, now)}]\n`;
         };
 
         const actives = sorted.filter(i => i.user !== "");
@@ -1411,13 +1483,34 @@
 
         sortedM.forEach(item => {
             let timeText = '<span class="not-set">尚未設定</span>', isExp = false;
+            
             if (item.targetTime != null) {
                 if (item.targetTime - now <= 0) { timeText = '已過期/可開打！'; isExp = true; } 
                 else { timeText = getRemainingText(item.targetTime, now); }
             }
+
+            // ======= 待認領巨菇 換日過期顯示邏輯 =======
+            if (item.user === "") {
+                const createdUTC = getCreatedAt(item.id);
+                const offset = getOffsetByCountry(item.country);
+                const createdLocal = new Date(createdUTC + offset * 3600000);
+                
+                const midnightLocal = new Date(createdLocal);
+                midnightLocal.setUTCDate(midnightLocal.getUTCDate() + 1);
+                midnightLocal.setUTCHours(0, 0, 0, 0);
+                const midnightUTC = midnightLocal.getTime() - offset * 3600000;
+
+                if (now >= midnightUTC) {
+                    isExp = true;
+                    timeText = '已換日過期';
+                }
+            }
+
             const card = createMushroomCard(item, now, isExp, timeText);
-            if (item.user === "") { uncCount++; unclaimEl.appendChild(card); } 
-            else { 
+            
+            if (item.user === "") { 
+                uncCount++; unclaimEl.appendChild(card); 
+            } else { 
                 actCount++; 
                 if (item.targetTime == null) activeGroup2.push(card);
                 else {
@@ -1460,14 +1553,21 @@
         pcEl.innerHTML = '';
         const searchKw = document.getElementById('postcard-search').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
         const filterState = document.getElementById('postcard-filter').value;
+        const searchLogic = document.getElementById('search-logic') ? document.getElementById('search-logic').value : 'and';
+
         const filteredPc = [...postcardList].sort((a,b) => String(a.type).localeCompare(String(b.type), 'zh-TW') || String(a.country).localeCompare(String(b.country), 'zh-TW')).filter(item => {
             const favList = Array.isArray(cloudFavorites) ? cloudFavorites : [];
             const isCol = favList.includes(item.id);
             if (filterState === 'collected' && !isCol) return false;
             if (filterState === 'uncollected' && isCol) return false;
+            
             if (searchKw.length > 0) {
                 const text = `${item.type} ${item.country} ${item.name} ${item.tag} ${item.coords}`.toLowerCase();
-                if (!searchKw.every(kw => text.includes(kw))) return false;
+                if (searchLogic === 'and') {
+                    if (!searchKw.every(kw => text.includes(kw))) return false;
+                } else {
+                    if (!searchKw.some(kw => text.includes(kw))) return false;
+                }
             }
             return true;
         });
