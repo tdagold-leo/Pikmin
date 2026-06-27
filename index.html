@@ -803,7 +803,7 @@
 
 <script>
     // ======= 每次修改程式碼時，請變更此版本號以觸發所有使用者的自動更新 =======
-    const APP_VERSION = "2026.06.27.2320";
+    const APP_VERSION = "2026.06.27.2350";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1090,6 +1090,11 @@
     database.ref('views').transaction(curr => (curr || 0) + 1);
     database.ref('views').on('value', snap => { document.getElementById('view-counter-text').innerText = `雲端總瀏覽次數：${snap.val() || 0} 次`; });
 
+    function updateVersionTag() {
+        const el = document.getElementById('header-version-tag');
+        if (el) el.innerText = 'v' + APP_VERSION;
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
         updateVersionTag();
         const savedSyncId = localStorage.getItem('pikmin_sync_id');
@@ -1099,6 +1104,13 @@
             const val = localStorage.getItem('pikmin_tz_area_' + i);
             if(val) document.getElementById('tz-select-' + i).value = val;
         });
+
+        const savedGroupMode = localStorage.getItem('pikmin_mushroom_group');
+        if (savedGroupMode) {
+            const el = document.getElementById('mushroom-group-logic');
+            if (el) el.value = savedGroupMode;
+        }
+
         updateClocks();
     });
 
@@ -1122,29 +1134,31 @@
         return pad(d.getHours()) + ':' + pad(d.getMinutes()) + (includeSeconds ? ':' + pad(d.getSeconds()) : '');
     }
     
+    const removingIds = new Set(); // 防止重複送出 remove
+
     setInterval(() => {
         updateClocks();
         const now = Date.now();
         dataList.forEach(item => {
+            if (removingIds.has(item.id)) return;
+
+            let shouldRemove = false;
+
             if (item.targetTime != null && (now - item.targetTime >= 7200000)) {
+                shouldRemove = true;
+            }
+
+            if (!shouldRemove && item.user === "") {
+                const midnightUTC = getUnclaimedMidnightUTC(item);
+                if (now >= midnightUTC + 3600000) shouldRemove = true;
+            }
+
+            if (shouldRemove) {
+                removingIds.add(item.id);
                 database.ref('mushrooms/' + item.id).remove();
             }
-            
-            if (item.user === "") {
-                const createdUTC = getCreatedAt(item.id);
-                const offset = getOffsetByCountry(item.country);
-                const createdLocal = new Date(createdUTC + offset * 3600000);
-                
-                const midnightLocal = new Date(createdLocal);
-                midnightLocal.setUTCDate(midnightLocal.getUTCDate() + 1);
-                midnightLocal.setUTCHours(0, 0, 0, 0);
-                const midnightUTC = midnightLocal.getTime() - offset * 3600000;
-
-                if (now >= midnightUTC + 3600000) {
-                    database.ref('mushrooms/' + item.id).remove();
-                }
-            }
         });
+        updateView();
     }, 1000);
 
     function addItem() {
@@ -1195,7 +1209,7 @@
 
             database.ref('postcards').push({
                 type: typeEl.value, country: processedCountry, name: nameEl.value.trim(),
-                coords: coordsEl.value.trim(), tag: tagEl.tag || "", image: imageEl.value.trim() || "無圖片"
+                coords: coordsEl.value.trim(), tag: tagEl.value.trim() || "", image: imageEl.value.trim() || "無圖片"
             });
             countryEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = ''; imageEl.value = '';
             document.getElementById('post-tz-hint').innerText = '';
@@ -1428,6 +1442,39 @@
         window.location.href = "https://line.me/R/msg/text/?" + encodeURIComponent(out.trim());
     }
 
+    function renderMGroup(container, cards, groupId, title, defaultCollapsed, groupMode = 'grouped') {
+        if (cards.length === 0) return;
+        if (groupMode === 'flat') {
+            cards.forEach(c => container.appendChild(c));
+            return;
+        }
+        if (!knownMushroomGroups.has(groupId)) { knownMushroomGroups.add(groupId); if (defaultCollapsed) collapsedGroups.add(groupId); }
+        const isCol = collapsedGroups.has(groupId);
+        const arrow = isCol ? '▶' : '▼';
+        const gHead = document.createElement('div');
+        gHead.className = 'group-header mushroom-header';
+        gHead.style.justifyContent = 'flex-start';
+        gHead.style.gap = '12px';
+        gHead.innerHTML = `
+            <span style="font-size:18px; font-weight:900; background:rgba(255,255,255,0.25); padding:4px 12px; border-radius:16px;">${cards.length} 筆</span>
+            <span>${arrow} 📂 ${title}</span>
+        `;
+        gHead.addEventListener('click', () => toggleGroup(groupId));
+        container.appendChild(gHead);
+        if (!isCol) cards.forEach(c => container.appendChild(c));
+    }
+
+    // 計算待認領菇換日 UTC 時間（提取到外層供 updateView 與 setInterval 共用）
+    function getUnclaimedMidnightUTC(item) {
+        const createdUTC = getCreatedAt(item.id);
+        const offset = getOffsetByCountry(item.country);
+        const createdLocal = new Date(createdUTC + offset * 3600000);
+        const midnightLocal = new Date(createdLocal);
+        midnightLocal.setUTCDate(midnightLocal.getUTCDate() + 1);
+        midnightLocal.setUTCHours(0, 0, 0, 0);
+        return midnightLocal.getTime() - offset * 3600000;
+    }
+
     function getRemainingText(targetTime, now) {
         if (targetTime == null) return "尚未設定";
         const rem = targetTime - now;
@@ -1519,17 +1566,6 @@
         let actCount = 0, uncCount = 0;
         const activeGroup1 = []; const activeGroup2 = [];
 
-        // [修正二] 計算待認領菇的換日倒數
-        function getUnclaimedMidnightUTC(item) {
-            const createdUTC = getCreatedAt(item.id);
-            const offset = getOffsetByCountry(item.country);
-            const createdLocal = new Date(createdUTC + offset * 3600000);
-            const midnightLocal = new Date(createdLocal);
-            midnightLocal.setUTCDate(midnightLocal.getUTCDate() + 1);
-            midnightLocal.setUTCHours(0, 0, 0, 0);
-            return midnightLocal.getTime() - offset * 3600000;
-        }
-
         const unclaimedQueue = [];
 
         sortedM.forEach(item => {
@@ -1565,34 +1601,10 @@
             unclaimEl.appendChild(createMushroomCard(item, now, isExp, timeText));
         });
 
-        // [修正一] 分類模式：讀取 select 開關
+        // 分類模式：讀取 select 開關
         const groupMode = document.getElementById('mushroom-group-logic') ? document.getElementById('mushroom-group-logic').value : 'grouped';
-
-        function renderMGroup(container, cards, groupId, title, defaultCollapsed) {
-            if (cards.length === 0) return;
-            if (groupMode === 'flat') {
-                // 分類關閉：直接輸出卡片，不加群組標題
-                cards.forEach(c => container.appendChild(c));
-                return;
-            }
-            if (!knownMushroomGroups.has(groupId)) { knownMushroomGroups.add(groupId); if (defaultCollapsed) collapsedGroups.add(groupId); }
-            const isCol = collapsedGroups.has(groupId);
-            const arrow = isCol ? '▶' : '▼';
-            const gHead = document.createElement('div');
-            gHead.className = 'group-header mushroom-header';
-            gHead.style.justifyContent = 'flex-start';
-            gHead.style.gap = '12px';
-            gHead.innerHTML = `
-                <span style="font-size:18px; font-weight:900; background:rgba(255,255,255,0.25); padding:4px 12px; border-radius:16px;">${cards.length} 筆</span> 
-                <span>${arrow} 📂 ${title}</span>
-            `;
-            gHead.addEventListener('click', () => toggleGroup(groupId));
-            container.appendChild(gHead);
-            if (!isCol) cards.forEach(c => container.appendChild(c));
-        }
-
-        renderMGroup(activeEl, activeGroup1, 'm-group-1', '⏳ 一天內 (含可開打)', false);
-        renderMGroup(activeEl, activeGroup2, 'm-group-2', '⏳ 一天後 (或未設定)', true);
+        renderMGroup(activeEl, activeGroup1, 'm-group-1', '⏳ 一天內 (含可開打)', false, groupMode);
+        renderMGroup(activeEl, activeGroup2, 'm-group-2', '⏳ 一天後 (或未設定)', true, groupMode);
 
         document.getElementById('active-empty').style.display = actCount === 0 ? 'block' : 'none';
         document.getElementById('unclaimed-empty').style.display = uncCount === 0 ? 'block' : 'none';
