@@ -544,11 +544,10 @@
     <main class="app-content">
 
         <section id="view-mushroom" class="view-section active">
-            <button class="line-share-btn" onclick="shareToLineWindow()" style="margin-bottom: 15px;">
+            <button class="line-share-btn" onclick="shareToLineWindow()" style="margin-bottom: 20px;">
                 💚 一鍵產生分享文字並喚醒 LINE
             </button>
 
-            <!-- 巨菇群組分類開關 -->
             <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
                 <select id="mushroom-group-logic" class="input-base filter-select" onchange="saveMushroomViewPref(); updateView();" style="font-size: 13px; padding: 6px 10px;">
                     <option value="grouped" selected>📂 分類模式：開啟</option>
@@ -804,7 +803,7 @@
 
 <script>
     // ======= 每次修改程式碼時，請變更此版本號以觸發所有使用者的自動更新 =======
-    const APP_VERSION = "2026.06.27.1713";
+    const APP_VERSION = "2026.06.27.2320";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -909,7 +908,7 @@
         "模里西斯": 4, "阿聯酋": 4, "杜拜": 4, "阿拉伯聯合大公國": 4, "阿聯": 4,
         "土耳其": 3, "沙烏地阿拉伯": 3, "卡達": 3, "科威特": 3, "莫斯科": 3, "俄羅斯": 3,
         "愛沙尼亞": 2, "拉脫維亞": 2, "立陶宛": 2, "烏克蘭": 2, "芬蘭": 2, "法國": 2, "法蘭西": 2, "德國": 2, "德意志": 2, "義大利": 2, "西班牙": 2, "歐洲": 2, "希臘": 2, "南非": 2, "埃及": 2, "瑞士": 2, "瑞典": 2, "波蘭": 2, "荷蘭": 2,
-        "葡萄牙": 1, "挪威": 1, "丹麥": 1, "比利時": 1, "英國": 1, "倫敦": 1, "UK": 1, "大不列顛": 1,
+        "葡萄牙": 1, "瑞典": 1, "挪威": 1, "丹麥": 1, "比利時": 1, "英國": 1, "倫敦": 1, "UK": 1, "大不列顛": 1,
         "澳洲": 10, "澳大利亞": 10, "雪梨": 10, "澳洲雪梨": 10, "關島": 10, "Australia": 10,
         "紐西蘭": 12, "奧克蘭": 12, "New Zealand": 12,
         "委內瑞拉": -4, "巴西": -3, "阿根廷": -3, "智利": -4, "哥倫比亞": -5, "秘魯": -5,
@@ -1091,25 +1090,8 @@
     database.ref('views').transaction(curr => (curr || 0) + 1);
     database.ref('views').on('value', snap => { document.getElementById('view-counter-text').innerText = `雲端總瀏覽次數：${snap.val() || 0} 次`; });
 
-    function updateVersionTag() {
-        if (document.getElementById('header-version-tag')) document.getElementById('header-version-tag').innerText = `Ver: ${APP_VERSION}`;
-    }
-
-    function saveMushroomViewPref() {
-        if (document.getElementById('mushroom-group-logic')) {
-            localStorage.setItem('pikmin_mushroom_group', document.getElementById('mushroom-group-logic').value);
-        }
-    }
-
     window.addEventListener('DOMContentLoaded', () => {
-        checkForUpdate(); 
         updateVersionTag();
-
-        const savedMushroomGroup = localStorage.getItem('pikmin_mushroom_group');
-        if (savedMushroomGroup && document.getElementById('mushroom-group-logic')) {
-            document.getElementById('mushroom-group-logic').value = savedMushroomGroup;
-        }
-
         const savedSyncId = localStorage.getItem('pikmin_sync_id');
         if (savedSyncId) { document.getElementById('sync-user-id').value = savedSyncId; applySyncId(); }
 
@@ -1213,7 +1195,7 @@
 
             database.ref('postcards').push({
                 type: typeEl.value, country: processedCountry, name: nameEl.value.trim(),
-                coords: coordsEl.value.trim(), tag: tagEl.value.trim(), image: imageEl.value.trim() || "無圖片"
+                coords: coordsEl.value.trim(), tag: tagEl.tag || "", image: imageEl.value.trim() || "無圖片"
             });
             countryEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = ''; imageEl.value = '';
             document.getElementById('post-tz-hint').innerText = '';
@@ -1378,35 +1360,66 @@
 
         const now = Date.now();
         const finalShareUrl = "https://tdagold-leo.github.io/Pikmin/";
-        const sorted = [...dataList].sort((a, b) => {
+
+        let activeItems = [];
+        let unclaimedItems = [];
+        
+        dataList.forEach(item => {
+            if (item.user === "") {
+                const createdUTC = getCreatedAt(item.id);
+                const offset = getOffsetByCountry(item.country);
+                const createdLocal = new Date(createdUTC + offset * 3600000);
+                
+                const midnightLocal = new Date(createdLocal);
+                midnightLocal.setUTCDate(midnightLocal.getUTCDate() + 1);
+                midnightLocal.setUTCHours(0, 0, 0, 0);
+                item.midnightUTC = midnightLocal.getTime() - offset * 3600000;
+                
+                unclaimedItems.push(item);
+            } else {
+                activeItems.push(item);
+            }
+        });
+
+        activeItems.sort((a, b) => {
             if (a.targetTime == null && b.targetTime == null) return 0;
             if (a.targetTime == null) return 1; if (b.targetTime == null) return -1;
             return a.targetTime - b.targetTime;
         });
 
+        unclaimedItems.sort((a, b) => a.midnightUTC - b.midnightUTC);
+
         let out = `🍄巨菇追蹤🍄\n🔗 ${finalShareUrl}\n\n`;
 
-        const formatLineText = (i, userName) => {
+        const formatLineText = (i, userName, isUnclaimed) => {
             const currentSlots = i.slots || ['', '', '', '', ''];
             const filledCount = currentSlots.filter(s => s !== '').length;
             const emptyCount = 5 - filledCount;
             let slotInfo = emptyCount === 0 ? "🈵額滿" : `空位${emptyCount}`;
             const snPad = String(i.sn).padStart(2, '0');
-            const itemName = i.name || "未命名";
+            const itemName = (i.name || "未命名").substring(0, 8);
             
             const shortUserName = userName ? String(userName).substring(0, 8) : '';
 
-            return `${snPad}.${slotInfo} <${shortUserName}> ${itemName}\n    [${getShortRemainingText(i.targetTime, now)}]\n`;
+            let timeStr = "";
+            if (isUnclaimed) {
+                if (now >= i.midnightUTC) {
+                    timeStr = "已換日過期";
+                } else {
+                    timeStr = "換日倒數 " + getShortRemainingText(i.midnightUTC, now);
+                }
+            } else {
+                timeStr = getShortRemainingText(i.targetTime, now);
+            }
+
+            return `${snPad}.${slotInfo} <${shortUserName}> ${itemName}\n    [${timeStr}]\n`;
         };
 
-        const actives = sorted.filter(i => i.user !== "");
-        const unclaimed = sorted.filter(i => i.user === "");
-
-        if (actives.length > 0) {
-            out += `🟢追蹤中\n`; actives.forEach((i) => { out += formatLineText(i, i.user); }); out += `\n`;
+        if (activeItems.length > 0) {
+            out += `🟢追蹤中\n`; activeItems.forEach((i) => { out += formatLineText(i, i.user, false); }); out += `\n`;
         }
-        if (unclaimed.length > 0) {
-            out += `🟡待認領\n`; unclaimed.forEach((i) => { out += formatLineText(i, "待認領"); });
+        if (unclaimedItems.length > 0) {
+            out += `🟡待認領\n`; unclaimedItems.forEach((i) => { out += formatLineText(i, "待認領", true); });
         }
         
         navigator.clipboard.writeText(out.trim()).catch(e=>console.log(e));
@@ -1431,6 +1444,12 @@
         updateView();
     }
 
+    function saveMushroomViewPref() {
+        if (document.getElementById('mushroom-group-logic')) {
+            localStorage.setItem('pikmin_mushroom_group', document.getElementById('mushroom-group-logic').value);
+        }
+    }
+
     function createMushroomCard(item, now, isExpired, timeText) {
         const safeC = escapeHtml(item.country||''), safeName = escapeHtml(item.name), safeTag = escapeHtml(item.tag);
         const diffStr = getTimeDiffString(safeC);
@@ -1439,6 +1458,7 @@
 
         const card = document.createElement('div');
         card.className = `grid-card ${isExpired ? 'row-expired' : ''}`;
+        card.style.position = 'relative';
         
         let actionHtml = item.user === "" ? `<button class="btn-sm btn-claim" onclick="openClaimModalById('${item.id}')">認領</button>` : '';
         actionHtml += `<button class="btn-sm btn-edit" onclick="openTimeModalById('${item.id}', 'mushroom')">修改</button><button class="btn-sm btn-danger" onclick="deleteItem('${item.id}', 'mushroom')">刪除</button>`;
@@ -1477,6 +1497,9 @@
                 ${slotsHtml}
                 <div class="lc-actions">${actionHtml}</div>
             </div>
+            ${isFull ? `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; border-radius:12px; overflow:hidden;">
+                <span style="font-size:72px; opacity:0.18; transform:rotate(-20deg); line-height:1; user-select:none;">🈵</span>
+            </div>` : ''}
         `;
         return card;
     }
@@ -1494,38 +1517,39 @@
 
         activeEl.innerHTML = ''; unclaimEl.innerHTML = '';
         let actCount = 0, uncCount = 0;
-        const activeGroup1 = []; const activeGroup2 = []; 
+        const activeGroup1 = []; const activeGroup2 = [];
+
+        // [修正二] 計算待認領菇的換日倒數
+        function getUnclaimedMidnightUTC(item) {
+            const createdUTC = getCreatedAt(item.id);
+            const offset = getOffsetByCountry(item.country);
+            const createdLocal = new Date(createdUTC + offset * 3600000);
+            const midnightLocal = new Date(createdLocal);
+            midnightLocal.setUTCDate(midnightLocal.getUTCDate() + 1);
+            midnightLocal.setUTCHours(0, 0, 0, 0);
+            return midnightLocal.getTime() - offset * 3600000;
+        }
+
+        const unclaimedQueue = [];
 
         sortedM.forEach(item => {
             let timeText = '<span class="not-set">尚未設定</span>', isExp = false;
-            
-            if (item.targetTime != null) {
-                if (item.targetTime - now <= 0) { timeText = '已過期/可開打！'; isExp = true; } 
-                else { timeText = getRemainingText(item.targetTime, now); }
-            }
 
             if (item.user === "") {
-                const createdUTC = getCreatedAt(item.id);
-                const offset = getOffsetByCountry(item.country);
-                const createdLocal = new Date(createdUTC + offset * 3600000);
-                
-                const midnightLocal = new Date(createdLocal);
-                midnightLocal.setUTCDate(midnightLocal.getUTCDate() + 1);
-                midnightLocal.setUTCHours(0, 0, 0, 0);
-                const midnightUTC = midnightLocal.getTime() - offset * 3600000;
-
+                const midnightUTC = getUnclaimedMidnightUTC(item);
                 if (now >= midnightUTC) {
-                    isExp = true;
-                    timeText = '已換日過期';
+                    timeText = '已換日過期'; isExp = true;
+                } else {
+                    timeText = '換日 ' + getRemainingText(midnightUTC, now);
                 }
-            }
-
-            const card = createMushroomCard(item, now, isExp, timeText);
-            
-            if (item.user === "") { 
-                uncCount++; unclaimEl.appendChild(card); 
-            } else { 
-                actCount++; 
+                unclaimedQueue.push({ item, midnightUTC, timeText, isExp });
+            } else {
+                if (item.targetTime != null) {
+                    if (item.targetTime - now <= 0) { timeText = '已過期/可開打！'; isExp = true; }
+                    else { timeText = getRemainingText(item.targetTime, now); }
+                }
+                actCount++;
+                const card = createMushroomCard(item, now, isExp, timeText);
                 if (item.targetTime == null) activeGroup2.push(card);
                 else {
                     if (item.targetTime - now <= 86400000) activeGroup1.push(card);
@@ -1534,8 +1558,23 @@
             }
         });
 
+        // 待認領菇：換日時間少的排前面，已過期的排最後
+        unclaimedQueue.sort((a, b) => a.midnightUTC - b.midnightUTC);
+        unclaimedQueue.forEach(({ item, midnightUTC, timeText, isExp }) => {
+            uncCount++;
+            unclaimEl.appendChild(createMushroomCard(item, now, isExp, timeText));
+        });
+
+        // [修正一] 分類模式：讀取 select 開關
+        const groupMode = document.getElementById('mushroom-group-logic') ? document.getElementById('mushroom-group-logic').value : 'grouped';
+
         function renderMGroup(container, cards, groupId, title, defaultCollapsed) {
             if (cards.length === 0) return;
+            if (groupMode === 'flat') {
+                // 分類關閉：直接輸出卡片，不加群組標題
+                cards.forEach(c => container.appendChild(c));
+                return;
+            }
             if (!knownMushroomGroups.has(groupId)) { knownMushroomGroups.add(groupId); if (defaultCollapsed) collapsedGroups.add(groupId); }
             const isCol = collapsedGroups.has(groupId);
             const arrow = isCol ? '▶' : '▼';
@@ -1552,15 +1591,8 @@
             if (!isCol) cards.forEach(c => container.appendChild(c));
         }
 
-        const groupMode = document.getElementById('mushroom-group-logic') ? document.getElementById('mushroom-group-logic').value : 'grouped';
-
-        if (groupMode === 'grouped') {
-            renderMGroup(activeEl, activeGroup1, 'm-group-1', '⏳ 一天內 (含可開打)', false);
-            renderMGroup(activeEl, activeGroup2, 'm-group-2', '⏳ 一天後 (或未設定)', true);
-        } else {
-            activeGroup1.forEach(c => activeEl.appendChild(c));
-            activeGroup2.forEach(c => activeEl.appendChild(c));
-        }
+        renderMGroup(activeEl, activeGroup1, 'm-group-1', '⏳ 一天內 (含可開打)', false);
+        renderMGroup(activeEl, activeGroup2, 'm-group-2', '⏳ 一天後 (或未設定)', true);
 
         document.getElementById('active-empty').style.display = actCount === 0 ? 'block' : 'none';
         document.getElementById('unclaimed-empty').style.display = uncCount === 0 ? 'block' : 'none';
@@ -1581,7 +1613,6 @@
             const isCol = favList.includes(item.id);
             if (filterState === 'collected' && !isCol) return false;
             if (filterState === 'uncollected' && isCol) return false;
-            
             if (searchKw.length > 0) {
                 const text = `${item.type} ${item.country} ${item.name} ${item.tag} ${item.coords}`.toLowerCase();
                 if (searchLogic === 'and') {
