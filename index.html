@@ -544,9 +544,17 @@
     <main class="app-content">
 
         <section id="view-mushroom" class="view-section active">
-            <button class="line-share-btn" onclick="shareToLineWindow()" style="margin-bottom: 20px;">
+            <button class="line-share-btn" onclick="shareToLineWindow()" style="margin-bottom: 15px;">
                 💚 一鍵產生分享文字並喚醒 LINE
             </button>
+
+            <!-- 巨菇群組分類開關 -->
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
+                <select id="mushroom-group-logic" class="input-base filter-select" onchange="saveMushroomViewPref(); updateView();" style="font-size: 13px; padding: 6px 10px;">
+                    <option value="grouped" selected>📂 分類模式：開啟</option>
+                    <option value="flat">📄 分類模式：關閉</option>
+                </select>
+            </div>
 
             <div id="mushroom-summary" class="summary-widget" style="display:none;"></div>
 
@@ -796,7 +804,7 @@
 
 <script>
     // ======= 每次修改程式碼時，請變更此版本號以觸發所有使用者的自動更新 =======
-    const APP_VERSION = "2026.06.25.01";
+    const APP_VERSION = "2026.06.27.1713";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -848,7 +856,6 @@
     let knownPostcardGroups = new Set(); 
     let knownMushroomGroups = new Set();
 
-    // Firebase 專用 ID 時間戳轉換器
     const PUSH_CHARS = '-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz';
     function getCreatedAt(id) {
         let time = 0;
@@ -941,7 +948,6 @@
                     const data = await resCountry.json();
                     if(data && data.countryName) {
                         countryName = data.countryName;
-                        // ======= 自動校正：中華民國改為台灣 =======
                         if (countryName.includes("中華民國")) {
                             countryName = "台灣";
                         }
@@ -1089,9 +1095,21 @@
         if (document.getElementById('header-version-tag')) document.getElementById('header-version-tag').innerText = `Ver: ${APP_VERSION}`;
     }
 
+    function saveMushroomViewPref() {
+        if (document.getElementById('mushroom-group-logic')) {
+            localStorage.setItem('pikmin_mushroom_group', document.getElementById('mushroom-group-logic').value);
+        }
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
         checkForUpdate(); 
         updateVersionTag();
+
+        const savedMushroomGroup = localStorage.getItem('pikmin_mushroom_group');
+        if (savedMushroomGroup && document.getElementById('mushroom-group-logic')) {
+            document.getElementById('mushroom-group-logic').value = savedMushroomGroup;
+        }
+
         const savedSyncId = localStorage.getItem('pikmin_sync_id');
         if (savedSyncId) { document.getElementById('sync-user-id').value = savedSyncId; applySyncId(); }
 
@@ -1126,12 +1144,10 @@
         updateClocks();
         const now = Date.now();
         dataList.forEach(item => {
-            // 原有的 targetTime 過期兩小時刪除邏輯
             if (item.targetTime != null && (now - item.targetTime >= 7200000)) {
                 database.ref('mushrooms/' + item.id).remove();
             }
             
-            // ======= 待認領巨菇 換日自動刪除邏輯 =======
             if (item.user === "") {
                 const createdUTC = getCreatedAt(item.id);
                 const offset = getOffsetByCountry(item.country);
@@ -1142,7 +1158,6 @@
                 midnightLocal.setUTCHours(0, 0, 0, 0);
                 const midnightUTC = midnightLocal.getTime() - offset * 3600000;
 
-                // 若超過當地晚上 00:00 後一小時 (01:00) 則刪除
                 if (now >= midnightUTC + 3600000) {
                     database.ref('mushrooms/' + item.id).remove();
                 }
@@ -1489,7 +1504,6 @@
                 else { timeText = getRemainingText(item.targetTime, now); }
             }
 
-            // ======= 待認領巨菇 換日過期顯示邏輯 =======
             if (item.user === "") {
                 const createdUTC = getCreatedAt(item.id);
                 const offset = getOffsetByCountry(item.country);
@@ -1538,8 +1552,15 @@
             if (!isCol) cards.forEach(c => container.appendChild(c));
         }
 
-        renderMGroup(activeEl, activeGroup1, 'm-group-1', '⏳ 一天內 (含可開打)', false);
-        renderMGroup(activeEl, activeGroup2, 'm-group-2', '⏳ 一天後 (或未設定)', true);
+        const groupMode = document.getElementById('mushroom-group-logic') ? document.getElementById('mushroom-group-logic').value : 'grouped';
+
+        if (groupMode === 'grouped') {
+            renderMGroup(activeEl, activeGroup1, 'm-group-1', '⏳ 一天內 (含可開打)', false);
+            renderMGroup(activeEl, activeGroup2, 'm-group-2', '⏳ 一天後 (或未設定)', true);
+        } else {
+            activeGroup1.forEach(c => activeEl.appendChild(c));
+            activeGroup2.forEach(c => activeEl.appendChild(c));
+        }
 
         document.getElementById('active-empty').style.display = actCount === 0 ? 'block' : 'none';
         document.getElementById('unclaimed-empty').style.display = uncCount === 0 ? 'block' : 'none';
