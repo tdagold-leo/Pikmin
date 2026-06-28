@@ -240,6 +240,28 @@
             background: #d1fae5;
             border-color: #059669;
         }
+        .copy-coords-btn {
+            width: 44px;
+            height: 44px;
+            flex: none;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 16px;
+            line-height: 1.2;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(37,99,235,0.35);
+            transition: opacity 0.15s, transform 0.1s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .copy-coords-btn:active { opacity: 0.8; transform: scale(0.94); }
 
         .lc-time {
             font-family: monospace;
@@ -771,6 +793,7 @@
             </div>
             
             <div id="edit-group-mushroom" style="display:none; flex-direction:column; gap:10px;">
+                <div class="input-group"><label>修改種類：</label><select id="edit-mushroom-kind" class="input-base"><option value="巨菇">🍄 巨菇</option><option value="普通菇">🍄 普通菇</option></select></div>
                 <div class="input-group"><label>修改使用者 (留空為待認領)：</label><input type="text" id="edit-user" class="input-base"></div>
                 <div class="input-group"><label>修改座標：</label><input type="text" id="edit-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-mushroom-country', 'edit-tz-hint')"></div>
                 <div class="input-group"><label>修改國家： <span id="edit-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label><input type="text" id="edit-mushroom-country" class="input-base" oninput="showTimeDiff(this.value, 'edit-tz-hint')"></div>
@@ -810,7 +833,7 @@
 
 <script>
     // ======= 每次修改程式碼時，請變更此版本號以觸發所有使用者的自動更新 =======
-    const APP_VERSION = "2026.06.27.2400";
+    const APP_VERSION = "2026.06.27.2600";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1070,7 +1093,7 @@
                         id: key, sn: item.sn, user: item.user || "",
                         country: item.country || "", name: item.name || "未命名",
                         coords: item.coords || "", tag: item.tag || "", targetTime: item.targetTime != null ? item.targetTime : null,
-                        slots: item.slots || ['', '', '', '', ''] 
+                        slots: item.slots || ['', '', '', '', ''], kind: item.kind || null 
                     });
                 }
             });
@@ -1278,6 +1301,8 @@
             document.getElementById('edit-name').value = item.name || '';
             document.getElementById('edit-coords').value = item.coords || '';
             document.getElementById('edit-tag').value = item.tag || '';
+            const editKindEl = document.getElementById('edit-mushroom-kind');
+            if (editKindEl) editKindEl.value = item.kind || '巨菇';
             showTimeDiff(item.country || '', 'edit-tz-hint');
             
             let d = 0, h = 0, m = 0;
@@ -1314,10 +1339,11 @@
                 processedCountry = "台灣";
             }
 
+            const editedKind = document.getElementById('edit-mushroom-kind') ? document.getElementById('edit-mushroom-kind').value : '巨菇';
             let updates = { 
                 user: newUser, country: processedCountry,
                 name: document.getElementById('edit-name').value.trim(), coords: document.getElementById('edit-coords').value.trim(),
-                tag: document.getElementById('edit-tag').value.trim(), targetTime: targetTime 
+                tag: document.getElementById('edit-tag').value.trim(), targetTime: targetTime, kind: editedKind
             };
             const item = dataList.find(i => i.id === currentEditingTimeId);
             if (item) {
@@ -1355,6 +1381,12 @@
         if(!src || src.includes('無圖片')) return;
         document.getElementById('lightbox-img').src = src; 
         document.getElementById('lightbox').style.display = 'flex';
+    }
+
+    function fillAllSlots(id) {
+        const item = dataList.find(i => i.id === id);
+        if (!item) return;
+        database.ref('mushrooms/' + id + '/slots').set(['✔️', '✔️', '✔️', '✔️', '✔️']);
     }
 
     function toggleSlot(id, index) {
@@ -1528,9 +1560,8 @@
         let slotsHtml = `<div class="slots-wrapper">`;
         slotsHtml += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">`;
         slotsHtml += `<span style="font-size: 10px; font-weight: bold; color: #4b5563;">⚔️ 參戰空位 (${filledCount}/5)</span>`;
-        if (isFull) slotsHtml += `<span style="font-size: 9px; background: #ef4444; color: white; padding: 1px 4px; border-radius: 4px; font-weight: bold;">🈵 額滿</span>`;
+        slotsHtml += !isFull ? `<button onclick="fillAllSlots('${item.id}')" style="font-size:9px; font-weight:bold; background:#ef4444; color:white; border:none; border-radius:5px; padding:2px 7px; cursor:pointer; margin-left:auto;">🈵 額滿</button>` : '';
         slotsHtml += `</div><div style="display: flex; gap: 4px;">`;
-        
         for (let i = 0; i < 5; i++) {
             if (currentSlots[i]) {
                 slotsHtml += `<button class="slot-btn filled" onclick="toggleSlot('${item.id}', ${i})">✔️</button>`;
@@ -1541,23 +1572,27 @@
         slotsHtml += `</div></div>`;
 
         card.innerHTML = `
-            <div style="background: ${isExpired ? '#f3f4f6' : '#ecfdf5'}; padding: 8px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 11px; font-weight: bold; color: var(--text-muted);">#${String(item.sn).padStart(2,'0')}</span>
-                <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin: 0; font-size: 11px;">${timeText}</span>
+            <div style="background: ${isExpired ? '#f3f4f6' : '#ecfdf5'}; padding: 7px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+                <span style="font-size: 10px; font-weight: bold; color: var(--text-muted); white-space:nowrap;">#${String(item.sn).padStart(2,'0')}</span>
+                <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin: 0; font-size: 10px;">${timeText}</span>
             </div>
-            <div class="card-body">
-                <div class="card-title" style="font-size: 14px; margin-bottom: 4px;">${safeName}</div>
-                <div class="card-sub" style="margin-bottom: 6px; align-items: center;">
-                    <div>${item.user ? `<span class="lc-user-badge">👤 ${escapeHtml(item.user)}</span>` : '<span style="color:#9ca3af; font-style:italic;">待認領</span>'}</div>
-                    <button class="btn-sm" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)" style="padding: 6px 12px; font-size: 12px; font-weight: bold; flex: none; background: #2563eb; color: white; border: none; border-radius: 8px; cursor:pointer;">📍 複製座標</button>
+            <div class="card-body" style="gap: 5px;">
+                <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px;">
+                    <div style="flex:1; min-width:0;">
+                        <div style="display:flex; align-items:center; gap:5px; margin-bottom:4px;">
+                            <span style="font-size:11px; font-weight:900; padding:1px 6px; border-radius:4px; white-space:nowrap; background:${(item.kind||'巨菇')==='普通菇' ? '#d1fae5' : '#fef3c7'}; color:${(item.kind||'巨菇')==='普通菇' ? '#065f46' : '#92400e'};">${(item.kind||'巨菇')==='普通菇' ? '普通' : '巨'}</span>
+                            <span class="card-title" style="font-size:13px; margin:0; line-height:1.3;">${safeName}</span>
+                        </div>
+                        <div>${item.user ? `<span class="lc-user-badge">👤 ${escapeHtml(item.user)}</span>` : '<span style="color:#9ca3af; font-style:italic; font-size:11px;">待認領</span>'}</div>
+                    </div>
+                    <button class="copy-coords-btn" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍<br><span style="font-size:9px;">複製</span></button>
                 </div>
-                <div class="lc-info"</div>
                 <div class="lc-info" style="margin: 0;">${cHtml} ${tHtml}</div>
                 ${slotsHtml}
                 <div class="lc-actions">${actionHtml}</div>
             </div>
             ${isFull ? `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; border-radius:12px; overflow:hidden;">
-                <span style="font-size:72px; opacity:0.18; transform:rotate(-20deg); line-height:1; user-select:none;">🈵</span>
+                <span style="font-size:72px; opacity:0.15; transform:rotate(-15deg); line-height:1; user-select:none;">🈵</span>
             </div>` : ''}
         `;
         return card;
@@ -1609,31 +1644,15 @@
         // 待認領菇：換日時間少的排前面，已過期的排最後，再依種類分群
         unclaimedQueue.sort((a, b) => a.midnightUTC - b.midnightUTC);
 
-        const unclaimGiant = unclaimedQueue.filter(x => (x.item.kind || '巨菇') === '巨菇');
-        const unclaimNormal = unclaimedQueue.filter(x => (x.item.kind || '巨菇') === '普通菇');
+        const unclaimGiant = unclaimedQueue.filter(x => (x.item.kind || '') === '巨菇' || x.item.kind == null);
+        const unclaimNormal = unclaimedQueue.filter(x => x.item.kind === '普通菇');
 
-        function renderUnclaimedGroup(list, groupId, title) {
-            if (list.length === 0) return;
-            const gHead = document.createElement('div');
-            gHead.className = 'group-header mushroom-header';
-            gHead.style.justifyContent = 'flex-start';
-            gHead.style.gap = '12px';
-            const isCol = collapsedGroups.has(groupId);
-            gHead.innerHTML = `<span style="font-size:18px; font-weight:900; background:rgba(255,255,255,0.25); padding:4px 12px; border-radius:16px;">${list.length} 筆</span> <span>${isCol ? '▶' : '▼'} 📂 ${title}</span>`;
-            gHead.addEventListener('click', () => toggleGroup(groupId));
-            unclaimEl.appendChild(gHead);
-            if (!collapsedGroups.has(groupId)) {
-                list.forEach(({ item, timeText, isExp }) => {
-                    uncCount++;
-                    unclaimEl.appendChild(createMushroomCard(item, now, isExp, timeText));
-                });
-            } else {
-                uncCount += list.length;
-            }
-        }
+        // 待認領群組：永遠分群顯示（有資料才顯示該群）
+        const unclaimGiantCards = unclaimGiant.map(({ item, timeText, isExp }) => { uncCount++; return createMushroomCard(item, now, isExp, timeText); });
+        const unclaimNormalCards = unclaimNormal.map(({ item, timeText, isExp }) => { uncCount++; return createMushroomCard(item, now, isExp, timeText); });
 
-        renderUnclaimedGroup(unclaimGiant, 'unc-giant', '🍄 巨菇');
-        renderUnclaimedGroup(unclaimNormal, 'unc-normal', '🍄 普通菇');
+        renderMGroup(unclaimEl, unclaimGiantCards, 'unc-giant', '🍄 巨菇', false, 'grouped');
+        renderMGroup(unclaimEl, unclaimNormalCards, 'unc-normal', '🍄 普通菇', false, 'grouped');
 
         // 分類模式：讀取 select 開關
         const groupMode = document.getElementById('mushroom-group-logic') ? document.getElementById('mushroom-group-logic').value : 'grouped';
