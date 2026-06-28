@@ -667,6 +667,13 @@
             
             <div id="form-mushroom" style="display:none; flex-direction:column; gap:10px;">
                 <div class="input-group">
+                    <label>種類</label>
+                    <select id="mushroom-kind" class="input-base">
+                        <option value="巨菇">🍄 巨菇</option>
+                        <option value="普通菇">🍄 普通菇</option>
+                    </select>
+                </div>
+                <div class="input-group">
                     <label>使用者 (留空待認領)</label>
                     <input type="text" id="user" class="input-base" placeholder="名字或留空">
                 </div>
@@ -803,7 +810,7 @@
 
 <script>
     // ======= 每次修改程式碼時，請變更此版本號以觸發所有使用者的自動更新 =======
-    const APP_VERSION = "2026.06.27.2350";
+    const APP_VERSION = "2026.06.27.2400";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1186,15 +1193,19 @@
             let nextSn = 1;
             if (dataList.length > 0) nextSn = Math.max(...dataList.map(i => i.sn || 0)) + 1;
 
+            const kindEl = document.getElementById('mushroom-kind');
+            const mushKind = kindEl ? kindEl.value : '巨菇';
+
             database.ref('mushrooms').push({
                 sn: nextSn, user: processedUser, country: processedCountry,
                 name: nameEl.value.trim(), coords: coordsEl.value.trim(), tag: tagEl.value.trim(), 
-                targetTime: targetTime, slots: initSlots 
+                targetTime: targetTime, slots: initSlots, kind: mushKind
             });
             
             userEl.value = ''; countryEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = '';
             document.getElementById('tz-hint').innerText = '';
             document.getElementById('days').value = '0'; document.getElementById('hours').value = '0'; document.getElementById('minutes').value = '0';
+            if (kindEl) kindEl.value = '巨菇';
         } else {
             const typeEl = document.getElementById('post-type'), countryEl = document.getElementById('post-country');
             const nameEl = document.getElementById('post-name'), coordsEl = document.getElementById('post-coords');
@@ -1535,11 +1546,12 @@
                 <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin: 0; font-size: 11px;">${timeText}</span>
             </div>
             <div class="card-body">
-                <div class="card-title" style="font-size: 14px; margin-bottom: 2px;">${safeName}</div>
-                <div class="card-sub" style="margin-bottom: 2px;">
+                <div class="card-title" style="font-size: 14px; margin-bottom: 4px;">${safeName}</div>
+                <div class="card-sub" style="margin-bottom: 6px; align-items: center;">
                     <div>${item.user ? `<span class="lc-user-badge">👤 ${escapeHtml(item.user)}</span>` : '<span style="color:#9ca3af; font-style:italic;">待認領</span>'}</div>
-                    <button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)" style="padding: 3px 6px; font-size: 10px; flex: none;">📍 複製座標</button>
+                    <button class="btn-sm" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)" style="padding: 6px 12px; font-size: 12px; font-weight: bold; flex: none; background: #2563eb; color: white; border: none; border-radius: 8px; cursor:pointer;">📍 複製座標</button>
                 </div>
+                <div class="lc-info"</div>
                 <div class="lc-info" style="margin: 0;">${cHtml} ${tHtml}</div>
                 ${slotsHtml}
                 <div class="lc-actions">${actionHtml}</div>
@@ -1594,12 +1606,34 @@
             }
         });
 
-        // 待認領菇：換日時間少的排前面，已過期的排最後
+        // 待認領菇：換日時間少的排前面，已過期的排最後，再依種類分群
         unclaimedQueue.sort((a, b) => a.midnightUTC - b.midnightUTC);
-        unclaimedQueue.forEach(({ item, midnightUTC, timeText, isExp }) => {
-            uncCount++;
-            unclaimEl.appendChild(createMushroomCard(item, now, isExp, timeText));
-        });
+
+        const unclaimGiant = unclaimedQueue.filter(x => (x.item.kind || '巨菇') === '巨菇');
+        const unclaimNormal = unclaimedQueue.filter(x => (x.item.kind || '巨菇') === '普通菇');
+
+        function renderUnclaimedGroup(list, groupId, title) {
+            if (list.length === 0) return;
+            const gHead = document.createElement('div');
+            gHead.className = 'group-header mushroom-header';
+            gHead.style.justifyContent = 'flex-start';
+            gHead.style.gap = '12px';
+            const isCol = collapsedGroups.has(groupId);
+            gHead.innerHTML = `<span style="font-size:18px; font-weight:900; background:rgba(255,255,255,0.25); padding:4px 12px; border-radius:16px;">${list.length} 筆</span> <span>${isCol ? '▶' : '▼'} 📂 ${title}</span>`;
+            gHead.addEventListener('click', () => toggleGroup(groupId));
+            unclaimEl.appendChild(gHead);
+            if (!collapsedGroups.has(groupId)) {
+                list.forEach(({ item, timeText, isExp }) => {
+                    uncCount++;
+                    unclaimEl.appendChild(createMushroomCard(item, now, isExp, timeText));
+                });
+            } else {
+                uncCount += list.length;
+            }
+        }
+
+        renderUnclaimedGroup(unclaimGiant, 'unc-giant', '🍄 巨菇');
+        renderUnclaimedGroup(unclaimNormal, 'unc-normal', '🍄 普通菇');
 
         // 分類模式：讀取 select 開關
         const groupMode = document.getElementById('mushroom-group-logic') ? document.getElementById('mushroom-group-logic').value : 'grouped';
