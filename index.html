@@ -157,6 +157,13 @@
         }
         
         /* 統一卡片基礎樣式 */
+        /* 元素菇邊框顏色 */
+        .grid-card.elem-水  { border: 2px solid #3b82f6; box-shadow: 0 0 0 1px #bfdbfe; }
+        .grid-card.elem-火  { border: 2px solid #ef4444; box-shadow: 0 0 0 1px #fecaca; }
+        .grid-card.elem-電  { border: 2px solid #f59e0b; box-shadow: 0 0 0 1px #fde68a; }
+        .grid-card.elem-毒  { border: 2px solid #ffffff; box-shadow: 0 0 0 1px #d1d5db; }
+        .grid-card.elem-水晶 { border: 2px solid #e0f2ff; box-shadow: 0 0 0 1px #e0f2ff, 0 0 8px 2px rgba(186,230,253,0.7); background: linear-gradient(135deg, rgba(224,242,255,0.15), rgba(186,230,253,0.1)); }
+
         .grid-card {
             background: var(--card-bg);
             border-radius: 12px;
@@ -692,7 +699,7 @@
                     <label>種類</label>
                     <select id="mushroom-kind" class="input-base">
                         <option value="巨菇">🍄 巨菇</option>
-                        <option value="普通菇">🍄 普通菇</option>
+                        <option value="元素菇">🌿 元素菇</option>
                     </select>
                 </div>
                 <div class="input-group">
@@ -793,7 +800,7 @@
             </div>
             
             <div id="edit-group-mushroom" style="display:none; flex-direction:column; gap:10px;">
-                <div class="input-group"><label>修改種類：</label><select id="edit-mushroom-kind" class="input-base"><option value="巨菇">🍄 巨菇</option><option value="普通菇">🍄 普通菇</option></select></div>
+                <div class="input-group"><label>修改種類：</label><select id="edit-mushroom-kind" class="input-base"><option value="巨菇">🍄 巨菇</option><option value="元素菇">🌿 元素菇</option></select></div>
                 <div class="input-group"><label>修改使用者 (留空為待認領)：</label><input type="text" id="edit-user" class="input-base"></div>
                 <div class="input-group"><label>修改座標：</label><input type="text" id="edit-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-mushroom-country', 'edit-tz-hint')"></div>
                 <div class="input-group"><label>修改國家： <span id="edit-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label><input type="text" id="edit-mushroom-country" class="input-base" oninput="showTimeDiff(this.value, 'edit-tz-hint')"></div>
@@ -833,7 +840,7 @@
 
 <script>
     // ======= 每次修改程式碼時，請變更此版本號以觸發所有使用者的自動更新 =======
-    const APP_VERSION = "2026.06.27.2600";
+    const APP_VERSION = "2026.06.27.2612";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1093,7 +1100,7 @@
                         id: key, sn: item.sn, user: item.user || "",
                         country: item.country || "", name: item.name || "未命名",
                         coords: item.coords || "", tag: item.tag || "", targetTime: item.targetTime != null ? item.targetTime : null,
-                        slots: item.slots || ['', '', '', '', ''], kind: item.kind || null 
+                        slots: item.slots || ['', '', '', '', ''], kind: item.kind === '普通菇' ? '元素菇' : (item.kind || null) 
                     });
                 }
             });
@@ -1547,7 +1554,17 @@
         const tHtml = safeTag ? `<span class="tag-badge">${safeTag}</span>` : '';
 
         const card = document.createElement('div');
-        card.className = `grid-card ${isExpired ? 'row-expired' : ''}`;
+        // 元素菇邊框：從名稱開頭偵測元素
+        let elemClass = '';
+        if ((item.kind || null) === '元素菇') {
+            const n = item.name || '';
+            if (n.startsWith('水晶')) elemClass = 'elem-水晶';
+            else if (n.startsWith('水')) elemClass = 'elem-水';
+            else if (n.startsWith('火')) elemClass = 'elem-火';
+            else if (n.startsWith('電')) elemClass = 'elem-電';
+            else if (n.startsWith('毒')) elemClass = 'elem-毒';
+        }
+        card.className = `grid-card ${isExpired ? 'row-expired' : ''} ${elemClass}`;
         card.style.position = 'relative';
         
         let actionHtml = item.user === "" ? `<button class="btn-sm btn-claim" onclick="openClaimModalById('${item.id}')">認領</button>` : '';
@@ -1580,7 +1597,7 @@
                 <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px;">
                     <div style="flex:1; min-width:0;">
                         <div style="display:flex; align-items:center; gap:5px; margin-bottom:4px;">
-                            <span style="font-size:11px; font-weight:900; padding:1px 6px; border-radius:4px; white-space:nowrap; background:${(item.kind||'巨菇')==='普通菇' ? '#d1fae5' : '#fef3c7'}; color:${(item.kind||'巨菇')==='普通菇' ? '#065f46' : '#92400e'};">${(item.kind||'巨菇')==='普通菇' ? '普通' : '巨'}</span>
+                            <span style="font-size:11px; font-weight:900; padding:1px 6px; border-radius:4px; white-space:nowrap; background:${(item.kind||'巨菇')==='元素菇' ? '#d1fae5' : '#fef3c7'}; color:${(item.kind||'巨菇')==='元素菇' ? '#065f46' : '#92400e'};">${(item.kind||'巨菇')==='元素菇' ? '元素' : '巨'}</span>
                             <span class="card-title" style="font-size:13px; margin:0; line-height:1.3;">${safeName}</span>
                         </div>
                         <div>${item.user ? `<span class="lc-user-badge">👤 ${escapeHtml(item.user)}</span>` : '<span style="color:#9ca3af; font-style:italic; font-size:11px;">待認領</span>'}</div>
@@ -1645,14 +1662,14 @@
         unclaimedQueue.sort((a, b) => a.midnightUTC - b.midnightUTC);
 
         const unclaimGiant = unclaimedQueue.filter(x => (x.item.kind || '') === '巨菇' || x.item.kind == null);
-        const unclaimNormal = unclaimedQueue.filter(x => x.item.kind === '普通菇');
+        const unclaimNormal = unclaimedQueue.filter(x => x.item.kind === '元素菇');
 
         // 待認領群組：永遠分群顯示（有資料才顯示該群）
         const unclaimGiantCards = unclaimGiant.map(({ item, timeText, isExp }) => { uncCount++; return createMushroomCard(item, now, isExp, timeText); });
         const unclaimNormalCards = unclaimNormal.map(({ item, timeText, isExp }) => { uncCount++; return createMushroomCard(item, now, isExp, timeText); });
 
         renderMGroup(unclaimEl, unclaimGiantCards, 'unc-giant', '🍄 巨菇', false, 'grouped');
-        renderMGroup(unclaimEl, unclaimNormalCards, 'unc-normal', '🍄 普通菇', false, 'grouped');
+        renderMGroup(unclaimEl, unclaimNormalCards, 'unc-normal', '🍄 元素菇', false, 'grouped');
 
         // 分類模式：讀取 select 開關
         const groupMode = document.getElementById('mushroom-group-logic') ? document.getElementById('mushroom-group-logic').value : 'grouped';
