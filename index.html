@@ -161,8 +161,8 @@
         .grid-card.elem-水  { border: 2px solid #3b82f6; box-shadow: 0 0 0 1px #bfdbfe; }
         .grid-card.elem-火  { border: 2px solid #ef4444; box-shadow: 0 0 0 1px #fecaca; }
         .grid-card.elem-電  { border: 2px solid #f59e0b; box-shadow: 0 0 0 1px #fde68a; }
-        .grid-card.elem-毒  { border: 2px solid #ffffff; box-shadow: 0 0 0 1px #d1d5db; }
-        .grid-card.elem-水晶 { border: 2px solid #e0f2ff; box-shadow: 0 0 0 1px #e0f2ff, 0 0 8px 2px rgba(186,230,253,0.7); background: linear-gradient(135deg, rgba(224,242,255,0.15), rgba(186,230,253,0.1)); }
+        .grid-card.elem-毒  { border: 2px solid #ffffff; box-shadow: 0 0 0 2px #9ca3af, 0 2px 8px rgba(0,0,0,0.1); }
+        .grid-card.elem-水晶 { border: 2px solid #7dd3fc; box-shadow: 0 0 0 1px #38bdf8, 0 0 8px 2px rgba(56,189,248,0.5); background: linear-gradient(135deg, rgba(224,242,255,0.4), rgba(186,230,253,0.2)); }
 
         .grid-card {
             background: var(--card-bg);
@@ -840,7 +840,7 @@
 
 <script>
     // ======= 每次修改程式碼時，請變更此版本號以觸發所有使用者的自動更新 =======
-    const APP_VERSION = "2026.06.27.2612";
+    const APP_VERSION = "2026.06.28.2333";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1241,8 +1241,6 @@
             const nameEl = document.getElementById('post-name'), coordsEl = document.getElementById('post-coords');
             const tagEl = document.getElementById('post-tag'), imageEl = document.getElementById('post-image');
 
-            if (!nameEl.value.trim() || !countryEl.value.trim() || !coordsEl.value.trim()) { alert('請填寫名稱、國家與座標欄位！'); return; }
-
             let processedCountry = countryEl ? countryEl.value.trim() : "";
             if (processedCountry.includes("中華民國")) {
                 processedCountry = "台灣";
@@ -1556,14 +1554,12 @@
         const card = document.createElement('div');
         // 元素菇邊框：從名稱開頭偵測元素
         let elemClass = '';
-        if ((item.kind || null) === '元素菇') {
-            const n = item.name || '';
-            if (n.startsWith('水晶')) elemClass = 'elem-水晶';
-            else if (n.startsWith('水')) elemClass = 'elem-水';
-            else if (n.startsWith('火')) elemClass = 'elem-火';
-            else if (n.startsWith('電')) elemClass = 'elem-電';
-            else if (n.startsWith('毒')) elemClass = 'elem-毒';
-        }
+        const n = item.name || '';
+        if (n.startsWith('水晶') || n.startsWith('大水晶')) elemClass = 'elem-水晶';
+        else if (n.startsWith('水') || n.startsWith('大水')) elemClass = 'elem-水';
+        else if (n.startsWith('火') || n.startsWith('大火') || n.startsWith('大紅')) elemClass = 'elem-火';
+        else if (n.startsWith('電') || n.startsWith('大電')) elemClass = 'elem-電';
+        else if (n.startsWith('毒') || n.startsWith('大毒')) elemClass = 'elem-毒';
         card.className = `grid-card ${isExpired ? 'row-expired' : ''} ${elemClass}`;
         card.style.position = 'relative';
         
@@ -1577,7 +1573,7 @@
         let slotsHtml = `<div class="slots-wrapper">`;
         slotsHtml += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">`;
         slotsHtml += `<span style="font-size: 10px; font-weight: bold; color: #4b5563;">⚔️ 參戰空位 (${filledCount}/5)</span>`;
-        slotsHtml += !isFull ? `<button onclick="fillAllSlots('${item.id}')" style="font-size:9px; font-weight:bold; background:#ef4444; color:white; border:none; border-radius:5px; padding:2px 7px; cursor:pointer; margin-left:auto;">🈵 額滿</button>` : '';
+        slotsHtml += !isFull ? `<button onclick="fillAllSlots('${item.id}')" style="font-size:9px; font-weight:bold; background:#ef4444; color:white; border:none; border-radius:5px; padding:2px 7px; cursor:pointer; margin-left:auto;">額滿</button>` : '';
         slotsHtml += `</div><div style="display: flex; gap: 4px;">`;
         for (let i = 0; i < 5; i++) {
             if (currentSlots[i]) {
@@ -1594,17 +1590,17 @@
                 <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin: 0; font-size: 10px;">${timeText}</span>
             </div>
             <div class="card-body" style="gap: 5px;">
-                <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px;">
-                    <div style="flex:1; min-width:0;">
-                        <div style="display:flex; align-items:center; gap:5px; margin-bottom:4px;">
-                            <span style="font-size:11px; font-weight:900; padding:1px 6px; border-radius:4px; white-space:nowrap; background:${(item.kind||'巨菇')==='元素菇' ? '#d1fae5' : '#fef3c7'}; color:${(item.kind||'巨菇')==='元素菇' ? '#065f46' : '#92400e'};">${(item.kind||'巨菇')==='元素菇' ? '元素' : '巨'}</span>
-                            <span class="card-title" style="font-size:13px; margin:0; line-height:1.3;">${safeName}</span>
-                        </div>
-                        <div>${item.user ? `<span class="lc-user-badge">👤 ${escapeHtml(item.user)}</span>` : '<span style="color:#9ca3af; font-style:italic; font-size:11px;">待認領</span>'}</div>
-                    </div>
-                    <button class="copy-coords-btn" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍<br><span style="font-size:9px;">複製</span></button>
+                <div style="display:flex; align-items:center; gap:5px; margin-bottom:2px;">
+                    <span style="font-size:11px; font-weight:900; padding:1px 6px; border-radius:4px; white-space:nowrap; background:${(item.kind||'巨菇')==='元素菇' ? '#d1fae5' : '#fef3c7'}; color:${(item.kind||'巨菇')==='元素菇' ? '#065f46' : '#92400e'};">${(item.kind||'巨菇')==='元素菇' ? '元素' : '巨'}</span>
+                    <span class="card-title" style="font-size:13px; margin:0; line-height:1.3;">${safeName}</span>
                 </div>
-                <div class="lc-info" style="margin: 0;">${cHtml} ${tHtml}</div>
+                <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px;">
+                    <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:0;">
+                        <div>${item.user ? `<span class="lc-user-badge">👤 ${escapeHtml(item.user)}</span>` : '<span style="color:#9ca3af; font-style:italic; font-size:11px;">待認領</span>'}</div>
+                        <div class="lc-info" style="margin: 0;">${cHtml} ${tHtml}</div>
+                    </div>
+                    <button class="copy-coords-btn" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)" style="height:40px; padding:2px 0;">📍<br><span style="font-size:9px;">複製</span></button>
+                </div>
                 ${slotsHtml}
                 <div class="lc-actions">${actionHtml}</div>
             </div>
@@ -1690,13 +1686,21 @@
         const filterState = document.getElementById('postcard-filter').value;
         const searchLogic = document.getElementById('search-logic') ? document.getElementById('search-logic').value : 'and';
 
-        const filteredPc = [...postcardList].sort((a,b) => String(a.type).localeCompare(String(b.type), 'zh-TW') || String(a.country).localeCompare(String(b.country), 'zh-TW')).filter(item => {
+        const filteredPc = [...postcardList].map(item => {
+            let m = [];
+            if (!item.name || item.name === "未命名") m.push("名稱");
+            if (!item.country) m.push("國家");
+            if (!item.coords) m.push("座標");
+            if (!item.image || item.image === "無圖片") m.push("圖片");
+            return { ...item, missingFields: m };
+        }).sort((a,b) => String(a.type).localeCompare(String(b.type), 'zh-TW') || String(a.country).localeCompare(String(b.country), 'zh-TW')).filter(item => {
             const favList = Array.isArray(cloudFavorites) ? cloudFavorites : [];
             const isCol = favList.includes(item.id);
             if (filterState === 'collected' && !isCol) return false;
             if (filterState === 'uncollected' && isCol) return false;
             if (searchKw.length > 0) {
-                const text = `${item.type} ${item.country} ${item.name} ${item.tag} ${item.coords}`.toLowerCase();
+                const missingText = item.missingFields.length > 0 ? "缺少 缺" + item.missingFields.join(" 缺") : "";
+                const text = `${item.type} ${item.country} ${item.name} ${item.tag} ${item.coords} ${missingText}`.toLowerCase();
                 if (searchLogic === 'and') {
                     if (!searchKw.every(kw => text.includes(kw))) return false;
                 } else {
@@ -1737,8 +1741,9 @@
                     
                     card.innerHTML = `
                         <div class="card-img-box">${imgHtml}<div class="card-badge-type">${escapeHtml(item.type)}</div><button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button></div>
-                        <div class="card-body"><div class="card-title">${escapeHtml(item.name)}</div><div class="card-sub"><span>🌍 ${safeC}</span>${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}</div>
-                        <div class="card-actions"><button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button><button class="btn-sm btn-edit" style="flex:0;" onclick="openTimeModalById('${item.id}', 'postcard')">✏️</button><button class="btn-sm btn-danger" style="flex:0;" onclick="deleteItem('${item.id}', 'postcard')">🗑️</button></div></div>
+                        <div class="card-body"><div class="card-title">${escapeHtml(item.name)}</div><div class="card-sub"><span>🌍 ${safeC || '未提供'}</span>${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}</div>
+                        ${item.missingFields && item.missingFields.length > 0 ? `<div style="color: #ef4444; font-size: 10px; font-weight: bold; margin-top: 4px; background: #fee2e2; padding: 4px 6px; border-radius: 4px; border: 1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>` : ''}
+                        <div class="card-actions" style="display:flex; gap:4px; margin-top:auto; padding-top:4px;"><button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button><button class="btn-sm btn-edit" style="flex:0;" onclick="openTimeModalById('${item.id}', 'postcard')">✏️</button><button class="btn-sm btn-danger" style="flex:0;" onclick="deleteItem('${item.id}', 'postcard')">🗑️</button></div></div>
                     `;
                     pcEl.appendChild(card);
                 });
