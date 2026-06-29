@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>皮克敏-巨菇-雲端同步追蹤器</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -568,6 +568,49 @@
         .clock-item .w-time {
             font-size: 16px; font-weight:bold; color:var(--text-main); font-family:monospace; margin-top:4px;
         }
+
+        /* ===== 響應式設計 ===== */
+        /* 小螢幕手機 (≤ 380px) */
+        @media (max-width: 380px) {
+            .app-header h2 { font-size: 15px; }
+            .app-content { padding: 10px; }
+            .grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .card-body { padding: 8px; }
+            .card-title { font-size: 12px; }
+            .nav-icon { font-size: 18px; }
+            .nav-item { font-size: 10px; }
+            .bottom-nav { height: 50px; }
+            body { padding-bottom: 55px; }
+            .fab { bottom: 70px; right: 12px; width: 48px; height: 48px; font-size: 24px; }
+        }
+
+        /* 一般手機 (381px ~ 480px) */
+        @media (min-width: 381px) and (max-width: 480px) {
+            .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        }
+
+        /* 平板直向 (481px ~ 768px) */
+        @media (min-width: 481px) and (max-width: 768px) {
+            .grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+            .app-content { padding: 20px; }
+        }
+
+        /* 平板橫向 / 小桌面 (769px ~ 1200px) */
+        @media (min-width: 769px) and (max-width: 1200px) {
+            .app-content { max-width: 1100px; padding: 20px 30px; }
+            .grid { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+            .app-header h2 { font-size: 20px; }
+        }
+
+        /* 大桌面螢幕 (> 1200px) */
+        @media (min-width: 1201px) {
+            .app-content { max-width: 1400px; padding: 25px 40px; }
+            .grid { grid-template-columns: repeat(5, 1fr); gap: 16px; }
+            .app-header { padding: 14px 30px; }
+            .app-header h2 { font-size: 22px; }
+            .card-body { padding: 14px; }
+            .card-title { font-size: 15px; }
+        }
     </style>
 </head>
 <body>
@@ -847,7 +890,7 @@
 
 <script>
     // ======= 每次修改程式碼時，請變更此版本號以觸發所有使用者的自動更新 =======
-    const APP_VERSION = "2026.06.29.0130";
+    const APP_VERSION = "2026.06.30.0310";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
