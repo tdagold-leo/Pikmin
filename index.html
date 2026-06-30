@@ -611,6 +611,16 @@
             .card-body { padding: 14px; }
             .card-title { font-size: 15px; }
         }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); border-color: rgba(239, 68, 68, 1); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); border-color: rgba(239, 68, 68, 0.3); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); border-color: rgba(239, 68, 68, 1); }
+        }
+        .alert-pulse {
+            animation: pulse-red 1.5s infinite;
+            border: 2px solid #ef4444 !important;
+            background-color: #fef2f2 !important;
+        }
     </style>
 </head>
 <body>
@@ -869,7 +879,7 @@
             <div id="edit-group-postcard" style="display:none; flex-direction:column; gap:10px;">
                 <div class="input-group">
                     <label>修改種類：</label>
-                    <select id="edit-post-type" class="input-base">
+                    <select id="edit-post-type" class="input-base" onchange="togglePostcardTimeEdit()">
                         <option value="菇">菇</option><option value="花">花</option><option value="菇窩">菇窩</option><option value="隱藏">隱藏</option><option value="特殊金盆">特殊金盆</option>
                     </select>
                 </div>
@@ -878,6 +888,15 @@
                 <div class="input-group"><label>修改名稱：</label><input type="text" id="edit-post-name" class="input-base"></div>
                 <div class="input-group"><label>修改標籤：</label><input type="text" id="edit-post-tag" class="input-base"></div>
                 <div class="input-group"><label>修改圖片網址：</label><input type="text" id="edit-post-image" class="input-base"></div>
+                
+                <div id="edit-post-time-container" class="input-group" style="margin-top:5px; display:none;">
+                    <label style="text-align:center;">設定「菇」剩餘時間：</label>
+                    <div class="time-container" style="margin-top: 5px;">
+                        <div class="time-box"><label>天</label><input type="number" id="edit-post-days" class="input-base" min="0" value="0"></div>
+                        <div class="time-box"><label>時</label><input type="number" id="edit-post-hours" class="input-base" min="0" max="23" value="0"></div>
+                        <div class="time-box"><label>分</label><input type="number" id="edit-post-minutes" class="input-base" min="0" max="59" value="0"></div>
+                    </div>
+                </div>
             </div>
 
             <button class="btn-sm btn-edit btn-block" style="margin-top:10px;" id="time-modal-submit-btn">儲存修改</button>
@@ -890,7 +909,7 @@
 
 <script>
     // ======= 每次修改程式碼時，請變更此版本號以觸發所有使用者的自動更新 =======
-    const APP_VERSION = "2026.06.30.0310";
+    const APP_VERSION = "2026.07.01.0420";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -997,7 +1016,8 @@
         "愛沙尼亞": 2, "拉脫維亞": 2, "立陶宛": 2, "烏克蘭": 2, "芬蘭": 2, "法國": 2, "法蘭西": 2, "德國": 2, "德意志": 2, "義大利": 2, "西班牙": 2, "歐洲": 2, "希臘": 2, "南非": 2, "埃及": 2, "瑞士": 2, "瑞典": 2, "波蘭": 2, "荷蘭": 2,
         "葡萄牙": 1, "瑞典": 1, "挪威": 1, "丹麥": 1, "比利時": 1, "英國": 1, "倫敦": 1, "UK": 1, "大不列顛": 1,
         "澳洲": 10, "澳大利亞": 10, "雪梨": 10, "澳洲雪梨": 10, "關島": 10, "Australia": 10,
-        "紐西蘭": 12, "奧克蘭": 12, "New Zealand": 12,
+        "紐西蘭": 12, "奧克蘭": 12, "新西蘭": 12, "New Zealand": 12,
+        "吉里巴斯": 14, "聖誕島": 14, "英屬聖誕島": 14,
         "委內瑞拉": -4, "巴西": -3, "阿根廷": -3, "智利": -4, "哥倫比亞": -5, "秘魯": -5,
         "美國美東": -4, "美東": -4, "紐約": -4, "加拿大東部": -4, "美國": -4, "美利堅": -4, "United States": -4, "USA": -4, "加拿大": -4, "Canada": -4, "多倫多": -4,
         "美國美中": -5, "美中": -5, "芝加哥": -5, "墨西哥": -6,
@@ -1029,7 +1049,7 @@
                 let countryName = "";
                 let offsetHours = null;
 
-                const resCountry = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh`);
+                const resCountry = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh-TW`);
                 if(resCountry.ok) {
                     const data = await resCountry.json();
                     if(data && data.countryName) {
@@ -1105,6 +1125,20 @@
         return '';
     }
 
+    function toTW(str) {
+        if (!str) return str;
+        return str.replace(/国/g, '國').replace(/兰/g, '蘭').replace(/亚/g, '亞')
+            .replace(/韩/g, '韓').replace(/马/g, '馬').replace(/来/g, '來')
+            .replace(/岛/g, '島').replace(/东/g, '東').replace(/罗/g, '羅')
+            .replace(/爱/g, '愛').replace(/尔/g, '爾').replace(/纽/g, '紐')
+            .replace(/苏/g, '蘇').replace(/华/g, '華').replace(/湾/g, '灣')
+            .replace(/龙/g, '龍').replace(/门/g, '門').replace(/区/g, '區')
+            .replace(/乌/g, '烏').replace(/鲁/g, '魯').replace(/乔/g, '喬')
+            .replace(/达/g, '達').replace(/麦/g, '麥').replace(/卢/g, '盧')
+            .replace(/萨/g, '薩').replace(/贝/g, '貝').replace(/维/g, '維')
+            .replace(/叙/g, '敘').replace(/几/g, '幾');
+    }
+
     function applySyncId() {
         const inputId = document.getElementById('sync-user-id').value.trim();
         const statusEl = document.getElementById('sync-status');
@@ -1148,7 +1182,7 @@
                 } else {
                     dataList.push({
                         id: key, sn: item.sn, user: item.user || "",
-                        country: item.country || "", name: item.name || "未命名",
+                        country: toTW(item.country || ""), name: item.name || "未命名",
                         coords: item.coords || "", tag: item.tag || "", targetTime: item.targetTime != null ? item.targetTime : null,
                         slots: item.slots || ['', '', '', '', ''], kind: item.kind === '普通菇' ? '元素菇' : (item.kind || null) 
                     });
@@ -1165,9 +1199,10 @@
             Object.keys(cloudData).forEach((key) => {
                 const typeVal = cloudData[key].type;
                 postcardList.push({
-                    id: key, type: typeVal ? String(typeVal) : "菇", name: cloudData[key].name || "未命名", 
-                    country: cloudData[key].country || "", coords: cloudData[key].coords || "",
-                    tag: cloudData[key].tag || "", image: cloudData[key].image || "無圖片"
+                    id: key, type: toTW(String(typeVal || "菇")), name: cloudData[key].name || "未命名", 
+                    country: toTW(cloudData[key].country || ""), coords: cloudData[key].coords || "",
+                    tag: cloudData[key].tag || "", image: cloudData[key].image || "無圖片",
+                    targetTime: cloudData[key].targetTime
                 });
             });
         }
@@ -1261,7 +1296,7 @@
             if (d > 0 || h > 0 || m > 0) targetTime = Date.now() + (((d * 24 * 60) + (h * 60) + m) * 60 * 1000);
 
             const processedUser = userEl ? userEl.value.trim() : "";
-            let processedCountry = countryEl ? countryEl.value.trim() : "";
+            let processedCountry = countryEl ? toTW(countryEl.value.trim()) : "";
             
             if (processedCountry.includes("中華民國")) {
                 processedCountry = "台灣";
@@ -1291,13 +1326,13 @@
             const nameEl = document.getElementById('post-name'), coordsEl = document.getElementById('post-coords');
             const tagEl = document.getElementById('post-tag'), imageEl = document.getElementById('post-image');
 
-            let processedCountry = countryEl ? countryEl.value.trim() : "";
+            let processedCountry = countryEl ? toTW(countryEl.value.trim()) : "";
             if (processedCountry.includes("中華民國")) {
                 processedCountry = "台灣";
             }
 
             database.ref('postcards').push({
-                type: typeEl.value, country: processedCountry, name: nameEl.value.trim(),
+                type: toTW(typeEl.value), country: processedCountry, name: nameEl.value.trim(),
                 coords: coordsEl.value.trim(), tag: tagEl.value.trim() || "", image: imageEl.value.trim() || "無圖片"
             });
             countryEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = ''; imageEl.value = '';
@@ -1377,9 +1412,26 @@
             document.getElementById('edit-post-coords').value = item.coords || ''; 
             document.getElementById('edit-post-image').value = (item.image === "無圖片" ? "" : item.image) || ''; 
             showTimeDiff(item.country || '', 'edit-post-tz-hint');
+            
+            let pd = 0, ph = 0, pm = 0;
+            const pt = Number(item.targetTime);
+            if (!isNaN(pt) && pt - Date.now() > 0) {
+                let totalMins = Math.floor((pt - Date.now()) / 60000);
+                pd = Math.floor(totalMins / 1440); ph = Math.floor((totalMins % 1440) / 60); pm = totalMins % 60;
+            }
+            document.getElementById('edit-post-days').value = pd; document.getElementById('edit-post-hours').value = ph; document.getElementById('edit-post-minutes').value = pm;
+            togglePostcardTimeEdit();
         }
         document.getElementById('time-modal-submit-btn').onclick = submitDataEdit;
         document.getElementById('time-modal').style.display = 'flex';
+    }
+
+    function togglePostcardTimeEdit() {
+        const typeEl = document.getElementById('edit-post-type');
+        const container = document.getElementById('edit-post-time-container');
+        if (typeEl && container) {
+            container.style.display = typeEl.value === '菇' ? 'block' : 'none';
+        }
     }
 
     function submitDataEdit() {
@@ -1389,7 +1441,7 @@
             let targetTime = null;
             if (d > 0 || h > 0 || m > 0) targetTime = Date.now() + (((d * 24 * 60) + (h * 60) + m) * 60 * 1000);
 
-            let processedCountry = document.getElementById('edit-mushroom-country').value.trim();
+            let processedCountry = toTW(document.getElementById('edit-mushroom-country').value.trim());
             if (processedCountry.includes("中華民國")) {
                 processedCountry = "台灣";
             }
@@ -1409,15 +1461,23 @@
             }
             database.ref('mushrooms/' + currentEditingTimeId).update(updates);
         } else {
-            let processedCountry = document.getElementById('edit-post-country').value.trim();
+            let processedCountry = toTW(document.getElementById('edit-post-country').value.trim());
             if (processedCountry.includes("中華民國")) {
                 processedCountry = "台灣";
             }
+            
+            const pType = toTW(document.getElementById('edit-post-type').value);
+            let targetTime = null;
+            if (pType === '菇') {
+                const d = parseInt(document.getElementById('edit-post-days').value, 10) || 0, h = parseInt(document.getElementById('edit-post-hours').value, 10) || 0, m = parseInt(document.getElementById('edit-post-minutes').value, 10) || 0;
+                if (d > 0 || h > 0 || m > 0) targetTime = Date.now() + (((d * 24 * 60) + (h * 60) + m) * 60 * 1000);
+            }
 
             database.ref('postcards/' + currentEditingTimeId).update({
-                type: document.getElementById('edit-post-type').value, country: processedCountry,
+                type: pType, country: processedCountry,
                 name: document.getElementById('edit-post-name').value.trim(), tag: document.getElementById('edit-post-tag').value.trim(),
-                coords: document.getElementById('edit-post-coords').value.trim(), image: document.getElementById('edit-post-image').value.trim() || "無圖片"
+                coords: document.getElementById('edit-post-coords').value.trim(), image: document.getElementById('edit-post-image').value.trim() || "無圖片",
+                targetTime: targetTime
             });
         }
         closeModal('time-modal');
@@ -1524,7 +1584,11 @@
                 timeStr = getShortRemainingText(i.targetTime, now);
             }
 
-            return `${snPad}.${slotInfo} <${shortUserName}> ${itemName}\n    [${timeStr}]\n`;
+            const tzDiff = getOffsetByCountry(i.country) - 8;
+            const tzStr = tzDiff !== 0 ? `(${tzDiff > 0 ? '+'+tzDiff : tzDiff}h) ` : '';
+            const countryTxt = i.country ? toTW(i.country) : "未提供";
+
+            return `${snPad}.${slotInfo} ${tzStr}${countryTxt} <${shortUserName}> ${itemName}\n    [${timeStr}]\n`;
         };
 
         if (activeItems.length > 0) {
@@ -1596,7 +1660,7 @@
     }
 
     function createMushroomCard(item, now, isExpired, timeText) {
-        const safeC = escapeHtml(item.country||''), safeName = escapeHtml(item.name), safeTag = escapeHtml(item.tag);
+        const safeC = toTW(escapeHtml(item.country||'')), safeName = escapeHtml(item.name), safeTag = escapeHtml(item.tag);
         const diffStr = getTimeDiffString(safeC);
         const cHtml = safeC ? `${safeC} ${diffStr ? `<span class="tz-badge">${diffStr}</span>` : ''}` : '';
         const tHtml = safeTag ? `<span class="tag-badge">${safeTag}</span>` : '';
@@ -1743,7 +1807,18 @@
             if (!item.coords) m.push("座標");
             if (!item.image || item.image === "無圖片") m.push("圖片");
             return { ...item, missingFields: m };
-        }).sort((a,b) => String(a.type).localeCompare(String(b.type), 'zh-TW') || String(a.country).localeCompare(String(b.country), 'zh-TW')).filter(item => {
+        }).sort((a,b) => {
+            const typeCmp = String(a.type).localeCompare(String(b.type), 'zh-TW');
+            if (typeCmp !== 0) return typeCmp;
+            
+            if (String(a.type).trim() === '菇窩') {
+                const offsetA = getOffsetByCountry(a.country);
+                const offsetB = getOffsetByCountry(b.country);
+                if (offsetA !== offsetB) return offsetB - offsetA;
+            }
+            
+            return String(a.country).localeCompare(String(b.country), 'zh-TW');
+        }).filter(item => {
             const favList = Array.isArray(cloudFavorites) ? cloudFavorites : [];
             const isCol = favList.includes(item.id);
             if (filterState === 'collected' && !isCol) return false;
@@ -1761,8 +1836,29 @@
         });
 
         let vCount = 0; const pcGroups = {};
-        filteredPc.forEach(item => { const type = item.type ? String(item.type).trim() : '未分類'; if (!pcGroups[type]) pcGroups[type] = []; pcGroups[type].push(item); });
-        Object.keys(pcGroups).sort((a,b) => a==='未分類'?1 : b==='未分類'?-1 : a.localeCompare(b,'zh-TW')).forEach(type => {
+        filteredPc.forEach(item => { 
+            let type = item.type ? String(item.type).trim() : '未分類'; 
+            
+            if (type === '菇' && item.targetTime != null) {
+                const rem = item.targetTime - now;
+                if (rem > -300000) { 
+                    type = '⏳ 倒數中 (菇)';
+                }
+            }
+            
+            if (!pcGroups[type]) pcGroups[type] = []; 
+            pcGroups[type].push(item); 
+        });
+        
+        const typeOrder = (a, b) => {
+            if (a === '⏳ 倒數中 (菇)') return -1;
+            if (b === '⏳ 倒數中 (菇)') return 1;
+            if (a === '未分類') return 1;
+            if (b === '未分類') return -1;
+            return a.localeCompare(b, 'zh-TW');
+        };
+        
+        Object.keys(pcGroups).sort(typeOrder).forEach(type => {
             const groupId = 'post-' + type;
             if (!knownPostcardGroups.has(groupId)) { collapsedGroups.add(groupId); knownPostcardGroups.add(groupId); }
             const isCol = collapsedGroups.has(groupId);
@@ -1781,17 +1877,40 @@
             pcEl.appendChild(gHead);
 
             if (!isCol) {
+                if (type === '⏳ 倒數中 (菇)') {
+                    pcGroups[type].sort((a, b) => (a.targetTime || 0) - (b.targetTime || 0));
+                }
+                
                 pcGroups[type].forEach(item => {
-                    vCount++; const safeC = escapeHtml(item.country), safeT = escapeHtml(item.tag), safeI = escapeHtml(item.image);
+                    vCount++; const safeC = toTW(escapeHtml(item.country)), safeT = escapeHtml(item.tag), safeI = escapeHtml(item.image);
                     const favList = Array.isArray(cloudFavorites) ? cloudFavorites : [];
                     const isFav = favList.includes(item.id); 
-                    const card = document.createElement('div'); card.className = 'grid-card';
+                    let isReady = false;
+                    let timeHtml = '';
+                    if (type === '⏳ 倒數中 (菇)') {
+                        if (item.targetTime - now <= 0) {
+                            isReady = true;
+                        }
+                        timeHtml = `<div style="color: #ef4444; font-size: 13px; font-weight: bold; margin-top: 4px; ${isReady ? 'animation: pulse-red 1.5s infinite;' : ''}">[${getShortRemainingText(item.targetTime, now)}]</div>`;
+                    }
+
+                    const card = document.createElement('div'); 
+                    card.className = `grid-card ${isReady ? 'alert-pulse' : ''}`;
                     
                     const imgHtml = (safeI && safeI !== "無圖片") ? `<img src="${safeI}" class="card-img" onclick="openImageLightbox(this.src)">` : `<div class="card-img-placeholder">無圖片</div>`;
                     
+                    let tzBadge = '';
+                    if (type === '菇窩') {
+                        const tzDiff = getOffsetByCountry(item.country) - 8;
+                        if (tzDiff !== 0) {
+                            const tzText = tzDiff > 0 ? `+${tzDiff}` : `${tzDiff}`;
+                            tzBadge = `<span style="color: #0284c7; font-weight: 900; margin-right: 4px;">(${tzText})</span>`;
+                        }
+                    }
+
                     card.innerHTML = `
                         <div class="card-img-box">${imgHtml}<div class="card-badge-type">${escapeHtml(item.type)}</div><button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button></div>
-                        <div class="card-body"><div class="card-title">${escapeHtml(item.name)}</div><div class="card-sub"><span>🌍 ${safeC || '未提供'}</span>${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}</div>
+                        <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}</span>${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}</div>
                         ${item.missingFields && item.missingFields.length > 0 ? `<div style="color: #ef4444; font-size: 10px; font-weight: bold; margin-top: 4px; background: #fee2e2; padding: 4px 6px; border-radius: 4px; border: 1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>` : ''}
                         <div class="card-actions" style="display:flex; gap:4px; margin-top:auto; padding-top:4px;"><button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button><button class="btn-sm btn-edit" style="flex:0;" onclick="openTimeModalById('${item.id}', 'postcard')">✏️</button><button class="btn-sm btn-danger" style="flex:0;" onclick="deleteItem('${item.id}', 'postcard')">🗑️</button></div></div>
                     `;
