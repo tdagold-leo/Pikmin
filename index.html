@@ -813,7 +813,7 @@
                 </div>
                 <div class="input-group">
                     <label>圖片網址</label>
-                    <input type="text" id="post-image" class="input-base" placeholder="請貼上圖片連結或留空">
+                    <input type="text" id="post-image" class="input-base" placeholder="請貼上圖片網址，或留空">
                 </div>
             </div>
             
@@ -887,7 +887,11 @@
                 <div class="input-group"><label>修改國家： <span id="edit-post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label><input type="text" id="edit-post-country" class="input-base" oninput="showTimeDiff(this.value, 'edit-post-tz-hint')"></div>
                 <div class="input-group"><label>修改名稱：</label><input type="text" id="edit-post-name" class="input-base"></div>
                 <div class="input-group"><label>修改標籤：</label><input type="text" id="edit-post-tag" class="input-base"></div>
-                <div class="input-group"><label>修改圖片網址：</label><input type="text" id="edit-post-image" class="input-base"></div>
+                <div class="input-group">
+                    <label>修改圖片網址：</label>
+                    <input type="text" id="edit-post-image" class="input-base" onchange="doOCR(this.value, 'edit-post-ocr-result')">
+                    <div id="edit-post-ocr-result" style="display:none; margin-top:5px; font-size:12px; background:#fef3c7; padding:8px; border-radius:4px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:100px; overflow-y:auto; color:#92400e;"></div>
+                </div>
                 
                 <div id="edit-post-time-container" class="input-group" style="margin-top:5px; display:none;">
                     <label style="text-align:center;">設定「菇」剩餘時間：</label>
@@ -908,8 +912,7 @@
     </div>
 
 <script>
-    // ======= 每次修改程式碼時，請變更此版本號以觸發所有使用者的自動更新 =======
-    const APP_VERSION = "2026.07.01.0435";
+    const APP_VERSION = "2026.07.01.0605";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1213,8 +1216,7 @@
     database.ref('views').on('value', snap => { document.getElementById('view-counter-text').innerText = `雲端總瀏覽次數：${snap.val() || 0} 次`; });
 
     function updateVersionTag() {
-        const el = document.getElementById('header-version-tag');
-        if (el) el.innerText = 'v' + APP_VERSION;
+        document.getElementById('header-version-tag').textContent = "v" + APP_VERSION;
     }
 
     window.addEventListener('DOMContentLoaded', () => {
