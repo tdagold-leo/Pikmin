@@ -909,7 +909,7 @@
 
 <script>
     // ======= 每次修改程式碼時，請變更此版本號以觸發所有使用者的自動更新 =======
-    const APP_VERSION = "2026.07.01.0420";
+    const APP_VERSION = "2026.07.01.0435";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1261,6 +1261,8 @@
     setInterval(() => {
         updateClocks();
         const now = Date.now();
+        let needsViewUpdate = false;
+
         dataList.forEach(item => {
             if (removingIds.has(item.id)) return;
 
@@ -1280,7 +1282,25 @@
                 database.ref('mushrooms/' + item.id).remove();
             }
         });
-        updateView();
+
+        document.querySelectorAll('.live-timer').forEach(el => {
+            const type = el.getAttribute('data-type');
+            const target = parseFloat(el.getAttribute('data-target'));
+            const rem = target - now;
+
+            if (type === 'mushroom-unclaimed') {
+                if (rem <= 0) { el.innerText = '已換日過期'; el.classList.remove('live-timer'); needsViewUpdate = true; }
+                else el.innerText = '換日 ' + getRemainingText(target, now);
+            } else if (type === 'mushroom-claimed') {
+                if (rem <= 0) { el.innerText = '已過期/可開打！'; el.classList.remove('live-timer'); needsViewUpdate = true; }
+                else el.innerText = getRemainingText(target, now);
+            } else if (type === 'postcard-timer') {
+                if (rem <= 0) { el.innerText = `[可開打!]`; el.classList.remove('live-timer'); needsViewUpdate = true; }
+                else el.innerText = `[${getShortRemainingText(target, now)}]`;
+            }
+        });
+
+        if (needsViewUpdate) updateView();
     }, 1000);
 
     function addItem() {
@@ -1750,13 +1770,13 @@
                 if (now >= midnightUTC) {
                     timeText = '已換日過期'; isExp = true;
                 } else {
-                    timeText = '換日 ' + getRemainingText(midnightUTC, now);
+                    timeText = `<span class="live-timer" data-type="mushroom-unclaimed" data-target="${midnightUTC}">換日 ${getRemainingText(midnightUTC, now)}</span>`;
                 }
                 unclaimedQueue.push({ item, midnightUTC, timeText, isExp });
             } else {
                 if (item.targetTime != null) {
                     if (item.targetTime - now <= 0) { timeText = '已過期/可開打！'; isExp = true; }
-                    else { timeText = getRemainingText(item.targetTime, now); }
+                    else { timeText = `<span class="live-timer" data-type="mushroom-claimed" data-target="${item.targetTime}">${getRemainingText(item.targetTime, now)}</span>`; }
                 }
                 actCount++;
                 const card = createMushroomCard(item, now, isExp, timeText);
@@ -1890,8 +1910,10 @@
                     if (type === '⏳ 倒數中 (菇)') {
                         if (item.targetTime - now <= 0) {
                             isReady = true;
+                            timeHtml = `<div style="color: #ef4444; font-size: 13px; font-weight: bold; margin-top: 4px;">[${getShortRemainingText(item.targetTime, now)}]</div>`;
+                        } else {
+                            timeHtml = `<div class="live-timer" data-type="postcard-timer" data-target="${item.targetTime}" style="color: #ef4444; font-size: 13px; font-weight: bold; margin-top: 4px;">[${getShortRemainingText(item.targetTime, now)}]</div>`;
                         }
-                        timeHtml = `<div style="color: #ef4444; font-size: 13px; font-weight: bold; margin-top: 4px; ${isReady ? 'animation: pulse-red 1.5s infinite;' : ''}">[${getShortRemainingText(item.targetTime, now)}]</div>`;
                     }
 
                     const card = document.createElement('div'); 
