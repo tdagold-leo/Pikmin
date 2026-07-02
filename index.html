@@ -621,6 +621,87 @@
             border: 2px solid #ef4444 !important;
             background-color: #fef2f2 !important;
         }
+        /* ===== 雲端自動註冊小幫手 (Cloud App) 樣式 ===== */
+        .cloud-app {
+            background-color: #0f172a;
+            background-image: radial-gradient(circle at top right, rgba(56, 189, 248, 0.15), transparent 400px),
+                              radial-gradient(circle at bottom left, rgba(34, 197, 94, 0.1), transparent 400px);
+            color: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            min-height: calc(100vh - 150px);
+            font-family: 'Outfit', sans-serif;
+        }
+        .cloud-app.active {
+            display: flex;
+        }
+        .cloud-app .container {
+            width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 20px;
+        }
+        .cloud-app header { text-align: center; margin-bottom: 10px; }
+        .cloud-app h1 {
+            font-weight: 700; font-size: 28px;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 5px; line-height: 1.2;
+        }
+        .cloud-app .subtitle { color: #94a3b8; font-size: 14px; }
+        .cloud-app .card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px; padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        .cloud-app .input-group { display: flex; flex-direction: column; gap: 8px; }
+        .cloud-app label { font-size: 14px; font-weight: 600; color: #94a3b8; }
+        .cloud-app input {
+            background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white; padding: 14px; border-radius: 12px; font-size: 16px; outline: none; transition: all 0.3s;
+        }
+        .cloud-app input:focus { border-color: #38bdf8; box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2); }
+        .cloud-app button.btn-primary {
+            background: linear-gradient(135deg, #38bdf8, #818cf8); color: white; border: none;
+            padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer;
+            transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3); width: 100%;
+        }
+        .cloud-app button.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4); }
+        .cloud-app button.btn-primary:active { transform: translateY(0); }
+        .cloud-app button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+        .cloud-app .info-box {
+            display: none; margin-top: 10px; background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 16px;
+            position: relative; overflow: hidden;
+        }
+        .cloud-app .info-box.active {
+            display: block; animation: slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .cloud-app .info-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #38bdf8; margin-bottom: 8px; font-weight: 700; }
+        .cloud-app .info-value { font-size: 22px; font-weight: 600; word-break: break-all; margin-bottom: 15px; }
+        .cloud-app .copy-btn {
+            background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 15px; border-radius: 8px; font-size: 14px; cursor: pointer; width: 100%;
+            display: flex; justify-content: center; align-items: center; gap: 8px; transition: all 0.2s;
+        }
+        .cloud-app .copy-btn:hover { background: rgba(255,255,255,0.15); }
+        .cloud-app .copy-btn.success { background: rgba(34, 197, 94, 0.2); border-color: #22c55e; color: #22c55e; }
+        .cloud-app .log-container {
+            margin-top: 10px; background: rgba(0, 0, 0, 0.3); border-radius: 12px; padding: 15px;
+            height: 150px; overflow-y: auto; font-family: monospace; font-size: 12px;
+            color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .cloud-app .log-entry { margin-bottom: 6px; line-height: 1.4; text-align: left; }
+        .cloud-app .log-success { color: #22c55e; }
+        .cloud-app .log-error { color: #ef4444; }
+        .cloud-app .pulsing {
+            position: absolute; top: 0; left: 0; right: 0; height: 2px; background: #38bdf8;
+            animation: pulse-width 2s infinite ease-in-out;
+        }
+        @keyframes pulse-width { 0% { width: 0%; opacity: 1; } 50% { width: 100%; opacity: 0.5; } 100% { width: 0%; opacity: 1; float: right; } }
     </style>
 </head>
 <body>
@@ -671,7 +752,6 @@
                 </select>
                 <input type="text" id="postcard-search" class="input-base search-input" oninput="updateView()" placeholder="🔍 支援多關鍵字搜尋...">
             </div>
-
             <div id="postcard-container" class="grid"></div>
             <div id="postcard-empty" class="empty-message" style="display: none;">目前沒有收藏的明信片項目</div>
         </section>
@@ -728,6 +808,49 @@
             </div>
         </section>
 
+        <section id="view-cloud" class="view-section cloud-app">
+            <div class="container">
+                <header>
+                    <h1>Pikmin 自動註冊</h1>
+                    <div class="subtitle">Cloud SPA 版・完全免費無超時</div>
+                </header>
+
+                <div class="card">
+                    <div class="input-group">
+                        <label for="cloud-referralCode">Pikmin 邀請碼</label>
+                        <input type="text" id="cloud-referralCode" placeholder="請輸入大寫英文字母" value="NLSPYIBHN">
+                    </div>
+                    
+                    <button id="cloud-startBtn" class="btn-primary" style="margin-top: 20px;">開始產生信箱</button>
+
+                    <!-- 信箱顯示區塊 -->
+                    <div id="cloud-emailBox" class="info-box">
+                        <div class="info-title">臨時任天堂信箱</div>
+                        <div id="cloud-emailDisplay" class="info-value">--</div>
+                        <button id="cloud-copyEmailBtn" class="copy-btn">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            <span>複製信箱 (去任天堂註冊)</span>
+                        </button>
+                    </div>
+
+                    <!-- 驗證碼顯示區塊 -->
+                    <div id="cloud-codeBox" class="info-box">
+                        <div id="cloud-loadingBar" class="pulsing"></div>
+                        <div class="info-title">任天堂驗證碼 (等待中...)</div>
+                        <div id="cloud-codeDisplay" class="info-value">--</div>
+                        <button id="cloud-copyCodeBtn" class="copy-btn" disabled>
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            <span>複製驗證碼</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="log-container" id="cloud-logContainer">
+                    <div class="log-entry">準備就緒。點擊「開始」以啟動純網頁版自動化流程...</div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <nav class="bottom-nav">
@@ -738,6 +861,10 @@
         <button class="nav-item" id="nav-postcard" onclick="switchTab('postcard')">
             <span class="nav-icon">🖼️</span>
             <span>明信片</span>
+        </button>
+        <button class="nav-item" id="nav-cloud" onclick="switchTab('cloud')">
+            <span class="nav-icon">🤖</span>
+            <span>免洗號</span>
         </button>
         <button class="nav-item" id="nav-settings" onclick="switchTab('settings')">
             <span class="nav-icon">⚙️</span>
@@ -981,7 +1108,7 @@
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         document.getElementById('view-' + tab).classList.add('active');
 
-        if(tab === 'settings') {
+        if(tab === 'settings' || tab === 'cloud') {
             document.getElementById('main-fab').style.display = 'none';
         } else {
             document.getElementById('main-fab').style.display = 'flex';
@@ -1944,7 +2071,168 @@
         });
         document.getElementById('postcard-empty').style.display = (postcardList.length===0 || (vCount===0 && !collapsedGroups.size)) ? 'block' : 'none';
     }
+    // ===== 雲端自動註冊小幫手邏輯 =====
+    (function() {
+        const logContainer = document.getElementById('cloud-logContainer');
+        const startBtn = document.getElementById('cloud-startBtn');
+        const referralCodeInput = document.getElementById('cloud-referralCode');
 
+        const emailBox = document.getElementById('cloud-emailBox');
+        const emailDisplay = document.getElementById('cloud-emailDisplay');
+        const copyEmailBtn = document.getElementById('cloud-copyEmailBtn');
+
+        const codeBox = document.getElementById('cloud-codeBox');
+        const codeDisplay = document.getElementById('cloud-codeDisplay');
+        const copyCodeBtn = document.getElementById('cloud-copyCodeBtn');
+        const loadingBar = document.getElementById('cloud-loadingBar');
+
+        function log(msg, type = '') {
+            if(!logContainer) return;
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const time = new Date().toLocaleTimeString();
+            entry.textContent = `[${time}] ${msg}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+        async function fetchWithRetry(url, options, maxRetries = 3) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const res = await fetch(url, options);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return await res.json();
+                } catch (err) {
+                    log(`連線失敗 (${err.message})，正在重試 (${i + 1}/${maxRetries})...`, 'log-error');
+                    await sleep(2000);
+                }
+            }
+            throw new Error('達到最大重試次數，網路連線失敗');
+        }
+
+        async function copyToClipboard(text, btnElement) {
+            try {
+                await navigator.clipboard.writeText(text);
+                const originalText = btnElement.innerHTML;
+                btnElement.classList.add('success');
+                btnElement.innerHTML = `
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <span>已複製！</span>
+                `;
+                setTimeout(() => {
+                    btnElement.classList.remove('success');
+                    btnElement.innerHTML = originalText;
+                }, 2000);
+            } catch (err) {
+                log(`複製失敗: ${err.message}`, 'log-error');
+            }
+        }
+
+        async function runAutomation() {
+            startBtn.disabled = true;
+            startBtn.textContent = "執行中...";
+            emailBox.classList.remove('active');
+            codeBox.classList.remove('active');
+            logContainer.innerHTML = '<div class="log-entry">準備就緒。點擊「開始」以啟動純網頁版自動化流程...</div>';
+            
+            try {
+                log('🚀 開始產生免洗信箱...');
+                const domainsRes = await fetchWithRetry('https://api.mail.tm/domains', { method: 'GET' });
+                const domain = domainsRes['hydra:member'][0].domain;
+                
+                const randomString = Date.now().toString();
+                const address = `nintendo${randomString}@${domain}`;
+                const password = 'Password123!';
+                
+                await fetchWithRetry('https://api.mail.tm/accounts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address, password })
+                });
+                
+                const tokenRes = await fetchWithRetry('https://api.mail.tm/token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address, password })
+                });
+                const token = tokenRes.token;
+                
+                log('✅ 成功取得信箱！', 'log-success');
+                emailDisplay.textContent = address;
+                emailBox.classList.add('active');
+                copyEmailBtn.onclick = () => copyToClipboard(address, copyEmailBtn);
+                
+                log('📬 開始監聽任天堂驗證信...');
+                codeBox.classList.add('active');
+                loadingBar.style.display = 'block';
+                codeDisplay.textContent = '--';
+                document.querySelector('#cloud-codeBox .info-title').textContent = '任天堂驗證碼 (等待中...)';
+                copyCodeBtn.disabled = true;
+                copyCodeBtn.onclick = null;
+                
+                let verificationCode = null;
+                const maxAttempts = 30;
+                
+                for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                    log(`⏳ 等待信件中... (${attempt}/${maxAttempts})`);
+                    const msgsRes = await fetchWithRetry('https://api.mail.tm/messages', {
+                        method: 'GET',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    const messages = msgsRes['hydra:member'];
+                    if (messages && messages.length > 0) {
+                        const mailId = messages[0].id;
+                        log('📧 收到信件了！正在讀取內容...');
+                        const mailRes = await fetchWithRetry(`https://api.mail.tm/messages/${mailId}`, {
+                            method: 'GET',
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        const htmlContent = mailRes.html[0] || mailRes.text;
+                        const match = htmlContent.match(/\b(\d{4})\b/);
+                        if (match) {
+                            verificationCode = match[1];
+                            break;
+                        } else {
+                            log('⚠️ 信件中沒有找到 4 位數驗證碼', 'log-error');
+                        }
+                    }
+                    await sleep(20000);
+                }
+                
+                if (verificationCode) {
+                    log(`✅ 成功取得驗證碼：${verificationCode}`, 'log-success');
+                    loadingBar.style.display = 'none';
+                    document.querySelector('#cloud-codeBox .info-title').textContent = '任天堂驗證碼 (點擊下方複製)';
+                    codeDisplay.textContent = verificationCode;
+                    copyCodeBtn.disabled = false;
+                    copyCodeBtn.onclick = () => copyToClipboard(verificationCode, copyCodeBtn);
+                    
+                    try {
+                        await navigator.clipboard.writeText(verificationCode);
+                        log('✅ 驗證碼已自動複製到剪貼簿！');
+                    } catch (e) {
+                        // ignore
+                    }
+                } else {
+                    log('❌ 等待超時，請重新執行', 'log-error');
+                    loadingBar.style.display = 'none';
+                    document.querySelector('#cloud-codeBox .info-title').textContent = '等待超時';
+                }
+            } catch (err) {
+                log(`❌ 發生錯誤: ${err.message}`, 'log-error');
+            } finally {
+                startBtn.disabled = false;
+                startBtn.textContent = "再次產生新信箱";
+            }
+        }
+
+        if(startBtn) {
+            startBtn.addEventListener('click', runAutomation);
+        }
+    })();
 </script>
 </body>
 </html>
