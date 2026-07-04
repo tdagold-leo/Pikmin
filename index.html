@@ -621,6 +621,10 @@
             border: 2px solid #ef4444 !important;
             background-color: #fef2f2 !important;
         }
+        .duplicate-card {
+            border: 2px dashed #f59e0b !important;
+            background-color: #fffbeb !important;
+        }
         /* ===== 雲端自動註冊小幫手 (Cloud App) 樣式 ===== */
         .cloud-app {
             background-color: #0f172a;
@@ -1039,7 +1043,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.01.0605";
+    const APP_VERSION = "2026.07.04.0850";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1984,6 +1988,17 @@
             return true;
         });
 
+        // 建立重複明信片判斷 (以 名稱+國家 作為判斷基準)
+        const pcDuplicateCount = {};
+        postcardList.forEach(item => {
+            const n = (item.name || '').trim();
+            const c = (item.country || '').trim();
+            if (n || c) {
+                const key = n + '||' + c;
+                pcDuplicateCount[key] = (pcDuplicateCount[key] || 0) + 1;
+            }
+        });
+
         let vCount = 0; const pcGroups = {};
         filteredPc.forEach(item => { 
             let type = item.type ? String(item.type).trim() : '未分類'; 
@@ -2045,8 +2060,13 @@
                         }
                     }
 
+                    const nStr = (item.name || '').trim();
+                    const cStr = (item.country || '').trim();
+                    const isDuplicate = (nStr || cStr) && (pcDuplicateCount[nStr + '||' + cStr] > 1);
+                    const dupBadge = isDuplicate ? `<div style="color: #b45309; font-size: 10px; font-weight: bold; margin-top: 4px; background: #fef3c7; padding: 4px 6px; border-radius: 4px; border: 1px dashed #f59e0b; text-align: center;">⚠️ 重複收藏</div>` : '';
+
                     const card = document.createElement('div'); 
-                    card.className = `grid-card ${isReady ? 'alert-pulse' : ''}`;
+                    card.className = `grid-card ${isReady ? 'alert-pulse' : ''} ${isDuplicate ? 'duplicate-card' : ''}`;
                     
                     const imgHtml = (safeI && safeI !== "無圖片") ? `<img src="${safeI}" class="card-img" onclick="openImageLightbox(this.src)">` : `<div class="card-img-placeholder">無圖片</div>`;
                     
@@ -2062,6 +2082,7 @@
                     card.innerHTML = `
                         <div class="card-img-box">${imgHtml}<div class="card-badge-type">${escapeHtml(item.type)}</div><button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button></div>
                         <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}</span>${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}</div>
+                        ${dupBadge}
                         ${item.missingFields && item.missingFields.length > 0 ? `<div style="color: #ef4444; font-size: 10px; font-weight: bold; margin-top: 4px; background: #fee2e2; padding: 4px 6px; border-radius: 4px; border: 1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>` : ''}
                         <div class="card-actions" style="display:flex; gap:4px; margin-top:auto; padding-top:4px;"><button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button><button class="btn-sm btn-edit" style="flex:0;" onclick="openTimeModalById('${item.id}', 'postcard')">✏️</button><button class="btn-sm btn-danger" style="flex:0;" onclick="deleteItem('${item.id}', 'postcard')">🗑️</button></div></div>
                     `;
