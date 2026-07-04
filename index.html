@@ -1043,7 +1043,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.04.0850";
+    const APP_VERSION = "2026.07.04.0900";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1482,6 +1482,28 @@
             let processedCountry = countryEl ? toTW(countryEl.value.trim()) : "";
             if (processedCountry.includes("中華民國")) {
                 processedCountry = "台灣";
+            }
+
+            const nStr = nameEl.value.trim().toLowerCase();
+            const cStr = processedCountry.toLowerCase();
+            const coordsStr = coordsEl.value.trim().toLowerCase();
+            
+            if (nStr || cStr || coordsStr) {
+                const isDup = postcardList.some(item => {
+                    const inStr = (item.name || '').trim().toLowerCase();
+                    const icStr = (item.country || '').trim().toLowerCase();
+                    const iCoordsStr = (item.coords || '').trim().toLowerCase();
+                    
+                    const isNcDup = (nStr || cStr) && (nStr === inStr && cStr === icStr);
+                    const isCnDup = coordsStr && (coordsStr === iCoordsStr && nStr === inStr);
+                    return isNcDup || isCnDup;
+                });
+                
+                if (isDup) {
+                    if (!confirm("⚠️ 系統偵測到可能重複！\n您即將新增的明信片（名稱＋國家 或 座標＋名稱）似乎已經在收藏庫裡了。\n\n您確定要繼續新增嗎？")) {
+                        return;
+                    }
+                }
             }
 
             database.ref('postcards').push({
@@ -1953,6 +1975,37 @@
         const filterState = document.getElementById('postcard-filter').value;
         const searchLogic = document.getElementById('search-logic') ? document.getElementById('search-logic').value : 'and';
 
+        // 建立重複判斷 Maps (在 filter 之前計算全域的重複狀況)
+        const nameCountryCount = {};
+        const coordNameCount = {};
+        
+        postcardList.forEach(item => {
+            const n = (item.name || '').trim().toLowerCase();
+            const c = (item.country || '').trim().toLowerCase();
+            const coords = (item.coords || '').trim().toLowerCase();
+            
+            if (n || c) {
+                const ncKey = n + '||' + c;
+                nameCountryCount[ncKey] = (nameCountryCount[ncKey] || 0) + 1;
+            }
+            if (coords) {
+                const cnKey = coords + '||' + n;
+                coordNameCount[cnKey] = (coordNameCount[cnKey] || 0) + 1;
+            }
+        });
+        
+        const checkIsDuplicate = (item) => {
+            const n = (item.name || '').trim().toLowerCase();
+            const c = (item.country || '').trim().toLowerCase();
+            const coords = (item.coords || '').trim().toLowerCase();
+            
+            const ncKey = n + '||' + c;
+            const isNcDuplicate = (n || c) && nameCountryCount[ncKey] > 1;
+            const isCoordNameDuplicate = coords && coordNameCount[coords + '||' + n] > 1;
+            
+            return isNcDuplicate || isCoordNameDuplicate;
+        };
+
         const filteredPc = [...postcardList].map(item => {
             let m = [];
             if (!item.name || item.name === "未命名") m.push("名稱");
@@ -1978,7 +2031,8 @@
             if (filterState === 'uncollected' && isCol) return false;
             if (searchKw.length > 0) {
                 const missingText = item.missingFields.length > 0 ? "缺少 缺" + item.missingFields.join(" 缺") : "";
-                const text = `${item.type} ${item.country} ${item.name} ${item.tag} ${item.coords} ${missingText}`.toLowerCase();
+                const dupText = checkIsDuplicate(item) ? "重複 重複收藏" : "";
+                const text = `${item.type} ${item.country} ${item.name} ${item.tag} ${item.coords} ${missingText} ${dupText}`.toLowerCase();
                 if (searchLogic === 'and') {
                     if (!searchKw.every(kw => text.includes(kw))) return false;
                 } else {
@@ -1986,17 +2040,6 @@
                 }
             }
             return true;
-        });
-
-        // 建立重複明信片判斷 (以 名稱+國家 作為判斷基準)
-        const pcDuplicateCount = {};
-        postcardList.forEach(item => {
-            const n = (item.name || '').trim();
-            const c = (item.country || '').trim();
-            if (n || c) {
-                const key = n + '||' + c;
-                pcDuplicateCount[key] = (pcDuplicateCount[key] || 0) + 1;
-            }
         });
 
         let vCount = 0; const pcGroups = {};
@@ -2060,9 +2103,7 @@
                         }
                     }
 
-                    const nStr = (item.name || '').trim();
-                    const cStr = (item.country || '').trim();
-                    const isDuplicate = (nStr || cStr) && (pcDuplicateCount[nStr + '||' + cStr] > 1);
+                    const isDuplicate = checkIsDuplicate(item);
                     const dupBadge = isDuplicate ? `<div style="color: #b45309; font-size: 10px; font-weight: bold; margin-top: 4px; background: #fef3c7; padding: 4px 6px; border-radius: 4px; border: 1px dashed #f59e0b; text-align: center;">⚠️ 重複收藏</div>` : '';
 
                     const card = document.createElement('div'); 
