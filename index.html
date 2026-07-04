@@ -820,6 +820,12 @@
                 <h3>ℹ️ 系統資訊</h3>
                 <div id="view-counter-text" style="font-size:13px; font-weight:bold; color:var(--text-main);">雲端總瀏覽次數：0 次</div>
             </div>
+
+            <div class="settings-card">
+                <h3>🤖 免洗號工具</h3>
+                <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">自動產生臨時任天堂信筱並接收驗證碼，全程免費。</p>
+                <button class="btn-sm btn-primary btn-block" onclick="switchTab('cloud')" style="padding:10px; font-size:14px; border-radius:8px;">🔗 前往免洗號工具</button>
+            </div>
         </section>
 
         <section id="view-cloud" class="view-section cloud-app">
@@ -876,10 +882,7 @@
             <span class="nav-icon">🖼️</span>
             <span>明信片</span>
         </button>
-        <button class="nav-item" id="nav-cloud" onclick="switchTab('cloud')">
-            <span class="nav-icon">🤖</span>
-            <span>免洗號</span>
-        </button>
+
         <button class="nav-item" id="nav-settings" onclick="switchTab('settings')">
             <span class="nav-icon">⚙️</span>
             <span>設定</span>
@@ -1077,7 +1080,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.05.0127";
+    const APP_VERSION = "2026.07.05.0132";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1142,7 +1145,8 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        document.getElementById('nav-' + tab).classList.add('active');
+        const navEl = document.getElementById('nav-' + tab);
+        if (navEl) navEl.classList.add('active');
 
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         document.getElementById('view-' + tab).classList.add('active');
