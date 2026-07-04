@@ -1080,7 +1080,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.05.0132";
+    const APP_VERSION = "2026.07.05.0140";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1390,39 +1390,66 @@
         localStorage.setItem('pikmin_vision_api_key', key);
     }
 
-    function getVisionUsage() {
+    function getCurrentMonth() {
         const now = new Date();
-        const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-        let usage = JSON.parse(localStorage.getItem('pikmin_vision_usage') || '{"month":"","count":0}');
-        if (usage.month !== currentMonth) {
-            usage = { month: currentMonth, count: 0 };
-            localStorage.setItem('pikmin_vision_usage', JSON.stringify(usage));
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    function listenVisionUsage() {
+        const month = getCurrentMonth();
+        const ref = database.ref('vision_usage/' + month);
+        
+        // 一次性遷移：把 localStorage 的舊計數搬到 Firebase
+        const oldUsage = JSON.parse(localStorage.getItem('pikmin_vision_usage') || '{"month":"","count":0}');
+        if (oldUsage.month === month && oldUsage.count > 0) {
+            ref.transaction((curr) => {
+                const firebaseCount = curr || 0;
+                const localCount = oldUsage.count;
+                return Math.max(firebaseCount, localCount);
+            }, () => {
+                // 遷移完成後清除 localStorage 舊資料
+                localStorage.removeItem('pikmin_vision_usage');
+            });
         }
-        if (usage.month === '2026-07' && usage.count < 5) {
-            usage.count = 5;
-            localStorage.setItem('pikmin_vision_usage', JSON.stringify(usage));
+        
+        ref.on('value', (snap) => {
+            let count = snap.val() || 0;
+            // 2026-07 特例：至少從 5 開始
+            if (month === '2026-07' && count < 5) count = 5;
+            const display = document.getElementById('vision-usage-display');
+            if (display) {
+                display.innerText = `本月 API 使用量 (${month})：${count} / 999 次`;
+                if (count >= 999) {
+                    display.style.color = '#ef4444';
+                } else {
+                    display.style.color = 'var(--text-muted)';
+                }
+            }
+        });
+    }
+
+    function getVisionUsage() {
+        // 改為從 Firebase 同步，此函式僅供「讀取當前快取顯示值」用
+        const display = document.getElementById('vision-usage-display');
+        if (display) {
+            const match = display.innerText.match(/：(\d+)\s*\//);
+            const count = match ? parseInt(match[1]) : 0;
+            return { month: getCurrentMonth(), count };
         }
-        return usage;
+        return { month: getCurrentMonth(), count: 0 };
     }
 
     function incrementVisionUsage() {
-        let usage = getVisionUsage();
-        usage.count += 1;
-        localStorage.setItem('pikmin_vision_usage', JSON.stringify(usage));
-        updateVisionUsageDisplay();
+        const month = getCurrentMonth();
+        database.ref('vision_usage/' + month).transaction((curr) => {
+            const next = (curr || 0) + 1;
+            // 2026-07 特例：至少從 5 開始
+            return month === '2026-07' ? Math.max(next, 5) : next;
+        });
     }
 
     function updateVisionUsageDisplay() {
-        const display = document.getElementById('vision-usage-display');
-        if (display) {
-            const usage = getVisionUsage();
-            display.innerText = `本月 API 使用量 (${usage.month})：${usage.count} / 999 次`;
-            if (usage.count >= 999) {
-                display.style.color = '#ef4444'; // Red for limit
-            } else {
-                display.style.color = 'var(--text-muted)';
-            }
-        }
+        // 由 listenVisionUsage 即時監聽更新，此函式保留為空以兼容舊呼叫
     }
 
     async function processVisionOcr(resultDivId, imagePayload) {
@@ -1703,7 +1730,7 @@
         
         const savedVisionKey = localStorage.getItem('pikmin_vision_api_key');
         if (savedVisionKey) { document.getElementById('vision-api-key').value = savedVisionKey; }
-        updateVisionUsageDisplay();
+        listenVisionUsage();
 
         ['1','2','3'].forEach(i => {
             const val = localStorage.getItem('pikmin_tz_area_' + i);
