@@ -750,10 +750,19 @@
                     <option value="collected">⭐ 我的收藏</option>
                     <option value="uncollected">✰ 尚未收藏</option>
                 </select>
+                <select id="postcard-recent-filter" class="input-base filter-select" onchange="updateView()" style="flex:0.8;">
+                    <option value="all">時間不限</option>
+                    <option value="1">最近 1 天新增</option>
+                    <option value="3">最近 3 天新增</option>
+                    <option value="7">最近 7 天新增</option>
+                    <option value="14">最近 14 天新增</option>
+                </select>
                 <select id="search-logic" class="input-base filter-select" onchange="updateView()">
                     <option value="and">且 (全部符合)</option>
                     <option value="or">或 (任一符合)</option>
                 </select>
+            </div>
+            <div class="search-row" style="margin-top: 8px;">
                 <input type="text" id="postcard-search" class="input-base search-input" oninput="updateView()" placeholder="🔍 支援多關鍵字搜尋...">
             </div>
             <div id="postcard-container" class="grid"></div>
@@ -768,7 +777,7 @@
                     <label>Google Cloud Vision API 金鑰</label>
                     <input type="text" id="vision-api-key" class="input-base" placeholder="AIzaSy..." onchange="saveVisionApiKey()">
                     <p style="font-size:11px; color:#6b7280; margin-top:4px;">用於啟用圖片文字自動辨識功能。金鑰僅儲存於您的瀏覽器中。</p>
-                    <div id="vision-usage-display" style="margin-top:8px; font-size:12px; color:var(--text-muted); font-weight:bold;">本月 API 使用量：5 / 999 次</div>
+                    <div id="vision-usage-display" style="margin-top:8px; font-size:12px; color:var(--text-muted); font-weight:bold;">讀取中...</div>
                 </div>
             </div>
 
@@ -968,10 +977,20 @@
                     <div style="display:flex; gap:8px;">
                         <input type="text" id="post-image" class="input-base" placeholder="請貼上圖片網址，或留空" style="flex:1;">
                         <input type="file" id="post-ocr-file" accept="image/*" style="display:none;" onchange="handleVisionOcrUpload(event, 'post-ocr-result')">
-                        <button class="btn-sm btn-default" onclick="triggerOCR('post-image', 'post-ocr-file', 'post-ocr-result')" style="white-space:nowrap; border-radius:8px; background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; font-weight:bold;">🔍 文字辨識</button>
+                        <button class="btn-sm btn-default" onclick="triggerOCR('post-image', 'post-ocr-file', 'post-ocr-result')" style="white-space:nowrap; border-radius:8px; background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; padding:6px 10px; line-height:1.3;">
+                            <div style="font-weight:bold;">🔍 文字辨識</div>
+                            <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#475569;">辨識左側網址</div>
+                        </button>
                     </div>
                     <div style="display:flex; gap:6px; margin-top:6px;">
-                        <button class="btn-sm btn-default" onclick="pasteFromClipboard('post-ocr-result')" style="background:#f0fdf4; color:#166534; border:1px dashed #22c55e; border-radius:8px; padding:6px 10px; font-weight:bold; white-space:nowrap;">📋 貼上圖片</button>
+                        <button class="btn-sm btn-default" onclick="document.getElementById('post-ocr-file').click()" style="flex:1; border-radius:8px; background:#f5f3ff; color:#5b21b6; border:1px dashed #8b5cf6; padding:6px; line-height:1.3;">
+                            <div style="font-weight:bold;">📁 上傳截圖</div>
+                            <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#64748b;">從裝置相簿檔案</div>
+                        </button>
+                        <button class="btn-sm btn-default" onclick="pasteFromClipboard('post-ocr-result')" style="flex:1; border-radius:8px; background:#f0fdf4; color:#166534; border:1px dashed #22c55e; padding:6px; line-height:1.3;">
+                            <div style="font-weight:bold;">📋 貼上圖片</div>
+                            <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#475569;">讀取剪貼簿圖片</div>
+                        </button>
                     </div>
                     <div id="post-ocr-result" style="display:none; margin-top:5px; font-size:12px; background:#fef3c7; padding:8px; border-radius:4px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:150px; overflow-y:auto; color:#92400e;"></div>
                 </div>
@@ -1015,20 +1034,43 @@
     <div id="time-modal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">
-                <h4>修改資料</h4>
+                <h4>✏️ 修改資料</h4>
                 <button class="modal-close" onclick="closeModal('time-modal')">&times;</button>
             </div>
             
-            <div id="edit-group-mushroom" style="display:none; flex-direction:column; gap:10px;">
-                <div class="input-group"><label>修改種類：</label><select id="edit-mushroom-kind" class="input-base"><option value="巨菇">🍄 巨菇</option><option value="元素菇">🌿 元素菇</option></select></div>
-                <div class="input-group"><label>修改使用者 (留空為待認領)：</label><input type="text" id="edit-user" class="input-base"></div>
-                <div class="input-group"><label>修改座標：</label><input type="text" id="edit-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-mushroom-country', 'edit-tz-hint')"></div>
-                <div class="input-group"><label>修改國家： <span id="edit-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label><input type="text" id="edit-mushroom-country" class="input-base" oninput="showTimeDiff(this.value, 'edit-tz-hint')"></div>
-                <div class="input-group"><label>修改名稱：</label><input type="text" id="edit-name" class="input-base"></div>
-                <div class="input-group"><label>修改標籤：</label><input type="text" id="edit-tag" class="input-base"></div>
-                <div class="input-group" style="margin-top:5px;">
-                    <label style="text-align:center;">重新設定剩餘時間：</label>
-                    <div class="time-container" style="margin-top: 5px;">
+            <div id="edit-group-mushroom" style="display:none; flex-direction:column; gap:8px;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <div class="input-group">
+                        <label>種類</label>
+                        <select id="edit-mushroom-kind" class="input-base">
+                            <option value="巨菇">🍄 巨菇</option>
+                            <option value="元素菇">🌿 元素菇</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>使用者</label>
+                        <input type="text" id="edit-user" class="input-base" placeholder="留空為待認領">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>座標</label>
+                    <input type="text" id="edit-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-mushroom-country', 'edit-tz-hint')">
+                </div>
+                <div class="input-group">
+                    <label>國家 <span id="edit-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
+                    <input type="text" id="edit-mushroom-country" class="input-base" oninput="showTimeDiff(this.value, 'edit-tz-hint')">
+                </div>
+                <div class="input-group">
+                    <label>名稱</label>
+                    <input type="text" id="edit-name" class="input-base">
+                </div>
+                <div class="input-group">
+                    <label>標籤</label>
+                    <input type="text" id="edit-tag" class="input-base">
+                </div>
+                <div class="input-group" style="margin-top:2px;">
+                    <label style="text-align:center;">重新設定剩餘時間</label>
+                    <div class="time-container" style="margin-top:5px;">
                         <div class="time-box"><label>天</label><input type="number" id="edit-days" class="input-base" min="0" value="0"></div>
                         <div class="time-box"><label>時</label><input type="number" id="edit-hours" class="input-base" min="0" max="23" value="0"></div>
                         <div class="time-box"><label>分</label><input type="number" id="edit-minutes" class="input-base" min="0" max="59" value="0"></div>
@@ -1036,34 +1078,55 @@
                 </div>
             </div>
 
-            <div id="edit-group-postcard" style="display:none; flex-direction:column; gap:10px;">
+            <div id="edit-group-postcard" style="display:none; flex-direction:column; gap:8px;">
                 <div class="input-group">
-                    <label>修改種類：</label>
+                    <label>種類</label>
                     <select id="edit-post-type" class="input-base" onchange="togglePostcardTimeEdit()">
                         <option value="菇">菇</option><option value="花">花</option><option value="菇窩">菇窩</option><option value="隱藏">隱藏</option><option value="特殊金盆">特殊金盆</option>
                     </select>
                 </div>
-                <div class="input-group"><label>修改座標：</label><input type="text" id="edit-post-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint')"></div>
-                <div class="input-group"><label>修改國家： <span id="edit-post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label><input type="text" id="edit-post-country" class="input-base" oninput="showTimeDiff(this.value, 'edit-post-tz-hint')"></div>
-                <div class="input-group"><label>修改名稱：</label><input type="text" id="edit-post-name" class="input-base"></div>
-                <div class="input-group"><label>修改標籤：</label><input type="text" id="edit-post-tag" class="input-base"></div>
                 <div class="input-group">
-                    <label>修改圖片網址：</label>
-                    <div style="display:flex; gap:8px;">
-                        <input type="text" id="edit-post-image" class="input-base" style="flex:1;">
+                    <label>座標</label>
+                    <input type="text" id="edit-post-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint')">
+                </div>
+                <div class="input-group">
+                    <label>國家 <span id="edit-post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
+                    <input type="text" id="edit-post-country" class="input-base" oninput="showTimeDiff(this.value, 'edit-post-tz-hint')">
+                </div>
+                <div class="input-group">
+                    <label>名稱</label>
+                    <input type="text" id="edit-post-name" class="input-base">
+                </div>
+                <div class="input-group">
+                    <label>標籤</label>
+                    <input type="text" id="edit-post-tag" class="input-base">
+                </div>
+                <div class="input-group">
+                    <label>圖片網址</label>
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <input type="text" id="edit-post-image" class="input-base" style="flex:1;" placeholder="貼上圖片網址，或留空">
                         <input type="file" id="edit-post-ocr-file" accept="image/*" style="display:none;" onchange="handleVisionOcrUpload(event, 'edit-post-ocr-result')">
-                        <button class="btn-sm btn-default" onclick="triggerOCR('edit-post-image', 'edit-post-ocr-file', 'edit-post-ocr-result')" style="white-space:nowrap; border-radius:8px; background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; font-weight:bold;">🔍 文字辨識</button>
+                        <button class="btn-sm btn-default" onclick="triggerOCR('edit-post-image', 'edit-post-ocr-file', 'edit-post-ocr-result')" style="white-space:nowrap; border-radius:8px; background:#e0e7ff; color:#3730a3; border:1px solid #6366f1; padding:6px 10px; line-height:1.3;">
+                            <div style="font-weight:bold;">🔍 文字辨識</div>
+                            <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#475569;">辨識左側網址</div>
+                        </button>
                     </div>
                     <div style="display:flex; gap:6px; margin-top:6px;">
-                        <button class="btn-sm btn-default" onclick="pasteFromClipboard('edit-post-ocr-result')" style="background:#f0fdf4; color:#166534; border:1px dashed #22c55e; border-radius:8px; padding:6px 10px; font-weight:bold; white-space:nowrap;">📋 貼上圖片</button>
+                        <button class="btn-sm btn-default" onclick="document.getElementById('edit-post-ocr-file').click()" style="flex:1; border-radius:8px; background:#f5f3ff; color:#5b21b6; border:1px solid #8b5cf6; padding:6px; line-height:1.3;">
+                            <div style="font-weight:bold;">📁 上傳截圖</div>
+                            <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#64748b;">從裝置相簿檔案</div>
+                        </button>
+                        <button class="btn-sm btn-default" onclick="pasteFromClipboard('edit-post-ocr-result')" style="flex:1; border-radius:8px; background:#f0fdf4; color:#166534; border:1px solid #22c55e; padding:6px; line-height:1.3;">
+                            <div style="font-weight:bold;">📋 貼上圖片</div>
+                            <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#475569;">讀取剪貼簿圖片</div>
+                        </button>
                     </div>
-                    </div>
-                    <div id="edit-post-ocr-result" style="display:none; margin-top:5px; font-size:12px; background:#fef3c7; padding:8px; border-radius:4px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:150px; overflow-y:auto; color:#92400e;"></div>
+                    <div id="edit-post-ocr-result" style="display:none; margin-top:5px; font-size:12px; background:#fef3c7; padding:8px; border-radius:6px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:120px; overflow-y:auto; color:#92400e;"></div>
                 </div>
                 
-                <div id="edit-post-time-container" class="input-group" style="margin-top:5px; display:none;">
-                    <label style="text-align:center;">設定「菇」剩餘時間：</label>
-                    <div class="time-container" style="margin-top: 5px;">
+                <div id="edit-post-time-container" class="input-group" style="margin-top:2px; display:none;">
+                    <label style="text-align:center;">設定「菇」剩餘時間</label>
+                    <div class="time-container" style="margin-top:5px;">
                         <div class="time-box"><label>天</label><input type="number" id="edit-post-days" class="input-base" min="0" value="0"></div>
                         <div class="time-box"><label>時</label><input type="number" id="edit-post-hours" class="input-base" min="0" max="23" value="0"></div>
                         <div class="time-box"><label>分</label><input type="number" id="edit-post-minutes" class="input-base" min="0" max="59" value="0"></div>
@@ -1071,16 +1134,17 @@
                 </div>
             </div>
 
-            <button class="btn-sm btn-edit btn-block" style="margin-top:10px;" id="time-modal-submit-btn">儲存修改</button>
+            <button class="btn-sm btn-edit btn-block" style="margin-top:12px; padding:11px; font-size:14px; font-weight:bold; border-radius:10px;" id="time-modal-submit-btn">💾 儲存修改</button>
         </div>
     </div>
+
 
     <div id="lightbox" class="lightbox-overlay" onclick="this.style.display='none'">
         <img id="lightbox-img" class="lightbox-img" src="" alt="明信片大圖">
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.05.0140";
+    const APP_VERSION = "2026.07.05.0236";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1298,9 +1362,11 @@
         return '';
     }
 
+
+
     function toTW(str) {
         if (!str) return str;
-        return str.replace(/国/g, '國').replace(/兰/g, '蘭').replace(/亚/g, '亞')
+        return str.replace(/冲/g, '沖').replace(/绳/g, '繩').replace(/国/g, '國').replace(/兰/g, '蘭').replace(/亚/g, '亞')
             .replace(/韩/g, '韓').replace(/马/g, '馬').replace(/来/g, '來')
             .replace(/岛/g, '島').replace(/东/g, '東').replace(/罗/g, '羅')
             .replace(/爱/g, '愛').replace(/尔/g, '爾').replace(/纽/g, '紐')
@@ -1406,9 +1472,11 @@
                 const firebaseCount = curr || 0;
                 const localCount = oldUsage.count;
                 return Math.max(firebaseCount, localCount);
-            }, () => {
-                // 遷移完成後清除 localStorage 舊資料
-                localStorage.removeItem('pikmin_vision_usage');
+            }, (error, committed) => {
+                // 只有成功寫入後才清除 localStorage
+                if (!error && committed) {
+                    localStorage.removeItem('pikmin_vision_usage');
+                }
             });
         }
         
@@ -2385,6 +2453,7 @@
         pcEl.innerHTML = '';
         const searchKw = document.getElementById('postcard-search').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
         const filterState = document.getElementById('postcard-filter').value;
+        const recentFilter = document.getElementById('postcard-recent-filter') ? document.getElementById('postcard-recent-filter').value : 'all';
         const searchLogic = document.getElementById('search-logic') ? document.getElementById('search-logic').value : 'and';
 
         // 建立重複判斷 Maps (在 filter 之前計算全域的重複狀況)
@@ -2441,6 +2510,13 @@
             const isCol = favList.includes(item.id);
             if (filterState === 'collected' && !isCol) return false;
             if (filterState === 'uncollected' && isCol) return false;
+            
+            if (recentFilter !== 'all') {
+                const days = parseInt(recentFilter, 10);
+                const itemTime = getCreatedAt(item.id);
+                if (now - itemTime > days * 86400000) return false;
+            }
+            
             if (searchKw.length > 0) {
                 const missingText = item.missingFields.length > 0 ? "缺少 缺" + item.missingFields.join(" 缺") : "";
                 const dupText = checkIsDuplicate(item) ? "重複 重複收藏" : "";
