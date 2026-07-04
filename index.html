@@ -899,7 +899,9 @@
                 <div style="margin-bottom:5px;">
                     <input type="file" id="mush-ocr-file" accept="image/*" style="display:none;" onchange="handleVisionOcrUpload(event, 'mush-ocr-result')">
                     <button class="btn-sm btn-default btn-block" onclick="document.getElementById('mush-ocr-file').click()" style="background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; border-radius:8px; padding:8px; width:100%; font-weight:bold;">🔍 上傳截圖進行文字辨識 (OCR)</button>
-                    <div style="font-size:10px; text-align:center; color:#6b7280; margin-top:4px;">✨ 支援直接在此視窗 Ctrl+V 貼上截圖 ✨</div>
+                    <div style="display:flex; gap:6px; margin-top:6px;">
+                        <button class="btn-sm btn-default btn-block" onclick="pasteFromClipboard('mush-ocr-result')" style="background:#f0fdf4; color:#166534; border:1px dashed #22c55e; border-radius:8px; padding:8px; font-weight:bold; flex:1;">📋 貼上圖片</button>
+                    </div>
                     <div id="mush-ocr-result" style="display:none; margin-top:5px; font-size:12px; background:#fef3c7; padding:8px; border-radius:4px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:150px; overflow-y:auto; color:#92400e;"></div>
                 </div>
                 <div class="input-group">
@@ -965,7 +967,9 @@
                         <input type="file" id="post-ocr-file" accept="image/*" style="display:none;" onchange="handleVisionOcrUpload(event, 'post-ocr-result')">
                         <button class="btn-sm btn-default" onclick="triggerOCR('post-image', 'post-ocr-file', 'post-ocr-result')" style="white-space:nowrap; border-radius:8px; background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; font-weight:bold;">🔍 文字辨識</button>
                     </div>
-                    <div style="font-size:10px; text-align:right; color:#6b7280; margin-top:4px;">✨ 支援直接在此視窗 Ctrl+V 貼上截圖 ✨</div>
+                    <div style="display:flex; gap:6px; margin-top:6px;">
+                        <button class="btn-sm btn-default" onclick="pasteFromClipboard('post-ocr-result')" style="background:#f0fdf4; color:#166534; border:1px dashed #22c55e; border-radius:8px; padding:6px 10px; font-weight:bold; white-space:nowrap;">📋 貼上圖片</button>
+                    </div>
                     <div id="post-ocr-result" style="display:none; margin-top:5px; font-size:12px; background:#fef3c7; padding:8px; border-radius:4px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:150px; overflow-y:auto; color:#92400e;"></div>
                 </div>
             </div>
@@ -1047,7 +1051,9 @@
                         <input type="file" id="edit-post-ocr-file" accept="image/*" style="display:none;" onchange="handleVisionOcrUpload(event, 'edit-post-ocr-result')">
                         <button class="btn-sm btn-default" onclick="triggerOCR('edit-post-image', 'edit-post-ocr-file', 'edit-post-ocr-result')" style="white-space:nowrap; border-radius:8px; background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; font-weight:bold;">🔍 文字辨識</button>
                     </div>
-                    <div style="font-size:10px; text-align:right; color:#6b7280; margin-top:4px;">✨ 支援直接在此視窗 Ctrl+V 貼上截圖 ✨</div>
+                    <div style="display:flex; gap:6px; margin-top:6px;">
+                        <button class="btn-sm btn-default" onclick="pasteFromClipboard('edit-post-ocr-result')" style="background:#f0fdf4; color:#166534; border:1px dashed #22c55e; border-radius:8px; padding:6px 10px; font-weight:bold; white-space:nowrap;">📋 貼上圖片</button>
+                    </div>
                     </div>
                     <div id="edit-post-ocr-result" style="display:none; margin-top:5px; font-size:12px; background:#fef3c7; padding:8px; border-radius:4px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:150px; overflow-y:auto; color:#92400e;"></div>
                 </div>
@@ -1071,7 +1077,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.05.0115";
+    const APP_VERSION = "2026.07.05.0127";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1624,6 +1630,44 @@
             await processVisionOcr(resultDivId, { source: { imageUri: imgUrl } });
         } else {
             document.getElementById(fileInputId).click();
+        }
+    }
+
+    async function pasteFromClipboard(resultDivId) {
+        const resDiv = document.getElementById(resultDivId);
+        if (!navigator.clipboard || !navigator.clipboard.read) {
+            resDiv.style.display = 'block';
+            resDiv.innerText = '⚠️ 您的瀏覽器不支援從剪貼簿直接讀取圖片。請改用「上傳截圖」按鈕。';
+            return;
+        }
+        try {
+            const items = await navigator.clipboard.read();
+            let imageFile = null;
+            for (const item of items) {
+                const imageType = item.types.find(t => t.startsWith('image/'));
+                if (imageType) {
+                    imageFile = await item.getType(imageType);
+                    break;
+                }
+            }
+            if (!imageFile) {
+                resDiv.style.display = 'block';
+                resDiv.innerText = '⚠️ 剪貼簿中沒有圖片，請先複製一張圖片再試。';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = async function() {
+                const base64data = reader.result.split(',')[1];
+                await processVisionOcr(resultDivId, { content: base64data });
+            };
+            reader.readAsDataURL(imageFile);
+        } catch (err) {
+            resDiv.style.display = 'block';
+            if (err.name === 'NotAllowedError') {
+                resDiv.innerText = '⚠️ 請允許瀏覽器存取剪貼簿的權限，才能使用此功能。';
+            } else {
+                resDiv.innerText = `⚠️ 無法讀取剪貼簿：${err.message}`;
+            }
         }
     }
 
