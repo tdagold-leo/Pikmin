@@ -763,6 +763,16 @@
         <section id="view-settings" class="view-section">
 
             <div class="settings-card">
+                <h3>🔍 圖片辨識 API 設定</h3>
+                <div class="input-group">
+                    <label>Google Cloud Vision API 金鑰</label>
+                    <input type="text" id="vision-api-key" class="input-base" placeholder="AIzaSy..." onchange="saveVisionApiKey()">
+                    <p style="font-size:11px; color:#6b7280; margin-top:4px;">用於啟用圖片文字自動辨識功能。金鑰僅儲存於您的瀏覽器中。</p>
+                    <div id="vision-usage-display" style="margin-top:8px; font-size:12px; color:var(--text-muted); font-weight:bold;">本月 API 使用量：5 / 999 次</div>
+                </div>
+            </div>
+
+            <div class="settings-card">
                 <h3>☁️ 跨裝置收藏同步</h3>
                 <div class="input-group">
                     <label>綁定同步代號 (手機/電腦輸入相同代號即同步)</label>
@@ -886,6 +896,12 @@
             </div>
             
             <div id="form-mushroom" style="display:none; flex-direction:column; gap:10px;">
+                <div style="margin-bottom:5px;">
+                    <input type="file" id="mush-ocr-file" accept="image/*" style="display:none;" onchange="handleVisionOcrUpload(event, 'mush-ocr-result')">
+                    <button class="btn-sm btn-default btn-block" onclick="document.getElementById('mush-ocr-file').click()" style="background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; border-radius:8px; padding:8px; width:100%; font-weight:bold;">🔍 上傳截圖進行文字辨識 (OCR)</button>
+                    <div style="font-size:10px; text-align:center; color:#6b7280; margin-top:4px;">✨ 支援直接在此視窗 Ctrl+V 貼上截圖 ✨</div>
+                    <div id="mush-ocr-result" style="display:none; margin-top:5px; font-size:12px; background:#fef3c7; padding:8px; border-radius:4px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:150px; overflow-y:auto; color:#92400e;"></div>
+                </div>
                 <div class="input-group">
                     <label>種類</label>
                     <select id="mushroom-kind" class="input-base">
@@ -944,7 +960,13 @@
                 </div>
                 <div class="input-group">
                     <label>圖片網址</label>
-                    <input type="text" id="post-image" class="input-base" placeholder="請貼上圖片網址，或留空">
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="post-image" class="input-base" placeholder="請貼上圖片網址，或留空" style="flex:1;">
+                        <input type="file" id="post-ocr-file" accept="image/*" style="display:none;" onchange="handleVisionOcrUpload(event, 'post-ocr-result')">
+                        <button class="btn-sm btn-default" onclick="triggerOCR('post-image', 'post-ocr-file', 'post-ocr-result')" style="white-space:nowrap; border-radius:8px; background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; font-weight:bold;">🔍 文字辨識</button>
+                    </div>
+                    <div style="font-size:10px; text-align:right; color:#6b7280; margin-top:4px;">✨ 支援直接在此視窗 Ctrl+V 貼上截圖 ✨</div>
+                    <div id="post-ocr-result" style="display:none; margin-top:5px; font-size:12px; background:#fef3c7; padding:8px; border-radius:4px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:150px; overflow-y:auto; color:#92400e;"></div>
                 </div>
             </div>
             
@@ -1020,8 +1042,14 @@
                 <div class="input-group"><label>修改標籤：</label><input type="text" id="edit-post-tag" class="input-base"></div>
                 <div class="input-group">
                     <label>修改圖片網址：</label>
-                    <input type="text" id="edit-post-image" class="input-base" onchange="doOCR(this.value, 'edit-post-ocr-result')">
-                    <div id="edit-post-ocr-result" style="display:none; margin-top:5px; font-size:12px; background:#fef3c7; padding:8px; border-radius:4px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:100px; overflow-y:auto; color:#92400e;"></div>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="edit-post-image" class="input-base" style="flex:1;">
+                        <input type="file" id="edit-post-ocr-file" accept="image/*" style="display:none;" onchange="handleVisionOcrUpload(event, 'edit-post-ocr-result')">
+                        <button class="btn-sm btn-default" onclick="triggerOCR('edit-post-image', 'edit-post-ocr-file', 'edit-post-ocr-result')" style="white-space:nowrap; border-radius:8px; background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; font-weight:bold;">🔍 文字辨識</button>
+                    </div>
+                    <div style="font-size:10px; text-align:right; color:#6b7280; margin-top:4px;">✨ 支援直接在此視窗 Ctrl+V 貼上截圖 ✨</div>
+                    </div>
+                    <div id="edit-post-ocr-result" style="display:none; margin-top:5px; font-size:12px; background:#fef3c7; padding:8px; border-radius:4px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:150px; overflow-y:auto; color:#92400e;"></div>
                 </div>
                 
                 <div id="edit-post-time-container" class="input-group" style="margin-top:5px; display:none;">
@@ -1043,7 +1071,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.04.1800";
+    const APP_VERSION = "2026.07.05.0115";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1104,6 +1132,7 @@
 
     function switchTab(tab) {
         currentMode = tab;
+        localStorage.setItem('pikmin_active_tab', tab);
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -1346,14 +1375,287 @@
     database.ref('views').transaction(curr => (curr || 0) + 1);
     database.ref('views').on('value', snap => { document.getElementById('view-counter-text').innerText = `雲端總瀏覽次數：${snap.val() || 0} 次`; });
 
+    function saveVisionApiKey() {
+        const key = document.getElementById('vision-api-key').value.trim();
+        localStorage.setItem('pikmin_vision_api_key', key);
+    }
+
+    function getVisionUsage() {
+        const now = new Date();
+        const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        let usage = JSON.parse(localStorage.getItem('pikmin_vision_usage') || '{"month":"","count":0}');
+        if (usage.month !== currentMonth) {
+            usage = { month: currentMonth, count: 0 };
+            localStorage.setItem('pikmin_vision_usage', JSON.stringify(usage));
+        }
+        if (usage.month === '2026-07' && usage.count < 5) {
+            usage.count = 5;
+            localStorage.setItem('pikmin_vision_usage', JSON.stringify(usage));
+        }
+        return usage;
+    }
+
+    function incrementVisionUsage() {
+        let usage = getVisionUsage();
+        usage.count += 1;
+        localStorage.setItem('pikmin_vision_usage', JSON.stringify(usage));
+        updateVisionUsageDisplay();
+    }
+
+    function updateVisionUsageDisplay() {
+        const display = document.getElementById('vision-usage-display');
+        if (display) {
+            const usage = getVisionUsage();
+            display.innerText = `本月 API 使用量 (${usage.month})：${usage.count} / 999 次`;
+            if (usage.count >= 999) {
+                display.style.color = '#ef4444'; // Red for limit
+            } else {
+                display.style.color = 'var(--text-muted)';
+            }
+        }
+    }
+
+    async function processVisionOcr(resultDivId, imagePayload) {
+        const apiKey = localStorage.getItem('pikmin_vision_api_key');
+        const resDiv = document.getElementById(resultDivId);
+        
+        if (!apiKey) {
+            alert('請先到「設定」分頁填寫 Google Cloud Vision API 金鑰！');
+            switchTab('settings');
+            closeModal('add-modal');
+            closeModal('time-modal');
+            return;
+        }
+        
+        const usage = getVisionUsage();
+        if (usage.count >= 999) {
+            resDiv.style.display = 'block';
+            resDiv.innerText = '❌ 為了避免產生費用，本月的免費辨識額度 (999次) 已用盡。請下個月再來使用！';
+            return;
+        }
+
+        resDiv.style.display = 'block';
+        resDiv.innerText = '🔄 圖片辨識中，請稍候...';
+        
+        try {
+            const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    requests: [
+                        {
+                            image: imagePayload,
+                            features: [{ type: "TEXT_DETECTION" }]
+                        }
+                    ]
+                })
+            });
+
+            const data = await response.json();
+            
+            if (data.error) {
+                resDiv.innerText = `❌ API 錯誤: ${data.error.message}`;
+                return;
+            }
+            
+            incrementVisionUsage();
+
+            if (data.responses && data.responses[0] && data.responses[0].textAnnotations && data.responses[0].textAnnotations.length > 0) {
+                const allXs = data.responses[0].textAnnotations.slice(1).flatMap(ann => ann.boundingPoly && ann.boundingPoly.vertices ? ann.boundingPoly.vertices.map(v => v.x || 0) : []);
+                const maxX = Math.max(...allXs, 1);
+                
+                let extractedLines = [];
+                if (data.responses[0].fullTextAnnotation && data.responses[0].fullTextAnnotation.pages) {
+                    for (const block of data.responses[0].fullTextAnnotation.pages[0].blocks) {
+                        const box = block.boundingBox;
+                        if (box && box.vertices) {
+                            const minX = Math.min(...box.vertices.map(v => v.x || 0));
+                            if (minX < maxX * 0.6) { 
+                                let blockText = "";
+                                for (const paragraph of block.paragraphs) {
+                                    for (const word of paragraph.words) {
+                                        for (const symbol of word.symbols) {
+                                            blockText += symbol.text;
+                                            if (symbol.property && symbol.property.detectedBreak) {
+                                                const bType = symbol.property.detectedBreak.type;
+                                                if (bType === "SPACE" || bType === "SURE_SPACE") blockText += " ";
+                                                if (bType === "LINE_BREAK" || bType === "EOL_SURE_SPACE") blockText += "\n";
+                                            }
+                                        }
+                                    }
+                                    blockText += "\n";
+                                }
+                                blockText.split('\n').forEach(l => {
+                                    if(l.trim()) extractedLines.push(l.trim());
+                                });
+                            }
+                        }
+                    }
+                } else {
+                    const text = data.responses[0].textAnnotations[0].description;
+                    extractedLines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                }
+                
+                const lines = extractedLines;
+                const text = lines.join('\n');
+                
+                let isPostcard = resultDivId.includes('post-ocr-result');
+                let isMushroom = resultDivId.includes('mush-ocr-result');
+                let limitedText = text;
+                
+                if (isPostcard) {
+                    limitedText = lines.slice(0, 2).join('\n');
+                } else if (isMushroom) {
+                    let cutIndex = lines.findIndex(l => l.includes('蘑菇'));
+                    if (cutIndex !== -1) {
+                        limitedText = lines.slice(0, cutIndex + 1).join('\n');
+                    }
+                }
+                
+                let displayHtml = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-weight:bold;"><span>✅ 辨識成功：</span><button class="btn-sm btn-default" style="padding:2px 6px; font-size:10px;" onclick="navigator.clipboard.writeText(this.parentElement.nextSibling.innerText); const o=this.innerText; this.innerText='已複製'; setTimeout(()=>{this.innerText=o},2000)">複製全部</button></div><div style="user-select:text;">${escapeHtml(limitedText)}</div>`;
+                
+                if (isPostcard) {
+                    let autoFilled = [];
+                    if (lines.length > 0) {
+                        const nameField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-name' : 'edit-post-name');
+                        const coordsField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-coords' : 'edit-post-coords');
+                        const tagField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-tag' : 'edit-post-tag');
+                        
+                        if (nameField && (!nameField.value || nameField.value.trim() === '')) {
+                            nameField.value = lines[0];
+                            autoFilled.push('名稱');
+                        }
+                        
+                        if (lines.length > 1) {
+                            const secondLine = lines[1];
+                            const coordRegex = /[-+]?\d{1,3}\.\d+,\s*[-+]?\d{1,3}\.\d+/;
+                            if (coordRegex.test(secondLine)) {
+                                if (coordsField && (!coordsField.value || coordsField.value.trim() === '')) {
+                                    coordsField.value = secondLine.match(coordRegex)[0];
+                                    autoFilled.push('座標');
+                                    coordsField.dispatchEvent(new Event('blur')); // 觸發自動抓國家
+                                }
+                            } else {
+                                if (tagField && (!tagField.value || tagField.value.trim() === '')) {
+                                    tagField.value = secondLine;
+                                    autoFilled.push('標籤');
+                                }
+                            }
+                        }
+                    }
+                    if (autoFilled.length > 0) {
+                        displayHtml = `<div style="color:green; font-weight:bold; margin-bottom:5px;">✨ 已自動填寫：${autoFilled.join('、')}</div>` + displayHtml;
+                    }
+                }
+                
+                if (isMushroom) {
+                    let autoFilled = [];
+                    const nameField = document.getElementById(resultDivId === 'mush-ocr-result' ? 'name' : 'edit-name');
+                    const kindField = resultDivId === 'mush-ocr-result' ? document.getElementById('mushroom-kind') : null;
+                    const daysField = document.getElementById(resultDivId === 'mush-ocr-result' ? 'days' : null);
+                    const hoursField = document.getElementById(resultDivId === 'mush-ocr-result' ? 'hours' : null);
+                    const minutesField = document.getElementById(resultDivId === 'mush-ocr-result' ? 'minutes' : null);
+                    
+                    let nameFound = false;
+                    let timeFound = false;
+                    for (let i = 0; i < lines.length; i++) {
+                        let l = lines[i];
+                        
+                        if (!nameFound && nameField && (!nameField.value || nameField.value.trim() === '')) {
+                            if (l.includes('>')) {
+                                nameField.value = l.replace('>', '').trim();
+                                autoFilled.push('名稱');
+                                nameFound = true;
+                            }
+                        }
+                        
+                        if (!timeFound) {
+                            const timeMatch = l.match(/剩下\s*(?:(\d+)\s*天)?\s*(?:(\d+)\s*小?時)?\s*(?:(\d+)\s*分)?/);
+                            if (timeMatch) {
+                                let d = timeMatch[1] ? parseInt(timeMatch[1]) : 0;
+                                let h = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
+                                let m = timeMatch[3] ? parseInt(timeMatch[3]) : 0;
+                                if (daysField) daysField.value = d;
+                                if (hoursField) hoursField.value = h;
+                                if (minutesField) minutesField.value = m;
+                                autoFilled.push('時間');
+                                timeFound = true;
+                            }
+                        }
+                        
+                        if (l.includes('蘑菇') && kindField) {
+                            if (l.includes('巨大')) {
+                                kindField.value = '巨菇';
+                                autoFilled.push('種類(巨菇)');
+                            }
+                        }
+                    }
+                    
+                    if (!nameFound && nameField && (!nameField.value || nameField.value.trim() === '')) {
+                        for (let i = 0; i < Math.min(5, lines.length); i++) {
+                            let l = lines[i];
+                            if (l.length > 3 && !/^\d{1,2}:\d{2}/.test(l) && !/5G|4G|LTE|Wi-Fi|%/.test(l) && !/剩下/.test(l)) {
+                                nameField.value = l.trim();
+                                autoFilled.push('名稱');
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (autoFilled.length > 0) {
+                        displayHtml = `<div style="color:green; font-weight:bold; margin-bottom:5px;">✨ 已自動填寫：${[...new Set(autoFilled)].join('、')}</div>` + displayHtml;
+                    }
+                }
+                
+                resDiv.innerHTML = displayHtml;
+            } else {
+                resDiv.innerText = '⚠️ 圖片中沒有辨識到任何文字。';
+            }
+        } catch (error) {
+            resDiv.innerText = `❌ 連線發生錯誤：${error.message}`;
+        }
+    }
+
+    async function triggerOCR(textInputId, fileInputId, resultDivId) {
+        const textInput = textInputId ? document.getElementById(textInputId) : null;
+        const imgUrl = textInput ? textInput.value.trim() : '';
+
+        if (imgUrl && imgUrl.startsWith('http')) {
+            await processVisionOcr(resultDivId, { source: { imageUri: imgUrl } });
+        } else {
+            document.getElementById(fileInputId).click();
+        }
+    }
+
+    async function handleVisionOcrUpload(event, resultDivId) {
+        const file = event.target.files[0];
+        if (!file) return;
+        event.target.value = ''; 
+        
+        const reader = new FileReader();
+        reader.onloadend = async function() {
+            const base64data = reader.result.split(',')[1];
+            await processVisionOcr(resultDivId, { content: base64data });
+        };
+        reader.readAsDataURL(file);
+    }
+
     function updateVersionTag() {
         document.getElementById('header-version-tag').textContent = "v" + APP_VERSION;
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+        const savedTab = localStorage.getItem('pikmin_active_tab');
+        if (savedTab) {
+            switchTab(savedTab);
+        }
         updateVersionTag();
         const savedSyncId = localStorage.getItem('pikmin_sync_id');
         if (savedSyncId) { document.getElementById('sync-user-id').value = savedSyncId; applySyncId(); }
+        
+        const savedVisionKey = localStorage.getItem('pikmin_vision_api_key');
+        if (savedVisionKey) { document.getElementById('vision-api-key').value = savedVisionKey; }
+        updateVisionUsageDisplay();
 
         ['1','2','3'].forEach(i => {
             const val = localStorage.getItem('pikmin_tz_area_' + i);
@@ -1367,6 +1669,40 @@
         }
 
         updateClocks();
+    });
+
+    document.addEventListener('paste', async (event) => {
+        const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+        let imageFile = null;
+        for (let i = 0; i < items.length; i++) {
+            let item = items[i];
+            if (item.kind === 'file' && item.type.startsWith('image/')) {
+                imageFile = item.getAsFile();
+                break;
+            }
+        }
+        
+        if (imageFile) {
+            const addModal = document.getElementById('add-modal');
+            const editModal = document.getElementById('edit-modal');
+            
+            let targetDivId = null;
+            if (addModal && addModal.style.display === 'flex') {
+                targetDivId = currentMode === 'mushroom' ? 'mush-ocr-result' : 'post-ocr-result';
+            } else if (editModal && editModal.style.display === 'flex') {
+                targetDivId = currentMode === 'mushroom' ? null : 'edit-post-ocr-result';
+            }
+            
+            if (targetDivId) {
+                event.preventDefault();
+                const reader = new FileReader();
+                reader.onloadend = async function() {
+                    const base64data = reader.result.split(',')[1];
+                    await processVisionOcr(targetDivId, { content: base64data });
+                };
+                reader.readAsDataURL(imageFile);
+            }
+        }
     });
 
     function saveTimezonePref() {
