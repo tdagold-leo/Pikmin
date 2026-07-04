@@ -1043,7 +1043,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.04.0900";
+    const APP_VERSION = "2026.07.04.0950";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1336,7 +1336,7 @@
                     id: key, type: toTW(String(typeVal || "菇")), name: cloudData[key].name || "未命名", 
                     country: toTW(cloudData[key].country || ""), coords: cloudData[key].coords || "",
                     tag: cloudData[key].tag || "", image: cloudData[key].image || "無圖片",
-                    targetTime: cloudData[key].targetTime
+                    targetTime: cloudData[key].targetTime, provider: cloudData[key].provider || ""
                 });
             });
         }
@@ -1508,7 +1508,8 @@
 
             database.ref('postcards').push({
                 type: toTW(typeEl.value), country: processedCountry, name: nameEl.value.trim(),
-                coords: coordsEl.value.trim(), tag: tagEl.value.trim() || "", image: imageEl.value.trim() || "無圖片"
+                coords: coordsEl.value.trim(), tag: tagEl.value.trim() || "", image: imageEl.value.trim() || "無圖片",
+                provider: currentSyncId || ""
             });
             countryEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = ''; imageEl.value = '';
             document.getElementById('post-tz-hint').innerText = '';
@@ -2122,7 +2123,7 @@
 
                     card.innerHTML = `
                         <div class="card-img-box">${imgHtml}<div class="card-badge-type">${escapeHtml(item.type)}</div><button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button></div>
-                        <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}</span>${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}</div>
+                        <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}</span>${item.provider ? `<span style="background:#e0e7ff; color:#3730a3; padding:2px 6px; border-radius:10px; font-size:11px; margin-left:4px; font-weight:bold;">🧑 ${escapeHtml(item.provider)}</span>` : ''}${safeT ? `<span class="tag-badge" style="margin-left:4px;">${safeT}</span>` : ''}</div>
                         ${dupBadge}
                         ${item.missingFields && item.missingFields.length > 0 ? `<div style="color: #ef4444; font-size: 10px; font-weight: bold; margin-top: 4px; background: #fee2e2; padding: 4px 6px; border-radius: 4px; border: 1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>` : ''}
                         <div class="card-actions" style="display:flex; gap:4px; margin-top:auto; padding-top:4px;"><button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button><button class="btn-sm btn-edit" style="flex:0;" onclick="openTimeModalById('${item.id}', 'postcard')">✏️</button><button class="btn-sm btn-danger" style="flex:0;" onclick="deleteItem('${item.id}', 'postcard')">🗑️</button></div></div>
