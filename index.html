@@ -1144,7 +1144,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.05.2208";
+    const APP_VERSION = "2026.07.05.2230";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -2377,7 +2377,7 @@
                     </div>
                     <div style="display:flex; flex-direction:column; gap:6px; flex:0 0 56px; align-items:stretch;">
                         <div style="background:#e0f2fe; color:#0369a1; font-weight:bold; border-radius:8px; padding:4px 2px; min-height:44px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.2; text-align:center; overflow:hidden;">
-                            ${item.user ? `<span style="font-size:12px; word-break:break-all; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.2; padding:0 2px;">${escapeHtml(item.user)}</span>` : `<span style="color:#64748b; font-size:11px; font-style:italic;">待認領</span>`}
+                            ${item.user ? `<span style="font-size:14px; word-break:break-all; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.1; padding:0 2px;">${escapeHtml(item.user)}</span>` : `<span style="color:#64748b; font-size:11px; font-style:italic;">待認領</span>`}
                         </div>
                         <button class="copy-coords-btn" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)" style="height:44px; padding:0; width:100%; border-radius:8px; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;"><span style="font-size:13px; line-height:1;">📍</span><span style="font-size:10px; line-height:1;">複製</span></button>
                     </div>
