@@ -2690,11 +2690,13 @@
         }
     }
 
-    function createMushroomCard(item, now, isExpired, timeText) {
+    function createMushroomCard(item, now, isExpired, timeText, isDup = false) {
         const safeC = toTW(escapeHtml(item.country||'')), safeName = escapeHtml(item.name), safeTag = escapeHtml(item.tag);
         const diffStr = getTimeDiffString(safeC);
         const cHtml = safeC ? `${safeC} ${diffStr ? `<span class="tz-badge">${diffStr}</span>` : ''}` : '';
         const tHtml = safeTag ? `<span class="tag-badge">${safeTag}</span>` : '';
+        const dupBadge = isDup ? `<span style="font-size:11px; color:#b45309; font-weight:bold; background:#fef3c7; padding:2px 6px; border-radius:6px; border:1px dashed #f59e0b;">⚠️ 重複收藏</span>` : '';
+        const badgeHtml = [tHtml, dupBadge].filter(Boolean).join(' ');
 
         const card = document.createElement('div');
         // 元素菇邊框：從名稱開頭偵測元素
@@ -2705,7 +2707,9 @@
         else if (n.startsWith('火') || n.startsWith('大火') || n.startsWith('大紅')) elemClass = 'elem-火';
         else if (n.startsWith('電') || n.startsWith('大電')) elemClass = 'elem-電';
         else if (n.startsWith('毒') || n.startsWith('大毒')) elemClass = 'elem-毒';
-        card.className = `grid-card ${isExpired ? 'row-expired' : ''} ${elemClass}`;
+        
+        const dupClass = isDup ? 'duplicate-card' : '';
+        card.className = `grid-card ${isExpired ? 'row-expired' : ''} ${elemClass} ${dupClass}`;
         card.style.position = 'relative';
         
         const uTheme = getUserColorTheme(item.user);
@@ -2745,7 +2749,7 @@
                         <div style="display:flex; align-items:flex-start; gap:6px;">
                             <span class="card-title" style="font-size:15px; margin:0; line-height:1.4; font-weight:bold;">${safeName}</span>
                         </div>
-                        <div class="lc-info" style="margin:0; margin-top:auto; display:flex; flex-wrap:wrap; gap:5px; align-items:center;">${cHtml} ${tHtml}</div>
+                        <div class="lc-info" style="margin:0; margin-top:auto; display:flex; flex-wrap:wrap; gap:5px; align-items:center;">${cHtml} ${badgeHtml}</div>
                     </div>
                     <div style="display:flex; flex-direction:column; gap:6px; flex:0 0 56px; align-items:stretch;">
                         <div style="background:${uTheme.bg}; color:${uTheme.color}; font-weight:${uTheme.fw}; font-family:${uTheme.ff}; border-radius:8px; padding:2px; min-height:44px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1; text-align:center; overflow:hidden; border: 2px solid ${uTheme.border}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
@@ -2768,6 +2772,12 @@
         const activeEl = document.getElementById('active-list'), unclaimEl = document.getElementById('unclaimed-list'), pcEl = document.getElementById('postcard-container');
         if (!activeEl || !unclaimEl || !pcEl) return;
         const now = Date.now();
+
+        const mushCoordCount = {};
+        dataList.forEach(item => {
+            const c = (item.coords || '').trim();
+            if (c) mushCoordCount[c] = (mushCoordCount[c] || 0) + 1;
+        });
 
         const sortedM = [...dataList].sort((a, b) => {
             if (a.targetTime == null && b.targetTime == null) return 0;
@@ -2798,7 +2808,8 @@
                     else { timeText = `<span class="live-timer" data-type="mushroom-claimed" data-target="${item.targetTime}">${getRemainingText(item.targetTime, now)}</span>`; }
                 }
                 actCount++;
-                const card = createMushroomCard(item, now, isExp, timeText);
+                const isDup = item.coords && mushCoordCount[item.coords.trim()] > 1;
+                const card = createMushroomCard(item, now, isExp, timeText, isDup);
                 if (item.targetTime == null) activeGroup2.push(card);
                 else {
                     if (item.targetTime - now <= 86400000) activeGroup1.push(card);
@@ -2814,8 +2825,16 @@
         const unclaimNormal = unclaimedQueue.filter(x => x.item.kind === '元素菇');
 
         // 待認領群組：永遠分群顯示（有資料才顯示該群）
-        const unclaimGiantCards = unclaimGiant.map(({ item, timeText, isExp }) => { uncCount++; return createMushroomCard(item, now, isExp, timeText); });
-        const unclaimNormalCards = unclaimNormal.map(({ item, timeText, isExp }) => { uncCount++; return createMushroomCard(item, now, isExp, timeText); });
+        const unclaimGiantCards = unclaimGiant.map(({ item, timeText, isExp }) => { 
+            uncCount++; 
+            const isDup = item.coords && mushCoordCount[item.coords.trim()] > 1;
+            return createMushroomCard(item, now, isExp, timeText, isDup); 
+        });
+        const unclaimNormalCards = unclaimNormal.map(({ item, timeText, isExp }) => { 
+            uncCount++; 
+            const isDup = item.coords && mushCoordCount[item.coords.trim()] > 1;
+            return createMushroomCard(item, now, isExp, timeText, isDup); 
+        });
 
         renderMGroup(unclaimEl, unclaimGiantCards, 'unc-giant', '🍄 巨菇', false, 'grouped');
         renderMGroup(unclaimEl, unclaimNormalCards, 'unc-normal', '🍄 元素菇', false, 'grouped');
