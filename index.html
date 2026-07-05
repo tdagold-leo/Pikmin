@@ -1197,7 +1197,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.06.0342";
+    const APP_VERSION = "2026.07.06.0345";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -2276,6 +2276,16 @@
 
             const kindEl = document.getElementById('mushroom-kind');
             const mushKind = kindEl ? kindEl.value : '巨菇';
+
+            const mCoordsStr = coordsEl.value.trim().toLowerCase().replace(/\s+/g, '');
+            if (mCoordsStr) {
+                const isDup = dataList.some(item => {
+                    return (item.coords || '').trim().toLowerCase().replace(/\s+/g, '') === mCoordsStr;
+                });
+                if (isDup) {
+                    if (!confirm("⚠️ 偵測到重複！\n此座標已有相同的巨菇/元素菇紀錄。\n\n確定要繼續新增嗎？")) return;
+                }
+            }
 
             database.ref('mushrooms').push({
                 sn: nextSn, user: processedUser, country: processedCountry,
