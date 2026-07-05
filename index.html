@@ -1144,7 +1144,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.05.2135";
+    const APP_VERSION = "2026.07.05.2143";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -2141,9 +2141,15 @@
     function copyCoords(text, buttonElement) {
         const cleanText = String(text).replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
         navigator.clipboard.writeText(cleanText).then(() => {
-            const originalText = buttonElement.innerText;
-            buttonElement.innerText = '✅ 成功'; buttonElement.style.background = '#e5e7eb';
-            setTimeout(() => { buttonElement.innerText = originalText; buttonElement.style.background = ''; }, 1200);
+            const originalHTML = buttonElement.innerHTML;
+            buttonElement.innerHTML = '✅<br><span style="font-size:10px; margin-top:2px; display:inline-block;">成功</span>';
+            buttonElement.style.background = '#e5e7eb';
+            buttonElement.style.color = '#374151';
+            setTimeout(() => { 
+                buttonElement.innerHTML = originalHTML; 
+                buttonElement.style.background = ''; 
+                buttonElement.style.color = '';
+            }, 1200);
         }).catch(err => alert('複製失敗，請手動複製。'));
     }
 
