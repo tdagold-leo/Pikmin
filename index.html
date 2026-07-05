@@ -1144,7 +1144,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.05.2143";
+    const APP_VERSION = "2026.07.05.2201";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -2360,15 +2360,17 @@
         slotsHtml += `</div></div>`;
 
         card.innerHTML = `
-            <div style="background: ${isExpired ? '#f3f4f6' : '#ecfdf5'}; padding: 7px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 6px;">
-                <span style="font-size: 10px; font-weight: bold; color: var(--text-muted); white-space:nowrap;">#${String(item.sn).padStart(2,'0')}</span>
+            <div style="background: ${isExpired ? '#f3f4f6' : '#ecfdf5'}; padding: 6px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="font-size: 11px; font-weight: bold; color: var(--text-muted); white-space:nowrap;">#${String(item.sn).padStart(2,'0')}</span>
+                    <span style="font-size:11px; font-weight:900; padding:2px 6px; border-radius:4px; white-space:nowrap; background:${(item.kind||'巨菇')==='元素菇' ? '#d1fae5' : '#fef3c7'}; color:${(item.kind||'巨菇')==='元素菇' ? '#065f46' : '#92400e'};">${(item.kind||'巨菇')==='元素菇' ? '元素' : '巨'}</span>
+                </div>
                 <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin: 0; font-size: 10px;">${timeText}</span>
             </div>
             <div class="card-body" style="gap: 6px;">
                 <div style="display:flex; justify-content:space-between; align-items:stretch; gap:8px;">
                     <div style="display:flex; flex-direction:column; gap:6px; flex:1; min-width:0;">
                         <div style="display:flex; align-items:flex-start; gap:6px;">
-                            <span style="font-size:14px; font-weight:900; padding:3px 8px; border-radius:6px; white-space:nowrap; background:${(item.kind||'巨菇')==='元素菇' ? '#d1fae5' : '#fef3c7'}; color:${(item.kind||'巨菇')==='元素菇' ? '#065f46' : '#92400e'}; margin-top:1px;">${(item.kind||'巨菇')==='元素菇' ? '元素' : '巨'}</span>
                             <span class="card-title" style="font-size:15px; margin:0; line-height:1.4; font-weight:bold;">${safeName}</span>
                         </div>
                         <div class="lc-info" style="margin:0; margin-top:auto; display:flex; flex-wrap:wrap; gap:5px; align-items:center;">${cHtml} ${tHtml}</div>
