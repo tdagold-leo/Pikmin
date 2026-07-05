@@ -1144,7 +1144,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.05.2201";
+    const APP_VERSION = "2026.07.05.2208";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -2142,7 +2142,7 @@
         const cleanText = String(text).replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
         navigator.clipboard.writeText(cleanText).then(() => {
             const originalHTML = buttonElement.innerHTML;
-            buttonElement.innerHTML = '✅<br><span style="font-size:10px; margin-top:2px; display:inline-block;">成功</span>';
+            buttonElement.innerHTML = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;"><span style="font-size:13px; line-height:1;">✅</span><span style="font-size:10px; line-height:1;">成功</span></div>';
             buttonElement.style.background = '#e5e7eb';
             buttonElement.style.color = '#374151';
             setTimeout(() => { 
@@ -2362,10 +2362,10 @@
         card.innerHTML = `
             <div style="background: ${isExpired ? '#f3f4f6' : '#ecfdf5'}; padding: 6px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 6px;">
                 <div style="display:flex; align-items:center; gap:6px;">
-                    <span style="font-size: 11px; font-weight: bold; color: var(--text-muted); white-space:nowrap;">#${String(item.sn).padStart(2,'0')}</span>
-                    <span style="font-size:11px; font-weight:900; padding:2px 6px; border-radius:4px; white-space:nowrap; background:${(item.kind||'巨菇')==='元素菇' ? '#d1fae5' : '#fef3c7'}; color:${(item.kind||'巨菇')==='元素菇' ? '#065f46' : '#92400e'};">${(item.kind||'巨菇')==='元素菇' ? '元素' : '巨'}</span>
+                    <span style="font-size: 11px; font-weight: bold; color: var(--text-muted); white-space:nowrap; line-height:1;">#${String(item.sn).padStart(2,'0')}</span>
+                    <span style="font-size:11px; font-weight:900; padding:2px 6px; border-radius:4px; white-space:nowrap; background:${(item.kind||'巨菇')==='元素菇' ? '#d1fae5' : '#fef3c7'}; color:${(item.kind||'巨菇')==='元素菇' ? '#065f46' : '#92400e'}; line-height:1;">${(item.kind||'巨菇')==='元素菇' ? '元素' : '巨'}</span>
                 </div>
-                <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin: 0; font-size: 10px;">${timeText}</span>
+                <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin: 0; font-size: 10px; line-height:1;">${timeText}</span>
             </div>
             <div class="card-body" style="gap: 6px;">
                 <div style="display:flex; justify-content:space-between; align-items:stretch; gap:8px;">
@@ -2375,11 +2375,11 @@
                         </div>
                         <div class="lc-info" style="margin:0; margin-top:auto; display:flex; flex-wrap:wrap; gap:5px; align-items:center;">${cHtml} ${tHtml}</div>
                     </div>
-                    <div style="display:flex; flex-direction:column; gap:6px; flex:0 0 52px; align-items:stretch;">
-                        <div style="background:#e0f2fe; color:#0369a1; font-weight:bold; border-radius:8px; padding:4px 2px; min-height:42px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.15; text-align:center; overflow:hidden;">
-                            ${item.user ? `👤<br><span style="margin-top:3px; font-size:10px; word-break:break-all; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${escapeHtml(item.user)}</span>` : `<span style="color:#64748b; font-size:10px; font-style:italic;">待認領</span>`}
+                    <div style="display:flex; flex-direction:column; gap:6px; flex:0 0 56px; align-items:stretch;">
+                        <div style="background:#e0f2fe; color:#0369a1; font-weight:bold; border-radius:8px; padding:4px 2px; min-height:44px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1.2; text-align:center; overflow:hidden;">
+                            ${item.user ? `<span style="font-size:12px; word-break:break-all; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.2; padding:0 2px;">${escapeHtml(item.user)}</span>` : `<span style="color:#64748b; font-size:11px; font-style:italic;">待認領</span>`}
                         </div>
-                        <button class="copy-coords-btn" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)" style="height:42px; padding:2px 0; width:100%; border-radius:8px; box-sizing:border-box;">📍<br><span style="font-size:10px; margin-top:2px; display:inline-block;">複製</span></button>
+                        <button class="copy-coords-btn" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)" style="height:44px; padding:0; width:100%; border-radius:8px; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;"><span style="font-size:13px; line-height:1;">📍</span><span style="font-size:10px; line-height:1;">複製</span></button>
                     </div>
                 </div>
                 ${slotsHtml}
