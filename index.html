@@ -1266,7 +1266,6 @@
             document.getElementById('form-mushroom').style.display = 'none';
             document.getElementById('form-postcard').style.display = 'flex';
             document.getElementById('form-time').style.display = 'none';
-        }
         } else if (currentMode === 'landmark') {
             document.getElementById('add-modal-title').innerText = '🚩 新增地標紀錄';
             document.getElementById('form-mushroom').style.display = 'none';
@@ -1993,7 +1992,8 @@
             document.getElementById('tz-hint').innerText = '';
             document.getElementById('days').value = '0'; document.getElementById('hours').value = '0'; document.getElementById('minutes').value = '0';
             if (kindEl) kindEl.value = '巨菇';
-        } else {
+            closeModal('add-modal');
+        } else if (currentMode === 'postcard') {
             const typeEl = document.getElementById('post-type'), countryEl = document.getElementById('post-country');
             const nameEl = document.getElementById('post-name'), coordsEl = document.getElementById('post-coords');
             const tagEl = document.getElementById('post-tag'), imageEl = document.getElementById('post-image');
@@ -2032,9 +2032,7 @@
             });
             countryEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = ''; imageEl.value = '';
             document.getElementById('post-tz-hint').innerText = '';
-        }
-        closeModal('add-modal');
-    }
+            closeModal('add-modal');
         } else if (currentMode === 'landmark') {
             const type = document.getElementById('lm-type').value.trim();
             const coords = document.getElementById('lm-coords').value.trim();
@@ -2043,12 +2041,13 @@
             
             const data = { type, coords, note, timestamp: Date.now() };
             if(editId) {
-                await firebase.database().ref('landmarks/' + editId).update(data);
+                firebase.database().ref('landmarks/' + editId).update(data);
             } else {
-                await firebase.database().ref('landmarks').push(data);
+                firebase.database().ref('landmarks').push(data);
             }
             closeModal('add-modal');
         } 
+    };
 
     function deleteItem(id, mode = 'mushroom') {
         if (mode === 'postcard') {
