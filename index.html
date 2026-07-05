@@ -769,6 +769,17 @@
             <div id="postcard-empty" class="empty-message" style="display: none;">目前沒有收藏的明信片項目</div>
         </section>
 
+        
+        <section id="view-landmark" class="view-section">
+            <div style="background:var(--card-bg); padding:10px 15px; border-radius:12px; margin-bottom:15px; box-shadow:0 1px 3px rgba(0,0,0,0.05); display:flex; gap:10px; align-items:center;">
+                <label style="font-size:14px; font-weight:bold; color:var(--text-main); white-space:nowrap;">過濾種類：</label>
+                <select id="lm-filter" style="flex:1; border:1px solid var(--border); border-radius:8px; padding:6px; outline:none; background:#f9fafb;" onchange="renderLandmarks()">
+                    <option value="">顯示全部</option>
+                </select>
+            </div>
+            <div id="landmark-empty" class="empty-state" style="display:none;">目前沒有地標紀錄，點擊下方「+」號新增！</div>
+            <div id="landmark-list" style="display:flex; flex-direction:column; gap:12px;"></div>
+        </section>
         <section id="view-settings" class="view-section">
 
             <div class="settings-card">
@@ -892,6 +903,11 @@
             <span>明信片</span>
         </button>
 
+        
+        <button class="nav-item" id="nav-landmark" onclick="switchTab('landmark')">
+            <span class="nav-icon">🚩</span>
+            <span>地標</span>
+        </button>
         <button class="nav-item" id="nav-settings" onclick="switchTab('settings')">
             <span class="nav-icon">⚙️</span>
             <span>設定</span>
@@ -996,6 +1012,22 @@
                 </div>
             </div>
             
+            
+            <div id="form-landmark" style="display:none; flex-direction:column; gap:10px;">
+                <div class="input-group">
+                    <label>種類</label>
+                    <input type="text" id="lm-type" class="input-base" placeholder="手動輸入或選擇現有種類" list="lm-type-list">
+                    <datalist id="lm-type-list"></datalist>
+                </div>
+                <div class="input-group">
+                    <label>座標</label>
+                    <input type="text" id="lm-coords" class="input-base" placeholder="貼上或輸入座標">
+                </div>
+                <div class="input-group">
+                    <label>備註 (選填)</label>
+                    <input type="text" id="lm-note" class="input-base" placeholder="例如：大花、名稱等">
+                </div>
+            </div>
             <div id="form-time" style="display:none; flex-direction:column; gap:10px; margin-top:5px;">
                 <label style="font-size:11px; color:var(--text-muted); font-weight:bold; text-align:center;">設定剩餘時間 (皆為0即未設定)</label>
                 <div class="time-container">
@@ -1144,7 +1176,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.05.2235";
+    const APP_VERSION = "2026.07.05.2319";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1182,7 +1214,8 @@
     const database = firebase.database();
 
     let dataList = [];
-    let postcardList = []; 
+    let postcardList = [];
+    let landmarkList = []; 
     let currentMode = 'mushroom'; 
     let currentClaimingId = null;
     let currentEditingTimeId = null;
@@ -1234,6 +1267,13 @@
             document.getElementById('form-postcard').style.display = 'flex';
             document.getElementById('form-time').style.display = 'none';
         }
+        } else if (currentMode === 'landmark') {
+            document.getElementById('add-modal-title').innerText = '🚩 新增地標紀錄';
+            document.getElementById('form-mushroom').style.display = 'none';
+            document.getElementById('form-postcard').style.display = 'none';
+            document.getElementById('form-landmark').style.display = 'flex';
+            document.getElementById('form-time').style.display = 'none';
+        } 
         document.getElementById('add-modal').style.display = 'flex';
     }
     
@@ -1995,6 +2035,20 @@
         }
         closeModal('add-modal');
     }
+        } else if (currentMode === 'landmark') {
+            const type = document.getElementById('lm-type').value.trim();
+            const coords = document.getElementById('lm-coords').value.trim();
+            const note = document.getElementById('lm-note').value.trim();
+            if(!type || !coords) { alert("種類與座標為必填！"); return; }
+            
+            const data = { type, coords, note, timestamp: Date.now() };
+            if(editId) {
+                await firebase.database().ref('landmarks/' + editId).update(data);
+            } else {
+                await firebase.database().ref('landmarks').push(data);
+            }
+            closeModal('add-modal');
+        } 
 
     function deleteItem(id, mode = 'mushroom') {
         if (mode === 'postcard') {
