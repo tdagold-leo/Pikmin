@@ -1197,7 +1197,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.06.0345";
+    const APP_VERSION = "2026.07.06.0351";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1358,6 +1358,20 @@
 
     async function autoDetectCountry(coordsStr, countryInputId, hintId, cityInputId = null) {
         if(!coordsStr) return;
+        
+        const normCoords = coordsStr.trim().toLowerCase().replace(/\s+/g, '');
+        if (currentMode === 'mushroom' && countryInputId === 'country') {
+            const isDup = dataList.some(item => (item.coords || '').trim().toLowerCase().replace(/\s+/g, '') === normCoords);
+            if (isDup) {
+                if (!confirm("⚠️ 偵測到重複！\n此座標已有相同的巨菇/元素菇紀錄。\n\n確定要繼續新增並查詢地區資訊嗎？")) return;
+            }
+        } else if (currentMode === 'landmark' && countryInputId === 'lm-country') {
+            const isDup = landmarkList.some(item => (item.coords || '').trim().toLowerCase().replace(/\s+/g, '') === normCoords);
+            if (isDup) {
+                if (!confirm("⚠️ 偵測到重複！\n此座標已有相同的純點紀錄。\n\n確定要繼續新增並查詢地區資訊嗎？")) return;
+            }
+        }
+
         const match = coordsStr.match(/(-?\d+(?:\.\d+)?)(?:[\s,]+)(-?\d+(?:\.\d+)?)/);
         if(match) {
             const lat = match[1];
