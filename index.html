@@ -1197,7 +1197,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.06.0444";
+    const APP_VERSION = "2026.07.06.0448";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1297,22 +1297,21 @@
     }
 
     function openAddModal() {
+        document.getElementById('form-mushroom').style.display = 'none';
+        document.getElementById('form-postcard').style.display = 'none';
+        document.getElementById('form-landmark').style.display = 'none';
+        document.getElementById('form-time').style.display = 'none';
+
         if(currentMode === 'mushroom') {
             document.getElementById('add-modal-title').innerText = '🍄 新增倒數巨菇';
             document.getElementById('form-mushroom').style.display = 'flex';
-            document.getElementById('form-postcard').style.display = 'none';
             document.getElementById('form-time').style.display = 'flex';
         } else if (currentMode === 'postcard') {
             document.getElementById('add-modal-title').innerText = '🖼️ 新增明信片';
-            document.getElementById('form-mushroom').style.display = 'none';
             document.getElementById('form-postcard').style.display = 'flex';
-            document.getElementById('form-time').style.display = 'none';
         } else if (currentMode === 'landmark') {
             document.getElementById('add-modal-title').innerText = '🚩 新增純點紀錄';
-            document.getElementById('form-mushroom').style.display = 'none';
-            document.getElementById('form-postcard').style.display = 'none';
             document.getElementById('form-landmark').style.display = 'flex';
-            document.getElementById('form-time').style.display = 'none';
         } 
         document.getElementById('add-modal').style.display = 'flex';
     }
