@@ -1197,7 +1197,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.07.0111";
+    const APP_VERSION = "2026.07.07.0122";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1230,10 +1230,10 @@ const avatarF = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAYEBQYF
         
         const lowerName = username.toLowerCase();
         if (lowerName === 'y') {
-            return { bg: 'transparent', color: 'transparent', border: '#4c1d95', fw: 'normal', fs: '0px', ff: 'inherit', bgImg: 'url(' + avatarY + ')', bgSize: 'cover', bgPos: 'center' };
+            return { bg: 'transparent', color: 'transparent', border: '#ffffff', fw: 'normal', fs: '0px', ff: 'inherit', bgImg: 'url(' + avatarY + ')', bgSize: 'cover', bgPos: 'center' };
         }
         if (lowerName === 'f') {
-            return { bg: 'transparent', color: 'transparent', border: '#7e22ce', fw: 'normal', fs: '0px', ff: 'inherit', bgImg: 'url(' + avatarF + ')', bgSize: 'cover', bgPos: 'center' };
+            return { bg: 'transparent', color: 'transparent', border: '#ffffff', fw: 'normal', fs: '0px', ff: 'inherit', bgImg: 'url(' + avatarF + ')', bgSize: 'cover', bgPos: 'center' };
         }
         
         let hash = 0;
