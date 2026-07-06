@@ -1197,7 +1197,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.07.0100";
+    const APP_VERSION = "2026.07.07.0104";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1227,10 +1227,10 @@
         
         const lowerName = username.toLowerCase();
         if (lowerName === 'y') {
-            return { bg: 'transparent', color: 'transparent', border: '#4c1d95', fw: 'normal', fs: '0px', ff: 'inherit', bgImg: 'url(assets/avatar_y.jpg)', bgSize: 'cover', bgPos: 'center' };
+            return { bg: 'transparent', color: 'transparent', border: '#4c1d95', fw: 'normal', fs: '0px', ff: 'inherit', bgImg: 'url(assets/avatar_y.png)', bgSize: 'cover', bgPos: 'center' };
         }
         if (lowerName === 'f') {
-            return { bg: 'transparent', color: 'transparent', border: '#7e22ce', fw: 'normal', fs: '0px', ff: 'inherit', bgImg: 'url(assets/avatar_f.jpg)', bgSize: 'cover', bgPos: 'center' };
+            return { bg: 'transparent', color: 'transparent', border: '#7e22ce', fw: 'normal', fs: '0px', ff: 'inherit', bgImg: 'url(assets/avatar_f.png)', bgSize: 'cover', bgPos: 'center' };
         }
         
         let hash = 0;
