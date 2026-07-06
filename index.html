@@ -1197,7 +1197,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.07.0219";
+    const APP_VERSION = "2026.07.07.0221";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1227,7 +1227,7 @@
 
     function getUserColorTheme(username) {
         if (!username) return { bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe', fw: '900', fs: '14px', ff: 'inherit' }; // Default blue for empty
-        if (username === '官') return { bg: '#1e3a8a', color: '#d4af37', border: '#b8860b', fw: 'normal', fs: '28px', ff: "'BiauKai', 'DFKai-SB', 'Kaiti', 'STKaiti', 'Noto Serif CJK TC', serif" }; // NAVY 底色搭配暗金字，特製美感字體
+        if (username === '官') return { bg: 'transparent', color: 'transparent', border: 'transparent', fw: 'normal', fs: '0px', ff: 'inherit', bgImg: 'url(' + avatarGuan + ')', bgSize: 'contain', bgPos: 'center' };
         
         const lowerName = username.toLowerCase();
         if (lowerName === 'y') {
