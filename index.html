@@ -720,6 +720,154 @@
             animation: pulse-width 2s infinite ease-in-out;
         }
         @keyframes pulse-width { 0% { width: 0%; opacity: 1; } 50% { width: 100%; opacity: 0.5; } 100% { width: 0%; opacity: 1; float: right; } }
+        /* 群組標題卡片樣式 */
+        .card-group-header {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin: 6px 6px 6px 0;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+            font-size: 15px;
+            font-weight: bold;
+            color: #111;
+            transition: all 0.2s;
+            width: 160px;
+            box-sizing: border-box;
+        }
+        .card-group-header span:last-child {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+        .card-group-header:hover {
+            background: #f1f5f9;
+        }
+        .card-group-header-count {
+            font-size: 15px;
+            font-weight: 900;
+            color: #111;
+            min-width: 20px;
+        }
+        /* 純點導航卡片樣式 */
+        .lm-nav-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 4px 0;
+            width: 100%;
+        }
+        .lm-nav-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: stretch;
+            gap: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            width: 160px;
+            aspect-ratio: 1 / 1;
+            box-sizing: border-box;
+        }
+        .lm-nav-card.lm-dup {
+            border: 2px dashed #f59e0b;
+        }
+        .lm-nav-left {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+            min-width: 0;
+        }
+        .lm-nav-title {
+            font-size: 16px;
+            font-weight: 900;
+            color: var(--text-main);
+            line-height: 1.3;
+        }
+        .lm-nav-sub {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .lm-type-pill {
+            background: #e5e7eb;
+            color: #374151;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        .lm-dist-badge {
+            color: #ef4444;
+            font-weight: bold;
+            background: #fee2e2;
+            padding: 2px 6px;
+            border-radius: 6px;
+        }
+        .lm-nav-right {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            flex: none;
+            width: 100%;
+        }
+        .lm-copy-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            height: 30px;
+            padding: 0 4px;
+            flex: 1;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+        .lm-copy-btn span {
+            font-size: 12px;
+        }
+        .lm-icon-actions {
+            display: flex;
+            gap: 4px;
+            flex: none;
+        }
+        .lm-icon-btn {
+            background: #f3f4f6;
+            border: none;
+            border-radius: 6px;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .lm-icon-btn.edit { color: #2563eb; }
+        .lm-icon-btn.del { color: #dc2626; background: #fee2e2; }
     </style>
 </head>
 <body>
@@ -798,7 +946,7 @@
                 </div>
             </div>
             <div id="landmark-empty" class="empty-state" style="display:none;">目前沒有純點紀錄，點擊下方「+」號新增！</div>
-            <div id="landmark-list" style="display:flex; flex-direction:column; gap:12px;"></div>
+            <div id="landmark-list" style="display:flex; flex-wrap:wrap; gap:12px; align-content: flex-start;"></div>
         </section>
         <section id="view-settings" class="view-section">
 
@@ -994,7 +1142,7 @@
                 </div>
                 <div class="input-group">
                     <label>座標 (貼上經緯度將自動抓取國家)</label>
-                    <input type="text" id="post-coords" class="input-base" placeholder="貼上點座標" onblur="autoDetectCountry(this.value, 'post-country', 'post-tz-hint')">
+                    <input type="text" id="post-coords" class="input-base" placeholder="貼上點座標" onblur="autoDetectCountry(this.value, 'post-country', 'post-tz-hint', 'append')">
                 </div>
                 <div class="input-group">
                     <label>國家 <span id="post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
@@ -1149,7 +1297,7 @@
                 </div>
                 <div class="input-group">
                     <label>座標</label>
-                    <input type="text" id="edit-post-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint')">
+                    <input type="text" id="edit-post-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint', 'append')">
                 </div>
                 <div class="input-group">
                     <label>國家 <span id="edit-post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
@@ -1206,7 +1354,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.08.0234";
+    const APP_VERSION = "2026.07.08.0409";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1398,7 +1546,7 @@
             }
         }
 
-        const match = coordsStr.match(/(-?\d+(?:\.\d+)?)(?:[\s,]+)(-?\d+(?:\.\d+)?)/);
+        const match = coordsStr.match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
         if(match) {
             const lat = match[1];
             const lon = match[2];
@@ -1406,37 +1554,67 @@
                 let countryName = "";
                 let offsetHours = null;
 
-                const resCountry = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh-TW`);
+                let resCountry = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh-TW`);
+                let data = null;
                 if(resCountry.ok) {
-                    const data = await resCountry.json();
-                    if(data && data.countryName) {
-                        countryName = data.countryName;
-                        if (countryName.includes("中華民國")) {
-                            countryName = "台灣";
+                    data = await resCountry.json();
+                } else {
+                    try {
+                        const resOsm = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=zh-TW`);
+                        if (resOsm.ok) {
+                            const osmData = await resOsm.json();
+                            if (osmData && osmData.address) {
+                                data = {
+                                    countryName: osmData.address.country,
+                                    city: osmData.address.city || osmData.address.town || osmData.address.village || osmData.address.county || '',
+                                    principalSubdivision: osmData.address.state || osmData.address.province || ''
+                                };
+                            }
                         }
+                    } catch(e) {}
+                }
+
+                if(data && data.countryName) {
+                        countryName = data.countryName;
                         if (window.OpenCC) {
                             const converter = OpenCC.Converter({ from: 'cn', to: 'tw' });
                             countryName = converter(countryName);
+                        }
+                        if (countryName.includes("中華民國")) {
+                            countryName = "台灣";
+                        }
+                        if (countryName.includes("大韓民國")) {
+                            countryName = "南韓";
                         }
                         const countryInput = document.getElementById(countryInputId);
                         if(countryInput) {
                             countryInput.value = countryName;
                         }
                         if(cityInputId) {
-                            const cityInput = document.getElementById(cityInputId);
-                            if(cityInput) {
-                                const subdivision = data.principalSubdivision || '';
-                                const cityName = data.city || data.locality || '';
-                                let combined = subdivision || cityName || '';
-                                if (window.OpenCC) {
-                                    const converter = OpenCC.Converter({ from: 'cn', to: 'tw' });
-                                    combined = converter(combined);
+                            const subdivision = data.principalSubdivision || '';
+                            const cityName = data.city || data.locality || '';
+                            let combined = subdivision || cityName || '';
+                            if (!combined && data.localityInfo && data.localityInfo.administrative) {
+                                const admins = data.localityInfo.administrative.sort((a,b) => b.adminLevel - a.adminLevel);
+                                const localAdmin = admins.find(a => a.adminLevel > 3 && a.adminLevel < 10);
+                                if (localAdmin) combined = localAdmin.name;
+                            }
+                            if (window.OpenCC) {
+                                const converter = OpenCC.Converter({ from: 'cn', to: 'tw' });
+                                combined = converter(combined);
+                            }
+                            if (cityInputId === 'append') {
+                                if (combined && countryInput) {
+                                    countryInput.value = countryName + " " + combined;
                                 }
-                                cityInput.value = combined;
+                            } else {
+                                const cityInput = document.getElementById(cityInputId);
+                                if(cityInput) {
+                                    cityInput.value = combined;
+                                }
                             }
                         }
                     }
-                }
 
                 const resTz = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&timezone=auto&current_weather=true`);
                 if(resTz.ok) {
@@ -1625,10 +1803,10 @@
         const searchVal = (document.getElementById('lm-search')?.value || '').trim();
         if (!container) return;
 
-        // 預先計算座標出現次數來判斷重複
+        // 預先計算座標出現次數來判斷重複 (用 normalizeCoords 統一格式)
         const coordCount = {};
         landmarkList.forEach(item => {
-            const c = (item.coords || '').trim().toLowerCase().replace(/\s+/g, '');
+            const c = normalizeCoords(item.coords || '').toLowerCase();
             if (c) coordCount[c] = (coordCount[c] || 0) + 1;
         });
 
@@ -1643,14 +1821,14 @@
         let filtered = filterVal ? landmarkList.filter(i => i.type === filterVal) : [...landmarkList];
 
         let searchCoords = null;
-        const coordMatch = searchVal.match(/(-?\d+(?:\.\d+)?)(?:[\s,]+)(-?\d+(?:\.\d+)?)/);
+        const coordMatch = searchVal.match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
         if (coordMatch) {
             searchCoords = { lat: parseFloat(coordMatch[1]), lon: parseFloat(coordMatch[2]) };
             filtered.forEach(item => {
-                const ic = (item.coords || '').match(/(-?\d+(?:\.\d+)?)(?:[\s,]+)(-?\d+(?:\.\d+)?)/);
+                const ic = (item.coords || '').match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
                 item._dist = ic ? getDistanceFromLatLonInKm(searchCoords.lat, searchCoords.lon, parseFloat(ic[1]), parseFloat(ic[2])) : 99999;
             });
-            filtered = filtered.filter(i => i._dist <= 1); // 1km 內
+            filtered = filtered.filter(i => i._dist <= 1);
         }
 
         if (filtered.length === 0) {
@@ -1662,51 +1840,52 @@
         container.innerHTML = '';
 
         const summary = document.createElement('div');
-        summary.innerHTML = `<div style="font-size: 15px; font-weight: 900; color: var(--text-main); margin-bottom: 8px;">📊 純點總計：${filtered.length} 筆</div>`;
+        summary.style.width = '100%';
+        summary.innerHTML = `<div style="font-size:15px; font-weight:900; color:var(--text-main); margin-bottom:8px;">📊 純點總計：${filtered.length} 筆</div>`;
         container.appendChild(summary);
 
-        // 如果是座標搜尋，則以扁平清單顯示距離排序，否則依種類分組
+        // 建立導航卡片的通用函數
+        function makeLmCard(item, extraBadge) {
+            const isDuplicate = item.coords && coordCount[normalizeCoords(item.coords).toLowerCase()] > 1;
+            const location = [escapeHtml(item.country), escapeHtml(item.city)].filter(Boolean).join(' · ');
+            const card = document.createElement('div');
+            card.className = 'lm-nav-card' + (isDuplicate ? ' lm-dup' : '');
+            card.innerHTML = `
+                <div class="lm-nav-left">
+                    <div class="lm-nav-title">📍 ${location || '(未填地點)'}</div>
+                    <div class="lm-nav-sub">
+                        <span class="lm-type-pill">${escapeHtml(item.type)}</span>
+                        ${isDuplicate ? '<span style="color:#b45309;font-weight:700;">⚠️重複</span>' : ''}
+                        ${extraBadge || ''}
+                        ${item.note ? `<span>💬 ${escapeHtml(item.note)}</span>` : ''}
+                    </div>
+                </div>
+                <div class="lm-nav-right">
+                    <button class="lm-copy-btn" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍<span>複製</span></button>
+                    <div class="lm-icon-actions">
+                        <button class="lm-icon-btn edit" onclick="editLandmark('${item.id}')">✏️</button>
+                        <button class="lm-icon-btn del"  onclick="deleteLandmark('${item.id}')">🗑️</button>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        // 座標搜尋：扁平清單，依距離排序
         if (searchCoords) {
             filtered.sort((a, b) => a._dist - b._dist);
             const grid = document.createElement('div');
-            grid.className = 'grid';
+            grid.className = 'lm-nav-grid';
             filtered.forEach(item => {
-                const isDuplicate = item.coords && coordCount[item.coords.trim().toLowerCase().replace(/\s+/g, '')] > 1;
-                const dupBadge = isDuplicate ? `<span style="font-size:11px; color:#b45309; font-weight:bold; background:#fef3c7; padding:2px 6px; border-radius:6px; border:1px dashed #f59e0b;">⚠️ 重複收藏</span>` : '';
-                
-                const card = document.createElement('div');
-                card.className = `grid-card ${isDuplicate ? 'duplicate-card' : ''}`;
-                const location = [escapeHtml(item.country), escapeHtml(item.city)].filter(Boolean).join(' · ');
                 const distText = item._dist < 1 ? (item._dist * 1000).toFixed(0) + ' m' : item._dist.toFixed(1) + ' km';
-                card.innerHTML = `
-                    <div class="card-body" style="gap: 6px; padding: 12px;">
-                        <div style="display:flex; justify-content:space-between; align-items:stretch; gap:8px;">
-                            <div style="display:flex; flex-direction:column; gap:6px; flex:1; min-width:0;">
-                                <div style="display:flex; align-items:flex-start; gap:6px; flex-wrap:wrap;">
-                                    <span class="card-badge-type" style="position:static; font-size:10px; padding:2px 6px; border-radius:6px; line-height:1.2; opacity:0.8;">${escapeHtml(item.type)}</span>
-                                    <span style="font-size:11px; color:#ef4444; font-weight:bold; background:#fee2e2; padding:2px 6px; border-radius:6px;">距離 ${distText}</span>
-                                    ${dupBadge}
-                                </div>
-                                <div class="lc-info" style="margin:0; font-size:15px; font-weight:900; color:var(--text-main); display:flex; align-items:center; gap:4px; line-height:1.3;">${location ? `📍 ${location}` : ''}</div>
-                                ${item.note ? `<div class="card-title" style="font-size:12px; font-weight:bold; color:#059669; margin:0; margin-top:auto; line-height:1.4;">💬 ${escapeHtml(item.note)}</div>` : '<div style="margin-top:auto;"></div>'}
-                            </div>
-                            <div style="display:flex; flex-direction:column; gap:6px; flex:0 0 56px; align-items:stretch; justify-content:center;">
-                                <button class="copy-coords-btn" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)" style="height:44px; padding:0; width:100%; border-radius:8px; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;"><span style="font-size:13px; line-height:1;">📍</span><span style="font-size:10px; line-height:1;">複製</span></button>
-                            </div>
-                        </div>
-                        <div class="lc-actions" style="display:flex; gap:6px; margin-top:auto; padding-top:4px;">
-                            <button class="btn-sm btn-edit" style="flex:1;" onclick="editLandmark('${item.id}')">修改</button>
-                            <button class="btn-sm btn-danger" style="flex:1;" onclick="deleteLandmark('${item.id}')">刪除</button>
-                        </div>
-                    </div>
-                `;
-                grid.appendChild(card);
+                const distBadge = `<span class="lm-dist-badge">📏 ${distText}</span>`;
+                grid.appendChild(makeLmCard(item, distBadge));
             });
             container.appendChild(grid);
             return;
         }
 
-        // 一般依種類分組
+        // 一般模式：依種類分組
         const groups = {};
         filtered.forEach(item => {
             const key = item.type || '未分類';
@@ -1722,15 +1901,13 @@
                 knownLandmarkGroups.add(groupId);
             }
 
-            // 群組標題 (仿明信片 postcard-header 樣式)
+            // 群組標題（卡片樣式）
             const gHead = document.createElement('div');
-            gHead.className = 'group-header postcard-header';
-            gHead.style.justifyContent = 'flex-start';
-            gHead.style.gap = '12px';
+            gHead.className = 'card-group-header';
             const isCollapsed = collapsedGroups.has(groupId);
             const arrow = isCollapsed ? '▶' : '▼';
             gHead.innerHTML = `
-                <span style="font-size:18px; font-weight:900; background:rgba(255,255,255,0.25); padding:4px 12px; border-radius:16px;">${items.length} 筆</span>
+                <span class="card-group-header-count">${items.length}</span>
                 <span>${arrow} 📂 ${escapeHtml(type)}</span>
             `;
             gHead.addEventListener('click', () => {
@@ -1742,53 +1919,20 @@
 
             if (isCollapsed) return;
 
-            // 格狀卡片區
+            // 導航卡片格狀區
             const grid = document.createElement('div');
-            grid.className = 'grid';
+            grid.className = 'lm-nav-grid';
 
-            // 按照 國家、城市(由北到南緯度) 排序
+            // 按國家、緯度由北到南排序
             items.sort((a, b) => {
-                const cA = a.country || '';
-                const cB = b.country || '';
+                const cA = a.country || '', cB = b.country || '';
                 if (cA !== cB) return cA.localeCompare(cB);
-                const latA = parseFloat((a.coords || '').split(/[\s,]+/)[0]) || 0;
-                const latB = parseFloat((b.coords || '').split(/[\s,]+/)[0]) || 0;
+                const latA = parseFloat((a.coords || '').split(/[\s,，]+/)[0]) || 0;
+                const latB = parseFloat((b.coords || '').split(/[\s,，]+/)[0]) || 0;
                 return latB - latA;
             });
 
-            items.forEach(item => {
-                const isDuplicate = item.coords && coordCount[item.coords.trim().toLowerCase().replace(/\s+/g, '')] > 1;
-                const dupBadge = isDuplicate ? `<span style="font-size:11px; color:#b45309; font-weight:bold; background:#fef3c7; padding:2px 6px; border-radius:6px; border:1px dashed #f59e0b;">⚠️ 重複收藏</span>` : '';
-                
-                const card = document.createElement('div');
-                card.className = `grid-card ${isDuplicate ? 'duplicate-card' : ''}`;
-
-                const location = [escapeHtml(item.country), escapeHtml(item.city)].filter(Boolean).join(' · ');
-
-                card.innerHTML = `
-                    <div class="card-body" style="gap: 6px; padding: 12px;">
-                        <div style="display:flex; justify-content:space-between; align-items:stretch; gap:8px;">
-                            <div style="display:flex; flex-direction:column; gap:6px; flex:1; min-width:0;">
-                                <div style="display:flex; align-items:flex-start; gap:6px; flex-wrap:wrap;">
-                                    <span class="card-badge-type" style="position:static; font-size:10px; padding:2px 6px; border-radius:6px; line-height:1.2; opacity:0.8;">${escapeHtml(item.type)}</span>
-                                    ${dupBadge}
-                                </div>
-                                <div class="lc-info" style="margin:0; font-size:15px; font-weight:900; color:var(--text-main); display:flex; align-items:center; gap:4px; line-height:1.3;">${location ? `📍 ${location}` : ''}</div>
-                                ${item.note ? `<div class="card-title" style="font-size:12px; font-weight:bold; color:#059669; margin:0; margin-top:auto; line-height:1.4;">💬 ${escapeHtml(item.note)}</div>` : '<div style="margin-top:auto;"></div>'}
-                            </div>
-                            <div style="display:flex; flex-direction:column; gap:6px; flex:0 0 56px; align-items:stretch; justify-content:center;">
-                                <button class="copy-coords-btn" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)" style="height:44px; padding:0; width:100%; border-radius:8px; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;"><span style="font-size:13px; line-height:1;">📍</span><span style="font-size:10px; line-height:1;">複製</span></button>
-                            </div>
-                        </div>
-                        <div class="lc-actions" style="display:flex; gap:6px; margin-top:auto; padding-top:4px;">
-                            <button class="btn-sm btn-edit" style="flex:1;" onclick="editLandmark('${item.id}')">修改</button>
-                            <button class="btn-sm btn-danger" style="flex:1;" onclick="deleteLandmark('${item.id}')">刪除</button>
-                        </div>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-
+            items.forEach(item => grid.appendChild(makeLmCard(item, '')));
             container.appendChild(grid);
         });
     }
