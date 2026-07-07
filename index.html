@@ -1197,7 +1197,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.07.0225";
+    const APP_VERSION = "2026.07.08.0209";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -2308,10 +2308,10 @@
             const kindEl = document.getElementById('mushroom-kind');
             const mushKind = kindEl ? kindEl.value : '巨菇';
 
-            const mCoordsStr = coordsEl.value.trim().toLowerCase().replace(/\s+/g, '');
+            const mCoordsStr = normalizeCoords(coordsEl.value).toLowerCase();
             if (mCoordsStr) {
                 const isDup = dataList.some(item => {
-                    return (item.coords || '').trim().toLowerCase().replace(/\s+/g, '') === mCoordsStr;
+                    return normalizeCoords(item.coords || '').toLowerCase() === mCoordsStr;
                 });
                 if (isDup) {
                     if (!confirm("⚠️ 偵測到重複！\n此座標已有相同的巨菇/元素菇紀錄。\n\n確定要繼續新增嗎？")) return;
@@ -2320,7 +2320,7 @@
 
             database.ref('mushrooms').push({
                 sn: nextSn, user: processedUser, country: processedCountry,
-                name: nameEl.value.trim(), coords: coordsEl.value.trim(), tag: tagEl.value.trim(), 
+                name: nameEl.value.trim(), coords: normalizeCoords(coordsEl.value), tag: tagEl.value.trim(), 
                 targetTime: targetTime, slots: initSlots, kind: mushKind
             });
             
@@ -2363,7 +2363,7 @@
 
             database.ref('postcards').push({
                 type: toTW(typeEl.value), country: processedCountry, name: nameEl.value.trim(),
-                coords: coordsEl.value.trim(), tag: tagEl.value.trim() || "", image: imageEl.value.trim() || "無圖片",
+                coords: normalizeCoords(coordsEl.value), tag: tagEl.value.trim() || "", image: imageEl.value.trim() || "無圖片",
                 provider: currentSyncId || ""
             });
             countryEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = ''; imageEl.value = '';
@@ -2377,7 +2377,7 @@
             const lmCity = document.getElementById('lm-city').value.trim();
             if(!lmType || !lmCoords) { alert('種類與座標為必填！'); return; }
 
-            const lmData = { type: lmType, coords: lmCoords, note: lmNote, country: lmCountry, city: lmCity, timestamp: Date.now() };
+            const lmData = { type: lmType, coords: normalizeCoords(lmCoords), note: lmNote, country: lmCountry, city: lmCity, timestamp: Date.now() };
 
             if (editingLandmarkId) {
                 // 修改模式
@@ -2385,9 +2385,9 @@
                 editingLandmarkId = null;
             } else {
                 // 重複判斷：座標完全相同視為重複
-                const lmCoordsNorm = lmCoords.trim().toLowerCase().replace(/\s+/g, '');
+                const lmCoordsNorm = normalizeCoords(lmCoords).toLowerCase();
                 const isDup = landmarkList.some(item => {
-                    return (item.coords || '').trim().toLowerCase().replace(/\s+/g, '') === lmCoordsNorm;
+                    return normalizeCoords(item.coords || '').toLowerCase() === lmCoordsNorm;
                 });
                 if (isDup) {
                     if (!confirm('⚠️ 偵測到重複！\n此座標已有相同的純點紀錄。\n\n確定要繼續新增嗎？')) return;
@@ -2515,7 +2515,7 @@
             const editedKind = document.getElementById('edit-mushroom-kind') ? document.getElementById('edit-mushroom-kind').value : '巨菇';
             let updates = { 
                 user: newUser, country: processedCountry,
-                name: document.getElementById('edit-name').value.trim(), coords: document.getElementById('edit-coords').value.trim(),
+                name: document.getElementById('edit-name').value.trim(), coords: normalizeCoords(document.getElementById('edit-coords').value),
                 tag: document.getElementById('edit-tag').value.trim(), targetTime: targetTime, kind: editedKind
             };
             const item = dataList.find(i => i.id === currentEditingTimeId);
@@ -2542,16 +2542,48 @@
             database.ref('postcards/' + currentEditingTimeId).update({
                 type: pType, country: processedCountry,
                 name: document.getElementById('edit-post-name').value.trim(), tag: document.getElementById('edit-post-tag').value.trim(),
-                coords: document.getElementById('edit-post-coords').value.trim(), image: document.getElementById('edit-post-image').value.trim() || "無圖片",
+                coords: normalizeCoords(document.getElementById('edit-post-coords').value), image: document.getElementById('edit-post-image').value.trim() || "無圖片",
                 targetTime: targetTime
             });
         }
         closeModal('time-modal');
     }
 
+    function detectOS() {
+        const ua = navigator.userAgent;
+        const platform = navigator.platform || '';
+        // iPad OS 13+ 偽裝成 macOS，需用 maxTouchPoints 判斷
+        if (/Mac/.test(platform) && navigator.maxTouchPoints > 1) return 'ios';
+        if (/iPad|iPhone|iPod/.test(ua)) return 'ios';
+        if (/Android/.test(ua)) return 'android';
+        if (/Mac/.test(platform) || /Macintosh/.test(ua)) return 'macos';
+        if (/Win/.test(platform) || /Windows/.test(ua)) return 'windows';
+        if (/Linux/.test(platform)) return 'linux';
+        return 'unknown';
+    }
+
+    function normalizeCoords(str) {
+        if (!str) return '';
+        let s = String(str).trim();
+        // 1. 偵測有無逗號
+        if (!s.includes(',')) {
+            // 2. 無逗號：將兩個數字之間的空白替換為逗號
+            s = s.replace(/(-?\d+\.?\d*)\s+(-?\d+\.?\d*)/, '$1,$2');
+        }
+        // 3. 移除所有空格，並清理多餘逗號
+        s = s.replace(/\s+/g, '').replace(/,+/g, ',').replace(/^,|,$/g, '');
+        return s;
+    }
+
     function copyCoords(text, buttonElement) {
-        const cleanText = String(text).replace(/,/g, ' ').replace(/\s+/g, '').trim();
-        navigator.clipboard.writeText(cleanText).then(() => {
+        const os = detectOS();
+        const normalized = normalizeCoords(String(text));
+        // iOS / macOS：用空格替代逗號（地圖 App 直接貼上更順暢）
+        // Android / Windows / Linux：維持逗號分隔
+        const copyText = (os === 'ios' || os === 'macos')
+            ? normalized.replace(/,/g, ' ')
+            : normalized;
+        navigator.clipboard.writeText(copyText).then(() => {
             const originalHTML = buttonElement.innerHTML;
             buttonElement.innerHTML = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;"><span style="font-size:13px; line-height:1;">✅</span><span style="font-size:10px; line-height:1;">成功</span></div>';
             buttonElement.style.background = '#e5e7eb';
@@ -2816,7 +2848,7 @@
 
         const mushCoordCount = {};
         dataList.forEach(item => {
-            const c = (item.coords || '').trim().toLowerCase().replace(/\s+/g, '');
+            const c = normalizeCoords(item.coords || '').toLowerCase();
             if (c) mushCoordCount[c] = (mushCoordCount[c] || 0) + 1;
         });
 
@@ -2849,7 +2881,7 @@
                     else { timeText = `<span class="live-timer" data-type="mushroom-claimed" data-target="${item.targetTime}">${getRemainingText(item.targetTime, now)}</span>`; }
                 }
                 actCount++;
-                const isDup = item.coords && mushCoordCount[item.coords.trim().toLowerCase().replace(/\s+/g, '')] > 1;
+                const isDup = item.coords && mushCoordCount[normalizeCoords(item.coords).toLowerCase()] > 1;
                 const card = createMushroomCard(item, now, isExp, timeText, isDup);
                 if (item.targetTime == null) activeGroup2.push(card);
                 else {
@@ -2868,12 +2900,12 @@
         // 待認領群組：永遠分群顯示（有資料才顯示該群）
         const unclaimGiantCards = unclaimGiant.map(({ item, timeText, isExp }) => { 
             uncCount++; 
-            const isDup = item.coords && mushCoordCount[item.coords.trim().toLowerCase().replace(/\s+/g, '')] > 1;
+            const isDup = item.coords && mushCoordCount[normalizeCoords(item.coords).toLowerCase()] > 1;
             return createMushroomCard(item, now, isExp, timeText, isDup); 
         });
         const unclaimNormalCards = unclaimNormal.map(({ item, timeText, isExp }) => { 
             uncCount++; 
-            const isDup = item.coords && mushCoordCount[item.coords.trim().toLowerCase().replace(/\s+/g, '')] > 1;
+            const isDup = item.coords && mushCoordCount[normalizeCoords(item.coords).toLowerCase()] > 1;
             return createMushroomCard(item, now, isExp, timeText, isDup); 
         });
 
