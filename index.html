@@ -906,26 +906,29 @@
                 🔗 推薦免費圖床：<a href="https://meee.com.tw/" target="_blank" style="color:var(--primary-dark);">Meee 圖片上傳</a>
             </div>
             
-            <div class="search-row">
-                <select id="postcard-filter" class="input-base filter-select" onchange="updateView()">
-                    <option value="all">全部明信片</option>
-                    <option value="collected">⭐ 我的收藏</option>
-                    <option value="uncollected">✰ 尚未收藏</option>
-                </select>
-                <select id="postcard-recent-filter" class="input-base filter-select" onchange="updateView()" style="flex:0.8;">
-                    <option value="all">時間不限</option>
-                    <option value="1">最近 1 天新增</option>
-                    <option value="3">最近 3 天新增</option>
-                    <option value="7">最近 7 天新增</option>
-                    <option value="14">最近 14 天新增</option>
-                </select>
-                <select id="search-logic" class="input-base filter-select" onchange="updateView()">
-                    <option value="and">且 (全部符合)</option>
-                    <option value="or">或 (任一符合)</option>
-                </select>
-            </div>
-            <div class="search-row" style="margin-top: 8px;">
-                <input type="text" id="postcard-search" class="input-base search-input" oninput="updateView()" placeholder="🔍 支援多關鍵字搜尋...">
+            <div style="background:var(--card-bg); padding:8px 15px; border-radius:12px; margin-bottom:15px; box-shadow:0 1px 3px rgba(0,0,0,0.05); display:flex; flex-direction:row; gap:8px; align-items:center; flex-wrap:wrap;">
+                <div style="display:flex; gap:6px; align-items:center; flex:0 0 auto;">
+                    <label style="font-size:13px; font-weight:bold; color:var(--text-main); white-space:nowrap;">過濾：</label>
+                    <select id="postcard-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:13px;">
+                        <option value="all">全部</option>
+                        <option value="collected">⭐ 已收</option>
+                        <option value="uncollected">✰ 未收</option>
+                    </select>
+                    <select id="postcard-recent-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:13px;">
+                        <option value="all">不限時</option>
+                        <option value="1">1天內</option>
+                        <option value="3">3天內</option>
+                        <option value="7">7天內</option>
+                        <option value="14">14天內</option>
+                    </select>
+                    <select id="search-logic" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:13px;">
+                        <option value="and">且</option>
+                        <option value="or">或</option>
+                    </select>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center; flex:1; min-width:150px;">
+                    <input type="text" id="postcard-search" class="input-base search-input" style="flex:1; padding:5px 8px; font-size:13px;" oninput="updateView()" placeholder="🔍 關鍵字搜尋...">
+                </div>
             </div>
             <div id="postcard-container" class="grid"></div>
             <div id="postcard-empty" class="empty-message" style="display: none;">目前沒有收藏的明信片項目</div>
@@ -933,16 +936,15 @@
 
         
         <section id="view-landmark" class="view-section">
-            <div style="background:var(--card-bg); padding:10px 15px; border-radius:12px; margin-bottom:15px; box-shadow:0 1px 3px rgba(0,0,0,0.05); display:flex; flex-direction:column; gap:10px;">
-                <div style="display:flex; gap:10px; align-items:center;">
-                    <label style="font-size:14px; font-weight:bold; color:var(--text-main); white-space:nowrap;">過濾種類：</label>
-                    <select id="lm-filter" style="flex:1; border:1px solid var(--border); border-radius:8px; padding:6px; outline:none; background:#f9fafb;" onchange="renderLandmarks()">
+            <div style="background:var(--card-bg); padding:8px 15px; border-radius:12px; margin-bottom:15px; box-shadow:0 1px 3px rgba(0,0,0,0.05); display:flex; flex-direction:row; gap:10px; align-items:center; flex-wrap:wrap;">
+                <div style="display:flex; gap:8px; align-items:center; flex:0 0 auto;">
+                    <label style="font-size:13px; font-weight:bold; color:var(--text-main); white-space:nowrap;">過濾：</label>
+                    <select id="lm-filter" style="border:1px solid var(--border); border-radius:8px; padding:5px 8px; outline:none; background:#f9fafb; font-size:13px;" onchange="renderLandmarks()">
                         <option value="">顯示全部</option>
                     </select>
                 </div>
-                <div style="display:flex; gap:10px; align-items:center;">
-                    <label style="font-size:14px; font-weight:bold; color:var(--text-main); white-space:nowrap;">座標搜尋：</label>
-                    <input type="text" id="lm-search" class="input-base" style="flex:1; border:1px solid var(--border); border-radius:8px; padding:6px; outline:none; background:#f9fafb;" oninput="renderLandmarks()" placeholder="🔍 貼上座標尋找 1km 內紀錄...">
+                <div style="display:flex; gap:8px; align-items:center; flex:1; min-width:180px;">
+                    <input type="text" id="lm-search" class="input-base" style="flex:1; border:1px solid var(--border); border-radius:8px; padding:5px 8px; outline:none; background:#f9fafb; font-size:13px;" oninput="renderLandmarks()" placeholder="🔍 貼上座標尋找 1km 內紀錄...">
                 </div>
             </div>
             <div id="landmark-empty" class="empty-state" style="display:none;">目前沒有純點紀錄，點擊下方「+」號新增！</div>
@@ -1354,7 +1356,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.08.0409";
+    const APP_VERSION = "2026.07.09.0131";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
