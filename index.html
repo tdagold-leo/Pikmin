@@ -907,28 +907,24 @@
             </div>
             
             <div style="background:var(--card-bg); padding:8px 15px; border-radius:12px; margin-bottom:15px; box-shadow:0 1px 3px rgba(0,0,0,0.05); display:flex; flex-direction:row; gap:8px; align-items:center; flex-wrap:wrap;">
-                <div style="display:flex; gap:6px; align-items:center; flex:0 0 auto;">
-                    <label style="font-size:13px; font-weight:bold; color:var(--text-main); white-space:nowrap;">過濾：</label>
-                    <select id="postcard-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:13px;">
-                        <option value="all">全部明信片</option>
-                        <option value="collected">⭐ 我的收藏</option>
-                        <option value="uncollected">✰ 尚未收藏</option>
-                    </select>
-                    <select id="postcard-recent-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:13px;">
-                        <option value="all">時間不限</option>
-                        <option value="1">最近 1 天新增</option>
-                        <option value="3">最近 3 天新增</option>
-                        <option value="7">最近 7 天新增</option>
-                        <option value="14">最近 14 天新增</option>
-                    </select>
-                    <select id="search-logic" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:13px;">
-                        <option value="and">且 (全部符合)</option>
-                        <option value="or">或 (任一符合)</option>
-                    </select>
-                </div>
-                <div style="display:flex; gap:8px; align-items:center; flex:1; min-width:150px;">
-                    <input type="text" id="postcard-search" class="input-base search-input" style="flex:1; padding:5px 8px; font-size:13px;" oninput="updateView()" placeholder="🔍 支援多關鍵字搜尋...">
-                </div>
+                <label style="font-size:13px; font-weight:bold; color:var(--text-main); white-space:nowrap; margin-right:-2px;">過濾：</label>
+                <select id="postcard-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:13px; flex:0 0 auto; max-width:fit-content;">
+                    <option value="all">全部明信片</option>
+                    <option value="collected">⭐ 我的收藏</option>
+                    <option value="uncollected">✰ 尚未收藏</option>
+                </select>
+                <select id="postcard-recent-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:13px; flex:0 0 auto; max-width:fit-content;">
+                    <option value="all">時間不限</option>
+                    <option value="1">最近 1 天新增</option>
+                    <option value="3">最近 3 天新增</option>
+                    <option value="7">最近 7 天新增</option>
+                    <option value="14">最近 14 天新增</option>
+                </select>
+                <select id="search-logic" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:13px; flex:0 0 auto; max-width:fit-content;">
+                    <option value="and">且 (全部符合)</option>
+                    <option value="or">或 (任一符合)</option>
+                </select>
+                <input type="text" id="postcard-search" class="input-base search-input" style="flex:1; min-width:140px; padding:5px 8px; font-size:13px;" oninput="updateView()" placeholder="🔍 支援多關鍵字搜尋...">
             </div>
             <div id="postcard-container" class="grid"></div>
             <div id="postcard-empty" class="empty-message" style="display: none;">目前沒有收藏的明信片項目</div>
@@ -1356,7 +1352,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.09.0221";
+    const APP_VERSION = "2026.07.09.0225";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
