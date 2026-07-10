@@ -887,7 +887,10 @@
 
             <div style="background:var(--card-bg); padding:10px 15px; border-radius:12px; margin-bottom:15px; box-shadow:0 1px 3px rgba(0,0,0,0.05); display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
                 <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:200px;">
-                    <div id="profile-avatar-preview" style="width:40px; height:40px; border-radius:50%; background:#e5e7eb; cursor:pointer; background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold; color:#6b7280; flex-shrink:0;" onclick="document.getElementById('profile-avatar-upload').click()" title="點擊上傳個人圖像">圖像</div>
+                    <div style="position:relative;">
+                        <div id="profile-avatar-preview" style="width:40px; height:40px; border-radius:50%; background:#e5e7eb; cursor:pointer; background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold; color:#6b7280; flex-shrink:0;" onclick="document.getElementById('profile-avatar-upload').click()" title="點擊上傳個人圖像">圖像</div>
+                        <div id="profile-avatar-clear" onclick="clearProfileAvatar(event)" style="display:none; position:absolute; top:-2px; right:-2px; background:#ef4444; color:white; border-radius:50%; width:16px; height:16px; font-size:10px; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.2);" title="移除頭像">✕</div>
+                    </div>
                     <input type="file" id="profile-avatar-upload" accept="image/*" style="display:none;" onchange="handleProfileAvatarUpload(event)">
                     <input type="text" id="profile-name-input" class="input-base" style="width:100%; padding:6px 10px; font-size:14px;" placeholder="設定專屬名稱與頭像..." oninput="saveProfileName()">
                 </div>
@@ -1358,7 +1361,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.10.2254";
+    const APP_VERSION = "2026.07.10.2302";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1482,6 +1485,20 @@
         if(typeof updateView === 'function') updateView();
     }
 
+    function clearProfileAvatar(e) {
+        e.stopPropagation();
+        if(confirm("確定要移除專屬頭像嗎？")) {
+            localStorage.removeItem('pikmin_custom_avatar');
+            const name = document.getElementById('profile-name-input').value.trim();
+            if (name) {
+                const safeKey = name.replace(/[.#$\[\]]/g, '_');
+                database.ref('user_profiles/' + safeKey).remove();
+            }
+            updateProfileUI();
+            if(typeof updateView === 'function') updateView();
+        }
+    }
+
     function updateProfileUI() {
         const savedName = localStorage.getItem('pikmin_custom_name') || '';
         const nameInput = document.getElementById('profile-name-input');
@@ -1489,14 +1506,17 @@
 
         const preview = document.getElementById('profile-avatar-preview');
         const customAvatar = localStorage.getItem('pikmin_custom_avatar');
+        const clearBtn = document.getElementById('profile-avatar-clear');
         if (preview) {
             if (customAvatar) {
                 preview.style.backgroundImage = `url(${customAvatar})`;
                 preview.innerHTML = '';
                 preview.style.border = '2px solid #10b981';
+                if(clearBtn) clearBtn.style.display = 'flex';
             } else {
                 preview.style.backgroundImage = '';
                 preview.innerHTML = savedName ? savedName.charAt(0).toUpperCase() : '圖像';
+                if(clearBtn) clearBtn.style.display = 'none';
                 if (savedName) {
                     const theme = getUserColorTheme(savedName, true);
                     preview.style.backgroundColor = theme.bg === 'transparent' ? '#e5e7eb' : theme.bg;
