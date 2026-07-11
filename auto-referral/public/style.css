@@ -1,0 +1,147 @@
+:root {
+    --primary: #4CAF50;
+    --primary-dark: #388E3C;
+    --bg-color: #f5f7fa;
+    --card-bg: #ffffff;
+    --text-main: #333333;
+    --text-light: #666666;
+    --border: #e0e0e0;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    color: var(--primary-dark);
+    margin-bottom: 10px;
+}
+
+.card {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.card h2 {
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+    color: var(--primary-dark);
+    border-bottom: 2px solid var(--primary);
+    display: inline-block;
+    padding-bottom: 5px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    max-width: 400px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.primary-btn {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.primary-btn:hover {
+    background-color: var(--primary-dark);
+}
+
+.primary-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.status-success { color: #28a745; font-weight: bold; }
+.status-error { color: #dc3545; font-weight: bold; }
+.status-pending { color: #ffc107; font-weight: bold; }
+
+.copy-btn {
+    background: #e9ecef;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.copy-btn:hover { background: #dee2e6; }
+
+.logs-container {
+    background: #1e1e1e;
+    color: #00ff00;
+    font-family: monospace;
+    padding: 15px;
+    border-radius: 4px;
+    height: 300px;
+    overflow-y: auto;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.logs-container div {
+    margin-bottom: 4px;
+}

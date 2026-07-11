@@ -1,0 +1,18 @@
+{
+  "name": "pikmin-auto-referral",
+  "version": "1.0.0",
+  "description": "Pikmin Bloom 邀請碼半自動化工具 - 自動建立 Nintendo 帳號",
+  "main": "index.mjs",
+  "type": "module",
+  "scripts": {
+    "start": "node index.mjs",
+    "start:headed": "HEADED=1 node index.mjs"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "playwright": "^1.52.0",
+    "playwright-extra": "^4.3.6",
+    "puppeteer-extra-plugin-adblocker": "^2.13.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  }
+}

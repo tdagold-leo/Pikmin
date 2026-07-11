@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>座標格式遷移工具</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 16px;
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-bottom: 6px;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 32px;
+    }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 28px;
+      width: 100%;
+      max-width: 680px;
+      margin-bottom: 20px;
+    }
+    .card h2 {
+      font-size: 15px;
+      color: #94a3b8;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat-box {
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+    }
+    .stat-box .num {
+      font-size: 28px;
+      font-weight: 700;
+      color: #38bdf8;
+      line-height: 1;
+    }
+    .stat-box .label {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    #log {
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 16px;
+      height: 300px;
+      overflow-y: auto;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.8;
+    }
+    #log .entry { display: flex; gap: 8px; }
+    #log .entry.info  .tag { color: #38bdf8; }
+    #log .entry.ok    .tag { color: #4ade80; }
+    #log .entry.skip  .tag { color: #94a3b8; }
+    #log .entry.warn  .tag { color: #fb923c; }
+    #log .entry.err   .tag { color: #f87171; }
+    #log .entry .msg  { color: #cbd5e1; word-break: break-all; }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: none;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    #btn-start {
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      color: white;
+    }
+    #btn-start:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(99,102,241,0.4);
+    }
+    #btn-start:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .progress-bar {
+      height: 6px;
+      background: #1e293b;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #6366f1);
+      width: 0%;
+      transition: width 0.3s ease;
+      border-radius: 3px;
+    }
+    .warning-box {
+      background: #431407;
+      border: 1px solid #9a3412;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: #fed7aa;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+    .warning-box strong { color: #fb923c; }
+  </style>
+</head>
+<body>
+
+<h1>🗺️ 座標格式遷移工具</h1>
+<p class="subtitle">一次性批次修正 Firebase 中所有座標，統一格式為 <code style="color:#38bdf8">緯度,經度</code>（移除空格，逗號分隔）</p>
+
+<div class="card">
+  <div class="warning-box">
+    <strong>⚠️ 注意：</strong>此操作將直接修改 Firebase 資料庫中的座標欄位。<br>
+    只有「需要修正」的座標才會被寫入，已符合格式的不會被動到。<br>
+    建議執行前先備份資料庫。
+  </div>
+
+  <h2>執行進度</h2>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+
+  <div class="stats">
+    <div class="stat-box"><div class="num" id="stat-total">—</div><div class="label">總筆數</div></div>
+    <div class="stat-box"><div class="num" id="stat-fixed" style="color:#4ade80">0</div><div class="label">已修正</div></div>
+    <div class="stat-box"><div class="num" id="stat-skip" style="color:#94a3b8">0</div><div class="label">無需修正</div></div>
+  </div>
+
+  <button class="btn" id="btn-start" onclick="startMigration()">▶ 開始遷移</button>
+</div>
+
+<div class="card">
+  <h2>執行紀錄</h2>
+  <div id="log"></div>
+</div>
+
+<!-- Firebase SDK (compat) 與主專案相同版本 -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+  // ===== 與 index.html 完全相同的 Firebase 設定 =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyBkmQhSKbiSTeHkbAnjSZTgYtGbmPySJbo",
+    authDomain: "pikmin-tracker-3cf56.firebaseapp.com",
+    databaseURL: "https://pikmin-tracker-3cf56-default-rtdb.firebaseio.com/",
+    projectId: "pikmin-tracker-3cf56",
+    storageBucket: "pikmin-tracker-3cf56.firebasestorage.app",
+    messagingSenderId: "848190561510",
+    appId: "1:848190561510:web:07ceb7fa8bc57a7004af27"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
+  // ===== 與 index.html 相同的標準化邏輯 =====
+  function normalizeCoords(str) {
+    if (!str) return '';
+    let s = String(str).trim();
+    // 1. 偵測有無逗號
+    if (!s.includes(',')) {
+      // 2. 無逗號：將兩個數字之間的空白替換為逗號
+      s = s.replace(/(-?\d+\.?\d*)\s+(-?\d+\.?\d*)/, '$1,$2');
+    }
+    // 3. 移除所有空格，並清理多餘逗號
+    s = s.replace(/\s+/g, '').replace(/,+/g, ',').replace(/^,|,$/g, '');
+    return s;
+  }
+
+  // ===== Log 工具 =====
+  let fixedCount = 0, skipCount = 0, totalCount = 0, processedCount = 0;
+
+  function log(type, msg) {
+    const el = document.getElementById('log');
+    const tags = { info: '[INFO]', ok: '[ OK ]', skip: '[SKIP]', warn: '[WARN]', err: '[ERR ]' };
+    const div = document.createElement('div');
+    div.className = 'entry ' + type;
+    div.innerHTML = `<span class="tag">${tags[type]}</span><span class="msg">${msg}</span>`;
+    el.appendChild(div);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function updateStats() {
+    document.getElementById('stat-total').textContent = totalCount || '—';
+    document.getElementById('stat-fixed').textContent = fixedCount;
+    document.getElementById('stat-skip').textContent = skipCount;
+    const pct = totalCount > 0 ? Math.round((processedCount / totalCount) * 100) : 0;
+    document.getElementById('progress-fill').style.width = pct + '%';
+  }
+
+  // ===== 遷移主邏輯 =====
+  async function migrateCollection(refPath, label) {
+    log('info', `讀取 ${label} 中...`);
+    const snapshot = await database.ref(refPath).once('value');
+    const data = snapshot.val();
+    if (!data) {
+      log('warn', `${label} 無資料，略過`);
+      return;
+    }
+
+    const entries = Object.entries(data);
+    log('info', `${label} 共 ${entries.length} 筆`);
+    totalCount += entries.length;
+    updateStats();
+
+    const updates = {};
+
+    for (const [key, item] of entries) {
+      const original = item.coords || '';
+      const normalized = normalizeCoords(original);
+
+      processedCount++;
+
+      if (original === normalized) {
+        skipCount++;
+        log('skip', `${label}/${key} ｜ "${original}" 無需修正`);
+      } else {
+        fixedCount++;
+        updates[`${refPath}/${key}/coords`] = normalized;
+        log('ok', `${label}/${key} ｜ "${original}" → "${normalized}"`);
+      }
+      updateStats();
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await database.ref('/').update(updates);
+      log('info', `✅ ${label} 批次寫入完成，共修正 ${Object.keys(updates).length} 筆`);
+    } else {
+      log('info', `✅ ${label} 全部座標格式正確，無需修改`);
+    }
+  }
+
+  async function startMigration() {
+    const btn = document.getElementById('btn-start');
+    btn.disabled = true;
+    btn.textContent = '⏳ 遷移中...';
+
+    fixedCount = 0; skipCount = 0; totalCount = 0; processedCount = 0;
+    document.getElementById('log').innerHTML = '';
+    updateStats();
+
+    try {
+      log('info', '=== 開始座標遷移 ===');
+      await migrateCollection('mushrooms', '巨菇/元素菇');
+      await migrateCollection('postcards', '明信片');
+      await migrateCollection('landmarks', '地標');
+      log('info', `=== 遷移完成 ✅ 修正 ${fixedCount} 筆，略過 ${skipCount} 筆 ===`);
+      btn.textContent = '✅ 已完成';
+      btn.style.background = 'linear-gradient(135deg, #059669, #10b981)';
+    } catch (err) {
+      log('err', '遷移過程發生錯誤：' + err.message);
+      btn.disabled = false;
+      btn.textContent = '▶ 重試';
+    }
+  }
+</script>
+</body>
+</html>

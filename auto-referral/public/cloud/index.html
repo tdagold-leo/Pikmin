@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pikmin 自動註冊小幫手</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --primary: #38bdf8;
+            --primary-hover: #0284c7;
+            --success: #22c55e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at top right, rgba(56, 189, 248, 0.15), transparent 400px),
+                              radial-gradient(circle at bottom left, rgba(34, 197, 94, 0.1), transparent 400px);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-weight: 700;
+            font-size: 28px;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+        }
+
+        button.btn-primary {
+            background: linear-gradient(135deg, var(--primary), #818cf8);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+            width: 100%;
+        }
+
+        button.btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4);
+        }
+
+        button.btn-primary:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* 資訊卡片區塊 */
+        .info-box {
+            display: none;
+            margin-top: 10px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .info-box.active {
+            display: block;
+            animation: slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .info-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .info-value {
+            font-size: 22px;
+            font-weight: 600;
+            word-break: break-all;
+            margin-bottom: 15px;
+        }
+
+        .copy-btn {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid var(--border);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255,255,255,0.15);
+        }
+        
+        .copy-btn.success {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        /* 日誌區塊 */
+        .log-container {
+            margin-top: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            height: 150px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+        }
+
+        .log-entry {
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .log-success { color: var(--success); }
+        .log-error { color: #ef4444; }
+        
+        /* 脈衝動畫 (等待狀態) */
+        .pulsing {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: var(--primary);
+            animation: pulse-width 2s infinite ease-in-out;
+        }
+        
+        @keyframes pulse-width {
+            0% { width: 0%; opacity: 1; }
+            50% { width: 100%; opacity: 0.5; }
+            100% { width: 0%; opacity: 1; float: right; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Pikmin 自動註冊</h1>
+            <div class="subtitle">Cloud SPA 版・完全免費無超時</div>
+        </header>
+
+        <div class="card">
+            <div class="input-group">
+                <label for="referralCode">Pikmin 邀請碼</label>
+                <input type="text" id="referralCode" placeholder="請輸入大寫英文字母" value="NLSPYIBHN">
+            </div>
+            
+            <button id="startBtn" class="btn-primary" style="margin-top: 20px;">開始產生信箱</button>
+
+            <!-- 信箱顯示區塊 -->
+            <div id="emailBox" class="info-box">
+                <div class="info-title">臨時任天堂信箱</div>
+                <div id="emailDisplay" class="info-value">--</div>
+                <button id="copyEmailBtn" class="copy-btn">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    <span>複製信箱 (去任天堂註冊)</span>
+                </button>
+            </div>
+
+            <!-- 驗證碼顯示區塊 -->
+            <div id="codeBox" class="info-box">
+                <div id="loadingBar" class="pulsing"></div>
+                <div class="info-title">任天堂驗證碼 (等待中...)</div>
+                <div id="codeDisplay" class="info-value">--</div>
+                <button id="copyCodeBtn" class="copy-btn" disabled>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    <span>複製驗證碼</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="log-container" id="logContainer">
+            <div class="log-entry">準備就緒。點擊「開始」以啟動純網頁版自動化流程...</div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
