@@ -1370,7 +1370,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.11.2143";
+    const APP_VERSION = "2026.07.11.2150";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -3388,20 +3388,18 @@
                     const isMushType = (item.type === '菇');
                     const hasClearBtn = isMushType && item.targetTime && item.targetTime > Date.now();
                     const timeSetRow = isMushType ? (
-                        '<div style="margin-top:8px;padding:8px 10px;background:linear-gradient(135deg,rgba(14,165,233,0.08),rgba(99,102,241,0.06));border-radius:10px;border:1px solid rgba(14,165,233,0.25);">' +
+                        '<div style="margin-top:6px;padding:6px;background:linear-gradient(135deg,rgba(14,165,233,0.08),rgba(99,102,241,0.06));border-radius:10px;border:1px solid rgba(14,165,233,0.25);">' +
                         '<div style="font-size:10px;font-weight:700;color:#0ea5e9;letter-spacing:0.5px;margin-bottom:6px;text-transform:uppercase;">⏱ 快速設定剩餘時間</div>' +
-                        '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">' +
-                        '<div style="display:flex;align-items:center;gap:4px;background:var(--card-bg,#fff);border:1px solid rgba(14,165,233,0.35);border-radius:8px;padding:3px 8px;">' +
-                        '<input type="number" min="0" max="99" value="0" id="pc-h-' + item.id + '" style="width:36px;padding:0;font-size:15px;font-weight:700;border:none;text-align:center;background:transparent;color:inherit;outline:none;">' +
-                        '<span style="font-size:11px;font-weight:600;color:#94a3b8;">h</span>' +
+                        '<div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap;">' +
+                        '<div style="display:flex;flex:1;min-width:0;align-items:center;justify-content:center;gap:2px;background:var(--card-bg,#fff);border:1px solid rgba(14,165,233,0.35);border-radius:6px;padding:2px 4px;">' +
+                        '<input type="text" inputmode="numeric" pattern="[0-9]*" value="0" id="pc-h-' + item.id + '" style="width:24px;padding:0;font-size:14px;font-weight:700;border:none;text-align:right;background:transparent;color:inherit;outline:none;">' +
+                        '<span style="font-size:10px;font-weight:600;color:#94a3b8;margin-right:2px;">h</span>' +
+                        '<span style="color:#cbd5e1;font-size:12px;font-weight:300;">:</span>' +
+                        '<input type="text" inputmode="numeric" pattern="[0-9]*" value="0" id="pc-m-' + item.id + '" style="width:24px;padding:0;font-size:14px;font-weight:700;border:none;text-align:right;background:transparent;color:inherit;outline:none;">' +
+                        '<span style="font-size:10px;font-weight:600;color:#94a3b8;">m</span>' +
                         '</div>' +
-                        '<span style="color:#cbd5e1;font-size:16px;font-weight:300;">:</span>' +
-                        '<div style="display:flex;align-items:center;gap:4px;background:var(--card-bg,#fff);border:1px solid rgba(14,165,233,0.35);border-radius:8px;padding:3px 8px;">' +
-                        '<input type="number" min="0" max="59" value="0" id="pc-m-' + item.id + '" style="width:36px;padding:0;font-size:15px;font-weight:700;border:none;text-align:center;background:transparent;color:inherit;outline:none;">' +
-                        '<span style="font-size:11px;font-weight:600;color:#94a3b8;">m</span>' +
-                        '</div>' +
-                        '<button onclick="setPostcardTime(\'' + item.id + '\',\'pc-h-' + item.id + '\',\'pc-m-' + item.id + '\')" style="flex:1;min-width:52px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:white;border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:0.3px;box-shadow:0 2px 6px rgba(14,165,233,0.35);transition:opacity 0.15s;" onmouseover="this.style.opacity=\'0.85\'" onmouseout="this.style.opacity=\'1\'">✓ 確定</button>' +
-                        (hasClearBtn ? '<button onclick="clearPostcardTime(\'' + item.id + '\')" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:5px 8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">✕</button>' : '') +
+                        '<button onclick="setPostcardTime(\'' + item.id + '\',\'pc-h-' + item.id + '\',\'pc-m-' + item.id + '\')" style="flex:0 0 auto;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:white;border:none;border-radius:6px;padding:4px 8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 4px rgba(14,165,233,0.35);">✓ 確定</button>' +
+                        (hasClearBtn ? '<button onclick="clearPostcardTime(\'' + item.id + '\')" style="flex:0 0 auto;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:4px 6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">✕</button>' : '') +
                         '</div></div>'
                     ) : '';
 
