@@ -330,12 +330,16 @@
         /* 明信片專用圖片樣式 */
         .card-img-box {
             width: 100%;
-            aspect-ratio: 4 / 3;
+            padding-bottom: 75%; /* 4:3 aspect ratio */
             background: #e5e7eb;
             position: relative;
             cursor: pointer;
+            overflow: hidden;
         }
         .card-img {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -344,6 +348,9 @@
             background: var(--card-bg);
         }
         .card-img-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             display: flex;
@@ -1376,7 +1383,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.11.2155";
+    const APP_VERSION = "2026.07.11.2205";
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
             .then(res => res.text())
@@ -2483,7 +2490,7 @@
             if (toggleEl) toggleEl.checked = (savedTimeSetter === 'yes');
         } else {
             const toggleEl = document.getElementById('toggle-time-setter');
-            if (toggleEl) toggleEl.checked = true; // default on
+            if (toggleEl) toggleEl.checked = false; // default off
         }
 
         updateClocks();
