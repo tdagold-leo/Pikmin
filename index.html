@@ -923,35 +923,31 @@
             </div>
             
             <div style="background:var(--card-bg); padding:10px 15px; border-radius:12px; margin-bottom:15px; box-shadow:0 1px 3px rgba(0,0,0,0.05); display:flex; flex-direction:column; gap:10px;">
-                <!-- 第一排：過濾選單 -->
+                <!-- 第一排：過濾選單 (三個) -->
                 <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
                     <label style="font-size:13px; font-weight:bold; color:var(--text-main); white-space:nowrap; margin-right:-2px;">過濾：</label>
-                    <select id="postcard-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:13px; flex:1; min-width:120px;">
+                    <select id="postcard-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:13px; flex:1; min-width:90px;">
                         <option value="all">全部明信片</option>
                         <option value="collected">⭐ 我的收藏</option>
                         <option value="uncollected">✰ 尚未收藏</option>
                     </select>
-                    <select id="postcard-recent-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:13px; flex:1; min-width:120px;">
+                    <select id="postcard-recent-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:13px; flex:1; min-width:90px;">
                         <option value="all">時間不限</option>
                         <option value="1">最近 1 天新增</option>
                         <option value="3">最近 3 天新增</option>
                         <option value="7">最近 7 天新增</option>
                         <option value="14">最近 14 天新增</option>
                     </select>
-                </div>
-                
-                <!-- 第二排：搜尋列 -->
-                <div style="display:flex; flex-wrap:nowrap; gap:8px; align-items:center;">
-                    <select id="search-logic" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:13px; flex:0 0 auto;">
+                    <select id="search-logic" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:13px; flex:1; min-width:90px;">
                         <option value="and">且 (全部符合)</option>
                         <option value="or">或 (任一符合)</option>
                     </select>
-                    <input type="text" id="postcard-search" class="input-base search-input" style="flex:1; min-width:0; padding:5px 8px; font-size:13px;" oninput="updateView()" placeholder="🔍 支援多關鍵字搜尋...">
                 </div>
-
-                <!-- 第三排：設定開關 -->
-                <div style="display:flex; justify-content:flex-end;">
-                    <label style="cursor:pointer; display:flex; align-items:center; gap:4px; font-size:13px; color:var(--text-main); font-weight:bold;">
+                
+                <!-- 第二排：搜尋列和開關 -->
+                <div style="display:flex; flex-wrap:nowrap; gap:8px; align-items:center;">
+                    <input type="text" id="postcard-search" class="input-base search-input" style="flex:1; min-width:0; padding:5px 8px; font-size:13px;" oninput="updateView()" placeholder="🔍 支援多關鍵字搜尋...">
+                    <label style="cursor:pointer; display:flex; align-items:center; gap:4px; font-size:13px; color:var(--text-main); font-weight:bold; flex-shrink:0;">
                         <input type="checkbox" id="toggle-time-setter" onchange="saveTimeSetterPref(); updateView();"> 
                         顯示計時設定框
                     </label>
@@ -1391,7 +1387,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.11.2325";
+    const APP_VERSION = "2026.07.11.2327";
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
             .then(res => res.text())
