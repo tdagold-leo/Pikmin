@@ -902,7 +902,6 @@
             filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
         }
     </style>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCYhfghWKD7hfAi1D5c0a8zFnmZBt4IBkU&loading=async&libraries=marker&callback=initMap"></script>
 </head>
 <body>
 
@@ -1000,6 +999,12 @@
             <div id="landmark-list" style="display:flex; flex-wrap:wrap; gap:12px; align-content: flex-start;"></div>
         </section>
         <section id="view-settings" class="view-section">
+
+            <div class="settings-card">
+                <h3>🗺️ 地圖 API 用量</h3>
+                <div style="font-size:14px; margin-bottom:5px; margin-top:8px;">本月已載入地圖：<span id="map-usage-count" style="font-weight:bold; color:#0ea5e9;">讀取中...</span> / 28,000 次</div>
+                <div style="font-size:11px; color:#64748b;">(超過 28,000 次將自動暫停載入地圖，以防產生額外費用)</div>
+            </div>
 
             <div class="settings-card">
                 <h3>🔍 圖片辨識 API 設定</h3>
@@ -1421,7 +1426,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.12.0016";
+    const APP_VERSION = "2026.07.12.0021";
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
             .then(res => res.text())
@@ -1655,7 +1660,9 @@
         
         if (tab === 'map') {
             document.body.style.overflow = 'hidden'; // 防止地圖頁面滾動
-            if (mapInstance && postcardList.length > 0) {
+            if (typeof checkAndLoadMap === 'function') {
+                checkAndLoadMap();
+            } else if (mapInstance && postcardList.length > 0) {
                 updateMapMarkers();
             }
         } else {
@@ -1968,6 +1975,12 @@
 
     database.ref('views').transaction(curr => (curr || 0) + 1);
     database.ref('views').on('value', snap => { document.getElementById('view-counter-text').innerText = `雲端總瀏覽次數：${snap.val() || 0} 次`; });
+
+    const nowMonth = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0');
+    database.ref('settings/mapUsage/' + nowMonth + '/count').on('value', snap => {
+        const el = document.getElementById('map-usage-count');
+        if (el) el.innerText = snap.val() || 0;
+    });
 
     // 純點監聽器
     database.ref('landmarks').on('value', (snapshot) => {
@@ -3700,8 +3713,51 @@
     let mapInstance = null;
     let mapMarkers = [];
     let mapInfoWindow = null;
+    let isMapScriptLoading = false;
+    let isMapScriptLoaded = false;
+
+    async function checkAndLoadMap() {
+        if (isMapScriptLoaded) {
+            if (mapInstance && postcardList.length > 0) updateMapMarkers();
+            return;
+        }
+        
+        const now = new Date();
+        const monthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+        const usageRef = database.ref(`settings/mapUsage/${monthKey}/count`);
+        
+        try {
+            const snapshot = await usageRef.once('value');
+            let currentCount = snapshot.val() || 0;
+            
+            if (currentCount >= 28000) {
+                alert('🚫 本月地圖免費 API 載入額度已耗盡 (已達 28,000 次)。\n為避免產生額外費用，地圖功能本月將暫停服務。');
+                return;
+            }
+            
+            if (isMapScriptLoading) return;
+            isMapScriptLoading = true;
+            
+            // Increment the counter
+            await usageRef.set(currentCount + 1);
+            
+            // Load the script
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyCYhfghWKD7hfAi1D5c0a8zFnmZBt4IBkU&loading=async&libraries=marker&callback=initMap`;
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+            
+        } catch (e) {
+            console.error('Failed to check map usage', e);
+            alert('無法檢查地圖額度，地圖載入失敗。');
+        }
+    }
 
     async function initMap() {
+        isMapScriptLoaded = true;
+        isMapScriptLoading = false;
+        
         const { Map } = await google.maps.importLibrary("maps");
         const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
         
@@ -3733,15 +3789,19 @@
             const lat = parseFloat(match[1]);
             const lng = parseFloat(match[2]);
 
+            const tag = document.createElement("div");
+            tag.innerHTML = `<div style="width:14px; height:14px; background:#ef4444; border:2px solid white; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.5); cursor:pointer; transform:translate(-50%, -50%);"></div>`;
+
             const marker = new google.maps.marker.AdvancedMarkerElement({
                 map: mapInstance,
                 position: { lat, lng },
+                content: tag,
                 title: pc.name
             });
 
             marker.addListener("click", () => {
                 const imgHtml = (pc.image && pc.image !== "無圖片") 
-                    ? `<div style="margin-bottom:8px; display:flex; justify-content:center;"><img src="${pc.image}" style="width:120px; height:120px; object-fit:cover; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1);"></div>` 
+                    ? `<div style="margin-bottom:8px; display:flex; justify-content:center; background:#111; border-radius:8px; padding:2px;"><img src="${pc.image}" style="width:140px; height:140px; object-fit:contain; border-radius:6px;"></div>` 
                     : '';
 
                 const content = `<div style="min-width:160px; padding:6px; font-family:var(--font-family); text-align:center;">
