@@ -1387,7 +1387,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.11.2327";
+    const APP_VERSION = "2026.07.11.2333";
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
             .then(res => res.text())
@@ -3260,7 +3260,17 @@
         } else { summaryEl.style.display = 'none'; }
 
         pcEl.innerHTML = '';
-        const searchKw = document.getElementById('postcard-search').value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+        const pcSearchVal = document.getElementById('postcard-search').value.trim().toLowerCase();
+        let searchCoords = null;
+        const coordMatch = pcSearchVal.match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
+        if (coordMatch) {
+            searchCoords = { lat: parseFloat(coordMatch[1]), lon: parseFloat(coordMatch[2]) };
+            postcardList.forEach(item => {
+                const ic = (item.coords || '').match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
+                item._dist = ic ? getDistanceFromLatLonInKm(searchCoords.lat, searchCoords.lon, parseFloat(ic[1]), parseFloat(ic[2])) : 99999;
+            });
+        }
+        const searchKw = pcSearchVal.split(/\s+/).filter(Boolean);
         const filterState = document.getElementById('postcard-filter').value;
         const recentFilter = document.getElementById('postcard-recent-filter') ? document.getElementById('postcard-recent-filter').value : 'all';
         const searchLogic = document.getElementById('search-logic') ? document.getElementById('search-logic').value : 'and';
@@ -3326,7 +3336,9 @@
                 if (now - itemTime > days * 86400000) return false;
             }
             
-            if (searchKw.length > 0) {
+            if (searchCoords) {
+                if (item._dist > 1) return false;
+            } else if (searchKw.length > 0) {
                 const missingText = item.missingFields.length > 0 ? "缺少 缺" + item.missingFields.join(" 缺") : "";
                 const dupText = checkIsDuplicate(item) ? "重複 重複收藏" : "";
                 const text = `${item.type} ${item.country} ${item.name} ${item.tag} ${item.coords} ${missingText} ${dupText}`.toLowerCase();
@@ -3381,7 +3393,9 @@
             pcEl.appendChild(gHead);
 
             if (!isCol) {
-                if (type === '⏳ 倒數中 (菇)') {
+                if (searchCoords) {
+                    pcGroups[type].sort((a, b) => a._dist - b._dist);
+                } else if (type === '⏳ 倒數中 (菇)') {
                     pcGroups[type].sort((a, b) => (a.targetTime || 0) - (b.targetTime || 0));
                 }
                 
@@ -3402,6 +3416,11 @@
 
                     const isDuplicate = checkIsDuplicate(item);
                     const dupBadge = isDuplicate ? `<div style="color: #b45309; font-size: 10px; font-weight: bold; margin-top: 4px; background: #fef3c7; padding: 4px 6px; border-radius: 4px; border: 1px dashed #f59e0b; text-align: center;">⚠️ 重複收藏</div>` : '';
+                    let distBadge = '';
+                    if (searchCoords && item._dist <= 1) {
+                        const distText = item._dist < 1 ? (item._dist * 1000).toFixed(0) + ' m' : item._dist.toFixed(1) + ' km';
+                        distBadge = `<div style="color: #065f46; font-size: 10px; font-weight: bold; margin-top: 4px; background: #d1fae5; padding: 4px 6px; border-radius: 4px; border: 1px dashed #10b981; text-align: center;">📏 距離 ${distText}</div>`;
+                    }
 
                     const card = document.createElement('div'); 
                     card.className = `grid-card ${isReady ? 'alert-pulse' : ''} ${isDuplicate ? 'duplicate-card' : ''}`;
@@ -3441,6 +3460,7 @@
                         <div class="card-img-box">${imgHtml}<div class="card-badge-type">${escapeHtml(item.type)}</div><button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button></div>
                         <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}</span>${item.provider ? `<span style="background:#e0e7ff; color:#3730a3; padding:2px 6px; border-radius:10px; font-size:11px; margin-left:4px; font-weight:bold;">🧑 ${escapeHtml(item.provider)}</span>` : ''}${safeT ? `<span class="tag-badge" style="margin-left:4px;">${safeT}</span>` : ''}</div>
                         ${dupBadge}
+                        ${distBadge}
                         ${item.missingFields && item.missingFields.length > 0 ? `<div style="color: #ef4444; font-size: 10px; font-weight: bold; margin-top: 4px; background: #fee2e2; padding: 4px 6px; border-radius: 4px; border: 1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>` : ''}
                         ${timeSetRow}
                         <div class="card-actions" style="display:flex; gap:4px; margin-top:auto; padding-top:4px;"><button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button><button class="btn-sm btn-edit" style="flex:0;" onclick="openTimeModalById('${item.id}', 'postcard')">✏️</button><button class="btn-sm btn-danger" style="flex:0;" onclick="deleteItem('${item.id}', 'postcard')">🗑️</button></div></div>
