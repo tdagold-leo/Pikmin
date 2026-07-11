@@ -1156,6 +1156,10 @@
                     <input type="text" id="post-country" class="input-base" placeholder="例如：日本" oninput="showTimeDiff(this.value, 'post-tz-hint')">
                 </div>
                 <div class="input-group">
+                    <label>城市</label>
+                    <input type="text" id="post-city" class="input-base" placeholder="例如：東京">
+                </div>
+                <div class="input-group">
                     <label>名稱</label>
                     <input type="text" id="post-name" class="input-base" placeholder="例如：櫻花美菇">
                 </div>
@@ -1311,6 +1315,10 @@
                     <input type="text" id="edit-post-country" class="input-base" oninput="showTimeDiff(this.value, 'edit-post-tz-hint')">
                 </div>
                 <div class="input-group">
+                    <label>城市</label>
+                    <input type="text" id="edit-post-city" class="input-base" placeholder="例如：東京">
+                </div>
+                <div class="input-group">
                     <label>名稱</label>
                     <input type="text" id="edit-post-name" class="input-base">
                 </div>
@@ -1361,7 +1369,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.10.2302";
+    const APP_VERSION = "2026.07.11.2126";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
@@ -1888,7 +1896,8 @@
                 const typeVal = cloudData[key].type;
                 postcardList.push({
                     id: key, type: toTW(String(typeVal || "菇")), name: cloudData[key].name || "未命名", 
-                    country: toTW(cloudData[key].country || ""), coords: cloudData[key].coords || "",
+                    country: toTW(cloudData[key].country || ""), city: cloudData[key].city || "",
+                    coords: cloudData[key].coords || "",
                     tag: cloudData[key].tag || "", image: cloudData[key].image || "無圖片",
                     targetTime: cloudData[key].targetTime, provider: cloudData[key].provider || ""
                 });
@@ -2620,6 +2629,7 @@
             const typeEl = document.getElementById('post-type'), countryEl = document.getElementById('post-country');
             const nameEl = document.getElementById('post-name'), coordsEl = document.getElementById('post-coords');
             const tagEl = document.getElementById('post-tag'), imageEl = document.getElementById('post-image');
+            const cityEl = document.getElementById('post-city');
 
             let processedCountry = countryEl ? toTW(countryEl.value.trim()) : "";
             if (processedCountry.includes("中華民國")) {
@@ -2649,11 +2659,12 @@
             }
 
             database.ref('postcards').push({
-                type: toTW(typeEl.value), country: processedCountry, name: nameEl.value.trim(),
+                type: toTW(typeEl.value), country: processedCountry, city: cityEl ? cityEl.value.trim() : "",
+                name: nameEl.value.trim(),
                 coords: normalizeCoords(coordsEl.value), tag: tagEl.value.trim() || "", image: imageEl.value.trim() || "無圖片",
                 provider: currentSyncId || ""
             });
-            countryEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = ''; imageEl.value = '';
+            countryEl.value = ''; if(cityEl) cityEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = ''; imageEl.value = '';
             document.getElementById('post-tz-hint').innerText = '';
             closeModal('add-modal');
         } else if (currentMode === 'landmark') {
@@ -2760,6 +2771,7 @@
             document.getElementById('edit-group-postcard').style.display = 'flex';
             document.getElementById('edit-post-type').value = item.type || '菇'; 
             document.getElementById('edit-post-country').value = item.country || '';  
+            document.getElementById('edit-post-city').value = item.city || '';  
             document.getElementById('edit-post-name').value = item.name || ''; 
             document.getElementById('edit-post-tag').value = item.tag || '';
             document.getElementById('edit-post-coords').value = item.coords || ''; 
@@ -2828,6 +2840,7 @@
 
             database.ref('postcards/' + currentEditingTimeId).update({
                 type: pType, country: processedCountry,
+                city: document.getElementById('edit-post-city').value.trim(),
                 name: document.getElementById('edit-post-name').value.trim(), tag: document.getElementById('edit-post-tag').value.trim(),
                 coords: normalizeCoords(document.getElementById('edit-post-coords').value), image: document.getElementById('edit-post-image').value.trim() || "無圖片",
                 targetTime: targetTime
@@ -3373,7 +3386,7 @@
 
                     card.innerHTML = `
                         <div class="card-img-box">${imgHtml}<div class="card-badge-type">${escapeHtml(item.type)}</div><button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button></div>
-                        <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}</span>${item.provider ? `<span style="background:#e0e7ff; color:#3730a3; padding:2px 6px; border-radius:10px; font-size:11px; margin-left:4px; font-weight:bold;">🧑 ${escapeHtml(item.provider)}</span>` : ''}${safeT ? `<span class="tag-badge" style="margin-left:4px;">${safeT}</span>` : ''}</div>
+                        <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}</span>${item.provider ? `<span style="background:#e0e7ff; color:#3730a3; padding:2px 6px; border-radius:10px; font-size:11px; margin-left:4px; font-weight:bold;">🧑 ${escapeHtml(item.provider)}</span>` : ''}${safeT ? `<span class="tag-badge" style="margin-left:4px;">${safeT}</span>` : ''}</div>
                         ${dupBadge}
                         ${item.missingFields && item.missingFields.length > 0 ? `<div style="color: #ef4444; font-size: 10px; font-weight: bold; margin-top: 4px; background: #fee2e2; padding: 4px 6px; border-radius: 4px; border: 1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>` : ''}
                         <div class="card-actions" style="display:flex; gap:4px; margin-top:auto; padding-top:4px;"><button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button><button class="btn-sm btn-edit" style="flex:0;" onclick="openTimeModalById('${item.id}', 'postcard')">✏️</button><button class="btn-sm btn-danger" style="flex:0;" onclick="deleteItem('${item.id}', 'postcard')">🗑️</button></div></div>
