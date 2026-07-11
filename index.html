@@ -1382,7 +1382,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.11.2315";
+    const APP_VERSION = "2026.07.11.2320";
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
             .then(res => res.text())
@@ -3017,10 +3017,10 @@
         };
 
         if (activeItems.length > 0) {
-            out += `🟢追蹤中\n`; activeItems.forEach((i) => { out += formatLineText(i, i.user, false); }); out += `\n`;
+            out += `🟢追蹤中 (${activeItems.length})\n`; activeItems.forEach((i) => { out += formatLineText(i, i.user, false); }); out += `\n`;
         }
         if (unclaimedItems.length > 0) {
-            out += `🟡待認領\n`; unclaimedItems.forEach((i) => { out += formatLineText(i, "待認領", true); });
+            out += `🟡待認領 (${unclaimedItems.length})\n`; unclaimedItems.forEach((i) => { out += formatLineText(i, "待認領", true); });
         }
         
         navigator.clipboard.writeText(out.trim()).catch(e=>console.log(e));
