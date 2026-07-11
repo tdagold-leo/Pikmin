@@ -1118,8 +1118,8 @@
 
     </main>
 
-    <section id="view-map" class="view-section" style="padding:0; height:calc(100vh - 60px); position:relative;">
-        <div style="position:absolute; top:15px; right:15px; z-index:10; background:rgba(255,255,255,0.95); padding:6px 12px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.2); display:flex; gap:6px; align-items:center;">
+    <section id="view-map" class="view-section" style="padding:0; height:calc(100dvh - 112px); position:relative;">
+        <div style="position:absolute; top:8px; right:8px; z-index:10; background:rgba(255,255,255,0.95); padding:6px 12px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.2); display:flex; gap:6px; align-items:center;">
             <label style="font-size:13px; font-weight:bold; color:var(--text-main);">分類</label>
             <select id="map-filter-type" style="padding:4px; font-size:13px; border-radius:4px; border:1px solid #cbd5e1; outline:none; cursor:pointer;" onchange="updateMapMarkers()">
                 <option value="all">全部顯示</option>
@@ -1433,7 +1433,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.12.0033";
+    const APP_VERSION = "2026.07.12.0040";
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
             .then(res => res.text())
