@@ -1149,7 +1149,7 @@
                 </div>
                 <div class="input-group">
                     <label>座標 (貼上經緯度將自動抓取國家)</label>
-                    <input type="text" id="post-coords" class="input-base" placeholder="貼上點座標" onblur="autoDetectCountry(this.value, 'post-country', 'post-tz-hint', 'append')">
+                    <input type="text" id="post-coords" class="input-base" placeholder="貼上點座標" onblur="autoDetectCountry(this.value, 'post-country', 'post-tz-hint', 'post-city')">
                 </div>
                 <div class="input-group">
                     <label>國家 <span id="post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
@@ -1308,7 +1308,7 @@
                 </div>
                 <div class="input-group">
                     <label>座標</label>
-                    <input type="text" id="edit-post-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint', 'append')">
+                    <input type="text" id="edit-post-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city')">
                 </div>
                 <div class="input-group">
                     <label>國家 <span id="edit-post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
@@ -1369,7 +1369,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.11.2126";
+    const APP_VERSION = "2026.07.11.2132";
 
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
