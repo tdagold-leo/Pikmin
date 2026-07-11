@@ -935,6 +935,12 @@
                     <option value="or">或 (任一符合)</option>
                 </select>
                 <input type="text" id="postcard-search" class="input-base search-input" style="flex:1; min-width:140px; padding:5px 8px; font-size:13px;" oninput="updateView()" placeholder="🔍 支援多關鍵字搜尋...">
+                <div style="display:flex; align-items:center; gap:4px; font-size:13px; color:var(--text-main); font-weight:bold; margin-left:auto;">
+                    <label style="cursor:pointer; display:flex; align-items:center; gap:4px;">
+                        <input type="checkbox" id="toggle-time-setter" onchange="saveTimeSetterPref(); updateView();"> 
+                        顯示計時設定框
+                    </label>
+                </div>
             </div>
             <div id="postcard-container" class="grid"></div>
             <div id="postcard-empty" class="empty-message" style="display: none;">目前沒有收藏的明信片項目</div>
@@ -1370,8 +1376,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.11.2150";
-
+    const APP_VERSION = "2026.07.11.2155";
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
             .then(res => res.text())
@@ -2472,6 +2477,15 @@
             if (el) el.value = savedGroupMode;
         }
 
+        const savedTimeSetter = localStorage.getItem('pikmin_show_time_setter');
+        if (savedTimeSetter) {
+            const toggleEl = document.getElementById('toggle-time-setter');
+            if (toggleEl) toggleEl.checked = (savedTimeSetter === 'yes');
+        } else {
+            const toggleEl = document.getElementById('toggle-time-setter');
+            if (toggleEl) toggleEl.checked = true; // default on
+        }
+
         updateClocks();
     });
 
@@ -3064,6 +3078,13 @@
         }
     }
 
+    function saveTimeSetterPref() {
+        const toggleEl = document.getElementById('toggle-time-setter');
+        if (toggleEl) {
+            localStorage.setItem('pikmin_show_time_setter', toggleEl.checked ? 'yes' : 'no');
+        }
+    }
+
     function createMushroomCard(item, now, isExpired, timeText, isDup = false) {
         const safeC = toTW(escapeHtml(item.country||'')), safeName = escapeHtml(item.name), safeTag = escapeHtml(item.tag);
         const diffStr = getTimeDiffString(safeC);
@@ -3387,7 +3408,9 @@
 
                     const isMushType = (item.type === '菇');
                     const hasClearBtn = isMushType && item.targetTime && item.targetTime > Date.now();
-                    const timeSetRow = isMushType ? (
+                    const toggleEl = document.getElementById('toggle-time-setter');
+                    const showTimeSetter = toggleEl ? toggleEl.checked : true;
+                    const timeSetRow = (isMushType && showTimeSetter) ? (
                         '<div style="margin-top:6px;padding:6px;background:linear-gradient(135deg,rgba(14,165,233,0.08),rgba(99,102,241,0.06));border-radius:10px;border:1px solid rgba(14,165,233,0.25);">' +
                         '<div style="font-size:10px;font-weight:700;color:#0ea5e9;letter-spacing:0.5px;margin-bottom:6px;text-transform:uppercase;">⏱ 快速設定剩餘時間</div>' +
                         '<div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap;">' +
