@@ -892,14 +892,14 @@
                 💚 一鍵產生分享文字並喚醒 LINE
             </button>
 
-            <div style="background:var(--card-bg); padding:10px 15px; border-radius:12px; margin-bottom:15px; box-shadow:0 1px 3px rgba(0,0,0,0.05); display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:200px;">
-                    <div style="position:relative;">
+            <div style="background:var(--card-bg); padding:10px 15px; border-radius:12px; margin-bottom:15px; box-shadow:0 1px 3px rgba(0,0,0,0.05); display:flex; align-items:center; gap:10px; flex-wrap:nowrap;">
+                <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+                    <div style="position:relative; flex-shrink:0;">
                         <div id="profile-avatar-preview" style="width:40px; height:40px; border-radius:50%; background:#e5e7eb; cursor:pointer; background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold; color:#6b7280; flex-shrink:0;" onclick="document.getElementById('profile-avatar-upload').click()" title="點擊上傳個人圖像">圖像</div>
                         <div id="profile-avatar-clear" onclick="clearProfileAvatar(event)" style="display:none; position:absolute; top:-2px; right:-2px; background:#ef4444; color:white; border-radius:50%; width:16px; height:16px; font-size:10px; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.2);" title="移除頭像">✕</div>
                     </div>
                     <input type="file" id="profile-avatar-upload" accept="image/*" style="display:none;" onchange="handleProfileAvatarUpload(event)">
-                    <input type="text" id="profile-name-input" class="input-base" style="width:100%; padding:6px 10px; font-size:14px;" placeholder="設定專屬名稱與頭像..." oninput="saveProfileName()">
+                    <input type="text" id="profile-name-input" class="input-base" style="width:100%; min-width:0; padding:6px 10px; font-size:14px;" placeholder="設定專屬名稱與頭像..." oninput="saveProfileName()">
                 </div>
                 <select id="mushroom-group-logic" class="input-base filter-select" onchange="saveMushroomViewPref(); updateView();" style="font-size: 13px; padding: 6px 10px; width:auto; flex-shrink:0;">
                     <option value="grouped" selected>📂 分類模式：開啟</option>
@@ -1382,7 +1382,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.11.2206";
+    const APP_VERSION = "2026.07.11.2315";
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
             .then(res => res.text())
