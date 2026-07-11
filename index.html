@@ -902,6 +902,7 @@
             filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
         }
     </style>
+    <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
 </head>
 <body>
 
@@ -1426,7 +1427,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.12.0021";
+    const APP_VERSION = "2026.07.12.0026";
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
             .then(res => res.text())
@@ -3712,9 +3713,20 @@
     // ===== Google Maps 邏輯 =====
     let mapInstance = null;
     let mapMarkers = [];
+    let mapClusterer = null;
     let mapInfoWindow = null;
     let isMapScriptLoading = false;
     let isMapScriptLoaded = false;
+
+    function getColorForType(type) {
+        if (!type || type.trim() === '') return '#ef4444'; // 預設紅色
+        let hash = 0;
+        for (let i = 0; i < type.length; i++) {
+            hash = type.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const hue = Math.abs(hash) % 360;
+        return `hsl(${hue}, 70%, 55%)`;
+    }
 
     async function checkAndLoadMap() {
         if (isMapScriptLoaded) {
@@ -3777,7 +3789,10 @@
     function updateMapMarkers() {
         if (!mapInstance || !google.maps.marker) return;
 
-        // 清除舊標記
+        // 清除舊標記與群集
+        if (mapClusterer) {
+            mapClusterer.clearMarkers();
+        }
         mapMarkers.forEach(m => m.map = null);
         mapMarkers = [];
 
@@ -3788,9 +3803,11 @@
             
             const lat = parseFloat(match[1]);
             const lng = parseFloat(match[2]);
-
+            
+            const bgColor = getColorForType(pc.type || '');
+            
             const tag = document.createElement("div");
-            tag.innerHTML = `<div style="width:14px; height:14px; background:#ef4444; border:2px solid white; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.5); cursor:pointer; transform:translate(-50%, -50%);"></div>`;
+            tag.innerHTML = `<div style="width:14px; height:14px; background:${bgColor}; border:2px solid white; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.5); cursor:pointer; transform:translate(-50%, -50%);"></div>`;
 
             const marker = new google.maps.marker.AdvancedMarkerElement({
                 map: mapInstance,
@@ -3807,7 +3824,8 @@
                 const content = `<div style="min-width:160px; padding:6px; font-family:var(--font-family); text-align:center;">
                     ${imgHtml}
                     <div style="font-size:14px; font-weight:bold; color:var(--text-main); margin-bottom:4px;">${escapeHtml(pc.name)}</div>
-                    <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">🌍 ${escapeHtml(pc.country || '未提供')}</div>
+                    <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">🌍 ${escapeHtml(pc.country || '未提供')}</div>
+                    ${pc.type ? `<div style="font-size:11px; font-weight:bold; color:white; background:${bgColor}; padding:2px 6px; border-radius:4px; display:inline-block; margin-bottom:10px;">${escapeHtml(pc.type)}</div>` : ''}
                     <button onclick="copyCoords('${escapeHtml(pc.coords).replace(/'/g, "\\'")}', this)" style="width:100%; padding:6px 0; background:linear-gradient(135deg, #0ea5e9, #6366f1); color:white; border:none; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">📍 複製座標</button>
                 </div>`;
                 mapInfoWindow.setContent(content);
@@ -3816,6 +3834,14 @@
             
             mapMarkers.push(marker);
         });
+        
+        // 建立群集
+        if (window.markerClusterer && mapMarkers.length > 0) {
+            mapClusterer = new markerClusterer.MarkerClusterer({ 
+                map: mapInstance, 
+                markers: mapMarkers 
+            });
+        }
     }
 </script>
 </body>
