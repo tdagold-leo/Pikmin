@@ -1433,7 +1433,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.12.0040";
+    const APP_VERSION = "2026.07.13.0014";
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
             .then(res => res.text())
@@ -2970,9 +2970,9 @@
     function copyCoords(text, buttonElement) {
         const os = detectOS();
         const normalized = normalizeCoords(String(text));
-        // iOS / macOS：用空格替代逗號（地圖 App 直接貼上更順暢）
-        // Android / Windows / Linux：維持逗號分隔
-        const copyText = (os === 'ios' || os === 'macos')
+        // iOS / macOS / Windows：用空格替代逗號（地圖 App 直接貼上更順暢）
+        // Android / Linux：維持逗號分隔
+        const copyText = (os === 'ios' || os === 'macos' || os === 'windows')
             ? normalized.replace(/,/g, ' ')
             : normalized;
         navigator.clipboard.writeText(copyText).then(() => {
