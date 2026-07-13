@@ -914,9 +914,16 @@
     <main class="app-content">
 
         <section id="view-mushroom" class="view-section active">
-            <button class="line-share-btn" onclick="shareToLineWindow()" style="margin-bottom: 20px;">
+            <button class="line-share-btn" onclick="shareToLineWindow()" style="margin-bottom: 15px;">
                 💚 一鍵產生分享文字並喚醒 LINE
             </button>
+
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 10px 12px; border-radius: 8px; margin-bottom: 15px; font-size: 12px; line-height: 1.5; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                <strong>💡 系統自動清理規則：</strong><br>
+                ▪️ <strong>已認領 / 有設時間</strong>：於設定的開打時間過後 <strong>2 小時</strong>自動刪除。<br>
+                ▪️ <strong>無人認領 (野菇)</strong>：於該巨菇所在國家的 <strong>隔日凌晨 1 點</strong>自動刪除。<br>
+                <span style="color:#dc2626; font-size:11px;">*(目前暫時關閉自動清理功能)*</span>
+            </div>
 
             <div style="background:var(--card-bg); padding:10px 15px; border-radius:12px; margin-bottom:15px; box-shadow:0 1px 3px rgba(0,0,0,0.05); display:flex; align-items:center; gap:10px; flex-wrap:nowrap;">
                 <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
@@ -1433,7 +1440,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.13.0014";
+    const APP_VERSION = "2026.07.13.0042";
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
             .then(res => res.text())
@@ -1947,7 +1954,8 @@
         if (cloudData) {
             Object.keys(cloudData).forEach((key) => {
                 const item = cloudData[key];
-                if (item.targetTime != null && (now - item.targetTime >= 7200000)) {
+                // 暫時關閉自動刪除功能 (2026-07-13)
+                if (false && item.targetTime != null && (now - item.targetTime >= 7200000)) {
                     database.ref('mushrooms/' + key).remove();
                 } else {
                     dataList.push({
@@ -2642,7 +2650,8 @@
                 if (now >= midnightUTC + 3600000) shouldRemove = true;
             }
 
-            if (shouldRemove) {
+            // 暫時關閉自動刪除功能 (2026-07-13)
+            if (false && shouldRemove) {
                 removingIds.add(item.id);
                 database.ref('mushrooms/' + item.id).remove();
             }
