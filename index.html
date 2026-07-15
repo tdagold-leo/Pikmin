@@ -945,8 +945,10 @@
 <body>
 
     <header class="app-header">
-        <h2 style="align-items: baseline;">🌱 Pickmin Tracker <span id="header-version-tag" style="font-size: 10px; color: #9ca3af; font-weight: normal; margin-left: 6px;"></span></h2>
-        <div id="view-counter-text" style="font-size: 10px; color: #9ca3af; font-weight: normal; margin-top: 1px;">雲端總瀏覽次數：0 次</div>
+        <div style="display:flex; flex-direction:column; justify-content:center; flex:1; min-width:0; overflow:hidden;">
+            <h2 style="margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">🌱 Pickmin Tracker <span id="header-version-tag" style="font-size: 10px; color: #9ca3af; font-weight: normal; margin-left: 4px;"></span></h2>
+            <div id="view-counter-text" style="font-size: 10px; color: #9ca3af; font-weight: normal; line-height:1.2; white-space:nowrap;">雲端總瀏覽次數：0 次</div>
+        </div>
         <div class="header-right" id="sync-status-indicator">⚪ 未連線</div>
     </header>
 
@@ -1565,7 +1567,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.16.0255";
+    const APP_VERSION = "2026.07.16.0300";
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
             .then(res => res.text())
