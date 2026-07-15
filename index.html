@@ -945,10 +945,7 @@
 <body>
 
     <header class="app-header">
-        <div style="display:flex; flex-direction:column; justify-content:center; flex:1; min-width:0; overflow:hidden;">
-            <h2 style="margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">🌱 Pickmin Tracker <span id="header-version-tag" style="font-size: 10px; color: #9ca3af; font-weight: normal; margin-left: 4px;"></span></h2>
-            <div id="view-counter-text" style="font-size: 10px; color: #9ca3af; font-weight: normal; line-height:1.2; white-space:nowrap;">雲端總瀏覽次數：0 次</div>
-        </div>
+        <h2>🌱 Pickmin Tracker <span id="header-version-tag" style="font-size: 10px; color: #9ca3af; font-weight: normal; margin-left: 4px;"></span></h2>
         <div class="header-right" id="sync-status-indicator">⚪ 未連線</div>
     </header>
 
@@ -1048,6 +1045,11 @@
             <div id="landmark-list" style="display:flex; flex-wrap:wrap; gap:12px; align-content: flex-start;"></div>
         </section>
         <section id="view-settings" class="view-section">
+            <!-- 瀏覽次數資訊列 -->
+            <div style="display:flex; align-items:center; gap:8px; padding:8px 12px; background:var(--card-bg); border:1px solid var(--border); border-radius:12px; margin-bottom:14px; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+                <span style="font-size:16px;">👁️</span>
+                <div id="view-counter-text" style="font-size:13px; color:var(--text-main); font-weight:600;">雲端總瀏覽次數：0 次</div>
+            </div>
             <div class="settings-grid">
 
             <!-- 同步設定（最上面） -->
@@ -1567,7 +1569,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.16.0300";
+    const APP_VERSION = "2026.07.16.0303";
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
             .then(res => res.text())
