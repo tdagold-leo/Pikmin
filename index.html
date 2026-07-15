@@ -1009,6 +1009,21 @@
         <section id="view-settings" class="view-section">
 
             <div class="settings-card">
+                <h3>🗑️ 巨菇自動清理</h3>
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px;">
+                    <div>
+                        <div style="font-size:14px; font-weight:bold; color:var(--text-main);">啟用自動刪除</div>
+                        <div style="font-size:11px; color:#64748b; margin-top:2px;">已認領過期 2 小時 / 野菇隔日凌晨 1 點</div>
+                    </div>
+                    <label style="position:relative; display:inline-block; width:44px; height:24px; flex-shrink:0;">
+                        <input type="checkbox" id="auto-delete-toggle" onchange="saveAutoDeletePref()" style="opacity:0; width:0; height:0;">
+                        <span id="auto-delete-slider" style="position:absolute; cursor:pointer; inset:0; background:#ccc; border-radius:24px; transition:0.3s;"></span>
+                    </label>
+                </div>
+                <div id="auto-delete-status" style="margin-top:8px; font-size:11px; font-weight:bold; color:#dc2626;">⛔ 目前已關閉自動清理</div>
+            </div>
+
+            <div class="settings-card">
                 <h3>🗺️ 地圖 API 用量</h3>
                 <div style="font-size:14px; margin-bottom:5px; margin-top:8px;">本月已載入地圖：<span id="map-usage-count" style="font-weight:bold; color:#0ea5e9;">讀取中...</span> / 28,000 次</div>
                 <div style="font-size:11px; color:#64748b;">(超過 28,000 次將自動暫停載入地圖，以防產生額外費用)</div>
@@ -1446,7 +1461,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.15.0043";
+    const APP_VERSION = "2026.07.15.0044";
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
             .then(res => res.text())
@@ -1978,8 +1993,7 @@
         if (cloudData) {
             Object.keys(cloudData).forEach((key) => {
                 const item = cloudData[key];
-                // 暫時關閉自動刪除功能 (2026-07-13)
-                if (false && item.targetTime != null && (now - item.targetTime >= 7200000)) {
+                if (localStorage.getItem('pikmin_auto_delete') === 'on' && item.targetTime != null && (now - item.targetTime >= 7200000)) {
                     database.ref('mushrooms/' + key).remove();
                 } else {
                     dataList.push({
@@ -2229,6 +2243,35 @@
     function saveVisionApiKey() {
         const key = document.getElementById('vision-api-key').value.trim();
         localStorage.setItem('pikmin_vision_api_key', key);
+    }
+
+    function saveAutoDeletePref() {
+        const cb = document.getElementById('auto-delete-toggle');
+        const slider = document.getElementById('auto-delete-slider');
+        const status = document.getElementById('auto-delete-status');
+        if (!cb) return;
+        const isOn = cb.checked;
+        localStorage.setItem('pikmin_auto_delete', isOn ? 'on' : 'off');
+        if (slider) slider.style.background = isOn ? '#22c55e' : '#ccc';
+        if (status) {
+            status.textContent = isOn ? '✅ 自動清理已啟用' : '⛔ 目前已關閉自動清理';
+            status.style.color = isOn ? '#15803d' : '#dc2626';
+        }
+    }
+
+    function loadAutoDeletePref() {
+        const val = localStorage.getItem('pikmin_auto_delete');
+        const cb = document.getElementById('auto-delete-toggle');
+        const slider = document.getElementById('auto-delete-slider');
+        const status = document.getElementById('auto-delete-status');
+        if (!cb) return;
+        const isOn = val === 'on';
+        cb.checked = isOn;
+        if (slider) slider.style.background = isOn ? '#22c55e' : '#ccc';
+        if (status) {
+            status.textContent = isOn ? '✅ 自動清理已啟用' : '⛔ 目前已關閉自動清理';
+            status.style.color = isOn ? '#15803d' : '#dc2626';
+        }
     }
 
     function getCurrentMonth() {
@@ -2574,6 +2617,7 @@
         const savedVisionKey = localStorage.getItem('pikmin_vision_api_key');
         if (savedVisionKey) { document.getElementById('vision-api-key').value = savedVisionKey; }
         listenVisionUsage();
+        loadAutoDeletePref();
 
         ['1','2','3'].forEach(i => {
             const val = localStorage.getItem('pikmin_tz_area_' + i);
@@ -2674,8 +2718,8 @@
                 if (now >= midnightUTC + 3600000) shouldRemove = true;
             }
 
-            // 暫時關閉自動刪除功能 (2026-07-13)
-            if (false && shouldRemove) {
+            // 動態檢查自動刪除開關
+            if (localStorage.getItem('pikmin_auto_delete') === 'on' && shouldRemove) {
                 removingIds.add(item.id);
                 database.ref('mushrooms/' + item.id).remove();
             }
