@@ -489,20 +489,49 @@
         /* 設定頁面卡片 */
         .settings-card {
             background: var(--card-bg);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border-radius: 16px;
+            padding: 0;
+            margin-bottom: 14px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
             border: 1px solid var(--border);
+            overflow: hidden;
         }
-        .settings-card h3 {
-            margin: 0 0 12px 0;
-            font-size: 15px;
-            border-bottom: 1px solid #f3f4f6;
-            padding-bottom: 8px;
-            color: var(--primary-dark);
+        .settings-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-bottom: 1px solid #bae6fd;
         }
-        .sync-status { font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 6px; background-color: #f3f4f6; color: #9ca3af; }
+        .settings-card-header.danger { background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%); border-color: #fecdd3; }
+        .settings-card-header.success { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-color: #bbf7d0; }
+        .settings-card-header.purple { background: linear-gradient(135deg, #faf5ff 0%, #ede9fe 100%); border-color: #ddd6fe; }
+        .settings-card-header.amber { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-color: #fde68a; }
+        .settings-card-icon { font-size: 20px; line-height: 1; }
+        .settings-card-title { font-size: 14px; font-weight: 800; color: var(--primary-dark); margin: 0; }
+        .settings-card-subtitle { font-size: 10px; color: #64748b; margin: 0; }
+        .settings-card-body { padding: 14px 16px; }
+        .settings-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .settings-toggle-label { font-size: 13px; font-weight: bold; color: var(--text-main); }
+        .settings-toggle-desc { font-size: 11px; color: #64748b; margin-top: 2px; }
+        .toggle-switch { position: relative; display: inline-block; width: 48px; height: 26px; flex-shrink: 0; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-knob { position: absolute; cursor: pointer; inset: 0; background: #cbd5e1; border-radius: 26px; transition: 0.3s; }
+        .toggle-knob::after { content: ''; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        .toggle-switch input:checked + .toggle-knob { background: #22c55e; }
+        .toggle-switch input:checked + .toggle-knob::after { transform: translateX(22px); }
+        .settings-progress-wrap { margin-top: 10px; }
+        .settings-progress-bar { height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin: 6px 0; }
+        .settings-progress-fill { height: 100%; background: linear-gradient(90deg, #0ea5e9, #6366f1); border-radius: 99px; transition: width 0.5s ease; }
+        .settings-stat { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; }
+        .settings-stat-val { font-size: 20px; font-weight: 900; color: #0ea5e9; }
+        .settings-info-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+        .settings-info-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .settings-info-icon { font-size: 16px; width: 28px; text-align: center; flex-shrink: 0; }
+        .settings-info-text { font-size: 13px; color: var(--text-main); font-weight: 600; }
+        .settings-info-sub { font-size: 11px; color: #64748b; }
+        .sync-status { font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 8px; background-color: #f3f4f6; color: #9ca3af; white-space: nowrap; }
         .sync-status.active { background-color: #d1fae5; color: #059669; }
 
         /* 彈出視窗 (Modal) */
@@ -1008,91 +1037,164 @@
         </section>
         <section id="view-settings" class="view-section">
 
+            <!-- 自動清理開關 -->
             <div class="settings-card">
-                <h3>🗑️ 巨菇自動清理</h3>
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-top:10px;">
+                <div class="settings-card-header danger">
+                    <span class="settings-card-icon">🗑️</span>
                     <div>
-                        <div style="font-size:14px; font-weight:bold; color:var(--text-main);">啟用自動刪除</div>
-                        <div style="font-size:11px; color:#64748b; margin-top:2px;">已認領過期 2 小時 / 野菇隔日凌晨 1 點</div>
+                        <div class="settings-card-title">巨菇自動清理</div>
+                        <div class="settings-card-subtitle">全域生效，所有裝置同步</div>
                     </div>
-                    <label style="position:relative; display:inline-block; width:44px; height:24px; flex-shrink:0;">
-                        <input type="checkbox" id="auto-delete-toggle" onchange="saveAutoDeletePref()" style="opacity:0; width:0; height:0;">
-                        <span id="auto-delete-slider" style="position:absolute; cursor:pointer; inset:0; background:#ccc; border-radius:24px; transition:0.3s;"></span>
-                    </label>
                 </div>
-                <div id="auto-delete-status" style="margin-top:8px; font-size:11px; font-weight:bold; color:#dc2626;">⛔ 目前已關閉自動清理</div>
-            </div>
-
-            <div class="settings-card">
-                <h3>🗺️ 地圖 API 用量</h3>
-                <div style="font-size:14px; margin-bottom:5px; margin-top:8px;">本月已載入地圖：<span id="map-usage-count" style="font-weight:bold; color:#0ea5e9;">讀取中...</span> / 28,000 次</div>
-                <div style="font-size:11px; color:#64748b;">(超過 28,000 次將自動暫停載入地圖，以防產生額外費用)</div>
-            </div>
-
-            <div class="settings-card">
-                <h3>🔍 圖片辨識 API 設定</h3>
-                <div class="input-group">
-                    <label>Google Cloud Vision API 金鑰</label>
-                    <input type="text" id="vision-api-key" class="input-base" placeholder="AIzaSy..." onchange="saveVisionApiKey()">
-                    <p style="font-size:11px; color:#6b7280; margin-top:4px;">用於啟用圖片文字自動辨識功能。金鑰僅儲存於您的瀏覽器中。</p>
-                    <div id="vision-usage-display" style="margin-top:8px; font-size:12px; color:var(--text-muted); font-weight:bold;">讀取中...</div>
+                <div class="settings-card-body">
+                    <div class="settings-toggle-row">
+                        <div>
+                            <div class="settings-toggle-label">啟用自動刪除</div>
+                            <div class="settings-toggle-desc">已認領過期 2 小時 / 野菇隔日凌晨 1 點</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="auto-delete-toggle" onchange="saveAutoDeletePref()">
+                            <span class="toggle-knob" id="auto-delete-slider"></span>
+                        </label>
+                    </div>
+                    <div id="auto-delete-status" style="margin-top:10px; font-size:11px; font-weight:bold; color:#dc2626; background:#fff1f2; border:1px solid #fecdd3; padding:6px 10px; border-radius:8px;">⛔ 目前已關閉自動清理</div>
                 </div>
             </div>
 
+            <!-- 地圖 API 用量 -->
             <div class="settings-card">
-                <h3>☁️ 跨裝置收藏同步</h3>
-                <div class="input-group">
-                    <label>綁定同步代號 (手機/電腦輸入相同代號即同步)</label>
-                    <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
+                <div class="settings-card-header">
+                    <span class="settings-card-icon">🗺️</span>
+                    <div>
+                        <div class="settings-card-title">地圖 API 用量</div>
+                        <div class="settings-card-subtitle">每月免費配額 28,000 次</div>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="settings-stat">
+                        <span style="font-size:13px; color:#64748b;">本月已載入</span>
+                        <span><span class="settings-stat-val" id="map-usage-count">--</span> <span style="font-size:11px; color:#94a3b8;">/ 28,000</span></span>
+                    </div>
+                    <div class="settings-progress-wrap">
+                        <div class="settings-progress-bar">
+                            <div class="settings-progress-fill" id="map-usage-bar" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <div style="font-size:11px; color:#64748b;">超過額度將自動暫停載入，防止產生額外費用</div>
+                </div>
+            </div>
+
+            <!-- 圖片辨識 -->
+            <div class="settings-card">
+                <div class="settings-card-header purple">
+                    <span class="settings-card-icon">🔍</span>
+                    <div>
+                        <div class="settings-card-title">圖片辨識 API</div>
+                        <div class="settings-card-subtitle">Google Cloud Vision 自動讀取明信片文字</div>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="input-group" style="margin-bottom:0;">
+                        <label>Google Cloud Vision API 金鑰</label>
+                        <input type="text" id="vision-api-key" class="input-base" placeholder="AIzaSy..." onchange="saveVisionApiKey()">
+                        <p style="font-size:11px; color:#6b7280; margin-top:4px; margin-bottom:0;">金鑰僅儲存於您的瀏覽器中，不會上傳。</p>
+                        <div id="vision-usage-display" style="margin-top:8px; font-size:12px; color:var(--text-muted); font-weight:bold;">讀取中...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 同步設定 -->
+            <div class="settings-card">
+                <div class="settings-card-header success">
+                    <span class="settings-card-icon">☁️</span>
+                    <div>
+                        <div class="settings-card-title">跨裝置收藏同步</div>
+                        <div class="settings-card-subtitle">輸入相同代號即可同步</div>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <label style="font-size:12px; color:#64748b; font-weight:600;">綁定同步代號</label>
+                    <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
                         <input type="text" id="sync-user-id" class="input-base" placeholder="例如：Leo..." onchange="applySyncId()" style="flex:1;">
                         <span id="sync-status" class="sync-status">未啟用</span>
                     </div>
                 </div>
             </div>
 
+            <!-- 時區設定 -->
             <div class="settings-card">
-                <h3>⏰ 時區設定與系統時間</h3>
-                <div style="text-align:center; margin-bottom:15px;">
-                    <div style="font-size:11px; color:var(--text-muted); font-weight:bold;">🇹🇼 台北標準時間</div>
-                    <div id="clock-taipei" style="font-size:26px; font-weight:bold; color:var(--primary-dark); font-family:monospace;">00:00:00</div>
+                <div class="settings-card-header amber">
+                    <span class="settings-card-icon">⏰</span>
+                    <div>
+                        <div class="settings-card-title">時區與系統時間</div>
+                        <div class="settings-card-subtitle">可同時監控全球各地時間</div>
+                    </div>
                 </div>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <div class="clock-item">
-                        <select id="tz-select-1" onchange="saveTimezonePref()">
-                            <option value="9" selected>日本/韓國 (UTC+9)</option>
-                            <option value="8">港澳/北京 (UTC+8)</option>
-                            <option value="7">泰國/越南 (UTC+7)</option>
-                        </select>
-                        <div class="w-time" id="clock-custom-1">00:00</div>
+                <div class="settings-card-body">
+                    <div style="text-align:center; margin-bottom:14px; background:linear-gradient(135deg,#f0fdf4,#dcfce7); padding:10px; border-radius:10px; border:1px solid #bbf7d0;">
+                        <div style="font-size:11px; color:#64748b; font-weight:bold; margin-bottom:2px;">🇹🇼 台北標準時間</div>
+                        <div id="clock-taipei" style="font-size:28px; font-weight:900; color:#15803d; font-family:monospace; letter-spacing:2px;">00:00:00</div>
                     </div>
-                    <div class="clock-item">
-                        <select id="tz-select-2" onchange="saveTimezonePref()">
-                            <option value="-5" selected>美國美東 (UTC-5)</option>
-                            <option value="-8">美國美西 (UTC-8)</option>
-                        </select>
-                        <div class="w-time" id="clock-custom-2">00:00</div>
-                    </div>
-                    <div class="clock-item">
-                        <select id="tz-select-3" onchange="saveTimezonePref()">
-                            <option value="10" selected>澳洲雪梨 (UTC+10)</option>
-                            <option value="1">英國倫敦 (UTC+1)</option>
-                            <option value="2">歐陸時間 (UTC+2)</option>
-                        </select>
-                        <div class="w-time" id="clock-custom-3">00:00</div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <div class="clock-item">
+                            <select id="tz-select-1" onchange="saveTimezonePref()">
+                                <option value="9" selected>日本/韓國 (UTC+9)</option>
+                                <option value="8">港澳/北京 (UTC+8)</option>
+                                <option value="7">泰國/越南 (UTC+7)</option>
+                            </select>
+                            <div class="w-time" id="clock-custom-1">00:00</div>
+                        </div>
+                        <div class="clock-item">
+                            <select id="tz-select-2" onchange="saveTimezonePref()">
+                                <option value="-5" selected>美國美東 (UTC-5)</option>
+                                <option value="-8">美國美西 (UTC-8)</option>
+                            </select>
+                            <div class="w-time" id="clock-custom-2">00:00</div>
+                        </div>
+                        <div class="clock-item">
+                            <select id="tz-select-3" onchange="saveTimezonePref()">
+                                <option value="10" selected>澳洲雪梨 (UTC+10)</option>
+                                <option value="1">英國倫敦 (UTC+1)</option>
+                                <option value="2">歐陸時間 (UTC+2)</option>
+                            </select>
+                            <div class="w-time" id="clock-custom-3">00:00</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <!-- 系統資訊 -->
             <div class="settings-card">
-                <h3>ℹ️ 系統資訊</h3>
-                <div id="view-counter-text" style="font-size:13px; font-weight:bold; color:var(--text-main);">雲端總瀏覽次數：0 次</div>
+                <div class="settings-card-header">
+                    <span class="settings-card-icon">ℹ️</span>
+                    <div>
+                        <div class="settings-card-title">系統資訊</div>
+                    </div>
+                </div>
+                <div class="settings-card-body" style="padding-top:10px; padding-bottom:10px;">
+                    <div class="settings-info-row">
+                        <span class="settings-info-icon">👁️</span>
+                        <div>
+                            <div class="settings-info-text" id="view-counter-text">雲端總瀏覽次數：0 次</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
+            <!-- 免洗號工具 -->
             <div class="settings-card">
-                <h3>🤖 免洗號工具</h3>
-                <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">自動產生臨時任天堂信筱並接收驗證碼，全程免費。</p>
-                <button class="btn-sm btn-primary btn-block" onclick="switchTab('cloud')" style="padding:10px; font-size:14px; border-radius:8px;">🔗 前往免洗號工具</button>
+                <div class="settings-card-header">
+                    <span class="settings-card-icon">🤖</span>
+                    <div>
+                        <div class="settings-card-title">免洗號工具</div>
+                        <div class="settings-card-subtitle">自動產生臨時任天堂信筱並接收驗證碼</div>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <button class="btn-sm btn-primary btn-block" onclick="switchTab('cloud')" style="padding:10px; font-size:14px; border-radius:10px; width:100%;">🔗 前往免洗號工具</button>
+                </div>
             </div>
+
         </section>
 
         <section id="view-cloud" class="view-section cloud-app">
@@ -1461,7 +1563,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.15.0045";
+    const APP_VERSION = "2026.07.15.0046";
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
             .then(res => res.text())
@@ -2031,8 +2133,15 @@
 
     const nowMonth = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0');
     database.ref('settings/mapUsage/' + nowMonth + '/count').on('value', snap => {
+        const count = snap.val() || 0;
         const el = document.getElementById('map-usage-count');
-        if (el) el.innerText = snap.val() || 0;
+        const bar = document.getElementById('map-usage-bar');
+        if (el) el.innerText = count;
+        if (bar) {
+            const pct = Math.min(100, Math.round(count / 28000 * 100));
+            bar.style.width = pct + '%';
+            bar.style.background = pct >= 90 ? 'linear-gradient(90deg,#f97316,#ef4444)' : 'linear-gradient(90deg,#0ea5e9,#6366f1)';
+        }
     });
 
     // 全域自動刪除開關（從 Firebase 同步）
