@@ -946,6 +946,7 @@
 
     <header class="app-header">
         <h2 style="align-items: baseline;">🌱 Pickmin Tracker <span id="header-version-tag" style="font-size: 10px; color: #9ca3af; font-weight: normal; margin-left: 6px;"></span></h2>
+        <div id="view-counter-text" style="font-size: 10px; color: #9ca3af; font-weight: normal; margin-top: 1px;">雲端總瀏覽次數：0 次</div>
         <div class="header-right" id="sync-status-indicator">⚪ 未連線</div>
     </header>
 
@@ -1047,6 +1048,24 @@
         <section id="view-settings" class="view-section">
             <div class="settings-grid">
 
+            <!-- 同步設定（最上面） -->
+            <div class="settings-card">
+                <div class="settings-card-header success">
+                    <span class="settings-card-icon">☁️</span>
+                    <div>
+                        <div class="settings-card-title">跨裝置收藏同步</div>
+                        <div class="settings-card-subtitle">輸入相同代號即可同步</div>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <label style="font-size:12px; color:#64748b; font-weight:600;">綁定同步代號</label>
+                    <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
+                        <input type="text" id="sync-user-id" class="input-base" placeholder="例如：Leo..." onchange="applySyncId()" style="flex:1;">
+                        <span id="sync-status" class="sync-status">未啟用</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- 時區設定 -->
             <div class="settings-card">
                 <div class="settings-card-header amber">
@@ -1097,24 +1116,6 @@
                 </div>
             </div>
 
-            <!-- 系統資訊 -->
-            <div class="settings-card">
-                <div class="settings-card-header">
-                    <span class="settings-card-icon">ℹ️</span>
-                    <div>
-                        <div class="settings-card-title">系統資訊</div>
-                    </div>
-                </div>
-                <div class="settings-card-body" style="padding-top:10px; padding-bottom:10px;">
-                    <div class="settings-info-row">
-                        <span class="settings-info-icon">👁️</span>
-                        <div>
-                            <div class="settings-info-text" id="view-counter-text">雲端總瀏覽次數：0 次</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- 自動清理開關 -->
             <div class="settings-card">
                 <div class="settings-card-header danger">
@@ -1128,7 +1129,7 @@
                     <div class="settings-toggle-row">
                         <div>
                             <div class="settings-toggle-label">啟用自動刪除</div>
-                            <div class="settings-toggle-desc">已認領過期 2 小時 / 野菇隔日凌晨 1 點</div>
+                            <div class="settings-toggle-desc">已認領過期 2 小時 / 野菇隔日凌晨 1 點</div>
                         </div>
                         <label class="toggle-switch">
                             <input type="checkbox" id="auto-delete-toggle" onchange="saveAutoDeletePref()">
@@ -1177,24 +1178,6 @@
                         <input type="text" id="vision-api-key" class="input-base" placeholder="AIzaSy..." onchange="saveVisionApiKey()">
                         <p style="font-size:11px; color:#6b7280; margin-top:4px; margin-bottom:0;">金鑰僅儲存於您的瀏覽器中，不會上傳。</p>
                         <div id="vision-usage-display" style="margin-top:8px; font-size:12px; color:var(--text-muted); font-weight:bold;">讀取中...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 同步設定 -->
-            <div class="settings-card">
-                <div class="settings-card-header success">
-                    <span class="settings-card-icon">☁️</span>
-                    <div>
-                        <div class="settings-card-title">跨裝置收藏同步</div>
-                        <div class="settings-card-subtitle">輸入相同代號即可同步</div>
-                    </div>
-                </div>
-                <div class="settings-card-body">
-                    <label style="font-size:12px; color:#64748b; font-weight:600;">綁定同步代號</label>
-                    <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
-                        <input type="text" id="sync-user-id" class="input-base" placeholder="例如：Leo..." onchange="applySyncId()" style="flex:1;">
-                        <span id="sync-status" class="sync-status">未啟用</span>
                     </div>
                 </div>
             </div>
@@ -1582,7 +1565,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.15.1434";
+    const APP_VERSION = "2026.07.16.0255";
     function checkForUpdate() {
         fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
             .then(res => res.text())
