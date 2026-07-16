@@ -1627,7 +1627,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.16.1417";
+    const APP_VERSION = "2026.07.16.1419";
     function checkForUpdate() {
         // 從 raw.github 抓取以繞過 GitHub Pages CDN 快取
         const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + new Date().getTime();
@@ -1653,9 +1653,6 @@
     window.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') checkForUpdate();
     });
-
-    // 每 60 秒自動背景檢查一次
-    setInterval(checkForUpdate, 60000);
 
     function escapeHtml(str) { 
         if (str == null) return '';
