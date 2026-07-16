@@ -1627,23 +1627,35 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.16.1413";
+    const APP_VERSION = "2026.07.16.1417";
     function checkForUpdate() {
-        fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
+        // 從 raw.github 抓取以繞過 GitHub Pages CDN 快取
+        const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + new Date().getTime();
+        fetch(rawUrl, { cache: 'no-store' })
             .then(res => res.text())
             .then(html => {
                 const match = html.match(/const APP_VERSION = ['"]([^'"]+)['"]/);
                 if (match && match[1] !== APP_VERSION) {
-                    console.log('發現新版本，正在重新載入...', match[1]);
+                    console.log('發現新版本，準備重新載入...', match[1]);
+                    // 如果用戶正在編輯，則不強制更新（避免資料遺失）
+                    const editModal = document.getElementById('edit-modal');
+                    if (editModal && editModal.style.display === 'flex') {
+                        console.log('用戶正在編輯，稍後更新');
+                        return;
+                    }
                     window.location.replace(window.location.pathname + '?v=' + match[1]);
                 }
             })
             .catch(err => console.log('檢查更新失敗:', err));
     }
 
+    // 每次網頁切換回前景時檢查
     window.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') checkForUpdate();
     });
+
+    // 每 60 秒自動背景檢查一次
+    setInterval(checkForUpdate, 60000);
 
     function escapeHtml(str) { 
         if (str == null) return '';
