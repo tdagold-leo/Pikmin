@@ -1629,7 +1629,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.18.1514";
+    const APP_VERSION = "2026.07.18.1543";
     function checkForUpdate() {
         // 從 raw.github 抓取以繞過 GitHub Pages CDN 快取
         const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + new Date().getTime();
@@ -3785,6 +3785,18 @@
                         distBadge = `<div style="color: #065f46; font-size: 10px; font-weight: bold; margin-top: 4px; background: #d1fae5; padding: 4px 6px; border-radius: 4px; border: 1px dashed #10b981; text-align: center;">📏 距離 ${distText}</div>`;
                     }
 
+                    const pTheme = getUserColorTheme(item.provider);
+                    let providerHtml = '';
+                    if (item.provider) {
+                        if (pTheme.bgImg) {
+                            providerHtml = `<span style="display:inline-flex; align-items:center; gap:4px; background:#f1f5f9; border:1px solid #cbd5e1; padding:2px 6px; border-radius:12px; font-size:11px; margin-left:4px; font-weight:bold; color:#334155; vertical-align:middle; line-height:1.2;">` +
+                                `<span style="width:14px; height:14px; border-radius:50%; background-image:${pTheme.bgImg}; background-size:cover; background-position:center; display:inline-block; border:1px solid #10b981; flex-shrink:0;"></span>` +
+                                `${escapeHtml(item.provider)}</span>`;
+                        } else {
+                            providerHtml = `<span style="background:${pTheme.bg}; color:${pTheme.color}; border:1px solid ${pTheme.border}; padding:2px 6px; border-radius:10px; font-size:11px; margin-left:4px; font-weight:bold; display:inline-flex; align-items:center; gap:2px; vertical-align:middle; line-height:1.2;">🧑 ${escapeHtml(item.provider)}</span>`;
+                        }
+                    }
+
                     const card = document.createElement('div'); 
                     card.className = `grid-card ${isReady ? 'alert-pulse' : ''} ${isDuplicate ? 'duplicate-card' : ''}`;
                     
@@ -3821,7 +3833,7 @@
 
                     card.innerHTML = `
                         <div class="card-img-box">${imgHtml}<div class="card-badge-type">${escapeHtml(item.type)}</div><button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button></div>
-                        <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}</span>${item.provider ? `<span style="background:#e0e7ff; color:#3730a3; padding:2px 6px; border-radius:10px; font-size:11px; margin-left:4px; font-weight:bold;">🧑 ${escapeHtml(item.provider)}</span>` : ''}${safeT ? `<span class="tag-badge" style="margin-left:4px;">${safeT}</span>` : ''}</div>
+                        <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}</span>${providerHtml}${safeT ? `<span class="tag-badge" style="margin-left:4px;">${safeT}</span>` : ''}</div>
                         ${dupBadge}
                         ${distBadge}
                         ${item.missingFields && item.missingFields.length > 0 ? `<div style="color: #ef4444; font-size: 10px; font-weight: bold; margin-top: 4px; background: #fee2e2; padding: 4px 6px; border-radius: 4px; border: 1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>` : ''}
