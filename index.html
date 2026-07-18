@@ -1408,10 +1408,12 @@
                 <div class="input-group">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
                         <label style="margin:0;">座標 (貼上經緯度將自動抓取國家)</label>
-                        <button type="button" onclick="searchCoordsByName('post-name', 'post-city', 'post-country', 'post-coords', 'post-tag')" style="font-size:11px; padding:2px 8px; border-radius:12px; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; cursor:pointer; line-height:1.2;">🔍 搜尋定位</button>
+                        <button type="button" onclick="searchCoordsByName('post-name', 'post-city', 'post-country', 'post-coords', 'post-tag')" style="display:none; font-size:11px; padding:2px 8px; border-radius:12px; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; cursor:pointer; line-height:1.2;">🔍 搜尋定位</button>
                     </div>
-                    <input type="text" id="post-coords" class="input-base" placeholder="貼上點座標" onblur="autoDetectCountry(this.value, 'post-country', 'post-tz-hint', 'post-city')">
-                    <div id="post-coords-candidates" style="display:none; margin-top:5px; display:flex; flex-direction:column; gap:4px;"></div>
+                    <input type="text" id="post-coords" class="input-base" placeholder="貼上點座標"
+                        onblur="autoDetectCountry(this.value, 'post-country', 'post-tz-hint', 'post-city')"
+                        oninput="clearTimeout(window._geoTimer); window._geoTimer = setTimeout(() => autoDetectCountry(this.value, 'post-country', 'post-tz-hint', 'post-city'), 1200)">
+                    <div id="post-coords-candidates" style="margin-top:5px; display:none; flex-direction:column; gap:4px;"></div>
                 </div>
                 <div class="input-group">
                     <label>國家 <span id="post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
@@ -1433,21 +1435,25 @@
                 <div class="input-group">
                     <label>圖片網址</label>
                     <div style="display:flex; gap:8px;">
-                        <input type="text" id="post-image" class="input-base" placeholder="請貼上圖片網址，或留空" style="flex:1;">
+                        <input type="text" id="post-image" class="input-base" placeholder="請貼上圖片網址，或留空" style="flex:1;" oninput="checkDatabaseForImage(this.value, 'post')">
                         <input type="file" id="post-ocr-file" accept="image/*" style="display:none;" onchange="handleVisionOcrUpload(event, 'post-ocr-result')">
-                        <button class="btn-sm btn-default" onclick="triggerOCR('post-image', 'post-ocr-file', 'post-ocr-result')" style="white-space:nowrap; border-radius:8px; background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; padding:6px 10px; line-height:1.3;">
+                        <button type="button" class="btn-sm btn-default" onclick="triggerOCR('post-image', 'post-ocr-file', 'post-ocr-result')" style="white-space:nowrap; border-radius:8px; background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; padding:6px 10px; line-height:1.3;">
                             <div style="font-weight:bold;">🔍 文字辨識</div>
                             <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#475569;">辨識左側網址</div>
                         </button>
                     </div>
                     <div style="display:flex; gap:6px; margin-top:6px;">
-                        <button class="btn-sm btn-default" onclick="document.getElementById('post-ocr-file').click()" style="flex:1; border-radius:8px; background:#f5f3ff; color:#5b21b6; border:1px dashed #8b5cf6; padding:6px; line-height:1.3;">
+                        <button type="button" class="btn-sm btn-default" onclick="document.getElementById('post-ocr-file').click()" style="flex:1; border-radius:8px; background:#f5f3ff; color:#5b21b6; border:1px dashed #8b5cf6; padding:6px; line-height:1.3;">
                             <div style="font-weight:bold;">📁 上傳截圖</div>
                             <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#64748b;">從裝置相簿檔案</div>
                         </button>
-                        <button class="btn-sm btn-default" onclick="pasteFromClipboard('post-ocr-result')" style="flex:1; border-radius:8px; background:#f0fdf4; color:#166534; border:1px dashed #22c55e; padding:6px; line-height:1.3;">
+                        <button type="button" class="btn-sm btn-default" onclick="pasteFromClipboard('post-ocr-result')" style="flex:1; border-radius:8px; background:#f0fdf4; color:#166534; border:1px dashed #22c55e; padding:6px; line-height:1.3;">
                             <div style="font-weight:bold;">📋 貼上圖片</div>
                             <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#475569;">讀取剪貼簿圖片</div>
+                        </button>
+                        <button type="button" class="btn-sm btn-default" onclick="searchImageOnGoogle('post-image')" style="flex:1; border-radius:8px; background:#fff7ed; color:#c2410c; border:1px dashed #f97316; padding:6px; line-height:1.3;">
+                            <div style="font-weight:bold;">🤖 AI 座標搜尋</div>
+                            <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#b45309;">Google AI 模式查座標</div>
                         </button>
                     </div>
                     <div id="post-ocr-result" style="display:none; margin-top:5px; font-size:12px; background:#fef3c7; padding:8px; border-radius:4px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:150px; overflow-y:auto; color:#92400e;"></div>
@@ -1572,10 +1578,12 @@
                 <div class="input-group">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
                         <label style="margin:0;">座標</label>
-                        <button type="button" onclick="searchCoordsByName('edit-post-name', 'edit-post-city', 'edit-post-country', 'edit-post-coords', 'edit-post-tag')" style="font-size:11px; padding:2px 8px; border-radius:12px; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; cursor:pointer; line-height:1.2;">🔍 搜尋定位</button>
+                        <button type="button" onclick="searchCoordsByName('edit-post-name', 'edit-post-city', 'edit-post-country', 'edit-post-coords', 'edit-post-tag')" style="display:none; font-size:11px; padding:2px 8px; border-radius:12px; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; cursor:pointer; line-height:1.2;">🔍 搜尋定位</button>
                     </div>
-                    <input type="text" id="edit-post-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city')">
-                    <div id="edit-post-coords-candidates" style="display:none; margin-top:5px; display:flex; flex-direction:column; gap:4px;"></div>
+                    <input type="text" id="edit-post-coords" class="input-base"
+                        onblur="autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city')"
+                        oninput="clearTimeout(window._editGeoTimer); window._editGeoTimer = setTimeout(() => autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city'), 1200)">
+                    <div id="edit-post-coords-candidates" style="margin-top:5px; display:none; flex-direction:column; gap:4px;"></div>
                 </div>
                 <div class="input-group">
                     <label>國家 <span id="edit-post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
@@ -1584,7 +1592,7 @@
                 <div class="input-group">
                     <label>城市</label>
                     <input type="text" id="edit-post-city" class="input-base" placeholder="例如：東京">
-                    <div id="edit-post-city-candidates" style="display:none; margin-top:5px; display:flex; flex-wrap:wrap; gap:5px;"></div>
+                    <div id="edit-post-city-candidates" style="margin-top:5px; display:none; flex-wrap:wrap; gap:5px;"></div>
                 </div>
                 <div class="input-group">
                     <label>名稱</label>
@@ -1597,21 +1605,25 @@
                 <div class="input-group">
                     <label>圖片網址</label>
                     <div style="display:flex; gap:6px; align-items:center;">
-                        <input type="text" id="edit-post-image" class="input-base" style="flex:1;" placeholder="貼上圖片網址，或留空">
+                        <input type="text" id="edit-post-image" class="input-base" style="flex:1;" placeholder="貼上圖片網址，或留空" oninput="checkDatabaseForImage(this.value, 'edit-post')">
                         <input type="file" id="edit-post-ocr-file" accept="image/*" style="display:none;" onchange="handleVisionOcrUpload(event, 'edit-post-ocr-result')">
-                        <button class="btn-sm btn-default" onclick="triggerOCR('edit-post-image', 'edit-post-ocr-file', 'edit-post-ocr-result')" style="white-space:nowrap; border-radius:8px; background:#e0e7ff; color:#3730a3; border:1px solid #6366f1; padding:6px 10px; line-height:1.3;">
+                        <button type="button" class="btn-sm btn-default" onclick="triggerOCR('edit-post-image', 'edit-post-ocr-file', 'edit-post-ocr-result')" style="white-space:nowrap; border-radius:8px; background:#e0e7ff; color:#3730a3; border:1px solid #6366f1; padding:6px 10px; line-height:1.3;">
                             <div style="font-weight:bold;">🔍 文字辨識</div>
                             <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#475569;">辨識左側網址</div>
                         </button>
                     </div>
                     <div style="display:flex; gap:6px; margin-top:6px;">
-                        <button class="btn-sm btn-default" onclick="document.getElementById('edit-post-ocr-file').click()" style="flex:1; border-radius:8px; background:#f5f3ff; color:#5b21b6; border:1px solid #8b5cf6; padding:6px; line-height:1.3;">
+                        <button type="button" class="btn-sm btn-default" onclick="document.getElementById('edit-post-ocr-file').click()" style="flex:1; border-radius:8px; background:#f5f3ff; color:#5b21b6; border:1px solid #8b5cf6; padding:6px; line-height:1.3;">
                             <div style="font-weight:bold;">📁 上傳截圖</div>
                             <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#64748b;">從裝置相簿檔案</div>
                         </button>
-                        <button class="btn-sm btn-default" onclick="pasteFromClipboard('edit-post-ocr-result')" style="flex:1; border-radius:8px; background:#f0fdf4; color:#166534; border:1px solid #22c55e; padding:6px; line-height:1.3;">
+                        <button type="button" class="btn-sm btn-default" onclick="pasteFromClipboard('edit-post-ocr-result')" style="flex:1; border-radius:8px; background:#f0fdf4; color:#166534; border:1px solid #22c55e; padding:6px; line-height:1.3;">
                             <div style="font-weight:bold;">📋 貼上圖片</div>
                             <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#475569;">讀取剪貼簿圖片</div>
+                        </button>
+                        <button type="button" class="btn-sm btn-default" onclick="searchImageOnGoogle('edit-post-image')" style="flex:1; border-radius:8px; background:#fff7ed; color:#c2410c; border:1px solid #f97316; padding:6px; line-height:1.3;">
+                            <div style="font-weight:bold;">🤖 AI 座標搜尋</div>
+                            <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#b45309;">Google AI 模式查座標</div>
                         </button>
                     </div>
                     <div id="edit-post-ocr-result" style="display:none; margin-top:5px; font-size:12px; background:#fef3c7; padding:8px; border-radius:6px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:120px; overflow-y:auto; color:#92400e;"></div>
@@ -1637,7 +1649,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.18.1700";
+    const APP_VERSION = "2026.07.18.1900";
     function checkForUpdate() {
         // 從 raw.github 抓取以繞過 GitHub Pages CDN 快取
         const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + new Date().getTime();
@@ -2953,9 +2965,164 @@
         }
     }
 
+    function checkDatabaseForImage(imageUrl, prefix) {
+        if (!imageUrl || imageUrl === '無圖片' || !imageUrl.startsWith('http')) return false;
+        if (typeof postcardList === 'undefined' || postcardList.length === 0) return false;
+        
+        // 找到相同圖片且有座標的明信片
+        const match = postcardList.find(pc => pc.image && pc.image === imageUrl && pc.coords);
+        if (match) {
+            document.getElementById(prefix + '-coords').value = match.coords;
+            document.getElementById(prefix + '-name').value = match.name;
+            document.getElementById(prefix + '-city').value = match.city || '';
+            document.getElementById(prefix + '-country').value = match.country || '';
+            
+            const tagEl = document.getElementById(prefix + '-tag');
+            if (tagEl) tagEl.value = match.tag || '';
+            
+            // 直接呼叫 autoDetectCountry 以確保國家與城市正確帶入（dispatchEvent('blur') 不觸發 inline onblur）
+            autoDetectCountry(match.coords, prefix + '-country', prefix + '-tz-hint', prefix + '-city');
+            
+            // 顯示提示
+            const resDiv = document.getElementById(prefix + '-ocr-result');
+            if (resDiv) {
+                resDiv.style.display = 'block';
+                resDiv.innerHTML = `<div style="color:#0f766e; font-weight:bold; padding:8px; border:1px solid #10b981; background:#f0fdf4; border-radius:8px; font-size:12px; line-height:1.4;">✨ 歷史資料庫比對成功！已自動填入座標與名稱。</div>`;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    async function searchImageOnGoogle(inputId) {
+        const input = document.getElementById(inputId);
+        const url = input ? input.value.trim() : '';
+        if (!url || !url.startsWith('http')) {
+            alert('請先填寫或貼上有效的圖片網址！');
+            return;
+        }
+
+        // 根據 inputId 判斷前綴（用於操作對應表單欄位）
+        const prefix = inputId.includes('edit-post') ? 'edit-post' : 'post';
+        const resDiv = document.getElementById(prefix + '-ocr-result');
+        const fallbackUrl = 'https://www.google.com/searchbyimage?image_url=' + encodeURIComponent(url) + '&q=' + encodeURIComponent('Pikmin Bloom 座標');
+
+        // 若未設定 Vision API 金鑰，直接開啟 Google AI 搜尋
+        const apiKey = localStorage.getItem('pikmin_vision_api_key') || '';
+        if (!apiKey) {
+            if (resDiv) {
+                resDiv.style.display = 'block';
+                resDiv.innerHTML = `<div style="color:#92400e; padding:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; font-size:12px; line-height:1.6;">
+                    ⚠️ 尚未設定 Vision API 金鑰，無法自動辨識。<br>
+                    <a href="${fallbackUrl}" target="_blank" style="color:#0369a1; font-weight:bold; text-decoration:none;">🔗 點此改用 Google AI 模式搜尋座標 →</a>
+                </div>`;
+            } else {
+                window.open(fallbackUrl, '_blank');
+            }
+            return;
+        }
+
+        // 顯示載入中
+        if (resDiv) {
+            resDiv.style.display = 'block';
+            resDiv.innerHTML = `<div style="color:#0369a1; padding:8px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; font-size:12px;">
+                ⏳ AI 正在辨識圖片地標與座標，請稍候...
+            </div>`;
+        }
+
+        try {
+            // 呼叫 Vision API：LANDMARK_DETECTION 可直接回傳地標 GPS 座標
+            const visionUrl = `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`;
+            const resp = await fetch(visionUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    requests: [{
+                        image: { source: { imageUri: url } },
+                        features: [
+                            { type: 'LANDMARK_DETECTION', maxResults: 5 }
+                        ]
+                    }]
+                })
+            });
+
+            const data = await resp.json();
+            const annotations = data.responses?.[0]?.landmarkAnnotations;
+
+            if (annotations && annotations.length > 0) {
+                // 取信心度最高的地標
+                const best = annotations[0];
+                const latLng = best.locations?.[0]?.latLng;
+
+                if (latLng && latLng.latitude != null && latLng.longitude != null) {
+                    const coords = `${parseFloat(latLng.latitude).toFixed(6)},${parseFloat(latLng.longitude).toFixed(6)}`;
+
+                    // 自動填入座標欄，直接呼叫 autoDetectCountry 確保國家/城市正確帶入
+                    const coordsField = document.getElementById(prefix + '-coords');
+                    if (coordsField) coordsField.value = coords;
+                    autoDetectCountry(coords, prefix + '-country', prefix + '-tz-hint', prefix + '-city');
+
+                    // 若名稱欄位為空，自動填入地標名稱
+                    const nameField = document.getElementById(prefix + '-name');
+                    if (nameField && !nameField.value.trim()) {
+                        nameField.value = best.description || '';
+                    }
+
+                    // 顯示多個候選地標供參考（候選按鈕也直接呼叫 autoDetectCountry）
+                    const candidateHtml = annotations.map((lm, i) => {
+                        const ll = lm.locations?.[0]?.latLng;
+                        if (!ll) return '';
+                        const c = `${parseFloat(ll.latitude).toFixed(6)},${parseFloat(ll.longitude).toFixed(6)}`;
+                        return `<button type="button" onclick="
+                            document.getElementById('${prefix}-coords').value='${c}';
+                            autoDetectCountry('${c}', '${prefix}-country', '${prefix}-tz-hint', '${prefix}-city');
+                        " style="font-size:11px; padding:4px 8px; margin-top:4px; border-radius:6px; border:1px solid #10b981; background:${i===0?'#d1fae5':'#f0fdf4'}; color:#065f46; cursor:pointer; width:100%; text-align:left; display:block; line-height:1.4;">
+                            ${i===0?'✅':'📍'} ${escapeHtml(lm.description)} <span style="color:#6b7280;">(${c}) — ${(lm.score*100).toFixed(0)}%</span>
+                        </button>`;
+                    }).join('');
+
+                    if (resDiv) {
+                        resDiv.style.display = 'block';
+                        resDiv.innerHTML = `<div style="color:#0f766e; padding:8px; background:#f0fdf4; border:1px solid #10b981; border-radius:8px; font-size:12px; line-height:1.6;">
+                            ✅ <strong>AI 地標辨識成功！座標已自動填入。</strong><br>
+                            ${candidateHtml}
+                            <div style="margin-top:6px; font-size:11px; color:#6b7280;">如結果不正確，可點擊上方其他候選地標替換，或改用 <a href="${fallbackUrl}" target="_blank" style="color:#0369a1;">Google AI 模式搜尋</a>。</div>
+                        </div>`;
+                    }
+                    return;
+                }
+            }
+
+            // 找不到地標：退回 Google AI 搜尋
+            if (resDiv) {
+                resDiv.style.display = 'block';
+                resDiv.innerHTML = `<div style="color:#92400e; padding:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; font-size:12px; line-height:1.6;">
+                    ⚠️ AI 無法從此圖片辨識已知地標。<br>
+                    <a href="${fallbackUrl}" target="_blank" style="color:#0369a1; font-weight:bold; text-decoration:none;">🔗 點此用 Google AI 模式搜尋座標（可手動複製）→</a>
+                </div>`;
+            } else {
+                window.open(fallbackUrl, '_blank');
+            }
+
+        } catch (err) {
+            if (resDiv) {
+                resDiv.style.display = 'block';
+                resDiv.innerHTML = `<div style="color:#dc2626; padding:8px; background:#fef2f2; border:1px solid #f87171; border-radius:8px; font-size:12px; line-height:1.6;">
+                    ❌ 呼叫 Vision API 失敗：${escapeHtml(err.message)}<br>
+                    <a href="${fallbackUrl}" target="_blank" style="color:#0369a1; font-weight:bold; text-decoration:none;">🔗 改用 Google AI 模式搜尋 →</a>
+                </div>`;
+            }
+        }
+    }
+
     async function triggerOCR(textInputId, fileInputId, resultDivId) {
         const textInput = textInputId ? document.getElementById(textInputId) : null;
         const imgUrl = textInput ? textInput.value.trim() : '';
+
+        const prefix = textInputId.includes('edit') ? 'edit-post' : 'post';
+        if (checkDatabaseForImage(imgUrl, prefix)) {
+            return; // 匹配成功，直接帶入，不用再跑 OCR
+        }
 
         if (imgUrl && imgUrl.startsWith('http')) {
             await processVisionOcr(resultDivId, { source: { imageUri: imgUrl } });
@@ -3355,7 +3522,14 @@
             document.getElementById('edit-post-name').value = item.name || ''; 
             document.getElementById('edit-post-tag').value = item.tag || '';
             document.getElementById('edit-post-coords').value = item.coords || ''; 
-            document.getElementById('edit-post-image').value = (item.image === "無圖片" ? "" : item.image) || ''; 
+            const imgUrl = (item.image === "無圖片" ? "" : item.image) || '';
+            document.getElementById('edit-post-image').value = imgUrl; 
+            
+            // 如果這張明信片目前沒有座標，但有圖片網址，開啟表單時自動比對本機資料庫
+            if (!item.coords && imgUrl) {
+                checkDatabaseForImage(imgUrl, 'edit-post');
+            }
+            
             showTimeDiff(item.country || '', 'edit-post-tz-hint');
             
             let pd = 0, ph = 0, pm = 0;
