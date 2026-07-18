@@ -1637,7 +1637,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.18.1700";
+    const APP_VERSION = "2026.07.18.1720";
     function checkForUpdate() {
         // 從 raw.github 抓取以繞過 GitHub Pages CDN 快取
         const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + new Date().getTime();
@@ -2782,52 +2782,65 @@
         candidatesEl.style.display = 'block';
         candidatesEl.innerHTML = '<span style="font-size:11px; color:var(--text-muted);">🔄 正在搜尋地圖...</span>';
         
-        // 收集多個可能的研究語句
+        // 1. 取得國家代碼過濾器
+        let countryCode = '';
+        if (countryVal) {
+            const cMap = {
+                '台灣': 'tw', '中華民國': 'tw', 'taiwan': 'tw',
+                '日本': 'jp', 'japan': 'jp',
+                '美國': 'us', 'usa': 'us',
+                '韓國': 'kr', 'korea': 'kr',
+                '英國': 'gb', 'uk': 'gb',
+                '德國': 'de', 'germany': 'de',
+                '法國': 'fr', 'france': 'fr',
+                '香港': 'hk', 'hong kong': 'hk',
+                '澳門': 'mo', 'macau': 'mo',
+                '哥倫比亞': 'co', 'colombia': 'co',
+                '墨西哥': 'mx', 'mexico': 'mx'
+            };
+            const cNorm = countryVal.toLowerCase();
+            if (cMap[cNorm]) {
+                countryCode = cMap[cNorm];
+            }
+        }
+
+        // 2. 收集搜尋語句。優先順序：
+        // A. 乾淨的「標籤」(通常是明信片最準確的實體地址，例如 "須恵町 旅石")
+        // B. 乾淨的「名稱」
+        // C. 地區 + 名稱
+        // D. 地區 + 標籤
         const queries = [];
         
-        // 1. 基於名稱與當前填寫區域的搜尋 (例如: 哥倫比亞 考卡省 totoro)
-        if (nameVal) {
-            let q1 = '';
-            if (countryVal && countryVal !== '台灣') q1 += countryVal + ' ';
-            if (cityVal) q1 += cityVal + ' ';
-            q1 += nameVal;
-            queries.push(q1.trim());
-            
-            // 如果有填地區，也加一個只搜名稱的 fallback
-            if (cityVal || countryVal) {
-                queries.push(nameVal);
-            }
-        }
-        
-        // 2. 基於標籤 (Tag) 的搜尋 (例如: Popular Sta Teresa Tlalpan)
         if (tagVal) {
             queries.push(tagVal);
-            // 也可以組合地區與標籤
-            if (cityVal || countryVal) {
-                let qTag = '';
-                if (countryVal && countryVal !== '台灣') qTag += countryVal + ' ';
-                if (cityVal) qTag += cityVal + ' ';
-                qTag += tagVal;
-                queries.push(qTag.trim());
-            }
+        }
+        if (nameVal) {
+            queries.push(nameVal);
+        }
+        if (nameVal && cityVal) {
+            queries.push(cityVal + ' ' + nameVal);
+        }
+        if (tagVal && cityVal) {
+            queries.push(cityVal + ' ' + tagVal);
         }
         
-        // 去重
         const uniqueQueries = [...new Set(queries.filter(Boolean))];
         
         try {
-            // 平行發送所有搜尋請求
-            const searchPromises = uniqueQueries.map(q => 
-                fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&accept-language=zh-TW&limit=4`, {
-                    headers: { 'User-Agent': 'PikminTrackerWeb/1.0' }
-                })
-                .then(res => res.json())
-                .catch(() => [])
-            );
+            // 平行發送搜尋請求，加上 countrycodes 與限制
+            const searchPromises = uniqueQueries.map(q => {
+                let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&accept-language=zh-TW&limit=4`;
+                if (countryCode) {
+                    url += `&countrycodes=${countryCode}`;
+                }
+                return fetch(url, { headers: { 'User-Agent': 'PikminTrackerWeb/1.0' } })
+                    .then(res => res.json())
+                    .catch(() => []);
+            });
             
             const resultsArray = await Promise.all(searchPromises);
             
-            // 合併所有搜尋結果並依 place_id 去重
+            // 合併並去重
             const mergedResults = [];
             const seenPlaceIds = new Set();
             
@@ -2843,8 +2856,29 @@
             });
             
             if (mergedResults.length > 0) {
+                // 如果有設定 countryCode，對結果進行排序：
+                // 優先將地名中包含 tagVal 或是 nameVal 的放前面，並且更嚴格地匹配地址特徵
+                mergedResults.sort((a, b) => {
+                    const aName = a.display_name.toLowerCase();
+                    const bName = b.display_name.toLowerCase();
+                    
+                    let aMatch = 0, bMatch = 0;
+                    if (tagVal) {
+                        const tagParts = tagVal.split(/\s+/);
+                        tagParts.forEach(p => {
+                            if (aName.includes(p.toLowerCase())) aMatch += 2;
+                            if (bName.includes(p.toLowerCase())) bMatch += 2;
+                        });
+                    }
+                    if (nameVal) {
+                        if (aName.includes(nameVal.toLowerCase())) aMatch += 1;
+                        if (bName.includes(nameVal.toLowerCase())) bMatch += 1;
+                    }
+                    return bMatch - aMatch;
+                });
+
                 candidatesEl.innerHTML = '<span style="font-size:11px; color:var(--text-muted); margin-bottom:2px;">點擊以填入座標（系統將同步更新地區）：</span>' +
-                    mergedResults.map(item => {
+                    mergedResults.slice(0, 6).map(item => {
                         const displayName = item.display_name.split(',')[0] || item.type;
                         const addressName = item.display_name.split(',').slice(1, 4).join(',').trim() || '';
                         const coords = `${parseFloat(item.lat).toFixed(6)},${parseFloat(item.lon).toFixed(6)}`;
