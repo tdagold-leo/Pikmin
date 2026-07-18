@@ -1406,8 +1406,12 @@
                     </select>
                 </div>
                 <div class="input-group">
-                    <label>座標 (貼上經緯度將自動抓取國家)</label>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                        <label style="margin:0;">座標 (貼上經緯度將自動抓取國家)</label>
+                        <button type="button" onclick="searchCoordsByName('post-name', 'post-city', 'post-country', 'post-coords')" style="font-size:11px; padding:2px 8px; border-radius:12px; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; cursor:pointer; line-height:1.2;">🔍 搜尋定位</button>
+                    </div>
                     <input type="text" id="post-coords" class="input-base" placeholder="貼上點座標" onblur="autoDetectCountry(this.value, 'post-country', 'post-tz-hint', 'post-city')">
+                    <div id="post-coords-candidates" style="display:none; margin-top:5px; display:flex; flex-direction:column; gap:4px;"></div>
                 </div>
                 <div class="input-group">
                     <label>國家 <span id="post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
@@ -1566,8 +1570,12 @@
                     </select>
                 </div>
                 <div class="input-group">
-                    <label>座標</label>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                        <label style="margin:0;">座標</label>
+                        <button type="button" onclick="searchCoordsByName('edit-post-name', 'edit-post-city', 'edit-post-country', 'edit-post-coords')" style="font-size:11px; padding:2px 8px; border-radius:12px; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; cursor:pointer; line-height:1.2;">🔍 搜尋定位</button>
+                    </div>
                     <input type="text" id="edit-post-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city')">
+                    <div id="edit-post-coords-candidates" style="display:none; margin-top:5px; display:flex; flex-direction:column; gap:4px;"></div>
                 </div>
                 <div class="input-group">
                     <label>國家 <span id="edit-post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
@@ -1629,7 +1637,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.18.1608";
+    const APP_VERSION = "2026.07.18.1649";
     function checkForUpdate() {
         // 從 raw.github 抓取以繞過 GitHub Pages CDN 快取
         const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + new Date().getTime();
@@ -2756,6 +2764,66 @@
             }
         } catch (error) {
             resDiv.innerText = `❌ 連線發生錯誤：${error.message}`;
+        }
+    }
+
+    async function searchCoordsByName(nameId, cityId, countryId, coordsId) {
+        const nameVal = document.getElementById(nameId).value.trim();
+        const cityVal = document.getElementById(cityId).value.trim();
+        const countryVal = document.getElementById(countryId).value.trim();
+        const candidatesEl = document.getElementById(coordsId + '-candidates');
+        
+        if (!nameVal) {
+            alert('請先填寫「名稱」欄位！');
+            return;
+        }
+        
+        candidatesEl.style.display = 'block';
+        candidatesEl.innerHTML = '<span style="font-size:11px; color:var(--text-muted);">🔄 正在搜尋地圖...</span>';
+        
+        // 組合搜尋關鍵字，例如 "台北市 台北101" 或 "建明里 大同區 寶藏女孩"
+        let query = '';
+        if (countryVal && countryVal !== '台灣') query += countryVal + ' ';
+        if (cityVal) query += cityVal + ' ';
+        query += nameVal;
+        
+        try {
+            const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&accept-language=zh-TW&limit=5`;
+            const response = await fetch(url, {
+                headers: { 'User-Agent': 'PikminTrackerWeb/1.0' }
+            });
+            const data = await response.json();
+            
+            if (data && data.length > 0) {
+                candidatesEl.innerHTML = '<span style="font-size:11px; color:var(--text-muted); margin-bottom:2px;">點擊以填入座標：</span>' +
+                    data.map(item => {
+                        const displayName = item.display_name.split(',')[0] || item.type;
+                        const coords = `${parseFloat(item.lat).toFixed(6)},${parseFloat(item.lon).toFixed(6)}`;
+                        return `<button type="button" onclick="document.getElementById('${coordsId}').value='${coords}'; document.getElementById('${coordsId}').dispatchEvent(new Event('blur')); this.parentElement.style.display='none'; this.parentElement.innerHTML='';" style="font-size:12px; padding:4px 8px; border-radius:6px; border:1px solid var(--border); background:var(--card-bg); color:var(--text-main); cursor:pointer; text-align:left; line-height:1.2; width:100%; transition:background 0.15s;">🗺️ ${escapeHtml(displayName)} (${coords})</button>`;
+                    }).join('');
+            } else {
+                // 如果找不到，試試看只用名稱搜尋
+                if (cityVal || countryVal) {
+                    candidatesEl.innerHTML = '<span style="font-size:11px; color:var(--text-muted);">🔄 找不到包含地區的結果，嘗試僅以名稱搜尋中...</span>';
+                    const fallbackUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(nameVal)}&format=json&accept-language=zh-TW&limit=5`;
+                    const fbRes = await fetch(fallbackUrl, {
+                        headers: { 'User-Agent': 'PikminTrackerWeb/1.0' }
+                    });
+                    const fbData = await fbRes.json();
+                    if (fbData && fbData.length > 0) {
+                        candidatesEl.innerHTML = '<span style="font-size:11px; color:var(--text-muted); margin-bottom:2px;">點擊以填入座標：</span>' +
+                            fbData.map(item => {
+                                const displayName = item.display_name.split(',')[0] || item.type;
+                                const coords = `${parseFloat(item.lat).toFixed(6)},${parseFloat(item.lon).toFixed(6)}`;
+                                return `<button type="button" onclick="document.getElementById('${coordsId}').value='${coords}'; document.getElementById('${coordsId}').dispatchEvent(new Event('blur')); this.parentElement.style.display='none'; this.parentElement.innerHTML='';" style="font-size:12px; padding:4px 8px; border-radius:6px; border:1px solid var(--border); background:var(--card-bg); color:var(--text-main); cursor:pointer; text-align:left; line-height:1.2; width:100%; transition:background 0.15s;">🗺️ ${escapeHtml(displayName)} (${coords})</button>`;
+                            }).join('');
+                        return;
+                    }
+                }
+                candidatesEl.innerHTML = '<span style="font-size:11px; color:#ef4444;">❌ 找不到對應的地理座標，請嘗試修改名稱或改為手動貼上。</span>';
+            }
+        } catch (err) {
+            candidatesEl.innerHTML = '<span style="font-size:11px; color:#ef4444;">❌ 搜尋失敗，請檢查網路連線。</span>';
         }
     }
 
