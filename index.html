@@ -1416,6 +1416,7 @@
                 <div class="input-group">
                     <label>城市</label>
                     <input type="text" id="post-city" class="input-base" placeholder="例如：東京">
+                    <div id="post-city-candidates" style="display:none; margin-top:5px; display:flex; flex-wrap:wrap; gap:5px;"></div>
                 </div>
                 <div class="input-group">
                     <label>名稱</label>
@@ -1575,6 +1576,7 @@
                 <div class="input-group">
                     <label>城市</label>
                     <input type="text" id="edit-post-city" class="input-base" placeholder="例如：東京">
+                    <div id="edit-post-city-candidates" style="display:none; margin-top:5px; display:flex; flex-wrap:wrap; gap:5px;"></div>
                 </div>
                 <div class="input-group">
                     <label>名稱</label>
@@ -1627,7 +1629,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.18.1512";
+    const APP_VERSION = "2026.07.18.1514";
     function checkForUpdate() {
         // 從 raw.github 抓取以繞過 GitHub Pages CDN 快取
         const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + new Date().getTime();
@@ -2043,6 +2045,45 @@
                                 const cityInput = document.getElementById(cityInputId);
                                 if(cityInput) {
                                     cityInput.value = combined;
+                                }
+
+                                // 收集所有候選地名，讓用戶自行選擇
+                                const candidatesEl = document.getElementById(cityInputId + '-candidates');
+                                if (candidatesEl) {
+                                    const seen = new Set();
+                                    const candidates = [];
+                                    const addCandidate = (name) => {
+                                        if (!name) return;
+                                        let n = name.trim();
+                                        if (window.OpenCC) {
+                                            const cv = OpenCC.Converter({ from: 'cn', to: 'tw' });
+                                            n = cv(n);
+                                        }
+                                        if (n && !seen.has(n) && n !== countryName) {
+                                            seen.add(n);
+                                            candidates.push(n);
+                                        }
+                                    };
+
+                                    // 依優先級收集各層地名
+                                    addCandidate(data.city);
+                                    addCandidate(data.locality);
+                                    addCandidate(data.principalSubdivision);
+                                    if (data.localityInfo && data.localityInfo.administrative) {
+                                        const admins = [...data.localityInfo.administrative].sort((a, b) => b.adminLevel - a.adminLevel);
+                                        admins.forEach(a => { if (a.adminLevel > 1) addCandidate(a.name); });
+                                    }
+
+                                    if (candidates.length > 0) {
+                                        candidatesEl.innerHTML = '<span style="font-size:11px;color:var(--text-muted);margin-right:2px;">選擇：</span>' +
+                                            candidates.map(c =>
+                                                `<button type="button" onclick="document.getElementById('${cityInputId}').value='${c.replace(/'/g, "\\'")}'; this.parentElement.querySelectorAll('button').forEach(b=>b.style.background=''); this.style.background='#d1fae5';" style="font-size:12px;padding:2px 8px;border-radius:20px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-main);cursor:pointer;transition:background 0.15s;">${c}</button>`
+                                            ).join('');
+                                        candidatesEl.style.display = 'flex';
+                                    } else {
+                                        candidatesEl.style.display = 'none';
+                                        candidatesEl.innerHTML = '';
+                                    }
                                 }
                             }
                         }
