@@ -431,19 +431,71 @@
         .btn-block { width: 100%; padding: 10px; border-radius: 8px; font-size: 14px; }
         
         .line-share-btn {
-            background-color: #06c755;
+            background: linear-gradient(135deg, #06c755 0%, #04a846 100%);
             color: white;
             border: none;
-            border-radius: 12px;
-            padding: 12px 16px;
-            font-size: 14px;
+            border-radius: 14px;
+            padding: 14px 16px;
+            font-size: 15px;
             font-weight: bold;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 6px;
             width: 100%;
-            box-shadow: 0 4px 6px rgba(6,199,85,0.2);
+            box-shadow: 0 4px 12px rgba(6,199,85,0.35);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+            letter-spacing: 0.5px;
+        }
+        .line-share-btn:hover {
+            filter: brightness(1.07);
+            box-shadow: 0 6px 16px rgba(6,199,85,0.45);
+        }
+        .line-share-btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 6px rgba(6,199,85,0.25);
+            filter: brightness(0.95);
+        }
+
+        /* 系統清理規則說明框 */
+        .cleanup-info-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            line-height: 1.7;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .cleanup-info-box .cleanup-title {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+        .cleanup-info-box .cleanup-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            margin-bottom: 3px;
+            word-break: keep-all;
+            overflow-wrap: break-word;
+        }
+        .cleanup-info-box .cleanup-row .icon {
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .cleanup-info-box .cleanup-notice {
+            color: #dc2626;
+            font-size: 11px;
+            margin-top: 6px;
+            display: block;
         }
 
         /* 群組高對比度標題樣式 */
@@ -487,22 +539,60 @@
         .filter-select { flex-shrink: 0; color: var(--primary-dark); font-weight: bold; }
 
         /* 設定頁面卡片 */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 16px;
+            align-items: stretch;
+            padding-bottom: 16px;
+        }
         .settings-card {
             background: var(--card-bg);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border-radius: 16px;
+            padding: 0;
+            margin-bottom: 0;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
             border: 1px solid var(--border);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
-        .settings-card h3 {
-            margin: 0 0 12px 0;
-            font-size: 15px;
-            border-bottom: 1px solid #f3f4f6;
-            padding-bottom: 8px;
-            color: var(--primary-dark);
+        .settings-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-bottom: 1px solid #bae6fd;
         }
-        .sync-status { font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 6px; background-color: #f3f4f6; color: #9ca3af; }
+        .settings-card-header.danger { background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%); border-color: #fecdd3; }
+        .settings-card-header.success { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-color: #bbf7d0; }
+        .settings-card-header.purple { background: linear-gradient(135deg, #faf5ff 0%, #ede9fe 100%); border-color: #ddd6fe; }
+        .settings-card-header.amber { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-color: #fde68a; }
+        .settings-card-icon { font-size: 20px; line-height: 1; }
+        .settings-card-title { font-size: 14px; font-weight: 800; color: var(--primary-dark); margin: 0; }
+        .settings-card-subtitle { font-size: 10px; color: #64748b; margin: 0; }
+        .settings-card-body { padding: 14px 16px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .settings-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .settings-toggle-label { font-size: 13px; font-weight: bold; color: var(--text-main); }
+        .settings-toggle-desc { font-size: 11px; color: #64748b; margin-top: 2px; }
+        .toggle-switch { position: relative; display: inline-block; width: 48px; height: 26px; flex-shrink: 0; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-knob { position: absolute; cursor: pointer; inset: 0; background: #cbd5e1; border-radius: 26px; transition: 0.3s; }
+        .toggle-knob::after { content: ''; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        .toggle-switch input:checked + .toggle-knob { background: #22c55e; }
+        .toggle-switch input:checked + .toggle-knob::after { transform: translateX(22px); }
+        .settings-progress-wrap { margin-top: 10px; }
+        .settings-progress-bar { height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin: 6px 0; }
+        .settings-progress-fill { height: 100%; background: linear-gradient(90deg, #0ea5e9, #6366f1); border-radius: 99px; transition: width 0.5s ease; }
+        .settings-stat { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; }
+        .settings-stat-val { font-size: 20px; font-weight: 900; color: #0ea5e9; }
+        .settings-info-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+        .settings-info-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .settings-info-icon { font-size: 16px; width: 28px; text-align: center; flex-shrink: 0; }
+        .settings-info-text { font-size: 13px; color: var(--text-main); font-weight: 600; }
+        .settings-info-sub { font-size: 11px; color: #64748b; }
+        .sync-status { font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 8px; background-color: #f3f4f6; color: #9ca3af; white-space: nowrap; }
         .sync-status.active { background-color: #d1fae5; color: #059669; }
 
         /* 彈出視窗 (Modal) */
@@ -907,16 +997,29 @@
 <body>
 
     <header class="app-header">
-        <h2 style="align-items: baseline;">🌱 Pickmin Tracker <span id="header-version-tag" style="font-size: 10px; color: #9ca3af; font-weight: normal; margin-left: 6px;"></span></h2>
+        <h2>🌱 Pickmin Tracker <span id="header-version-tag" style="font-size: 10px; color: #9ca3af; font-weight: normal; margin-left: 4px;"></span></h2>
         <div class="header-right" id="sync-status-indicator">⚪ 未連線</div>
     </header>
 
     <main class="app-content">
 
         <section id="view-mushroom" class="view-section active">
-            <button class="line-share-btn" onclick="shareToLineWindow()" style="margin-bottom: 20px;">
+            <button class="line-share-btn" onclick="shareToLineWindow()" style="margin-bottom: 15px;">
                 💚 一鍵產生分享文字並喚醒 LINE
             </button>
+
+            <div class="cleanup-info-box">
+                <div class="cleanup-title">💡 系統自動清理規則：</div>
+                <div class="cleanup-row">
+                    <span class="icon">▪️</span>
+                    <span><strong>已認領 / 有設時間</strong>：於設定的開打時間過後 <strong>2 小時</strong>自動刪除。</span>
+                </div>
+                <div class="cleanup-row">
+                    <span class="icon">▪️</span>
+                    <span><strong>無人認領 (野菇)</strong>：於該巨菇所在國家的 <strong>隔日凌晨 1 點</strong>自動刪除。</span>
+                </div>
+                <span class="cleanup-notice">*(目前暫時關閉自動清理功能)*</span>
+            </div>
 
             <div style="background:var(--card-bg); padding:10px 15px; border-radius:12px; margin-bottom:15px; box-shadow:0 1px 3px rgba(0,0,0,0.05); display:flex; align-items:center; gap:10px; flex-wrap:nowrap;">
                 <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
@@ -1000,77 +1103,162 @@
             <div id="landmark-list" style="display:flex; flex-wrap:wrap; gap:12px; align-content: flex-start;"></div>
         </section>
         <section id="view-settings" class="view-section">
-
-            <div class="settings-card">
-                <h3>🗺️ 地圖 API 用量</h3>
-                <div style="font-size:14px; margin-bottom:5px; margin-top:8px;">本月已載入地圖：<span id="map-usage-count" style="font-weight:bold; color:#0ea5e9;">讀取中...</span> / 28,000 次</div>
-                <div style="font-size:11px; color:#64748b;">(超過 28,000 次將自動暫停載入地圖，以防產生額外費用)</div>
+            <!-- 瀏覽次數資訊列 -->
+            <div style="display:flex; align-items:center; gap:8px; padding:8px 12px; background:var(--card-bg); border:1px solid var(--border); border-radius:12px; margin-bottom:14px; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+                <span style="font-size:16px;">👁️</span>
+                <div id="view-counter-text" style="font-size:13px; color:var(--text-main); font-weight:600;">雲端總瀏覽次數：0 次</div>
             </div>
+            <div class="settings-grid">
 
+            <!-- 同步設定（最上面） -->
             <div class="settings-card">
-                <h3>🔍 圖片辨識 API 設定</h3>
-                <div class="input-group">
-                    <label>Google Cloud Vision API 金鑰</label>
-                    <input type="text" id="vision-api-key" class="input-base" placeholder="AIzaSy..." onchange="saveVisionApiKey()">
-                    <p style="font-size:11px; color:#6b7280; margin-top:4px;">用於啟用圖片文字自動辨識功能。金鑰僅儲存於您的瀏覽器中。</p>
-                    <div id="vision-usage-display" style="margin-top:8px; font-size:12px; color:var(--text-muted); font-weight:bold;">讀取中...</div>
+                <div class="settings-card-header success">
+                    <span class="settings-card-icon">☁️</span>
+                    <div>
+                        <div class="settings-card-title">跨裝置收藏同步</div>
+                        <div class="settings-card-subtitle">輸入相同代號即可同步</div>
+                    </div>
                 </div>
-            </div>
-
-            <div class="settings-card">
-                <h3>☁️ 跨裝置收藏同步</h3>
-                <div class="input-group">
-                    <label>綁定同步代號 (手機/電腦輸入相同代號即同步)</label>
-                    <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
+                <div class="settings-card-body">
+                    <label style="font-size:12px; color:#64748b; font-weight:600;">綁定同步代號</label>
+                    <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
                         <input type="text" id="sync-user-id" class="input-base" placeholder="例如：Leo..." onchange="applySyncId()" style="flex:1;">
                         <span id="sync-status" class="sync-status">未啟用</span>
                     </div>
                 </div>
             </div>
 
+            <!-- 時區設定 -->
             <div class="settings-card">
-                <h3>⏰ 時區設定與系統時間</h3>
-                <div style="text-align:center; margin-bottom:15px;">
-                    <div style="font-size:11px; color:var(--text-muted); font-weight:bold;">🇹🇼 台北標準時間</div>
-                    <div id="clock-taipei" style="font-size:26px; font-weight:bold; color:var(--primary-dark); font-family:monospace;">00:00:00</div>
+                <div class="settings-card-header amber">
+                    <span class="settings-card-icon">⏰</span>
+                    <div>
+                        <div class="settings-card-title">時區與系統時間</div>
+                        <div class="settings-card-subtitle">可選擇一個其他國家時間對照</div>
+                    </div>
                 </div>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <div class="clock-item">
-                        <select id="tz-select-1" onchange="saveTimezonePref()">
-                            <option value="9" selected>日本/韓國 (UTC+9)</option>
-                            <option value="8">港澳/北京 (UTC+8)</option>
-                            <option value="7">泰國/越南 (UTC+7)</option>
-                        </select>
-                        <div class="w-time" id="clock-custom-1">00:00</div>
+                <div class="settings-card-body">
+                    <div style="text-align:center; margin-bottom:14px; background:linear-gradient(135deg,#f0fdf4,#dcfce7); padding:10px; border-radius:10px; border:1px solid #bbf7d0;">
+                        <div style="font-size:11px; color:#64748b; font-weight:bold; margin-bottom:2px;">🇹🇼 台北標準時間</div>
+                        <div id="clock-taipei" style="font-size:28px; font-weight:900; color:#15803d; font-family:monospace; letter-spacing:2px;">00:00:00</div>
                     </div>
-                    <div class="clock-item">
-                        <select id="tz-select-2" onchange="saveTimezonePref()">
-                            <option value="-5" selected>美國美東 (UTC-5)</option>
-                            <option value="-8">美國美西 (UTC-8)</option>
-                        </select>
-                        <div class="w-time" id="clock-custom-2">00:00</div>
-                    </div>
-                    <div class="clock-item">
-                        <select id="tz-select-3" onchange="saveTimezonePref()">
-                            <option value="10" selected>澳洲雪梨 (UTC+10)</option>
-                            <option value="1">英國倫敦 (UTC+1)</option>
-                            <option value="2">歐陸時間 (UTC+2)</option>
-                        </select>
-                        <div class="w-time" id="clock-custom-3">00:00</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <label style="font-size:12px; color:#64748b; font-weight:600;">選擇對照國家/時區</label>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <select id="tz-select-1" onchange="saveTimezonePref()" class="input-base" style="flex:1;">
+                                <option value="-11">美屬薩摩亞 (UTC-11)</option>
+                                <option value="-10">夏威夷 (UTC-10)</option>
+                                <option value="-9">阿拉斯加 (UTC-9)</option>
+                                <option value="-8">美國美西/溫哥華 (UTC-8)</option>
+                                <option value="-7">美國山區/丹佛 (UTC-7)</option>
+                                <option value="-6">美國中部/芝加哥 (UTC-6)</option>
+                                <option value="-5">美國美東/紐約 (UTC-5)</option>
+                                <option value="-4">加拿大/大西洋 (UTC-4)</option>
+                                <option value="-3">阿根廷/巴西 (UTC-3)</option>
+                                <option value="-1">亞速群島 (UTC-1)</option>
+                                <option value="0">英國倫敦/格林威治 (UTC+0)</option>
+                                <option value="1">歐陸時間/巴黎 (UTC+1)</option>
+                                <option value="2">東歐/開羅 (UTC+2)</option>
+                                <option value="3">莫斯科/杜拜 (UTC+3)</option>
+                                <option value="4">阿布達比/巴庫 (UTC+4)</option>
+                                <option value="5">巴基斯坦/馬爾地夫 (UTC+5)</option>
+                                <option value="5.5">印度/斯里蘭卡 (UTC+5:30)</option>
+                                <option value="6">孟加拉 (UTC+6)</option>
+                                <option value="7">泰國/越南/印尼 (UTC+7)</option>
+                                <option value="8">港澳/北京/新加坡 (UTC+8)</option>
+                                <option value="9" selected>日本/韓國 (UTC+9)</option>
+                                <option value="9.5">澳洲中部 (UTC+9:30)</option>
+                                <option value="10">澳洲雪梨/關島 (UTC+10)</option>
+                                <option value="11">索羅門群島 (UTC+11)</option>
+                                <option value="12">紐西蘭/斐濟 (UTC+12)</option>
+                            </select>
+                            <div class="w-time" id="clock-custom-1" style="font-size:20px; font-weight:bold; color:var(--text-main); font-family:monospace; min-width:65px; text-align:center;">00:00</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <!-- 自動清理開關 -->
             <div class="settings-card">
-                <h3>ℹ️ 系統資訊</h3>
-                <div id="view-counter-text" style="font-size:13px; font-weight:bold; color:var(--text-main);">雲端總瀏覽次數：0 次</div>
+                <div class="settings-card-header danger">
+                    <span class="settings-card-icon">🗑️</span>
+                    <div>
+                        <div class="settings-card-title">巨菇自動清理</div>
+                        <div class="settings-card-subtitle">全域生效，所有裝置同步</div>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="settings-toggle-row">
+                        <div>
+                            <div class="settings-toggle-label">啟用自動刪除</div>
+                            <div class="settings-toggle-desc">已認領過期 2 小時 / 野菇隔日凌晨 1 點</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="auto-delete-toggle" onchange="saveAutoDeletePref()">
+                            <span class="toggle-knob" id="auto-delete-slider"></span>
+                        </label>
+                    </div>
+                    <div id="auto-delete-status" style="margin-top:10px; font-size:11px; font-weight:bold; color:#dc2626; background:#fff1f2; border:1px solid #fecdd3; padding:6px 10px; border-radius:8px;">⛔ 目前已關閉自動清理</div>
+                </div>
             </div>
 
+            <!-- 地圖 API 用量 -->
             <div class="settings-card">
-                <h3>🤖 免洗號工具</h3>
-                <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">自動產生臨時任天堂信筱並接收驗證碼，全程免費。</p>
-                <button class="btn-sm btn-primary btn-block" onclick="switchTab('cloud')" style="padding:10px; font-size:14px; border-radius:8px;">🔗 前往免洗號工具</button>
+                <div class="settings-card-header">
+                    <span class="settings-card-icon">🗺️</span>
+                    <div>
+                        <div class="settings-card-title">地圖 API 用量</div>
+                        <div class="settings-card-subtitle">每月免費配額 28,000 次</div>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="settings-stat">
+                        <span style="font-size:13px; color:#64748b;">本月已載入</span>
+                        <span><span class="settings-stat-val" id="map-usage-count">--</span> <span style="font-size:11px; color:#94a3b8;">/ 28,000</span></span>
+                    </div>
+                    <div class="settings-progress-wrap">
+                        <div class="settings-progress-bar">
+                            <div class="settings-progress-fill" id="map-usage-bar" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <div style="font-size:11px; color:#64748b;">超過額度將自動暫停載入，防止產生額外費用</div>
+                </div>
             </div>
+
+            <!-- 圖片辨識 -->
+            <div class="settings-card">
+                <div class="settings-card-header purple">
+                    <span class="settings-card-icon">🔍</span>
+                    <div>
+                        <div class="settings-card-title">圖片辨識 API</div>
+                        <div class="settings-card-subtitle">Google Cloud Vision 自動讀取明信片文字</div>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="input-group" style="margin-bottom:0;">
+                        <label>Google Cloud Vision API 金鑰</label>
+                        <input type="text" id="vision-api-key" class="input-base" placeholder="AIzaSy..." onchange="saveVisionApiKey()">
+                        <p style="font-size:11px; color:#6b7280; margin-top:4px; margin-bottom:0;">金鑰僅儲存於您的瀏覽器中，不會上傳。</p>
+                        <div id="vision-usage-display" style="margin-top:8px; font-size:12px; color:var(--text-muted); font-weight:bold;">讀取中...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 免洗號工具 -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <span class="settings-card-icon">🤖</span>
+                    <div>
+                        <div class="settings-card-title">免洗號工具</div>
+                        <div class="settings-card-subtitle">自動產生臨時任天堂信筱並接收驗證碼</div>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <button class="btn-sm btn-primary btn-block" onclick="switchTab('cloud')" style="padding:10px; font-size:14px; border-radius:10px; width:100%;">🔗 前往免洗號工具</button>
+                </div>
+            </div>
+
+            </div> <!-- end settings-grid -->
         </section>
 
         <section id="view-cloud" class="view-section cloud-app">
@@ -1127,6 +1315,12 @@
         </div>
         <div id="google-map" style="width: 100%; height: 100%;"></div>
     </section>
+
+    <!-- 地圖照片放大燈笱 -->
+    <div id="map-lightbox" onclick="closeMapLightbox()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9999; align-items:center; justify-content:center; cursor:pointer;">
+        <img id="map-lightbox-img" src="" style="max-width:92vw; max-height:88vh; border-radius:10px; box-shadow:0 8px 32px rgba(0,0,0,0.6); object-fit:contain;">
+        <div style="position:absolute; top:16px; right:20px; color:white; font-size:26px; font-weight:bold; cursor:pointer;">&times;</div>
+    </div>
 
     <nav class="bottom-nav">
         <button class="nav-item active" id="nav-mushroom" onclick="switchTab('mushroom')">
@@ -1212,8 +1406,12 @@
                     </select>
                 </div>
                 <div class="input-group">
-                    <label>座標 (貼上經緯度將自動抓取國家)</label>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                        <label style="margin:0;">座標 (貼上經緯度將自動抓取國家)</label>
+                        <button type="button" onclick="searchCoordsByName('post-name', 'post-city', 'post-country', 'post-coords', 'post-tag')" style="font-size:11px; padding:2px 8px; border-radius:12px; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; cursor:pointer; line-height:1.2;">🔍 搜尋定位</button>
+                    </div>
                     <input type="text" id="post-coords" class="input-base" placeholder="貼上點座標" onblur="autoDetectCountry(this.value, 'post-country', 'post-tz-hint', 'post-city')">
+                    <div id="post-coords-candidates" style="display:none; margin-top:5px; display:flex; flex-direction:column; gap:4px;"></div>
                 </div>
                 <div class="input-group">
                     <label>國家 <span id="post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
@@ -1222,6 +1420,7 @@
                 <div class="input-group">
                     <label>城市</label>
                     <input type="text" id="post-city" class="input-base" placeholder="例如：東京">
+                    <div id="post-city-candidates" style="display:none; margin-top:5px; display:flex; flex-wrap:wrap; gap:5px;"></div>
                 </div>
                 <div class="input-group">
                     <label>名稱</label>
@@ -1234,7 +1433,7 @@
                 <div class="input-group">
                     <label>圖片網址</label>
                     <div style="display:flex; gap:8px;">
-                        <input type="text" id="post-image" class="input-base" placeholder="請貼上圖片網址，或留空" style="flex:1;" oninput="checkDatabaseForImage(this.value, 'post')">
+                        <input type="text" id="post-image" class="input-base" placeholder="請貼上圖片網址，或留空" style="flex:1;">
                         <input type="file" id="post-ocr-file" accept="image/*" style="display:none;" onchange="handleVisionOcrUpload(event, 'post-ocr-result')">
                         <button class="btn-sm btn-default" onclick="triggerOCR('post-image', 'post-ocr-file', 'post-ocr-result')" style="white-space:nowrap; border-radius:8px; background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; padding:6px 10px; line-height:1.3;">
                             <div style="font-weight:bold;">🔍 文字辨識</div>
@@ -1371,8 +1570,12 @@
                     </select>
                 </div>
                 <div class="input-group">
-                    <label>座標</label>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                        <label style="margin:0;">座標</label>
+                        <button type="button" onclick="searchCoordsByName('edit-post-name', 'edit-post-city', 'edit-post-country', 'edit-post-coords', 'edit-post-tag')" style="font-size:11px; padding:2px 8px; border-radius:12px; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; cursor:pointer; line-height:1.2;">🔍 搜尋定位</button>
+                    </div>
                     <input type="text" id="edit-post-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city')">
+                    <div id="edit-post-coords-candidates" style="display:none; margin-top:5px; display:flex; flex-direction:column; gap:4px;"></div>
                 </div>
                 <div class="input-group">
                     <label>國家 <span id="edit-post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
@@ -1381,6 +1584,7 @@
                 <div class="input-group">
                     <label>城市</label>
                     <input type="text" id="edit-post-city" class="input-base" placeholder="例如：東京">
+                    <div id="edit-post-city-candidates" style="display:none; margin-top:5px; display:flex; flex-wrap:wrap; gap:5px;"></div>
                 </div>
                 <div class="input-group">
                     <label>名稱</label>
@@ -1393,7 +1597,7 @@
                 <div class="input-group">
                     <label>圖片網址</label>
                     <div style="display:flex; gap:6px; align-items:center;">
-                        <input type="text" id="edit-post-image" class="input-base" style="flex:1;" placeholder="貼上圖片網址，或留空" oninput="checkDatabaseForImage(this.value, 'edit-post')">
+                        <input type="text" id="edit-post-image" class="input-base" style="flex:1;" placeholder="貼上圖片網址，或留空">
                         <input type="file" id="edit-post-ocr-file" accept="image/*" style="display:none;" onchange="handleVisionOcrUpload(event, 'edit-post-ocr-result')">
                         <button class="btn-sm btn-default" onclick="triggerOCR('edit-post-image', 'edit-post-ocr-file', 'edit-post-ocr-result')" style="white-space:nowrap; border-radius:8px; background:#e0e7ff; color:#3730a3; border:1px solid #6366f1; padding:6px 10px; line-height:1.3;">
                             <div style="font-weight:bold;">🔍 文字辨識</div>
@@ -1433,20 +1637,29 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.18.1800";
+    const APP_VERSION = "2026.07.18.1700";
     function checkForUpdate() {
-        fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
+        // 從 raw.github 抓取以繞過 GitHub Pages CDN 快取
+        const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + new Date().getTime();
+        fetch(rawUrl, { cache: 'no-store' })
             .then(res => res.text())
             .then(html => {
                 const match = html.match(/const APP_VERSION = ['"]([^'"]+)['"]/);
                 if (match && match[1] !== APP_VERSION) {
-                    console.log('發現新版本，正在重新載入...', match[1]);
+                    console.log('發現新版本，準備重新載入...', match[1]);
+                    // 如果用戶正在編輯，則不強制更新（避免資料遺失）
+                    const editModal = document.getElementById('edit-modal');
+                    if (editModal && editModal.style.display === 'flex') {
+                        console.log('用戶正在編輯，稍後更新');
+                        return;
+                    }
                     window.location.replace(window.location.pathname + '?v=' + match[1]);
                 }
             })
             .catch(err => console.log('檢查更新失敗:', err));
     }
 
+    // 每次網頁切換回前景時檢查
     window.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') checkForUpdate();
     });
@@ -1677,6 +1890,24 @@
         }
     }
 
+    function goToMapCoords(coords) {
+        const match = coords.match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
+        if (!match) { alert('座標格式無法識別'); return; }
+        const lat = parseFloat(match[1]);
+        const lng = parseFloat(match[2]);
+        switchTab('map');
+        // 等地圖載入完成再移動視觓
+        const waitAndGo = () => {
+            if (mapInstance) {
+                mapInstance.setCenter({ lat, lng });
+                mapInstance.setZoom(15);
+            } else {
+                setTimeout(waitAndGo, 300);
+            }
+        };
+        setTimeout(waitAndGo, 200);
+    }
+
     function openAddModal() {
         document.getElementById('form-mushroom').style.display = 'none';
         document.getElementById('form-postcard').style.display = 'none';
@@ -1823,6 +2054,45 @@
                                 if(cityInput) {
                                     cityInput.value = combined;
                                 }
+
+                                // 收集所有候選地名，讓用戶自行選擇
+                                const candidatesEl = document.getElementById(cityInputId + '-candidates');
+                                if (candidatesEl) {
+                                    const seen = new Set();
+                                    const candidates = [];
+                                    const addCandidate = (name) => {
+                                        if (!name) return;
+                                        let n = name.trim();
+                                        if (window.OpenCC) {
+                                            const cv = OpenCC.Converter({ from: 'cn', to: 'tw' });
+                                            n = cv(n);
+                                        }
+                                        if (n && !seen.has(n) && n !== countryName) {
+                                            seen.add(n);
+                                            candidates.push(n);
+                                        }
+                                    };
+
+                                    // 依優先級收集各層地名
+                                    addCandidate(data.city);
+                                    addCandidate(data.locality);
+                                    addCandidate(data.principalSubdivision);
+                                    if (data.localityInfo && data.localityInfo.administrative) {
+                                        const admins = [...data.localityInfo.administrative].sort((a, b) => b.adminLevel - a.adminLevel);
+                                        admins.forEach(a => { if (a.adminLevel > 1) addCandidate(a.name); });
+                                    }
+
+                                    if (candidates.length > 0) {
+                                        candidatesEl.innerHTML = '<span style="font-size:11px;color:var(--text-muted);margin-right:2px;">選擇：</span>' +
+                                            candidates.map(c =>
+                                                `<button type="button" onclick="document.getElementById('${cityInputId}').value='${c.replace(/'/g, "\\'")}'; this.parentElement.querySelectorAll('button').forEach(b=>b.style.background=''); this.style.background='#d1fae5';" style="font-size:12px;padding:2px 8px;border-radius:20px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-main);cursor:pointer;transition:background 0.15s;">${c}</button>`
+                                            ).join('');
+                                        candidatesEl.style.display = 'flex';
+                                    } else {
+                                        candidatesEl.style.display = 'none';
+                                        candidatesEl.innerHTML = '';
+                                    }
+                                }
                             }
                         }
                     }
@@ -1947,7 +2217,7 @@
         if (cloudData) {
             Object.keys(cloudData).forEach((key) => {
                 const item = cloudData[key];
-                if (item.targetTime != null && (now - item.targetTime >= 7200000)) {
+                if (isAutoDeleteOn && item.targetTime != null && (now - item.targetTime >= 7200000)) {
                     database.ref('mushrooms/' + key).remove();
                 } else {
                     dataList.push({
@@ -1985,8 +2255,30 @@
 
     const nowMonth = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0');
     database.ref('settings/mapUsage/' + nowMonth + '/count').on('value', snap => {
+        const count = snap.val() || 0;
         const el = document.getElementById('map-usage-count');
-        if (el) el.innerText = snap.val() || 0;
+        const bar = document.getElementById('map-usage-bar');
+        if (el) el.innerText = count;
+        if (bar) {
+            const pct = Math.min(100, Math.round(count / 28000 * 100));
+            bar.style.width = pct + '%';
+            bar.style.background = pct >= 90 ? 'linear-gradient(90deg,#f97316,#ef4444)' : 'linear-gradient(90deg,#0ea5e9,#6366f1)';
+        }
+    });
+
+    // 全域自動刪除開關（從 Firebase 同步）
+    let isAutoDeleteOn = false;
+    database.ref('settings/autoDelete').on('value', snap => {
+        isAutoDeleteOn = snap.val() === true;
+        const cb = document.getElementById('auto-delete-toggle');
+        const slider = document.getElementById('auto-delete-slider');
+        const status = document.getElementById('auto-delete-status');
+        if (cb) cb.checked = isAutoDeleteOn;
+        if (slider) slider.style.background = isAutoDeleteOn ? '#22c55e' : '#ccc';
+        if (status) {
+            status.textContent = isAutoDeleteOn ? '✅ 自動清理已啟用（全域生效）' : '⛔ 目前已關閉自動清理';
+            status.style.color = isAutoDeleteOn ? '#15803d' : '#dc2626';
+        }
     });
 
     // 純點監聽器
@@ -2197,6 +2489,17 @@
     function saveVisionApiKey() {
         const key = document.getElementById('vision-api-key').value.trim();
         localStorage.setItem('pikmin_vision_api_key', key);
+    }
+
+    function saveAutoDeletePref() {
+        const cb = document.getElementById('auto-delete-toggle');
+        if (!cb) return;
+        // 寫入 Firebase，全域生效
+        database.ref('settings/autoDelete').set(cb.checked);
+    }
+
+    function loadAutoDeletePref() {
+        // UI 狀態已由 Firebase 監聽器自動更新，此處不需要做任何事
     }
 
     function getCurrentMonth() {
@@ -2556,43 +2859,103 @@
         }
     }
 
-    function checkDatabaseForImage(imageUrl, prefix) {
-        if (!imageUrl || imageUrl === '無圖片' || !imageUrl.startsWith('http')) return false;
-        if (typeof postcardList === 'undefined' || postcardList.length === 0) return false;
+    async function searchCoordsByName(nameId, cityId, countryId, coordsId, tagId = null) {
+        const nameVal = document.getElementById(nameId).value.trim();
+        const cityVal = document.getElementById(cityId).value.trim();
+        const countryVal = document.getElementById(countryId).value.trim();
+        const tagVal = tagId ? document.getElementById(tagId).value.trim() : '';
+        const candidatesEl = document.getElementById(coordsId + '-candidates');
         
-        // 找到相同圖片且有座標的明信片
-        const match = postcardList.find(pc => pc.image && pc.image === imageUrl && pc.coords);
-        if (match) {
-            document.getElementById(prefix + '-coords').value = match.coords;
-            document.getElementById(prefix + '-name').value = match.name;
-            document.getElementById(prefix + '-city').value = match.city || '';
-            document.getElementById(prefix + '-country').value = match.country || '';
-            
-            const tagEl = document.getElementById(prefix + '-tag');
-            if (tagEl) tagEl.value = match.tag || '';
-            
-            // 觸發更新與時區判定
-            document.getElementById(prefix + '-coords').dispatchEvent(new Event('blur'));
-            
-            // 顯示提示
-            const resDiv = document.getElementById(prefix + '-ocr-result');
-            if (resDiv) {
-                resDiv.style.display = 'block';
-                resDiv.innerHTML = `<div style="color:#0f766e; font-weight:bold; padding:8px; border:1px solid #10b981; background:#f0fdf4; border-radius:8px; font-size:12px; line-height:1.4;">✨ 歷史資料庫比對成功！已自動填入座標與名稱。</div>`;
-            }
-            return true;
+        if (!nameVal && !tagVal) {
+            alert('請先填寫「名稱」或「標籤」欄位！');
+            return;
         }
-        return false;
+        
+        candidatesEl.style.display = 'block';
+        candidatesEl.innerHTML = '<span style="font-size:11px; color:var(--text-muted);">🔄 正在搜尋地圖...</span>';
+        
+        // 收集多個可能的研究語句
+        const queries = [];
+        
+        // 1. 基於名稱與當前填寫區域的搜尋 (例如: 哥倫比亞 考卡省 totoro)
+        if (nameVal) {
+            let q1 = '';
+            if (countryVal && countryVal !== '台灣') q1 += countryVal + ' ';
+            if (cityVal) q1 += cityVal + ' ';
+            q1 += nameVal;
+            queries.push(q1.trim());
+            
+            // 如果有填地區，也加一個只搜名稱的 fallback
+            if (cityVal || countryVal) {
+                queries.push(nameVal);
+            }
+        }
+        
+        // 2. 基於標籤 (Tag) 的搜尋 (例如: Popular Sta Teresa Tlalpan)
+        if (tagVal) {
+            queries.push(tagVal);
+            // 也可以組合地區與標籤
+            if (cityVal || countryVal) {
+                let qTag = '';
+                if (countryVal && countryVal !== '台灣') qTag += countryVal + ' ';
+                if (cityVal) qTag += cityVal + ' ';
+                qTag += tagVal;
+                queries.push(qTag.trim());
+            }
+        }
+        
+        // 去重
+        const uniqueQueries = [...new Set(queries.filter(Boolean))];
+        
+        try {
+            // 平行發送所有搜尋請求
+            const searchPromises = uniqueQueries.map(q => 
+                fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&accept-language=zh-TW&limit=4`, {
+                    headers: { 'User-Agent': 'PikminTrackerWeb/1.0' }
+                })
+                .then(res => res.json())
+                .catch(() => [])
+            );
+            
+            const resultsArray = await Promise.all(searchPromises);
+            
+            // 合併所有搜尋結果並依 place_id 去重
+            const mergedResults = [];
+            const seenPlaceIds = new Set();
+            
+            resultsArray.forEach(list => {
+                if (Array.isArray(list)) {
+                    list.forEach(item => {
+                        if (item && item.place_id && !seenPlaceIds.has(item.place_id)) {
+                            seenPlaceIds.add(item.place_id);
+                            mergedResults.push(item);
+                        }
+                    });
+                }
+            });
+            
+            if (mergedResults.length > 0) {
+                candidatesEl.innerHTML = '<span style="font-size:11px; color:var(--text-muted); margin-bottom:2px;">點擊以填入座標（系統將同步更新地區）：</span>' +
+                    mergedResults.map(item => {
+                        const displayName = item.display_name.split(',')[0] || item.type;
+                        const addressName = item.display_name.split(',').slice(1, 4).join(',').trim() || '';
+                        const coords = `${parseFloat(item.lat).toFixed(6)},${parseFloat(item.lon).toFixed(6)}`;
+                        return `<button type="button" onclick="document.getElementById('${coordsId}').value='${coords}'; document.getElementById('${coordsId}').dispatchEvent(new Event('blur')); this.parentElement.style.display='none'; this.parentElement.innerHTML='';" style="font-size:12px; padding:6px 8px; border-radius:6px; border:1px solid var(--border); background:var(--card-bg); color:var(--text-main); cursor:pointer; text-align:left; line-height:1.2; width:100%; display:block; margin-bottom:2px; transition:background 0.15s;">` +
+                            `<strong>🗺️ ${escapeHtml(displayName)}</strong><br>` +
+                            `<span style="font-size:10px; color:var(--text-muted); font-weight:normal;">${escapeHtml(addressName)} (${coords})</span>` +
+                            `</button>`;
+                    }).join('');
+            } else {
+                candidatesEl.innerHTML = '<span style="font-size:11px; color:#ef4444;">❌ 找不到對應的地理座標，請嘗試修改名稱/標籤或改為手動貼上。</span>';
+            }
+        } catch (err) {
+            candidatesEl.innerHTML = '<span style="font-size:11px; color:#ef4444;">❌ 搜尋失敗，請檢查網路連線。</span>';
+        }
     }
 
     async function triggerOCR(textInputId, fileInputId, resultDivId) {
         const textInput = textInputId ? document.getElementById(textInputId) : null;
         const imgUrl = textInput ? textInput.value.trim() : '';
-
-        const prefix = textInputId.includes('edit') ? 'edit-post' : 'post';
-        if (checkDatabaseForImage(imgUrl, prefix)) {
-            return; // 匹配成功，直接帶入，不用再跑 OCR
-        }
 
         if (imgUrl && imgUrl.startsWith('http')) {
             await processVisionOcr(resultDivId, { source: { imageUri: imgUrl } });
@@ -2668,11 +3031,10 @@
         const savedVisionKey = localStorage.getItem('pikmin_vision_api_key');
         if (savedVisionKey) { document.getElementById('vision-api-key').value = savedVisionKey; }
         listenVisionUsage();
+        loadAutoDeletePref();
 
-        ['1','2','3'].forEach(i => {
-            const val = localStorage.getItem('pikmin_tz_area_' + i);
-            if(val) document.getElementById('tz-select-' + i).value = val;
-        });
+        const tzVal = localStorage.getItem('pikmin_tz_area_1');
+        if(tzVal) document.getElementById('tz-select-1').value = tzVal;
 
         const savedGroupMode = localStorage.getItem('pikmin_mushroom_group');
         if (savedGroupMode) {
@@ -2728,7 +3090,7 @@
     });
 
     function saveTimezonePref() {
-        ['1','2','3'].forEach(i => localStorage.setItem('pikmin_tz_area_'+i, document.getElementById('tz-select-'+i).value));
+        localStorage.setItem('pikmin_tz_area_1', document.getElementById('tz-select-1').value);
         updateClocks();
     }
 
@@ -2736,9 +3098,8 @@
         const now = new Date();
         const utcMs = now.getTime() + (now.getTimezoneOffset() * 60000);
         document.getElementById('clock-taipei').innerText = formatTimeStr(utcMs, 8, true);
-        ['1','2','3'].forEach(i => {
-            document.getElementById('clock-custom-'+i).innerText = formatTimeStr(utcMs, parseFloat(document.getElementById('tz-select-'+i).value)||0, false);
-        });
+        const sel1 = document.getElementById('tz-select-1');
+        if(sel1) document.getElementById('clock-custom-1').innerText = formatTimeStr(utcMs, parseFloat(sel1.value)||0, false);
     }
     
     function formatTimeStr(utcTimeMs, offsetHours, includeSeconds = false) {
@@ -2768,7 +3129,8 @@
                 if (now >= midnightUTC + 3600000) shouldRemove = true;
             }
 
-            if (shouldRemove) {
+            // 動態檢查自動刪除開關
+            if (isAutoDeleteOn && shouldRemove) {
                 removingIds.add(item.id);
                 database.ref('mushrooms/' + item.id).remove();
             }
@@ -2993,14 +3355,7 @@
             document.getElementById('edit-post-name').value = item.name || ''; 
             document.getElementById('edit-post-tag').value = item.tag || '';
             document.getElementById('edit-post-coords').value = item.coords || ''; 
-            const imgUrl = (item.image === "無圖片" ? "" : item.image) || '';
-            document.getElementById('edit-post-image').value = imgUrl; 
-            
-            // 如果這張明信片目前沒有座標，但有圖片網址，開啟表單時自動比對本機資料庫
-            if (!item.coords && imgUrl) {
-                checkDatabaseForImage(imgUrl, 'edit-post');
-            }
-            
+            document.getElementById('edit-post-image').value = (item.image === "無圖片" ? "" : item.image) || ''; 
             showTimeDiff(item.country || '', 'edit-post-tz-hint');
             
             let pd = 0, ph = 0, pm = 0;
@@ -3103,9 +3458,9 @@
     function copyCoords(text, buttonElement) {
         const os = detectOS();
         const normalized = normalizeCoords(String(text));
-        // iOS / macOS：用空格替代逗號（地圖 App 直接貼上更順暢）
-        // Android / Windows / Linux：維持逗號分隔
-        const copyText = (os === 'ios' || os === 'macos')
+        // iOS / macOS / Windows：用空格替代逗號（地圖 App 直接貼上更順暢）
+        // Android / Linux：維持逗號分隔
+        const copyText = (os === 'ios' || os === 'macos' || os === 'windows')
             ? normalized.replace(/,/g, ' ')
             : normalized;
         navigator.clipboard.writeText(copyText).then(() => {
@@ -3540,7 +3895,7 @@
             } else if (searchKw.length > 0) {
                 const missingText = item.missingFields.length > 0 ? "缺少 缺" + item.missingFields.join(" 缺") : "";
                 const dupText = checkIsDuplicate(item) ? "重複 重複收藏" : "";
-                const text = `${item.type} ${item.country} ${item.name} ${item.tag} ${item.coords} ${missingText} ${dupText}`.toLowerCase();
+                const text = `${item.type} ${item.country} ${item.city || ''} ${item.name} ${item.tag} ${item.coords} ${missingText} ${dupText}`.toLowerCase();
                 if (searchLogic === 'and') {
                     if (!searchKw.every(kw => text.includes(kw))) return false;
                 } else {
@@ -3624,6 +3979,22 @@
                         distBadge = `<div style="color: #065f46; font-size: 10px; font-weight: bold; margin-top: 4px; background: #d1fae5; padding: 4px 6px; border-radius: 4px; border: 1px dashed #10b981; text-align: center;">📏 距離 ${distText}</div>`;
                     }
 
+                    const pTheme = getUserColorTheme(item.provider);
+                    let providerHtml = '';
+                    if (item.provider) {
+                        if (pTheme.bgImg) {
+                            providerHtml = `<span style="display:inline-flex; align-items:center; gap:4px; background:#f1f5f9; border:1px solid #cbd5e1; padding:2px 6px; border-radius:12px; font-size:11px; margin-left:4px; font-weight:bold; color:#334155; vertical-align:middle; line-height:1.2;">` +
+                                `<span style="width:14px; height:14px; border-radius:50%; background-image:${pTheme.bgImg}; background-size:cover; background-position:center; display:inline-block; border:1px solid #10b981; flex-shrink:0;"></span>` +
+                                `${escapeHtml(item.provider)}</span>`;
+                        } else {
+                            providerHtml = `<span style="background:${pTheme.bg}; color:${pTheme.color}; border:1px solid ${pTheme.border}; padding:2px 6px; border-radius:10px; font-size:11px; margin-left:4px; font-weight:bold; display:inline-flex; align-items:center; gap:2px; vertical-align:middle; line-height:1.2;">🧑 ${escapeHtml(item.provider)}</span>`;
+                        }
+                    }
+
+                    const createdDate = new Date(getCreatedAt(item.id));
+                    const formattedDate = `${createdDate.getFullYear()}/${String(createdDate.getMonth() + 1).padStart(2, '0')}/${String(createdDate.getDate()).padStart(2, '0')}`;
+                    const dateHtml = `<span style="background:var(--bg); color:var(--text-muted); padding:2px 6px; border-radius:10px; font-size:11px; font-weight:bold; display:inline-flex; align-items:center; gap:2px; vertical-align:middle; line-height:1.2;">📅 ${formattedDate}</span>`;
+
                     const card = document.createElement('div'); 
                     card.className = `grid-card ${isReady ? 'alert-pulse' : ''} ${isDuplicate ? 'duplicate-card' : ''}`;
                     
@@ -3660,12 +4031,12 @@
 
                     card.innerHTML = `
                         <div class="card-img-box">${imgHtml}<div class="card-badge-type">${escapeHtml(item.type)}</div><button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button></div>
-                        <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}</span>${item.provider ? `<span style="background:#e0e7ff; color:#3730a3; padding:2px 6px; border-radius:10px; font-size:11px; margin-left:4px; font-weight:bold;">🧑 ${escapeHtml(item.provider)}</span>` : ''}${safeT ? `<span class="tag-badge" style="margin-left:4px;">${safeT}</span>` : ''}</div>
+                        <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}</span><div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">${dateHtml}${providerHtml}${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}</div></div>
                         ${dupBadge}
                         ${distBadge}
                         ${item.missingFields && item.missingFields.length > 0 ? `<div style="color: #ef4444; font-size: 10px; font-weight: bold; margin-top: 4px; background: #fee2e2; padding: 4px 6px; border-radius: 4px; border: 1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>` : ''}
                         ${timeSetRow}
-                        <div class="card-actions" style="display:flex; gap:4px; margin-top:auto; padding-top:4px;"><button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button><a href="https://maps.google.com/?q=${escapeHtml(item.coords)}" target="_blank" class="btn-sm btn-default" style="text-decoration:none; display:flex; align-items:center; justify-content:center; background:#f0f9ff; color:#0284c7; border:1px solid #bae6fd;">🗺️ 地圖</a><button class="btn-sm btn-edit" style="flex:0;" onclick="openTimeModalById('${item.id}', 'postcard')">✏️</button><button class="btn-sm btn-danger" style="flex:0;" onclick="deleteItem('${item.id}', 'postcard')">🗑️</button></div></div>
+                        <div class="card-actions" style="display:flex; gap:4px; margin-top:auto; padding-top:4px;"><button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button>${item.coords ? `<button class="btn-sm btn-default" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}')">🗺️ 地圖</button>` : ''}<button class="btn-sm btn-edit" style="flex:0;" onclick="openTimeModalById('${item.id}', 'postcard')">✏️</button><button class="btn-sm btn-danger" style="flex:0;" onclick="deleteItem('${item.id}', 'postcard')">🗑️</button></div></div>
                     `;
                     pcEl.appendChild(card);
                 });
@@ -3978,7 +4349,9 @@
 
             marker.addListener("click", () => {
                 const imgHtml = (pc.image && pc.image !== "無圖片") 
-                    ? `<div style="margin-bottom:8px; display:flex; justify-content:center; background:#111; border-radius:8px; padding:2px;"><img src="${pc.image}" style="width:140px; height:140px; object-fit:contain; border-radius:6px;"></div>` 
+                    ? `<div style="margin-bottom:8px; display:flex; justify-content:center; background:#111; border-radius:8px; padding:2px; cursor:zoom-in;" onclick="openMapLightbox('${pc.image.replace(/'/g, "\\'")}')">
+                        <img src="${pc.image}" style="width:140px; height:140px; object-fit:contain; border-radius:6px; pointer-events:none;">
+                       </div>` 
                     : '';
 
                 const content = `<div style="min-width:160px; padding:6px; font-family:var(--font-family); text-align:center;">
@@ -4002,6 +4375,19 @@
                 markers: mapMarkers 
             });
         }
+    }
+
+    function openMapLightbox(src) {
+        const lb = document.getElementById('map-lightbox');
+        const img = document.getElementById('map-lightbox-img');
+        if (!lb || !img) return;
+        img.src = src;
+        lb.style.display = 'flex';
+    }
+
+    function closeMapLightbox() {
+        const lb = document.getElementById('map-lightbox');
+        if (lb) lb.style.display = 'none';
     }
 </script>
 </body>
