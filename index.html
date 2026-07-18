@@ -1629,7 +1629,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.18.1543";
+    const APP_VERSION = "2026.07.18.1608";
     function checkForUpdate() {
         // 從 raw.github 抓取以繞過 GitHub Pages CDN 快取
         const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + new Date().getTime();
@@ -3797,6 +3797,10 @@
                         }
                     }
 
+                    const createdDate = new Date(getCreatedAt(item.id));
+                    const formattedDate = `${createdDate.getFullYear()}/${String(createdDate.getMonth() + 1).padStart(2, '0')}/${String(createdDate.getDate()).padStart(2, '0')}`;
+                    const dateHtml = `<span style="background:var(--bg); color:var(--text-muted); padding:2px 6px; border-radius:10px; font-size:11px; font-weight:bold; display:inline-flex; align-items:center; gap:2px; vertical-align:middle; line-height:1.2;">📅 ${formattedDate}</span>`;
+
                     const card = document.createElement('div'); 
                     card.className = `grid-card ${isReady ? 'alert-pulse' : ''} ${isDuplicate ? 'duplicate-card' : ''}`;
                     
@@ -3833,7 +3837,7 @@
 
                     card.innerHTML = `
                         <div class="card-img-box">${imgHtml}<div class="card-badge-type">${escapeHtml(item.type)}</div><button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button></div>
-                        <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}</span>${providerHtml}${safeT ? `<span class="tag-badge" style="margin-left:4px;">${safeT}</span>` : ''}</div>
+                        <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}</span><div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">${dateHtml}${providerHtml}${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}</div></div>
                         ${dupBadge}
                         ${distBadge}
                         ${item.missingFields && item.missingFields.length > 0 ? `<div style="color: #ef4444; font-size: 10px; font-weight: bold; margin-top: 4px; background: #fee2e2; padding: 4px 6px; border-radius: 4px; border: 1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>` : ''}
