@@ -1627,7 +1627,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.18.1507";
+    const APP_VERSION = "2026.07.18.1512";
     function checkForUpdate() {
         // 從 raw.github 抓取以繞過 GitHub Pages CDN 快取
         const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + new Date().getTime();
@@ -2025,7 +2025,7 @@
                         if(cityInputId) {
                             const subdivision = data.principalSubdivision || '';
                             const cityName = data.city || data.locality || '';
-                            let combined = cityName || subdivision || '';
+                            let combined = subdivision || cityName || '';
                             if (!combined && data.localityInfo && data.localityInfo.administrative) {
                                 const admins = data.localityInfo.administrative.sort((a,b) => b.adminLevel - a.adminLevel);
                                 const localAdmin = admins.find(a => a.adminLevel > 3 && a.adminLevel < 10);
