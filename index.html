@@ -1378,7 +1378,12 @@
                 </div>
                 <div class="input-group">
                     <label>座標 (貼上經緯度將自動抓取國家)</label>
-                    <input type="text" id="coords" class="input-base" placeholder="貼上或輸入座標" onblur="autoDetectCountry(this.value, 'country', 'tz-hint')">
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <input type="text" id="coords" class="input-base" placeholder="貼上或輸入座標" style="flex:1;"
+                            onblur="autoDetectCountry(this.value, 'country', 'tz-hint')"
+                            oninput="clearTimeout(window._mushroomGeoTimer); window._mushroomGeoTimer = setTimeout(() => autoDetectCountry(this.value, 'country', 'tz-hint'), 1200)">
+                        <button type="button" class="btn-sm btn-default" onclick="navigator.clipboard.readText().then(t => { document.getElementById('coords').value = t.trim(); autoDetectCountry(t.trim(), 'country', 'tz-hint'); }).catch(() => alert('無法讀取剪貼簿，請手動貼上'))" style="white-space:nowrap; padding:6px 10px; border-radius:8px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; font-size:13px;">📋 貼上</button>
+                    </div>
                 </div>
                 <div class="input-group">
                     <label>國家 <span id="tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
@@ -1639,6 +1644,13 @@
                 </div>
             </div>
 
+            <!-- 絕版標記按鈕 -->
+            <button type="button" id="edit-post-discontinued-btn"
+                onclick="window._editDiscontinued = !window._editDiscontinued; this.style.background = window._editDiscontinued ? '#fef2f2' : ''; this.style.color = window._editDiscontinued ? '#dc2626' : ''; this.style.borderColor = window._editDiscontinued ? '#f87171' : ''; this.textContent = window._editDiscontinued ? '📦 已標記為絕版 （點擊取消）' : '📦 標記為絕版';"
+                style="width:100%; margin-top:10px; padding:9px; border-radius:10px; border:1px dashed #d1d5db; background:var(--card-bg); color:var(--text-muted); font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s;">
+                📦 標記為絕版
+            </button>
+
             <button class="btn-sm btn-edit btn-block" style="margin-top:12px; padding:11px; font-size:14px; font-weight:bold; border-radius:10px;" id="time-modal-submit-btn">💾 儲存修改</button>
         </div>
     </div>
@@ -1649,7 +1661,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.18.1900";
+    const APP_VERSION = "2026.07.20.0150";
     function checkForUpdate() {
         // 從 raw.github 抓取以繞過 GitHub Pages CDN 快取
         const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + new Date().getTime();
@@ -1690,6 +1702,9 @@
     function getUserColorTheme(username, skipCustom = false) {
         if (!username) return { bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe', fw: '900', fs: '14px', ff: 'inherit' }; // Default blue for empty
         
+        // 「官」特殊頭像：必須在 custom profile 檢查之前，防止被意外覆寫
+        if (username === '官') return { bg: 'transparent', color: 'transparent', border: '#d4af37', fw: 'normal', fs: '0px', ff: 'inherit', bgImg: 'url(' + avatarGuan + ')', bgSize: 'cover', bgPos: 'center' };
+
         if (!skipCustom) {
             const safeKey = username.replace(/[.#$\[\]]/g, '_');
             if (userProfiles && userProfiles[safeKey] && userProfiles[safeKey].avatar) {
@@ -1704,8 +1719,6 @@
                 }
             }
         }
-
-        if (username === '官') return { bg: 'transparent', color: 'transparent', border: '#d4af37', fw: 'normal', fs: '0px', ff: 'inherit', bgImg: 'url(' + avatarGuan + ')', bgSize: 'cover', bgPos: 'center' };
         
         const lowerName = username.toLowerCase();
         if (lowerName === 'y') {
@@ -2255,7 +2268,8 @@
                     country: toTW(cloudData[key].country || ""), city: cloudData[key].city || "",
                     coords: cloudData[key].coords || "",
                     tag: cloudData[key].tag || "", image: cloudData[key].image || "無圖片",
-                    targetTime: cloudData[key].targetTime, provider: cloudData[key].provider || ""
+                    targetTime: cloudData[key].targetTime, provider: cloudData[key].provider || "",
+                    discontinued: cloudData[key].discontinued === true
                 });
             });
         }
@@ -3462,6 +3476,26 @@
         }
     }
 
+    function duplicatePostcard(id) {
+        const item = postcardList.find(p => p.id === id);
+        if (!item) return;
+        if (!confirm(`📋 確定要複製「${item.name}」這張明信片嗎？\n（將新增一份完全相同的資料）`)) return;
+        database.ref('postcards').push({
+            type: item.type,
+            country: item.country || '',
+            city: item.city || '',
+            name: item.name || '',
+            coords: item.coords || '',
+            tag: item.tag || '',
+            image: item.image || '無圖片',
+            provider: currentSyncId || ''
+        }).then(() => {
+            // 短暫提示
+            const btn = document.querySelector(`[onclick="duplicatePostcard('${id}')"]`);
+            if (btn) { const orig = btn.textContent; btn.textContent = '✅'; setTimeout(() => { btn.textContent = orig; }, 1200); }
+        });
+    }
+
     function openClaimModalById(id) {
         const item = dataList.find(i => i.id === id);
         if (!item) return;
@@ -3524,6 +3558,16 @@
             document.getElementById('edit-post-coords').value = item.coords || ''; 
             const imgUrl = (item.image === "無圖片" ? "" : item.image) || '';
             document.getElementById('edit-post-image').value = imgUrl; 
+            
+            // 初始化絕版按鈕狀態
+            window._editDiscontinued = item.discontinued === true;
+            const discBtn = document.getElementById('edit-post-discontinued-btn');
+            if (discBtn) {
+                discBtn.textContent = window._editDiscontinued ? '📦 已標記為絕版 （點擊取消）' : '📦 標記為絕版';
+                discBtn.style.background = window._editDiscontinued ? '#fef2f2' : '';
+                discBtn.style.color = window._editDiscontinued ? '#dc2626' : '';
+                discBtn.style.borderColor = window._editDiscontinued ? '#f87171' : '';
+            }
             
             // 如果這張明信片目前沒有座標，但有圖片網址，開啟表單時自動比對本機資料庫
             if (!item.coords && imgUrl) {
@@ -3597,8 +3641,10 @@
                 city: document.getElementById('edit-post-city').value.trim(),
                 name: document.getElementById('edit-post-name').value.trim(), tag: document.getElementById('edit-post-tag').value.trim(),
                 coords: normalizeCoords(document.getElementById('edit-post-coords').value), image: document.getElementById('edit-post-image').value.trim() || "無圖片",
-                targetTime: targetTime
+                targetTime: targetTime,
+                discontinued: window._editDiscontinued === true
             });
+            window._editDiscontinued = false;
         }
         closeModal('time-modal');
     }
@@ -4003,11 +4049,12 @@
         const recentFilter = document.getElementById('postcard-recent-filter') ? document.getElementById('postcard-recent-filter').value : 'all';
         const searchLogic = document.getElementById('search-logic') ? document.getElementById('search-logic').value : 'and';
 
-        // 建立重複判斷 Maps (在 filter 之前計算全域的重複狀況)
+        // 建立重複判斷 Maps（絕版明信片不納入重複計算）
         const nameCountryCount = {};
         const coordNameCount = {};
         
         postcardList.forEach(item => {
+            if (item.discontinued) return; // 絕版不參與重複判斷
             const n = (item.name || '').trim().toLowerCase();
             const c = (item.country || '').trim().toLowerCase();
             const coords = (item.coords || '').trim().toLowerCase();
@@ -4023,6 +4070,7 @@
         });
         
         const checkIsDuplicate = (item) => {
+            if (item.discontinued) return false; // 絕版明信片不顯示重複標記
             const n = (item.name || '').trim().toLowerCase();
             const c = (item.country || '').trim().toLowerCase();
             const coords = (item.coords || '').trim().toLowerCase();
@@ -4069,7 +4117,7 @@
             } else if (searchKw.length > 0) {
                 const missingText = item.missingFields.length > 0 ? "缺少 缺" + item.missingFields.join(" 缺") : "";
                 const dupText = checkIsDuplicate(item) ? "重複 重複收藏" : "";
-                const text = `${item.type} ${item.country} ${item.city || ''} ${item.name} ${item.tag} ${item.coords} ${missingText} ${dupText}`.toLowerCase();
+                const text = `${item.type} ${item.country} ${item.city || ''} ${item.name} ${item.tag} ${item.coords} ${item.discontinued ? '絕版' : ''} ${missingText} ${dupText}`.toLowerCase();
                 if (searchLogic === 'and') {
                     if (!searchKw.every(kw => text.includes(kw))) return false;
                 } else {
@@ -4203,14 +4251,20 @@
                         '</div></div>'
                     ) : '';
 
+                    const discWatermark = item.discontinued
+                        ? `<div style="position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; pointer-events:none; z-index:5;">
+                            <div style="transform:rotate(-30deg); font-size:28px; font-weight:900; color:rgba(220,38,38,0.82); border:4px solid rgba(220,38,38,0.82); padding:4px 10px; border-radius:6px; letter-spacing:4px; text-shadow:0 1px 4px rgba(0,0,0,0.25); font-family:serif; white-space:nowrap;">絕版</div>
+                           </div>`
+                        : '';
+
                     card.innerHTML = `
-                        <div class="card-img-box">${imgHtml}<div class="card-badge-type">${escapeHtml(item.type)}</div><button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button></div>
+                        <div class="card-img-box" style="position:relative;">${imgHtml}${discWatermark}<div class="card-badge-type">${escapeHtml(item.type)}</div><button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button></div>
                         <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}</span><div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">${dateHtml}${providerHtml}${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}</div></div>
                         ${dupBadge}
                         ${distBadge}
                         ${item.missingFields && item.missingFields.length > 0 ? `<div style="color: #ef4444; font-size: 10px; font-weight: bold; margin-top: 4px; background: #fee2e2; padding: 4px 6px; border-radius: 4px; border: 1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>` : ''}
                         ${timeSetRow}
-                        <div class="card-actions" style="display:flex; gap:4px; margin-top:auto; padding-top:4px;"><button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button>${item.coords ? `<button class="btn-sm btn-default" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}')">🗺️ 地圖</button>` : ''}<button class="btn-sm btn-edit" style="flex:0;" onclick="openTimeModalById('${item.id}', 'postcard')">✏️</button><button class="btn-sm btn-danger" style="flex:0;" onclick="deleteItem('${item.id}', 'postcard')">🗑️</button></div></div>
+                        <div class="card-actions" style="display:flex; gap:4px; margin-top:auto; padding-top:4px;"><button class="btn-sm btn-default" onclick="duplicatePostcard('${item.id}')" title="複製一張相同明信片" style="flex:0; background:#f5f3ff; color:#6d28d9; border:1px solid #ddd6fe;">📋</button><button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button>${item.coords ? `<button class="btn-sm btn-default" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}')">🗺️ 地圖</button>` : ''}<button class="btn-sm btn-edit" style="flex:0;" onclick="openTimeModalById('${item.id}', 'postcard')">✏️</button><button class="btn-sm btn-danger" style="flex:0;" onclick="deleteItem('${item.id}', 'postcard')">🗑️</button></div></div>
                     `;
                     pcEl.appendChild(card);
                 });
