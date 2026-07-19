@@ -1681,7 +1681,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.20.0200-manage";
+    const APP_VERSION = "2026.07.20.0210-db-migration";
     function checkForUpdate() {
         // 從 raw.github 抓取以繞過 GitHub Pages CDN 快取
         const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + new Date().getTime();
@@ -2314,7 +2314,18 @@
         if (typeof updateView === 'function') updateView();
     });
 
-    database.ref('mushrooms').on('value', (snapshot) => {
+    // 一次性從舊版 mushrooms 轉移到 mushrooms_v2（用來擺脫舊版客戶端的自動刪除機制）
+    database.ref('mushrooms_v2').once('value', snap => {
+        if (!snap.exists()) {
+            database.ref('mushrooms').once('value', oldSnap => {
+                if (oldSnap.exists()) {
+                    database.ref('mushrooms_v2').set(oldSnap.val());
+                }
+            });
+        }
+    });
+
+    database.ref('mushrooms_v2').on('value', (snapshot) => {
         const cloudData = snapshot.val();
         dataList = [];
         const now = Date.now();
@@ -2322,7 +2333,7 @@
             Object.keys(cloudData).forEach((key) => {
                 const item = cloudData[key];
                 if (isAutoDeleteOn && item.targetTime != null && (now - item.targetTime >= 7200000)) {
-                    database.ref('mushrooms/' + key).remove();
+                    database.ref('mushrooms_v2/' + key).remove();
                 } else {
                     dataList.push({
                         id: key, sn: item.sn, user: item.user || "",
@@ -3392,7 +3403,7 @@
             // 動態檢查自動刪除開關
             if (isAutoDeleteOn && shouldRemove) {
                 removingIds.add(item.id);
-                database.ref('mushrooms/' + item.id).remove();
+                database.ref('mushrooms_v2/' + item.id).remove();
             }
         });
 
@@ -3454,7 +3465,7 @@
                 }
             }
 
-            database.ref('mushrooms').push({
+            database.ref('mushrooms_v2').push({
                 sn: nextSn, user: processedUser, country: processedCountry,
                 name: nameEl.value.trim(), coords: normalizeCoords(coordsEl.value), tag: tagEl.value.trim(), 
                 targetTime: targetTime, slots: initSlots, kind: mushKind
@@ -3551,7 +3562,7 @@
             if (pwd !== "1215") { if (pwd !== null) alert("❌ 密碼錯誤，無法刪除！"); return; }
         }
         if (confirm(`確定要刪除這筆${mode === 'mushroom' ? '巨菇' : '明信片'}資料嗎？`)) {
-            database.ref((mode === 'mushroom' ? 'mushrooms/' : 'postcards/') + id).remove();
+            database.ref((mode === 'mushroom' ? 'mushrooms_v2/' : 'postcards/') + id).remove();
         }
     }
 
@@ -3598,7 +3609,7 @@
             let currentSlots = item.slots ? [...item.slots] : ['', '', '', '', ''];
             if (!currentSlots.some(s => s !== '')) { currentSlots[0] = '✔️'; updates.slots = currentSlots; }
         }
-        database.ref('mushrooms/' + currentClaimingId).update(updates);
+        database.ref('mushrooms_v2/' + currentClaimingId).update(updates);
         closeModal('claim-modal');
     }
 
@@ -3701,7 +3712,7 @@
                     currentSlots[0] = '✔️'; updates.slots = currentSlots;
                 }
             }
-            database.ref('mushrooms/' + currentEditingTimeId).update(updates);
+            database.ref('mushrooms_v2/' + currentEditingTimeId).update(updates);
         } else {
             let processedCountry = toTW(document.getElementById('edit-post-country').value.trim());
             if (processedCountry.includes("中華民國")) {
@@ -3784,7 +3795,7 @@
     function fillAllSlots(id) {
         const item = dataList.find(i => i.id === id);
         if (!item) return;
-        database.ref('mushrooms/' + id + '/slots').set(['✔️', '✔️', '✔️', '✔️', '✔️']);
+        database.ref('mushrooms_v2/' + id + '/slots').set(['✔️', '✔️', '✔️', '✔️', '✔️']);
     }
 
     function toggleSlot(id, index) {
@@ -3794,7 +3805,7 @@
         
         if (currentSlots[index]) currentSlots[index] = '';
         else currentSlots[index] = '✔️';
-        database.ref('mushrooms/' + id + '/slots').set(currentSlots);
+        database.ref('mushrooms_v2/' + id + '/slots').set(currentSlots);
     }
 
     function getShortRemainingText(targetTime, now) {
