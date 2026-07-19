@@ -80,6 +80,17 @@
             display: block;
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeOut { from { opacity:1; transform:translateY(0); } to { opacity:0; transform:translateY(-10px); } }
+        @keyframes shake {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(2deg); }
+            50% { transform: rotate(0deg); }
+            75% { transform: rotate(-2deg); }
+            100% { transform: rotate(0deg); }
+        }
+        .shake-avatar {
+            animation: shake 0.3s infinite ease-in-out;
+        }
 
         /* 底部導覽列 */
         .bottom-nav {
@@ -1036,6 +1047,15 @@
                 </select>
             </div>
 
+            <!-- 玩家名單 -->
+            <div id="player-roster-section" style="margin-bottom:14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <div style="font-size:12px; font-weight:700; color:var(--text-muted); letter-spacing:0.5px;">👥 玩家名單</div>
+                    <button type="button" onclick="window._rosterDeleteMode = !window._rosterDeleteMode; renderPlayerRoster();" style="background:transparent; border:none; cursor:pointer; font-size:11px; color:var(--text-muted); padding:3px 8px; border-radius:6px; border:1px solid #e5e7eb; transition:all 0.2s;" title="切換刪除頭像模式" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">🗑️ 管理</button>
+                </div>
+                <div id="player-roster" style="display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;"></div>
+            </div>
+
             <div id="mushroom-summary" class="summary-widget" style="display:none;"></div>
 
             <div id="active-list" class="grid"></div>
@@ -1661,7 +1681,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.20.0150";
+    const APP_VERSION = "2026.07.20.0200-manage";
     function checkForUpdate() {
         // 從 raw.github 抓取以繞過 GitHub Pages CDN 快取
         const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + new Date().getTime();
@@ -1743,6 +1763,64 @@
             fw: '900', fs: '14px', ff: 'inherit'
         };
     }
+
+    function renderPlayerRoster() {
+        const container = document.getElementById('player-roster');
+        if (!container) return;
+
+        // 收集所有有頭像設定的玩家：Firebase userProfiles
+        const profileUsers = userProfiles ? Object.keys(userProfiles).filter(k => userProfiles[k] && userProfiles[k].avatar) : [];
+        // 特殊硬編碼用戶
+        const specialUsers = ['官', 'y', 'f'];
+        // 從 dataList 收集所有曾出現的用戶名稱
+        const mushUsers = [...new Set((dataList || []).map(i => i.user).filter(u => u && u.trim()))];
+
+        // 合併並去重（以小寫比對）
+        const seen = new Set();
+        const allUsers = [];
+        const add = (name) => {
+            const key = name.trim().toLowerCase();
+            if (!seen.has(key) && name.trim()) { seen.add(key); allUsers.push(name.trim()); }
+        };
+        specialUsers.forEach(add);
+        profileUsers.forEach(k => add(k.replace(/_/g, '.')));
+        mushUsers.forEach(add);
+
+        if (allUsers.length === 0) {
+            container.innerHTML = '<span style="font-size:12px; color:var(--text-muted);">尚無玩家設定頭像</span>';
+            return;
+        }
+
+        container.innerHTML = allUsers.map(name => {
+            const theme = getUserColorTheme(name);
+            const avatarStyle = theme.bgImg
+                ? `background-image:${theme.bgImg}; background-size:${theme.bgSize||'cover'}; background-position:${theme.bgPos||'center'}; background-color:transparent;`
+                : `background:${theme.bg}; color:${theme.color};`;
+            const initials = theme.bgImg ? '' : (name.slice(0, 2));
+            const border = theme.border && theme.border !== 'transparent' ? `border:2px solid ${theme.border};` : 'border:2px solid #e5e7eb;';
+            
+            const safeKey = name.replace(/[.#$\[\]]/g, '_');
+            const hasFirebaseProfile = profileUsers.includes(safeKey);
+            const canDelete = window._rosterDeleteMode && hasFirebaseProfile && !specialUsers.includes(name);
+            const isDeleteMode = window._rosterDeleteMode;
+
+            const deleteOverlay = canDelete ? `<div onclick="deleteUserProfile('${safeKey}', '${name}')" style="position:absolute; top:-4px; right:-4px; width:16px; height:16px; background:#ef4444; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.3); z-index:10;" title="刪除雲端頭像">✕</div>` : '';
+            const shakeClass = isDeleteMode ? 'shake-avatar' : '';
+            const opacityStyle = (isDeleteMode && !canDelete) ? 'opacity:0.5;' : '';
+
+            return `<div style="display:flex; flex-direction:column; align-items:center; gap:3px; cursor:default; position:relative; ${opacityStyle}" title="${name}" class="${shakeClass}">
+                ${deleteOverlay}
+                <div style="width:40px; height:40px; border-radius:50%; ${avatarStyle} ${border} display:flex; align-items:center; justify-content:center; font-size:${theme.fs||'13px'}; font-weight:${theme.fw||'700'}; font-family:${theme.ff||'inherit'}; flex-shrink:0; box-shadow:0 1px 3px rgba(0,0,0,0.1);">${initials}</div>
+                <div style="font-size:10px; font-weight:600; color:var(--text-muted); max-width:44px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center;">${name}</div>
+            </div>`;
+        }).join('');
+    }
+
+    window.deleteUserProfile = function(safeKey, name) {
+        if (confirm(`確定要刪除「${name}」的自訂頭像資料嗎？\n這將會清除雲端上與此名稱綁定的頭像。`)) {
+            database.ref('user_profiles/' + safeKey).remove();
+        }
+    };
 
     function handleProfileAvatarUpload(e) {
         const file = e.target.files[0];
@@ -2232,6 +2310,7 @@
 
     database.ref('user_profiles').on('value', (snapshot) => {
         userProfiles = snapshot.val() || {};
+        renderPlayerRoster();
         if (typeof updateView === 'function') updateView();
     });
 
@@ -3952,6 +4031,8 @@
         const activeEl = document.getElementById('active-list'), unclaimEl = document.getElementById('unclaimed-list'), pcEl = document.getElementById('postcard-container');
         if (!activeEl || !unclaimEl || !pcEl) return;
         const now = Date.now();
+
+        renderPlayerRoster();
 
         const mushCoordCount = {};
         dataList.forEach(item => {
