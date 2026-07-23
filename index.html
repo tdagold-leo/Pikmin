@@ -1720,7 +1720,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.23.2219";
+    const APP_VERSION = "2026.07.23.2247";
     function checkForUpdate() {
         // 從 raw.github 抓取以繞過 GitHub Pages CDN 快取
         const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + new Date().getTime();
@@ -3539,7 +3539,14 @@
     }
     const finishSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
     function playCountdownFinishedSound() {
-        finishSound.play().catch(e => console.log('Sound play blocked:', e));
+        // 連續發出提示音 3 秒 (每秒一聲，共 3 聲)
+        let count = 0;
+        const beepInterval = setInterval(() => {
+            finishSound.currentTime = 0; // 確保聲音從頭開始
+            finishSound.play().catch(e => console.log('Sound play blocked:', e));
+            count++;
+            if (count >= 3) clearInterval(beepInterval);
+        }, 1000);
     }
 
     function formatTimeStr(utcTimeMs, offsetHours, includeSeconds = false) {
@@ -4921,3 +4928,4 @@
 </script>
 </body>
 </html>
+
