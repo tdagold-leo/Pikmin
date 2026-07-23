@@ -3537,7 +3537,11 @@
         const sel1 = document.getElementById('tz-select-1');
         if(sel1) document.getElementById('clock-custom-1').innerText = formatTimeStr(utcMs, parseFloat(sel1.value)||0, false);
     }
-    
+    const finishSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+    function playCountdownFinishedSound() {
+        finishSound.play().catch(e => console.log('Sound play blocked:', e));
+    }
+
     function formatTimeStr(utcTimeMs, offsetHours, includeSeconds = false) {
         const d = new Date(utcTimeMs + (3600000 * offsetHours));
         const pad = n => String(n).padStart(2, '0');
@@ -3584,7 +3588,15 @@
                 if (rem <= 0) { el.innerText = '已過期/可開打！'; el.classList.remove('live-timer'); needsViewUpdate = true; }
                 else el.innerText = getRemainingText(target, now);
             } else if (type === 'postcard-timer') {
-                if (rem <= 0) { el.innerText = `[可開打!]`; el.classList.remove('live-timer'); needsViewUpdate = true; }
+                if (rem <= 0) { 
+                    el.innerText = `[可開打!]`; 
+                    el.classList.remove('live-timer'); 
+                    needsViewUpdate = true; 
+                    if (!el.dataset.playedSound) {
+                        el.dataset.playedSound = 'true';
+                        playCountdownFinishedSound();
+                    }
+                }
                 else el.innerText = `[${getShortRemainingText(target, now)}]`;
             }
         });
@@ -4406,14 +4418,18 @@
             return true;
         });
 
-        let vCount = 0; const pcGroups = {};
+        let vCount = 0; 
+        const pcGroups = {};
+        const countdownItems = [];
+        
         filteredPc.forEach(item => { 
             let type = item.type ? String(item.type).trim() : '未分類'; 
             
             if (type === '菇' && item.targetTime != null) {
                 const rem = item.targetTime - now;
                 if (rem > -300000) { 
-                    type = '⏳ 倒數中 (菇)';
+                    countdownItems.push(item);
+                    return; // 倒數中的不分群組，直接排在最前面
                 }
             }
             
@@ -4422,42 +4438,13 @@
         });
         
         const typeOrder = (a, b) => {
-            if (a === '⏳ 倒數中 (菇)') return -1;
-            if (b === '⏳ 倒數中 (菇)') return 1;
             if (a === '未分類') return 1;
             if (b === '未分類') return -1;
             return a.localeCompare(b, 'zh-TW');
         };
         
-        Object.keys(pcGroups).sort(typeOrder).forEach(type => {
-            const groupId = 'post-' + type;
-            if (!knownPostcardGroups.has(groupId)) { collapsedGroups.add(groupId); knownPostcardGroups.add(groupId); }
-            const isCol = collapsedGroups.has(groupId);
-            const arrow = isCol ? '▶' : '▼';
-            const gHead = document.createElement('div');
-            gHead.className = 'group-header postcard-header';
-            if (typeof getColorForType === 'function') {
-                gHead.style.background = getColorForType(type);
-            }
-            
-            gHead.style.justifyContent = 'flex-start';
-            gHead.style.gap = '12px';
-            gHead.innerHTML = `
-                <span style="font-size:18px; font-weight:900; background:rgba(255,255,255,0.25); padding:4px 12px; border-radius:16px;">${pcGroups[type].length} 筆</span> 
-                <span>${arrow} 📂 ${escapeHtml(type)}</span>
-            `;
 
-            gHead.addEventListener('click', () => toggleGroup(groupId));
-            pcEl.appendChild(gHead);
-
-            if (!isCol) {
-                if (searchCoords) {
-                    pcGroups[type].sort((a, b) => a._dist - b._dist);
-                } else if (type === '⏳ 倒數中 (菇)') {
-                    pcGroups[type].sort((a, b) => (a.targetTime || 0) - (b.targetTime || 0));
-                }
-                
-                pcGroups[type].forEach(item => {
+        const renderPostcardItem = (item, type, isSearchCoords) => {
                     vCount++; const safeC = toTW(escapeHtml(item.country)), safeT = escapeHtml(item.tag), safeI = escapeHtml(item.image);
                     const favList = Array.isArray(cloudFavorites) ? cloudFavorites : [];
                     const isFav = favList.includes(item.id);
@@ -4476,7 +4463,7 @@
                     const isDuplicate = checkIsDuplicate(item);
                     const dupBadge = isDuplicate ? `<div style="color: #b45309; font-size: 10px; font-weight: bold; margin-top: 4px; background: #fef3c7; padding: 4px 6px; border-radius: 4px; border: 1px dashed #f59e0b; text-align: center;">⚠️ 重複收藏</div>` : '';
                     let distBadge = '';
-                    if (searchCoords && item._dist <= 1) {
+                    if (isSearchCoords && item._dist <= 1) {
                         const distText = item._dist < 1 ? (item._dist * 1000).toFixed(0) + ' m' : item._dist.toFixed(1) + ' km';
                         distBadge = `<div style="color: #065f46; font-size: 10px; font-weight: bold; margin-top: 4px; background: #d1fae5; padding: 4px 6px; border-radius: 4px; border: 1px dashed #10b981; text-align: center;">📏 距離 ${distText}</div>`;
                     }
@@ -4547,6 +4534,40 @@
                         <div class="card-actions" style="display:flex; gap:4px; margin-top:auto; padding-top:4px;"><button class="btn-sm btn-default" onclick="duplicatePostcard('${item.id}')" title="複製一張相同明信片" style="flex:0; background:#f5f3ff; color:#6d28d9; border:1px solid #ddd6fe;">📋</button><button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button>${item.coords ? `<button class="btn-sm btn-default" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}')">🗺️ 地圖</button>` : ''}<button class="btn-sm btn-edit" style="flex:0;" onclick="openTimeModalById('${item.id}', 'postcard')">✏️</button><button class="btn-sm btn-danger" style="flex:0;" onclick="deleteItem('${item.id}', 'postcard')">🗑️</button></div></div>
                     `;
                     pcEl.appendChild(card);
+        };
+
+        countdownItems.sort((a, b) => (a.targetTime || 0) - (b.targetTime || 0));
+        countdownItems.forEach(item => {
+            renderPostcardItem(item, '⏳ 倒數中 (菇)', searchCoords);
+        });
+        Object.keys(pcGroups).sort(typeOrder).forEach(type => {
+            const groupId = 'post-' + type;
+            if (!knownPostcardGroups.has(groupId)) { collapsedGroups.add(groupId); knownPostcardGroups.add(groupId); }
+            const isCol = collapsedGroups.has(groupId);
+            const arrow = isCol ? '▶' : '▼';
+            const gHead = document.createElement('div');
+            gHead.className = 'group-header postcard-header';
+            if (typeof getColorForType === 'function') {
+                gHead.style.background = getColorForType(type);
+            }
+            
+            gHead.style.justifyContent = 'flex-start';
+            gHead.style.gap = '12px';
+            gHead.innerHTML = `
+                <span style="font-size:18px; font-weight:900; background:rgba(255,255,255,0.25); padding:4px 12px; border-radius:16px;">${pcGroups[type].length} 筆</span> 
+                <span>${arrow} 📂 ${escapeHtml(type)}</span>
+            `;
+
+            gHead.addEventListener('click', () => toggleGroup(groupId));
+            pcEl.appendChild(gHead);
+
+            if (!isCol) {
+                if (searchCoords) {
+                    pcGroups[type].sort((a, b) => a._dist - b._dist);
+                }
+                
+                pcGroups[type].forEach(item => {
+                    renderPostcardItem(item, type, searchCoords);
                 });
             }
         });
