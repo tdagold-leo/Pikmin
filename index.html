@@ -1115,9 +1115,10 @@
                     </select>
                 </div>
                 
-                <!-- 第二排：搜尋列和開關 -->
+                <!-- 第三排：搜尋列和開關 -->
                 <div style="display:flex; flex-wrap:nowrap; gap:8px; align-items:center;">
                     <input type="text" id="postcard-search" class="input-base search-input" style="flex:1; min-width:0; padding:5px 8px; font-size:13px;" oninput="updateView()" placeholder="🔍 支援多關鍵字搜尋...">
+                    <button type="button" onclick="collapseAllPostcardGroups()" title="全部折疊以節省流量" style="flex-shrink:0; background:transparent; border:1px solid #e5e7eb; border-radius:8px; padding:5px 8px; cursor:pointer; font-size:12px; color:var(--text-muted); white-space:nowrap;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">全部折疊</button>
                     <label style="cursor:pointer; display:flex; align-items:center; gap:4px; font-size:13px; color:var(--text-main); font-weight:bold; flex-shrink:0;">
                         <input type="checkbox" id="toggle-time-setter" onchange="saveTimeSetterPref(); updateView();"> 
                         顯示計時設定框
@@ -1703,7 +1704,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.23.0100";
+    const APP_VERSION = "2026.07.23.1538";
     function checkForUpdate() {
         // 從 raw.github 抓取以繞過 GitHub Pages CDN 快取
         const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + new Date().getTime();
@@ -3986,6 +3987,12 @@
         updateView();
     }
 
+    function collapseAllPostcardGroups() {
+        // 把所有已知的明信片群組全部加回折疊狀態，断开不必要的圖片請求
+        knownPostcardGroups.forEach(id => collapsedGroups.add(id));
+        updateView();
+    }
+
     function saveMushroomViewPref() {
         if (document.getElementById('mushroom-group-logic')) {
             localStorage.setItem('pikmin_mushroom_group', document.getElementById('mushroom-group-logic').value);
@@ -4354,7 +4361,7 @@
                     const card = document.createElement('div'); 
                     card.className = `grid-card ${isReady ? 'alert-pulse' : ''} ${isDuplicate ? 'duplicate-card' : ''}`;
                     
-                    const imgHtml = (safeI && safeI !== "無圖片") ? `<img src="${safeI}" class="card-img" onclick="openImageLightbox(this.src)">` : `<div class="card-img-placeholder">無圖片</div>`;
+                    const imgHtml = (safeI && safeI !== "無圖片") ? `<img src="${safeI}" loading="lazy" class="card-img" onclick="openImageLightbox(this.src)">` : `<div class="card-img-placeholder">無圖片</div>`;
                     
                     let tzBadge = '';
                     if (type === '菇窩') {
