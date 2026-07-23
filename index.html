@@ -1124,6 +1124,16 @@
                         顯示計時設定框
                     </label>
                 </div>
+                <!-- 新增常用字搜尋按鈕 -->
+                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:2px;">
+                    <button type="button" onclick="document.getElementById('postcard-search').value = '缺'; updateView();" style="padding:4px 10px; border-radius:12px; border:1px solid #fca5a5; background:#fef2f2; font-size:12px; cursor:pointer; color:#b91c1c;">⚠️ 缺</button>
+                    <button type="button" onclick="document.getElementById('postcard-search').value = '日本'; updateView();" style="padding:4px 10px; border-radius:12px; border:1px solid #d1d5db; background:#f9fafb; font-size:12px; cursor:pointer; color:var(--text-main);">日本</button>
+                    <button type="button" onclick="document.getElementById('postcard-search').value = '台灣'; updateView();" style="padding:4px 10px; border-radius:12px; border:1px solid #d1d5db; background:#f9fafb; font-size:12px; cursor:pointer; color:var(--text-main);">台灣</button>
+                    <button type="button" onclick="document.getElementById('postcard-search').value = '櫻花'; updateView();" style="padding:4px 10px; border-radius:12px; border:1px solid #fbcfe8; background:#fdf2f8; font-size:12px; cursor:pointer; color:#be185d;">🌸 櫻花</button>
+                    <button type="button" onclick="document.getElementById('postcard-search').value = '車站'; updateView();" style="padding:4px 10px; border-radius:12px; border:1px solid #bfdbfe; background:#eff6ff; font-size:12px; cursor:pointer; color:#1d4ed8;">🚉 車站</button>
+                    <button type="button" onclick="document.getElementById('postcard-search').value = '機場'; updateView();" style="padding:4px 10px; border-radius:12px; border:1px solid #e5e7eb; background:#f3f4f6; font-size:12px; cursor:pointer; color:#374151;">✈️ 機場</button>
+                    <button type="button" onclick="document.getElementById('postcard-search').value = '美術館'; updateView();" style="padding:4px 10px; border-radius:12px; border:1px solid #fef08a; background:#fefce8; font-size:12px; cursor:pointer; color:#854d0e;">🖼️ 美術館</button>
+                </div>
             </div>
             <div id="postcard-container" class="grid"></div>
             <div id="postcard-empty" class="empty-message" style="display: none;">目前沒有收藏的明信片項目</div>
@@ -1490,16 +1500,16 @@
                             <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#475569;">辨識左側網址</div>
                         </button>
                     </div>
-                    <div style="display:flex; gap:6px; margin-top:6px;">
-                        <button type="button" class="btn-sm btn-default" onclick="document.getElementById('post-ocr-file').click()" style="flex:1; border-radius:8px; background:#f5f3ff; color:#5b21b6; border:1px dashed #8b5cf6; padding:6px; line-height:1.3;">
+                    <div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
+                        <button type="button" class="btn-sm btn-default" onclick="document.getElementById('post-ocr-file').click()" style="flex:1; min-width:80px; border-radius:8px; background:#f5f3ff; color:#5b21b6; border:1px dashed #8b5cf6; padding:6px; line-height:1.3;">
                             <div style="font-weight:bold;">📁 上傳截圖</div>
                             <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#64748b;">從裝置相簿檔案</div>
                         </button>
-                        <button type="button" class="btn-sm btn-default" onclick="pasteFromClipboard('post-ocr-result')" style="flex:1; border-radius:8px; background:#f0fdf4; color:#166534; border:1px dashed #22c55e; padding:6px; line-height:1.3;">
+                        <button type="button" class="btn-sm btn-default" onclick="pasteFromClipboard('post-ocr-result')" style="flex:1; min-width:80px; border-radius:8px; background:#f0fdf4; color:#166534; border:1px dashed #22c55e; padding:6px; line-height:1.3;">
                             <div style="font-weight:bold;">📋 貼上圖片</div>
                             <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#475569;">讀取剪貼簿圖片</div>
                         </button>
-                        <button type="button" class="btn-sm btn-default" onclick="searchImageOnGoogle('post-image')" style="flex:1; border-radius:8px; background:#fff7ed; color:#c2410c; border:1px dashed #f97316; padding:6px; line-height:1.3;">
+                        <button type="button" class="btn-sm btn-default" onclick="openGoogleLensSearch('post-image', 'post-coords')" style="flex:1; min-width:80px; border-radius:8px; background:#fff7ed; color:#c2410c; border:1px dashed #f97316; padding:6px; line-height:1.3;">
                             <div style="font-weight:bold;">🤖 AI 座標搜尋</div>
                             <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#b45309;">Google AI 模式查座標</div>
                         </button>
@@ -1665,16 +1675,16 @@
                             <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#475569;">辨識左側網址</div>
                         </button>
                     </div>
-                    <div style="display:flex; gap:6px; margin-top:6px;">
-                        <button type="button" class="btn-sm btn-default" onclick="document.getElementById('edit-post-ocr-file').click()" style="flex:1; border-radius:8px; background:#f5f3ff; color:#5b21b6; border:1px solid #8b5cf6; padding:6px; line-height:1.3;">
+                    <div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
+                        <button type="button" class="btn-sm btn-default" onclick="document.getElementById('edit-post-ocr-file').click()" style="flex:1; min-width:80px; border-radius:8px; background:#f5f3ff; color:#5b21b6; border:1px solid #8b5cf6; padding:6px; line-height:1.3;">
                             <div style="font-weight:bold;">📁 上傳截圖</div>
                             <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#64748b;">從裝置相簿檔案</div>
                         </button>
-                        <button type="button" class="btn-sm btn-default" onclick="pasteFromClipboard('edit-post-ocr-result')" style="flex:1; border-radius:8px; background:#f0fdf4; color:#166534; border:1px solid #22c55e; padding:6px; line-height:1.3;">
+                        <button type="button" class="btn-sm btn-default" onclick="pasteFromClipboard('edit-post-ocr-result')" style="flex:1; min-width:80px; border-radius:8px; background:#f0fdf4; color:#166534; border:1px solid #22c55e; padding:6px; line-height:1.3;">
                             <div style="font-weight:bold;">📋 貼上圖片</div>
                             <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#475569;">讀取剪貼簿圖片</div>
                         </button>
-                        <button type="button" class="btn-sm btn-default" onclick="searchImageOnGoogle('edit-post-image')" style="flex:1; border-radius:8px; background:#fff7ed; color:#c2410c; border:1px solid #f97316; padding:6px; line-height:1.3;">
+                        <button type="button" class="btn-sm btn-default" onclick="openGoogleLensSearch('edit-post-image', 'edit-post-coords')" style="flex:1; min-width:80px; border-radius:8px; background:#fff7ed; color:#c2410c; border:1px solid #f97316; padding:6px; line-height:1.3;">
                             <div style="font-weight:bold;">🤖 AI 座標搜尋</div>
                             <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#b45309;">Google AI 模式查座標</div>
                         </button>
@@ -1692,14 +1702,15 @@
                 </div>
             </div>
 
-            <!-- 絕版標記按鈕 -->
-            <button type="button" id="edit-post-discontinued-btn"
-                onclick="window._editDiscontinued = !window._editDiscontinued; this.style.background = window._editDiscontinued ? '#fef2f2' : ''; this.style.color = window._editDiscontinued ? '#dc2626' : ''; this.style.borderColor = window._editDiscontinued ? '#f87171' : ''; this.textContent = window._editDiscontinued ? '📦 已標記為絕版 （點擊取消）' : '📦 標記為絕版';"
-                style="width:100%; margin-top:10px; padding:9px; border-radius:10px; border:1px dashed #d1d5db; background:var(--card-bg); color:var(--text-muted); font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s;">
-                📦 標記為絕版
-            </button>
-
-            <button class="btn-sm btn-edit btn-block" style="margin-top:12px; padding:11px; font-size:14px; font-weight:bold; border-radius:10px;" id="time-modal-submit-btn">💾 儲存修改</button>
+            <!-- 底部操作列：絕版標記 + 儲存 -->
+            <div style="display:flex; gap:8px; margin-top:12px; align-items:center;">
+                <button type="button" id="edit-post-discontinued-btn"
+                    onclick="window._editDiscontinued = !window._editDiscontinued; this.style.background = window._editDiscontinued ? '#fef2f2' : ''; this.style.color = window._editDiscontinued ? '#dc2626' : 'var(--text-muted)'; this.style.borderColor = window._editDiscontinued ? '#f87171' : '#d1d5db'; this.innerHTML = window._editDiscontinued ? '📦 絕版 ✓' : '📦 絕版';"
+                    style="flex-shrink:0; padding:8px 12px; border-radius:10px; border:1px dashed #d1d5db; background:var(--card-bg); color:var(--text-muted); font-size:12px; font-weight:600; cursor:pointer; transition:all 0.2s; white-space:nowrap;">
+                    📦 絕版
+                </button>
+                <button class="btn-sm btn-edit btn-block" style="flex:1; padding:11px; font-size:14px; font-weight:bold; border-radius:10px;" id="time-modal-submit-btn">💾 儲存修改</button>
+            </div>
         </div>
     </div>
 
@@ -2150,7 +2161,7 @@
                 }
 
                 if(data && data.countryName) {
-                        countryName = toTW(data.countryName);
+                        countryName = await translateToTW(data.countryName);
                         if (typeof countryName === 'string' && countryName.includes("/")) {
                             countryName = countryName.split('/')[0].trim();
                         }
@@ -2173,7 +2184,7 @@
                                 const localAdmin = admins.find(a => a.adminLevel > 3 && a.adminLevel < 10);
                                 if (localAdmin) combined = localAdmin.name;
                             }
-                            combined = toTW(combined);
+                            combined = await translateToTW(combined);
                             if (typeof combined === 'string' && combined.includes("/")) {
                                 combined = combined.split('/')[0].trim();
                             }
@@ -2289,6 +2300,37 @@
 
 
 
+    function searchCoordsOnMap(inputId) {
+        const val = document.getElementById(inputId).value.trim();
+        const coordMatch = val.match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
+        if (coordMatch) {
+            const lat = coordMatch[1];
+            const lon = coordMatch[2];
+            window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lon}`, '_blank');
+        } else if (val) {
+            window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(val)}`, '_blank');
+        } else {
+            alert('請先在座標欄位輸入座標或地名！');
+        }
+    }
+
+    async function translateToTW(text) {
+        if (!text) return text;
+        try {
+            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-CN&tl=zh-TW&dt=t&q=${encodeURIComponent(text)}`;
+            const res = await fetch(url);
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data[0] && data[0][0] && data[0][0][0]) {
+                    return data[0][0][0];
+                }
+            }
+        } catch (e) {
+            console.error("Translation API failed", e);
+        }
+        return toTW(text);
+    }
+
     function toTW(str) {
         if (!str) return str;
         return str.replace(/冲/g, '沖').replace(/绳/g, '繩').replace(/国/g, '國').replace(/兰/g, '蘭').replace(/亚/g, '亞')
@@ -2300,7 +2342,29 @@
             .replace(/乌/g, '烏').replace(/鲁/g, '魯').replace(/乔/g, '喬')
             .replace(/达/g, '達').replace(/麦/g, '麥').replace(/卢/g, '盧')
             .replace(/萨/g, '薩').replace(/贝/g, '貝').replace(/维/g, '維')
-            .replace(/叙/g, '敘').replace(/几/g, '幾');
+            .replace(/叙/g, '敘').replace(/几/g, '幾')
+            .replace(/广/g, '廣').replace(/宁/g, '寧').replace(/辽/g, '遼').replace(/陕/g, '陝').replace(/肃/g, '肅')
+            .replace(/贵/g, '貴').replace(/云/g, '雲').replace(/乡/g, '鄉').replace(/镇/g, '鎮').replace(/县/g, '縣')
+            .replace(/阳/g, '陽').replace(/阴/g, '陰').replace(/济/g, '濟').replace(/汉/g, '漢').replace(/郑/g, '鄭')
+            .replace(/沧/g, '滄').replace(/宝/g, '寶').replace(/晋/g, '晉').replace(/齐/g, '齊').replace(/苏/g, '蘇')
+            .replace(/沪/g, '滬').replace(/粤/g, '粵').replace(/琼/g, '瓊').replace(/陇/g, '隴').replace(/铁/g, '鐵')
+            .replace(/连/g, '連').replace(/樱/g, '櫻').replace(/桥/g, '橋').replace(/机/g, '機').replace(/场/g, '場')
+            .replace(/车/g, '車').replace(/站/g, '站').replace(/总/g, '總').replace(/线/g, '線').replace(/号/g, '號')
+            .replace(/楼/g, '樓').replace(/头/g, '頭').replace(/海/g, '海').replace(/湾/g, '灣').replace(/园/g, '園')
+            .replace(/宫/g, '宮').replace(/庙/g, '廟').replace(/观/g, '觀').replace(/台/g, '台').replace(/广/g, '廣')
+            .replace(/西/g, '西').replace(/东/g, '東').replace(/南/g, '南').replace(/北/g, '北').replace(/中/g, '中')
+            .replace(/长/g, '長').replace(/城/g, '城').replace(/市/g, '市').replace(/村/g, '村').replace(/里/g, '里')
+            .replace(/关/g, '關').replace(/于/g, '於').replace(/这/g, '這').replace(/为/g, '為').replace(/会/g, '會')
+            .replace(/产/g, '產').replace(/业/g, '業').replace(/发/g, '發').replace(/无/g, '無').replace(/当/g, '當')
+            .replace(/从/g, '從').replace(/动/g, '動').replace(/进/g, '進').replace(/过/g, '過').replace(/对/g, '對')
+            .replace(/点/g, '點').replace(/学/g, '學').replace(/与/g, '與').replace(/电/g, '電').replace(/双/g, '雙')
+            .replace(/实/g, '實').replace(/条/g, '條').replace(/钱/g, '錢').replace(/图/g, '圖').replace(/务/g, '務')
+            .replace(/设/g, '設').replace(/报/g, '報').replace(/导/g, '導').replace(/声/g, '聲').replace(/数/g, '數')
+            .replace(/写/g, '寫').replace(/军/g, '軍').replace(/农/g, '農').replace(/单/g, '單').replace(/医/g, '醫')
+            .replace(/旧/g, '舊').replace(/师/g, '師').replace(/类/g, '類').replace(/边/g, '邊').replace(/战/g, '戰')
+            .replace(/风/g, '風').replace(/飞/g, '飛').replace(/标/g, '標').replace(/权/g, '權').replace(/网/g, '網')
+            .replace(/应/g, '應').replace(/极/g, '極').replace(/伤/g, '傷').replace(/觉/g, '覺').replace(/认/g, '認')
+            .replace(/际/g, '際').replace(/击/g, '擊').replace(/没/g, '沒').replace(/尔/g, '爾');
     }
 
     function applySyncId() {
@@ -3139,18 +3203,34 @@
         return false;
     }
 
-    async function searchImageOnGoogle(inputId) {
-        const input = document.getElementById(inputId);
-        const url = input ? input.value.trim() : '';
+    function openGoogleLensSearch(imageInputId, coordsInputId) {
+        const imageInput = document.getElementById(imageInputId);
+        const url = imageInput ? imageInput.value.trim() : '';
         if (!url || !url.startsWith('http')) {
             alert('請先填寫或貼上有效的圖片網址！');
             return;
         }
+        const coordsInput = document.getElementById(coordsInputId);
+        const coordsStr = coordsInput ? coordsInput.value.trim() : '';
+        const queryText = coordsStr ? coordsStr : '座標';
+        const lensUrl = 'https://lens.google.com/uploadbyurl?url=' + encodeURIComponent(url)
+                      + '&q=' + encodeURIComponent(queryText)
+                      + '&lns_mode=mu';
+        window.open(lensUrl, '_blank');
+    }
+
+    async function searchImageOnGoogle(inputId) {
+        const input = document.getElementById(inputId);
+        const url = input ? input.value.trim() : '';
+        if (!url || !url.startsWith('http')) return;
 
         // 根據 inputId 判斷前綴（用於操作對應表單欄位）
         const prefix = inputId.includes('edit-post') ? 'edit-post' : 'post';
         const resDiv = document.getElementById(prefix + '-ocr-result');
-        const fallbackUrl = 'https://lens.google.com/uploadbyurl?url=' + encodeURIComponent(url);
+        const coordsInput = document.getElementById(prefix + '-coords');
+        const coordsStr = coordsInput ? coordsInput.value.trim() : '';
+        const copyText = coordsStr ? coordsStr : '座標';
+        const fallbackUrl = 'https://lens.google.com/uploadbyurl?url=' + encodeURIComponent(url) + '&q=' + encodeURIComponent(copyText) + '&lns_mode=mu';
 
         // 若未設定 Vision API 金鑰，直接開啟 Google AI 搜尋
         const apiKey = localStorage.getItem('pikmin_vision_api_key') || '';
@@ -3159,7 +3239,7 @@
                 resDiv.style.display = 'block';
                 resDiv.innerHTML = `<div style="color:#92400e; padding:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; font-size:12px; line-height:1.6;">
                     ⚠️ 尚未設定 Vision API 金鑰，無法自動辨識。<br>
-                    <a href="${fallbackUrl}" target="_blank" style="color:#0369a1; font-weight:bold; text-decoration:none;">🔗 點此改用 Google AI 模式搜尋座標 →</a>
+                    <a href="${fallbackUrl}" target="_blank" style="color:#0369a1; font-weight:bold; text-decoration:none;">🔗 點此改用 Google AI 模式搜尋（已帶入「${copyText}」合併圖片搜尋）→</a>
                 </div>`;
             } else {
                 window.open(fallbackUrl, '_blank');
@@ -3176,6 +3256,43 @@
         }
 
         try {
+            // 從座標欄位提取座標以作為搜尋限制 (latLongRect)
+            let imageContext = undefined;
+            if (coordsStr) {
+                const match = coordsStr.match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
+                if (match) {
+                    const lat = parseFloat(match[1]);
+                    const lon = parseFloat(match[2]);
+                    imageContext = {
+                        latLongRect: {
+                            minLatLng: { latitude: lat - 0.05, longitude: lon - 0.05 },
+                            maxLatLng: { latitude: lat + 0.05, longitude: lon + 0.05 }
+                        }
+                    };
+                }
+            }
+
+            // 嘗試先把圖片轉成 base64（避免 CORS 導致 Vision API 無法抓取圖片）
+            let imagePayload;
+            try {
+                const imgResp = await fetch(url);
+                if (imgResp.ok) {
+                    const blob = await imgResp.blob();
+                    const base64 = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result.split(',')[1]);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    });
+                    imagePayload = { content: base64 };
+                } else {
+                    imagePayload = { source: { imageUri: url } };
+                }
+            } catch (e) {
+                // 若圖片本身有 CORS 限制，退回直接用 imageUri
+                imagePayload = { source: { imageUri: url } };
+            }
+
             // 呼叫 Vision API：LANDMARK_DETECTION 可直接回傳地標 GPS 座標
             const visionUrl = `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`;
             const resp = await fetch(visionUrl, {
@@ -3183,13 +3300,15 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     requests: [{
-                        image: { source: { imageUri: url } },
+                        image: imagePayload,
                         features: [
                             { type: 'LANDMARK_DETECTION', maxResults: 5 }
-                        ]
+                        ],
+                        imageContext: imageContext
                     }]
                 })
             });
+
 
             const data = await resp.json();
             const annotations = data.responses?.[0]?.landmarkAnnotations;
@@ -3218,12 +3337,17 @@
                         const ll = lm.locations?.[0]?.latLng;
                         if (!ll) return '';
                         const c = `${parseFloat(ll.latitude).toFixed(6)},${parseFloat(ll.longitude).toFixed(6)}`;
-                        return `<button type="button" onclick="
-                            document.getElementById('${prefix}-coords').value='${c}';
-                            autoDetectCountry('${c}', '${prefix}-country', '${prefix}-tz-hint', '${prefix}-city');
-                        " style="font-size:11px; padding:4px 8px; margin-top:4px; border-radius:6px; border:1px solid #10b981; background:${i===0?'#d1fae5':'#f0fdf4'}; color:#065f46; cursor:pointer; width:100%; text-align:left; display:block; line-height:1.4;">
-                            ${i===0?'✅':'📍'} ${escapeHtml(lm.description)} <span style="color:#6b7280;">(${c}) — ${(lm.score*100).toFixed(0)}%</span>
-                        </button>`;
+                        return `<div style="display:flex; gap:4px; margin-top:4px;">
+                            <button type="button" onclick="
+                                document.getElementById('${prefix}-coords').value='${c}';
+                                autoDetectCountry('${c}', '${prefix}-country', '${prefix}-tz-hint', '${prefix}-city');
+                            " style="flex:1; font-size:11px; padding:4px 8px; border-radius:6px; border:1px solid #10b981; background:${i===0?'#d1fae5':'#f0fdf4'}; color:#065f46; cursor:pointer; text-align:left; line-height:1.4;">
+                                ${i===0?'✅':'📍'} ${escapeHtml(lm.description)} <span style="color:#6b7280;">(${c}) — ${(lm.score*100).toFixed(0)}%</span>
+                            </button>
+                            <button type="button" onclick="window.open('https://www.google.com/maps/search/?api=1&query=${c}', '_blank')" style="display:flex; align-items:center; justify-content:center; padding:0 8px; border-radius:6px; background:#e0f2fe; color:#0369a1; text-decoration:none; font-size:11px; border:1px solid #7dd3fc; cursor:pointer; white-space:nowrap;" title="在地圖上查看">
+                                🗺️ 查看
+                            </button>
+                        </div>`;
                     }).join('');
 
                     if (resDiv) {
@@ -3706,7 +3830,7 @@
             window._editDiscontinued = item.discontinued === true;
             const discBtn = document.getElementById('edit-post-discontinued-btn');
             if (discBtn) {
-                discBtn.textContent = window._editDiscontinued ? '📦 已標記為絕版 （點擊取消）' : '📦 標記為絕版';
+                discBtn.innerHTML = window._editDiscontinued ? '📦 絕版 ✓' : '📦 絕版';
                 discBtn.style.background = window._editDiscontinued ? '#fef2f2' : '';
                 discBtn.style.color = window._editDiscontinued ? '#dc2626' : '';
                 discBtn.style.borderColor = window._editDiscontinued ? '#f87171' : '';
