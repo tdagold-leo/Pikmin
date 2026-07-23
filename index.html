@@ -80,6 +80,17 @@
             display: block;
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeOut { from { opacity:1; transform:translateY(0); } to { opacity:0; transform:translateY(-10px); } }
+        @keyframes shake {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(2deg); }
+            50% { transform: rotate(0deg); }
+            75% { transform: rotate(-2deg); }
+            100% { transform: rotate(0deg); }
+        }
+        .shake-avatar {
+            animation: shake 0.3s infinite ease-in-out;
+        }
 
         /* 底部導覽列 */
         .bottom-nav {
@@ -388,6 +399,27 @@
         }
         .card-star-btn.active { color: #f59e0b; text-shadow: 0 0 2px rgba(245,158,11,0.5); }
         .card-star-btn.inactive { color: #d1d5db; }
+        .card-fav-btn {
+            position: absolute;
+            top: 38px;
+            right: 6px;
+            background: rgba(255,255,255,0.85);
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            font-size: 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: transform 0.15s;
+        }
+        .card-fav-btn:active { transform: scale(1.3); }
+        .card-fav-btn.fav-on  { color: #ef4444; text-shadow: 0 0 4px rgba(239,68,68,0.4); }
+        .card-fav-btn.fav-off { color: #d1d5db; }
 
         /* 標籤徽章 */
         .tag-badge {
@@ -431,19 +463,71 @@
         .btn-block { width: 100%; padding: 10px; border-radius: 8px; font-size: 14px; }
         
         .line-share-btn {
-            background-color: #06c755;
+            background: linear-gradient(135deg, #06c755 0%, #04a846 100%);
             color: white;
             border: none;
-            border-radius: 12px;
-            padding: 12px 16px;
-            font-size: 14px;
+            border-radius: 14px;
+            padding: 14px 16px;
+            font-size: 15px;
             font-weight: bold;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 6px;
             width: 100%;
-            box-shadow: 0 4px 6px rgba(6,199,85,0.2);
+            box-shadow: 0 4px 12px rgba(6,199,85,0.35);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+            letter-spacing: 0.5px;
+        }
+        .line-share-btn:hover {
+            filter: brightness(1.07);
+            box-shadow: 0 6px 16px rgba(6,199,85,0.45);
+        }
+        .line-share-btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 6px rgba(6,199,85,0.25);
+            filter: brightness(0.95);
+        }
+
+        /* 系統清理規則說明框 */
+        .cleanup-info-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            line-height: 1.7;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .cleanup-info-box .cleanup-title {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+        .cleanup-info-box .cleanup-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            margin-bottom: 3px;
+            word-break: keep-all;
+            overflow-wrap: break-word;
+        }
+        .cleanup-info-box .cleanup-row .icon {
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .cleanup-info-box .cleanup-notice {
+            color: #dc2626;
+            font-size: 11px;
+            margin-top: 6px;
+            display: block;
         }
 
         /* 群組高對比度標題樣式 */
@@ -487,22 +571,60 @@
         .filter-select { flex-shrink: 0; color: var(--primary-dark); font-weight: bold; }
 
         /* 設定頁面卡片 */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 16px;
+            align-items: stretch;
+            padding-bottom: 16px;
+        }
         .settings-card {
             background: var(--card-bg);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border-radius: 16px;
+            padding: 0;
+            margin-bottom: 0;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
             border: 1px solid var(--border);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
-        .settings-card h3 {
-            margin: 0 0 12px 0;
-            font-size: 15px;
-            border-bottom: 1px solid #f3f4f6;
-            padding-bottom: 8px;
-            color: var(--primary-dark);
+        .settings-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-bottom: 1px solid #bae6fd;
         }
-        .sync-status { font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 6px; background-color: #f3f4f6; color: #9ca3af; }
+        .settings-card-header.danger { background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%); border-color: #fecdd3; }
+        .settings-card-header.success { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-color: #bbf7d0; }
+        .settings-card-header.purple { background: linear-gradient(135deg, #faf5ff 0%, #ede9fe 100%); border-color: #ddd6fe; }
+        .settings-card-header.amber { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-color: #fde68a; }
+        .settings-card-icon { font-size: 20px; line-height: 1; }
+        .settings-card-title { font-size: 14px; font-weight: 800; color: var(--primary-dark); margin: 0; }
+        .settings-card-subtitle { font-size: 10px; color: #64748b; margin: 0; }
+        .settings-card-body { padding: 14px 16px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .settings-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .settings-toggle-label { font-size: 13px; font-weight: bold; color: var(--text-main); }
+        .settings-toggle-desc { font-size: 11px; color: #64748b; margin-top: 2px; }
+        .toggle-switch { position: relative; display: inline-block; width: 48px; height: 26px; flex-shrink: 0; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-knob { position: absolute; cursor: pointer; inset: 0; background: #cbd5e1; border-radius: 26px; transition: 0.3s; }
+        .toggle-knob::after { content: ''; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        .toggle-switch input:checked + .toggle-knob { background: #22c55e; }
+        .toggle-switch input:checked + .toggle-knob::after { transform: translateX(22px); }
+        .settings-progress-wrap { margin-top: 10px; }
+        .settings-progress-bar { height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; margin: 6px 0; }
+        .settings-progress-fill { height: 100%; background: linear-gradient(90deg, #0ea5e9, #6366f1); border-radius: 99px; transition: width 0.5s ease; }
+        .settings-stat { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; }
+        .settings-stat-val { font-size: 20px; font-weight: 900; color: #0ea5e9; }
+        .settings-info-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+        .settings-info-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .settings-info-icon { font-size: 16px; width: 28px; text-align: center; flex-shrink: 0; }
+        .settings-info-text { font-size: 13px; color: var(--text-main); font-weight: 600; }
+        .settings-info-sub { font-size: 11px; color: #64748b; }
+        .sync-status { font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 8px; background-color: #f3f4f6; color: #9ca3af; white-space: nowrap; }
         .sync-status.active { background-color: #d1fae5; color: #059669; }
 
         /* 彈出視窗 (Modal) */
@@ -907,16 +1029,29 @@
 <body>
 
     <header class="app-header">
-        <h2 style="align-items: baseline;">🌱 Pickmin Tracker <span id="header-version-tag" style="font-size: 10px; color: #9ca3af; font-weight: normal; margin-left: 6px;"></span></h2>
+        <h2>🌱 Pickmin Tracker <span id="header-version-tag" style="font-size: 10px; color: #9ca3af; font-weight: normal; margin-left: 4px;"></span></h2>
         <div class="header-right" id="sync-status-indicator">⚪ 未連線</div>
     </header>
 
     <main class="app-content">
 
         <section id="view-mushroom" class="view-section active">
-            <button class="line-share-btn" onclick="shareToLineWindow()" style="margin-bottom: 20px;">
+            <button class="line-share-btn" onclick="shareToLineWindow()" style="margin-bottom: 15px;">
                 💚 一鍵產生分享文字並喚醒 LINE
             </button>
+
+            <div class="cleanup-info-box">
+                <div class="cleanup-title">💡 系統自動清理規則：</div>
+                <div class="cleanup-row">
+                    <span class="icon">▪️</span>
+                    <span><strong>已認領 / 有設時間</strong>：於設定的開打時間過後 <strong>2 小時</strong>自動刪除。</span>
+                </div>
+                <div class="cleanup-row">
+                    <span class="icon">▪️</span>
+                    <span><strong>無人認領 (野菇)</strong>：於該巨菇所在國家的 <strong>隔日凌晨 1 點</strong>自動刪除。</span>
+                </div>
+                <span class="cleanup-notice">*(目前暫時關閉自動清理功能)*</span>
+            </div>
 
             <div style="background:var(--card-bg); padding:10px 15px; border-radius:12px; margin-bottom:15px; box-shadow:0 1px 3px rgba(0,0,0,0.05); display:flex; align-items:center; gap:10px; flex-wrap:nowrap;">
                 <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
@@ -931,6 +1066,15 @@
                     <option value="grouped" selected>📂 分類模式：開啟</option>
                     <option value="flat">📄 分類模式：關閉</option>
                 </select>
+            </div>
+
+            <!-- 玩家名單 -->
+            <div id="player-roster-section" style="margin-bottom:14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <div style="font-size:12px; font-weight:700; color:var(--text-muted); letter-spacing:0.5px;">👥 玩家名單</div>
+                    <button type="button" onclick="window._rosterDeleteMode = !window._rosterDeleteMode; renderPlayerRoster();" style="background:transparent; border:none; cursor:pointer; font-size:11px; color:var(--text-muted); padding:3px 8px; border-radius:6px; border:1px solid #e5e7eb; transition:all 0.2s;" title="切換刪除頭像模式" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">🗑️ 管理</button>
+                </div>
+                <div id="player-roster" style="display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start;"></div>
             </div>
 
             <div id="mushroom-summary" class="summary-widget" style="display:none;"></div>
@@ -956,6 +1100,7 @@
                         <option value="all">全部明信片</option>
                         <option value="collected">⭐ 我的收藏</option>
                         <option value="uncollected">✰ 尚未收藏</option>
+                        <option value="fav">❤️ 我的最愛</option>
                     </select>
                     <select id="postcard-recent-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:13px; flex:1; min-width:90px;">
                         <option value="all">時間不限</option>
@@ -970,9 +1115,10 @@
                     </select>
                 </div>
                 
-                <!-- 第二排：搜尋列和開關 -->
+                <!-- 第三排：搜尋列和開關 -->
                 <div style="display:flex; flex-wrap:nowrap; gap:8px; align-items:center;">
                     <input type="text" id="postcard-search" class="input-base search-input" style="flex:1; min-width:0; padding:5px 8px; font-size:13px;" oninput="updateView()" placeholder="🔍 支援多關鍵字搜尋...">
+                    <button type="button" onclick="collapseAllPostcardGroups()" title="全部折疊以節省流量" style="flex-shrink:0; background:transparent; border:1px solid #e5e7eb; border-radius:8px; padding:5px 8px; cursor:pointer; font-size:12px; color:var(--text-muted); white-space:nowrap;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">全部折疊</button>
                     <label style="cursor:pointer; display:flex; align-items:center; gap:4px; font-size:13px; color:var(--text-main); font-weight:bold; flex-shrink:0;">
                         <input type="checkbox" id="toggle-time-setter" onchange="saveTimeSetterPref(); updateView();"> 
                         顯示計時設定框
@@ -1000,77 +1146,162 @@
             <div id="landmark-list" style="display:flex; flex-wrap:wrap; gap:12px; align-content: flex-start;"></div>
         </section>
         <section id="view-settings" class="view-section">
-
-            <div class="settings-card">
-                <h3>🗺️ 地圖 API 用量</h3>
-                <div style="font-size:14px; margin-bottom:5px; margin-top:8px;">本月已載入地圖：<span id="map-usage-count" style="font-weight:bold; color:#0ea5e9;">讀取中...</span> / 28,000 次</div>
-                <div style="font-size:11px; color:#64748b;">(超過 28,000 次將自動暫停載入地圖，以防產生額外費用)</div>
+            <!-- 瀏覽次數資訊列 -->
+            <div style="display:flex; align-items:center; gap:8px; padding:8px 12px; background:var(--card-bg); border:1px solid var(--border); border-radius:12px; margin-bottom:14px; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+                <span style="font-size:16px;">👁️</span>
+                <div id="view-counter-text" style="font-size:13px; color:var(--text-main); font-weight:600;">雲端總瀏覽次數：0 次</div>
             </div>
+            <div class="settings-grid">
 
+            <!-- 同步設定（最上面） -->
             <div class="settings-card">
-                <h3>🔍 圖片辨識 API 設定</h3>
-                <div class="input-group">
-                    <label>Google Cloud Vision API 金鑰</label>
-                    <input type="text" id="vision-api-key" class="input-base" placeholder="AIzaSy..." onchange="saveVisionApiKey()">
-                    <p style="font-size:11px; color:#6b7280; margin-top:4px;">用於啟用圖片文字自動辨識功能。金鑰僅儲存於您的瀏覽器中。</p>
-                    <div id="vision-usage-display" style="margin-top:8px; font-size:12px; color:var(--text-muted); font-weight:bold;">讀取中...</div>
+                <div class="settings-card-header success">
+                    <span class="settings-card-icon">☁️</span>
+                    <div>
+                        <div class="settings-card-title">跨裝置收藏同步</div>
+                        <div class="settings-card-subtitle">輸入相同代號即可同步</div>
+                    </div>
                 </div>
-            </div>
-
-            <div class="settings-card">
-                <h3>☁️ 跨裝置收藏同步</h3>
-                <div class="input-group">
-                    <label>綁定同步代號 (手機/電腦輸入相同代號即同步)</label>
-                    <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
+                <div class="settings-card-body">
+                    <label style="font-size:12px; color:#64748b; font-weight:600;">綁定同步代號</label>
+                    <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
                         <input type="text" id="sync-user-id" class="input-base" placeholder="例如：Leo..." onchange="applySyncId()" style="flex:1;">
                         <span id="sync-status" class="sync-status">未啟用</span>
                     </div>
                 </div>
             </div>
 
+            <!-- 時區設定 -->
             <div class="settings-card">
-                <h3>⏰ 時區設定與系統時間</h3>
-                <div style="text-align:center; margin-bottom:15px;">
-                    <div style="font-size:11px; color:var(--text-muted); font-weight:bold;">🇹🇼 台北標準時間</div>
-                    <div id="clock-taipei" style="font-size:26px; font-weight:bold; color:var(--primary-dark); font-family:monospace;">00:00:00</div>
+                <div class="settings-card-header amber">
+                    <span class="settings-card-icon">⏰</span>
+                    <div>
+                        <div class="settings-card-title">時區與系統時間</div>
+                        <div class="settings-card-subtitle">可選擇一個其他國家時間對照</div>
+                    </div>
                 </div>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <div class="clock-item">
-                        <select id="tz-select-1" onchange="saveTimezonePref()">
-                            <option value="9" selected>日本/韓國 (UTC+9)</option>
-                            <option value="8">港澳/北京 (UTC+8)</option>
-                            <option value="7">泰國/越南 (UTC+7)</option>
-                        </select>
-                        <div class="w-time" id="clock-custom-1">00:00</div>
+                <div class="settings-card-body">
+                    <div style="text-align:center; margin-bottom:14px; background:linear-gradient(135deg,#f0fdf4,#dcfce7); padding:10px; border-radius:10px; border:1px solid #bbf7d0;">
+                        <div style="font-size:11px; color:#64748b; font-weight:bold; margin-bottom:2px;">🇹🇼 台北標準時間</div>
+                        <div id="clock-taipei" style="font-size:28px; font-weight:900; color:#15803d; font-family:monospace; letter-spacing:2px;">00:00:00</div>
                     </div>
-                    <div class="clock-item">
-                        <select id="tz-select-2" onchange="saveTimezonePref()">
-                            <option value="-5" selected>美國美東 (UTC-5)</option>
-                            <option value="-8">美國美西 (UTC-8)</option>
-                        </select>
-                        <div class="w-time" id="clock-custom-2">00:00</div>
-                    </div>
-                    <div class="clock-item">
-                        <select id="tz-select-3" onchange="saveTimezonePref()">
-                            <option value="10" selected>澳洲雪梨 (UTC+10)</option>
-                            <option value="1">英國倫敦 (UTC+1)</option>
-                            <option value="2">歐陸時間 (UTC+2)</option>
-                        </select>
-                        <div class="w-time" id="clock-custom-3">00:00</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <label style="font-size:12px; color:#64748b; font-weight:600;">選擇對照國家/時區</label>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <select id="tz-select-1" onchange="saveTimezonePref()" class="input-base" style="flex:1;">
+                                <option value="-11">美屬薩摩亞 (UTC-11)</option>
+                                <option value="-10">夏威夷 (UTC-10)</option>
+                                <option value="-9">阿拉斯加 (UTC-9)</option>
+                                <option value="-8">美國美西/溫哥華 (UTC-8)</option>
+                                <option value="-7">美國山區/丹佛 (UTC-7)</option>
+                                <option value="-6">美國中部/芝加哥 (UTC-6)</option>
+                                <option value="-5">美國美東/紐約 (UTC-5)</option>
+                                <option value="-4">加拿大/大西洋 (UTC-4)</option>
+                                <option value="-3">阿根廷/巴西 (UTC-3)</option>
+                                <option value="-1">亞速群島 (UTC-1)</option>
+                                <option value="0">英國倫敦/格林威治 (UTC+0)</option>
+                                <option value="1">歐陸時間/巴黎 (UTC+1)</option>
+                                <option value="2">東歐/開羅 (UTC+2)</option>
+                                <option value="3">莫斯科/杜拜 (UTC+3)</option>
+                                <option value="4">阿布達比/巴庫 (UTC+4)</option>
+                                <option value="5">巴基斯坦/馬爾地夫 (UTC+5)</option>
+                                <option value="5.5">印度/斯里蘭卡 (UTC+5:30)</option>
+                                <option value="6">孟加拉 (UTC+6)</option>
+                                <option value="7">泰國/越南/印尼 (UTC+7)</option>
+                                <option value="8">港澳/北京/新加坡 (UTC+8)</option>
+                                <option value="9" selected>日本/韓國 (UTC+9)</option>
+                                <option value="9.5">澳洲中部 (UTC+9:30)</option>
+                                <option value="10">澳洲雪梨/關島 (UTC+10)</option>
+                                <option value="11">索羅門群島 (UTC+11)</option>
+                                <option value="12">紐西蘭/斐濟 (UTC+12)</option>
+                            </select>
+                            <div class="w-time" id="clock-custom-1" style="font-size:20px; font-weight:bold; color:var(--text-main); font-family:monospace; min-width:65px; text-align:center;">00:00</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <!-- 自動清理開關 -->
             <div class="settings-card">
-                <h3>ℹ️ 系統資訊</h3>
-                <div id="view-counter-text" style="font-size:13px; font-weight:bold; color:var(--text-main);">雲端總瀏覽次數：0 次</div>
+                <div class="settings-card-header danger">
+                    <span class="settings-card-icon">🗑️</span>
+                    <div>
+                        <div class="settings-card-title">巨菇自動清理</div>
+                        <div class="settings-card-subtitle">全域生效，所有裝置同步</div>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="settings-toggle-row">
+                        <div>
+                            <div class="settings-toggle-label">啟用自動刪除</div>
+                            <div class="settings-toggle-desc">已認領過期 2 小時 / 野菇隔日凌晨 1 點</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="auto-delete-toggle" onchange="saveAutoDeletePref()">
+                            <span class="toggle-knob" id="auto-delete-slider"></span>
+                        </label>
+                    </div>
+                    <div id="auto-delete-status" style="margin-top:10px; font-size:11px; font-weight:bold; color:#dc2626; background:#fff1f2; border:1px solid #fecdd3; padding:6px 10px; border-radius:8px;">⛔ 目前已關閉自動清理</div>
+                </div>
             </div>
 
+            <!-- 地圖 API 用量 -->
             <div class="settings-card">
-                <h3>🤖 免洗號工具</h3>
-                <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">自動產生臨時任天堂信筱並接收驗證碼，全程免費。</p>
-                <button class="btn-sm btn-primary btn-block" onclick="switchTab('cloud')" style="padding:10px; font-size:14px; border-radius:8px;">🔗 前往免洗號工具</button>
+                <div class="settings-card-header">
+                    <span class="settings-card-icon">🗺️</span>
+                    <div>
+                        <div class="settings-card-title">地圖 API 用量</div>
+                        <div class="settings-card-subtitle">每月免費配額 28,000 次</div>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="settings-stat">
+                        <span style="font-size:13px; color:#64748b;">本月已載入</span>
+                        <span><span class="settings-stat-val" id="map-usage-count">--</span> <span style="font-size:11px; color:#94a3b8;">/ 28,000</span></span>
+                    </div>
+                    <div class="settings-progress-wrap">
+                        <div class="settings-progress-bar">
+                            <div class="settings-progress-fill" id="map-usage-bar" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <div style="font-size:11px; color:#64748b;">超過額度將自動暫停載入，防止產生額外費用</div>
+                </div>
             </div>
+
+            <!-- 圖片辨識 -->
+            <div class="settings-card">
+                <div class="settings-card-header purple">
+                    <span class="settings-card-icon">🔍</span>
+                    <div>
+                        <div class="settings-card-title">圖片辨識 API</div>
+                        <div class="settings-card-subtitle">Google Cloud Vision 自動讀取明信片文字</div>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <div class="input-group" style="margin-bottom:0;">
+                        <label>Google Cloud Vision API 金鑰</label>
+                        <input type="text" id="vision-api-key" class="input-base" placeholder="AIzaSy..." onchange="saveVisionApiKey()">
+                        <p style="font-size:11px; color:#6b7280; margin-top:4px; margin-bottom:0;">金鑰僅儲存於您的瀏覽器中，不會上傳。</p>
+                        <div id="vision-usage-display" style="margin-top:8px; font-size:12px; color:var(--text-muted); font-weight:bold;">讀取中...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 免洗號工具 -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <span class="settings-card-icon">🤖</span>
+                    <div>
+                        <div class="settings-card-title">免洗號工具</div>
+                        <div class="settings-card-subtitle">自動產生臨時任天堂信筱並接收驗證碼</div>
+                    </div>
+                </div>
+                <div class="settings-card-body">
+                    <button class="btn-sm btn-primary btn-block" onclick="switchTab('cloud')" style="padding:10px; font-size:14px; border-radius:10px; width:100%;">🔗 前往免洗號工具</button>
+                </div>
+            </div>
+
+            </div> <!-- end settings-grid -->
         </section>
 
         <section id="view-cloud" class="view-section cloud-app">
@@ -1128,6 +1359,12 @@
         <div id="google-map" style="width: 100%; height: 100%;"></div>
     </section>
 
+    <!-- 地圖照片放大燈笱 -->
+    <div id="map-lightbox" onclick="closeMapLightbox()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9999; align-items:center; justify-content:center; cursor:pointer;">
+        <img id="map-lightbox-img" src="" style="max-width:92vw; max-height:88vh; border-radius:10px; box-shadow:0 8px 32px rgba(0,0,0,0.6); object-fit:contain;">
+        <div style="position:absolute; top:16px; right:20px; color:white; font-size:26px; font-weight:bold; cursor:pointer;">&times;</div>
+    </div>
+
     <nav class="bottom-nav">
         <button class="nav-item active" id="nav-mushroom" onclick="switchTab('mushroom')">
             <span class="nav-icon">🍄</span>
@@ -1184,7 +1421,12 @@
                 </div>
                 <div class="input-group">
                     <label>座標 (貼上經緯度將自動抓取國家)</label>
-                    <input type="text" id="coords" class="input-base" placeholder="貼上或輸入座標" onblur="autoDetectCountry(this.value, 'country', 'tz-hint')">
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <input type="text" id="coords" class="input-base" placeholder="貼上或輸入座標" style="flex:1;"
+                            onblur="autoDetectCountry(this.value, 'country', 'tz-hint')"
+                            oninput="clearTimeout(window._mushroomGeoTimer); window._mushroomGeoTimer = setTimeout(() => autoDetectCountry(this.value, 'country', 'tz-hint'), 1200)">
+                        <button type="button" class="btn-sm btn-default" onclick="navigator.clipboard.readText().then(t => { document.getElementById('coords').value = t.trim(); autoDetectCountry(t.trim(), 'country', 'tz-hint'); }).catch(() => alert('無法讀取剪貼簿，請手動貼上'))" style="white-space:nowrap; padding:6px 10px; border-radius:8px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; font-size:13px;">📋 貼上</button>
+                    </div>
                 </div>
                 <div class="input-group">
                     <label>國家 <span id="tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
@@ -1212,8 +1454,14 @@
                     </select>
                 </div>
                 <div class="input-group">
-                    <label>座標 (貼上經緯度將自動抓取國家)</label>
-                    <input type="text" id="post-coords" class="input-base" placeholder="貼上點座標" onblur="autoDetectCountry(this.value, 'post-country', 'post-tz-hint', 'post-city')">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                        <label style="margin:0;">座標 (貼上經緯度將自動抓取國家)</label>
+                        <button type="button" onclick="searchCoordsByName('post-name', 'post-city', 'post-country', 'post-coords', 'post-tag')" style="display:none; font-size:11px; padding:2px 8px; border-radius:12px; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; cursor:pointer; line-height:1.2;">🔍 搜尋定位</button>
+                    </div>
+                    <input type="text" id="post-coords" class="input-base" placeholder="貼上點座標"
+                        onblur="autoDetectCountry(this.value, 'post-country', 'post-tz-hint', 'post-city')"
+                        oninput="clearTimeout(window._geoTimer); window._geoTimer = setTimeout(() => autoDetectCountry(this.value, 'post-country', 'post-tz-hint', 'post-city'), 1200)">
+                    <div id="post-coords-candidates" style="margin-top:5px; display:none; flex-direction:column; gap:4px;"></div>
                 </div>
                 <div class="input-group">
                     <label>國家 <span id="post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
@@ -1222,6 +1470,7 @@
                 <div class="input-group">
                     <label>城市</label>
                     <input type="text" id="post-city" class="input-base" placeholder="例如：東京">
+                    <div id="post-city-candidates" style="display:none; margin-top:5px; display:flex; flex-wrap:wrap; gap:5px;"></div>
                 </div>
                 <div class="input-group">
                     <label>名稱</label>
@@ -1234,21 +1483,25 @@
                 <div class="input-group">
                     <label>圖片網址</label>
                     <div style="display:flex; gap:8px;">
-                        <input type="text" id="post-image" class="input-base" placeholder="請貼上圖片網址，或留空" style="flex:1;">
+                        <input type="text" id="post-image" class="input-base" placeholder="請貼上圖片網址，或留空" style="flex:1;" oninput="checkDatabaseForImage(this.value, 'post')">
                         <input type="file" id="post-ocr-file" accept="image/*" style="display:none;" onchange="handleVisionOcrUpload(event, 'post-ocr-result')">
-                        <button class="btn-sm btn-default" onclick="triggerOCR('post-image', 'post-ocr-file', 'post-ocr-result')" style="white-space:nowrap; border-radius:8px; background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; padding:6px 10px; line-height:1.3;">
+                        <button type="button" class="btn-sm btn-default" onclick="triggerOCR('post-image', 'post-ocr-file', 'post-ocr-result')" style="white-space:nowrap; border-radius:8px; background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; padding:6px 10px; line-height:1.3;">
                             <div style="font-weight:bold;">🔍 文字辨識</div>
                             <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#475569;">辨識左側網址</div>
                         </button>
                     </div>
                     <div style="display:flex; gap:6px; margin-top:6px;">
-                        <button class="btn-sm btn-default" onclick="document.getElementById('post-ocr-file').click()" style="flex:1; border-radius:8px; background:#f5f3ff; color:#5b21b6; border:1px dashed #8b5cf6; padding:6px; line-height:1.3;">
+                        <button type="button" class="btn-sm btn-default" onclick="document.getElementById('post-ocr-file').click()" style="flex:1; border-radius:8px; background:#f5f3ff; color:#5b21b6; border:1px dashed #8b5cf6; padding:6px; line-height:1.3;">
                             <div style="font-weight:bold;">📁 上傳截圖</div>
                             <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#64748b;">從裝置相簿檔案</div>
                         </button>
-                        <button class="btn-sm btn-default" onclick="pasteFromClipboard('post-ocr-result')" style="flex:1; border-radius:8px; background:#f0fdf4; color:#166534; border:1px dashed #22c55e; padding:6px; line-height:1.3;">
+                        <button type="button" class="btn-sm btn-default" onclick="pasteFromClipboard('post-ocr-result')" style="flex:1; border-radius:8px; background:#f0fdf4; color:#166534; border:1px dashed #22c55e; padding:6px; line-height:1.3;">
                             <div style="font-weight:bold;">📋 貼上圖片</div>
                             <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#475569;">讀取剪貼簿圖片</div>
+                        </button>
+                        <button type="button" class="btn-sm btn-default" onclick="searchImageOnGoogle('post-image')" style="flex:1; border-radius:8px; background:#fff7ed; color:#c2410c; border:1px dashed #f97316; padding:6px; line-height:1.3;">
+                            <div style="font-weight:bold;">🤖 AI 座標搜尋</div>
+                            <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#b45309;">Google AI 模式查座標</div>
                         </button>
                     </div>
                     <div id="post-ocr-result" style="display:none; margin-top:5px; font-size:12px; background:#fef3c7; padding:8px; border-radius:4px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:150px; overflow-y:auto; color:#92400e;"></div>
@@ -1339,11 +1592,16 @@
                 </div>
                 <div class="input-group">
                     <label>座標</label>
-                    <input type="text" id="edit-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-mushroom-country', 'edit-tz-hint')">
+                    <input type="text" id="edit-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-mushroom-country', 'edit-tz-hint', 'edit-mushroom-city')">
                 </div>
                 <div class="input-group">
                     <label>國家 <span id="edit-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
                     <input type="text" id="edit-mushroom-country" class="input-base" oninput="showTimeDiff(this.value, 'edit-tz-hint')">
+                </div>
+                <div class="input-group">
+                    <label>城市</label>
+                    <input type="text" id="edit-mushroom-city" class="input-base" placeholder="例如：東京">
+                    <div id="edit-mushroom-city-candidates" style="display:none; margin-top:5px; flex-wrap:wrap; gap:5px;"></div>
                 </div>
                 <div class="input-group">
                     <label>名稱</label>
@@ -1371,8 +1629,14 @@
                     </select>
                 </div>
                 <div class="input-group">
-                    <label>座標</label>
-                    <input type="text" id="edit-post-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city')">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                        <label style="margin:0;">座標</label>
+                        <button type="button" onclick="searchCoordsByName('edit-post-name', 'edit-post-city', 'edit-post-country', 'edit-post-coords', 'edit-post-tag')" style="display:none; font-size:11px; padding:2px 8px; border-radius:12px; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; cursor:pointer; line-height:1.2;">🔍 搜尋定位</button>
+                    </div>
+                    <input type="text" id="edit-post-coords" class="input-base"
+                        onblur="autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city')"
+                        oninput="clearTimeout(window._editGeoTimer); window._editGeoTimer = setTimeout(() => autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city'), 1200)">
+                    <div id="edit-post-coords-candidates" style="margin-top:5px; display:none; flex-direction:column; gap:4px;"></div>
                 </div>
                 <div class="input-group">
                     <label>國家 <span id="edit-post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
@@ -1381,6 +1645,7 @@
                 <div class="input-group">
                     <label>城市</label>
                     <input type="text" id="edit-post-city" class="input-base" placeholder="例如：東京">
+                    <div id="edit-post-city-candidates" style="margin-top:5px; display:none; flex-wrap:wrap; gap:5px;"></div>
                 </div>
                 <div class="input-group">
                     <label>名稱</label>
@@ -1393,21 +1658,25 @@
                 <div class="input-group">
                     <label>圖片網址</label>
                     <div style="display:flex; gap:6px; align-items:center;">
-                        <input type="text" id="edit-post-image" class="input-base" style="flex:1;" placeholder="貼上圖片網址，或留空">
+                        <input type="text" id="edit-post-image" class="input-base" style="flex:1;" placeholder="貼上圖片網址，或留空" oninput="checkDatabaseForImage(this.value, 'edit-post')">
                         <input type="file" id="edit-post-ocr-file" accept="image/*" style="display:none;" onchange="handleVisionOcrUpload(event, 'edit-post-ocr-result')">
-                        <button class="btn-sm btn-default" onclick="triggerOCR('edit-post-image', 'edit-post-ocr-file', 'edit-post-ocr-result')" style="white-space:nowrap; border-radius:8px; background:#e0e7ff; color:#3730a3; border:1px solid #6366f1; padding:6px 10px; line-height:1.3;">
+                        <button type="button" class="btn-sm btn-default" onclick="triggerOCR('edit-post-image', 'edit-post-ocr-file', 'edit-post-ocr-result')" style="white-space:nowrap; border-radius:8px; background:#e0e7ff; color:#3730a3; border:1px solid #6366f1; padding:6px 10px; line-height:1.3;">
                             <div style="font-weight:bold;">🔍 文字辨識</div>
                             <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#475569;">辨識左側網址</div>
                         </button>
                     </div>
                     <div style="display:flex; gap:6px; margin-top:6px;">
-                        <button class="btn-sm btn-default" onclick="document.getElementById('edit-post-ocr-file').click()" style="flex:1; border-radius:8px; background:#f5f3ff; color:#5b21b6; border:1px solid #8b5cf6; padding:6px; line-height:1.3;">
+                        <button type="button" class="btn-sm btn-default" onclick="document.getElementById('edit-post-ocr-file').click()" style="flex:1; border-radius:8px; background:#f5f3ff; color:#5b21b6; border:1px solid #8b5cf6; padding:6px; line-height:1.3;">
                             <div style="font-weight:bold;">📁 上傳截圖</div>
                             <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#64748b;">從裝置相簿檔案</div>
                         </button>
-                        <button class="btn-sm btn-default" onclick="pasteFromClipboard('edit-post-ocr-result')" style="flex:1; border-radius:8px; background:#f0fdf4; color:#166534; border:1px solid #22c55e; padding:6px; line-height:1.3;">
+                        <button type="button" class="btn-sm btn-default" onclick="pasteFromClipboard('edit-post-ocr-result')" style="flex:1; border-radius:8px; background:#f0fdf4; color:#166534; border:1px solid #22c55e; padding:6px; line-height:1.3;">
                             <div style="font-weight:bold;">📋 貼上圖片</div>
                             <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#475569;">讀取剪貼簿圖片</div>
+                        </button>
+                        <button type="button" class="btn-sm btn-default" onclick="searchImageOnGoogle('edit-post-image')" style="flex:1; border-radius:8px; background:#fff7ed; color:#c2410c; border:1px solid #f97316; padding:6px; line-height:1.3;">
+                            <div style="font-weight:bold;">🤖 AI 座標搜尋</div>
+                            <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#b45309;">Google AI 模式查座標</div>
                         </button>
                     </div>
                     <div id="edit-post-ocr-result" style="display:none; margin-top:5px; font-size:12px; background:#fef3c7; padding:8px; border-radius:6px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:120px; overflow-y:auto; color:#92400e;"></div>
@@ -1423,6 +1692,13 @@
                 </div>
             </div>
 
+            <!-- 絕版標記按鈕 -->
+            <button type="button" id="edit-post-discontinued-btn"
+                onclick="window._editDiscontinued = !window._editDiscontinued; this.style.background = window._editDiscontinued ? '#fef2f2' : ''; this.style.color = window._editDiscontinued ? '#dc2626' : ''; this.style.borderColor = window._editDiscontinued ? '#f87171' : ''; this.textContent = window._editDiscontinued ? '📦 已標記為絕版 （點擊取消）' : '📦 標記為絕版';"
+                style="width:100%; margin-top:10px; padding:9px; border-radius:10px; border:1px dashed #d1d5db; background:var(--card-bg); color:var(--text-muted); font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s;">
+                📦 標記為絕版
+            </button>
+
             <button class="btn-sm btn-edit btn-block" style="margin-top:12px; padding:11px; font-size:14px; font-weight:bold; border-radius:10px;" id="time-modal-submit-btn">💾 儲存修改</button>
         </div>
     </div>
@@ -1433,20 +1709,29 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.12.0040";
+    const APP_VERSION = "2026.07.23.1643";
     function checkForUpdate() {
-        fetch(window.location.pathname + '?nocache=' + new Date().getTime(), { cache: 'no-store' })
+        // 從 raw.github 抓取以繞過 GitHub Pages CDN 快取
+        const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + new Date().getTime();
+        fetch(rawUrl, { cache: 'no-store' })
             .then(res => res.text())
             .then(html => {
                 const match = html.match(/const APP_VERSION = ['"]([^'"]+)['"]/);
                 if (match && match[1] !== APP_VERSION) {
-                    console.log('發現新版本，正在重新載入...', match[1]);
+                    console.log('發現新版本，準備重新載入...', match[1]);
+                    // 如果用戶正在編輯，則不強制更新（避免資料遺失）
+                    const editModal = document.getElementById('edit-modal');
+                    if (editModal && editModal.style.display === 'flex') {
+                        console.log('用戶正在編輯，稍後更新');
+                        return;
+                    }
                     window.location.replace(window.location.pathname + '?v=' + match[1]);
                 }
             })
             .catch(err => console.log('檢查更新失敗:', err));
     }
 
+    // 每次網頁切換回前景時檢查
     window.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') checkForUpdate();
     });
@@ -1465,6 +1750,9 @@
     function getUserColorTheme(username, skipCustom = false) {
         if (!username) return { bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe', fw: '900', fs: '14px', ff: 'inherit' }; // Default blue for empty
         
+        // 「官」特殊頭像：必須在 custom profile 檢查之前，防止被意外覆寫
+        if (username === '官') return { bg: 'transparent', color: 'transparent', border: '#d4af37', fw: 'normal', fs: '0px', ff: 'inherit', bgImg: 'url(' + avatarGuan + ')', bgSize: 'cover', bgPos: 'center' };
+
         if (!skipCustom) {
             const safeKey = username.replace(/[.#$\[\]]/g, '_');
             if (userProfiles && userProfiles[safeKey] && userProfiles[safeKey].avatar) {
@@ -1479,8 +1767,6 @@
                 }
             }
         }
-
-        if (username === '官') return { bg: 'transparent', color: 'transparent', border: '#d4af37', fw: 'normal', fs: '0px', ff: 'inherit', bgImg: 'url(' + avatarGuan + ')', bgSize: 'cover', bgPos: 'center' };
         
         const lowerName = username.toLowerCase();
         if (lowerName === 'y') {
@@ -1505,6 +1791,64 @@
             fw: '900', fs: '14px', ff: 'inherit'
         };
     }
+
+    function renderPlayerRoster() {
+        const container = document.getElementById('player-roster');
+        if (!container) return;
+
+        // 收集所有有頭像設定的玩家：Firebase userProfiles
+        const profileUsers = userProfiles ? Object.keys(userProfiles).filter(k => userProfiles[k] && userProfiles[k].avatar) : [];
+        // 特殊硬編碼用戶
+        const specialUsers = ['官', 'y', 'f'];
+        // 從 dataList 收集所有曾出現的用戶名稱
+        const mushUsers = [...new Set((dataList || []).map(i => i.user).filter(u => u && u.trim()))];
+
+        // 合併並去重（以小寫比對）
+        const seen = new Set();
+        const allUsers = [];
+        const add = (name) => {
+            const key = name.trim().toLowerCase();
+            if (!seen.has(key) && name.trim()) { seen.add(key); allUsers.push(name.trim()); }
+        };
+        specialUsers.forEach(add);
+        profileUsers.forEach(k => add(k.replace(/_/g, '.')));
+        mushUsers.forEach(add);
+
+        if (allUsers.length === 0) {
+            container.innerHTML = '<span style="font-size:12px; color:var(--text-muted);">尚無玩家設定頭像</span>';
+            return;
+        }
+
+        container.innerHTML = allUsers.map(name => {
+            const theme = getUserColorTheme(name);
+            const avatarStyle = theme.bgImg
+                ? `background-image:${theme.bgImg}; background-size:${theme.bgSize||'cover'}; background-position:${theme.bgPos||'center'}; background-color:transparent;`
+                : `background:${theme.bg}; color:${theme.color};`;
+            const initials = theme.bgImg ? '' : (name.slice(0, 2));
+            const border = theme.border && theme.border !== 'transparent' ? `border:2px solid ${theme.border};` : 'border:2px solid #e5e7eb;';
+            
+            const safeKey = name.replace(/[.#$\[\]]/g, '_');
+            const hasFirebaseProfile = profileUsers.includes(safeKey);
+            const canDelete = window._rosterDeleteMode && hasFirebaseProfile && !specialUsers.includes(name);
+            const isDeleteMode = window._rosterDeleteMode;
+
+            const deleteOverlay = canDelete ? `<div onclick="deleteUserProfile('${safeKey}', '${name}')" style="position:absolute; top:-4px; right:-4px; width:16px; height:16px; background:#ef4444; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.3); z-index:10;" title="刪除雲端頭像">✕</div>` : '';
+            const shakeClass = isDeleteMode ? 'shake-avatar' : '';
+            const opacityStyle = (isDeleteMode && !canDelete) ? 'opacity:0.5;' : '';
+
+            return `<div style="display:flex; flex-direction:column; align-items:center; gap:3px; cursor:default; position:relative; ${opacityStyle}" title="${name}" class="${shakeClass}">
+                ${deleteOverlay}
+                <div style="width:40px; height:40px; border-radius:50%; ${avatarStyle} ${border} display:flex; align-items:center; justify-content:center; font-size:${theme.fs||'13px'}; font-weight:${theme.fw||'700'}; font-family:${theme.ff||'inherit'}; flex-shrink:0; box-shadow:0 1px 3px rgba(0,0,0,0.1);">${initials}</div>
+                <div style="font-size:10px; font-weight:600; color:var(--text-muted); max-width:44px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center;">${name}</div>
+            </div>`;
+        }).join('');
+    }
+
+    window.deleteUserProfile = function(safeKey, name) {
+        if (confirm(`確定要刪除「${name}」的自訂頭像資料嗎？\n這將會清除雲端上與此名稱綁定的頭像。`)) {
+            database.ref('user_profiles/' + safeKey).remove();
+        }
+    };
 
     function handleProfileAvatarUpload(e) {
         const file = e.target.files[0];
@@ -1633,7 +1977,9 @@
 
     let currentSyncId = '';
     let cloudFavorites = [];
+    let cloudPcFav = []; // 我的最愛（獨立於已收藏）
     let favoritesListenerRef = null;
+    let favPcListenerRef = null;
     
     let collapsedGroups = new Set();
     let knownPostcardGroups = new Set(); 
@@ -1675,6 +2021,24 @@
         } else {
             document.body.style.overflow = ''; // 恢復滾動
         }
+    }
+
+    function goToMapCoords(coords) {
+        const match = coords.match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
+        if (!match) { alert('座標格式無法識別'); return; }
+        const lat = parseFloat(match[1]);
+        const lng = parseFloat(match[2]);
+        switchTab('map');
+        // 等地圖載入完成再移動視觓
+        const waitAndGo = () => {
+            if (mapInstance) {
+                mapInstance.setCenter({ lat, lng });
+                mapInstance.setZoom(15);
+            } else {
+                setTimeout(waitAndGo, 300);
+            }
+        };
+        setTimeout(waitAndGo, 200);
     }
 
     function openAddModal() {
@@ -1786,10 +2150,9 @@
                 }
 
                 if(data && data.countryName) {
-                        countryName = data.countryName;
-                        if (window.OpenCC) {
-                            const converter = OpenCC.Converter({ from: 'cn', to: 'tw' });
-                            countryName = converter(countryName);
+                        countryName = toTW(data.countryName);
+                        if (typeof countryName === 'string' && countryName.includes("/")) {
+                            countryName = countryName.split('/')[0].trim();
                         }
                         if (countryName.includes("中華民國")) {
                             countryName = "台灣";
@@ -1810,9 +2173,9 @@
                                 const localAdmin = admins.find(a => a.adminLevel > 3 && a.adminLevel < 10);
                                 if (localAdmin) combined = localAdmin.name;
                             }
-                            if (window.OpenCC) {
-                                const converter = OpenCC.Converter({ from: 'cn', to: 'tw' });
-                                combined = converter(combined);
+                            combined = toTW(combined);
+                            if (typeof combined === 'string' && combined.includes("/")) {
+                                combined = combined.split('/')[0].trim();
                             }
                             if (cityInputId === 'append') {
                                 if (combined && countryInput) {
@@ -1822,6 +2185,42 @@
                                 const cityInput = document.getElementById(cityInputId);
                                 if(cityInput) {
                                     cityInput.value = combined;
+                                }
+
+                                // 收集所有候選地名，讓用戶自行選擇
+                                const candidatesEl = document.getElementById(cityInputId + '-candidates');
+                                if (candidatesEl) {
+                                    const seen = new Set();
+                                    const candidates = [];
+                                    const addCandidate = (name) => {
+                                        if (!name) return;
+                                        let n = toTW(name.trim());
+                                        if (typeof n === 'string' && n.includes("/")) n = n.split('/')[0].trim();
+                                        if (n && !seen.has(n) && n !== countryName) {
+                                            seen.add(n);
+                                            candidates.push(n);
+                                        }
+                                    };
+
+                                    // 依優先級收集各層地名
+                                    addCandidate(data.city);
+                                    addCandidate(data.locality);
+                                    addCandidate(data.principalSubdivision);
+                                    if (data.localityInfo && data.localityInfo.administrative) {
+                                        const admins = [...data.localityInfo.administrative].sort((a, b) => b.adminLevel - a.adminLevel);
+                                        admins.forEach(a => { if (a.adminLevel > 1) addCandidate(a.name); });
+                                    }
+
+                                    if (candidates.length > 0) {
+                                        candidatesEl.innerHTML = '<span style="font-size:11px;color:var(--text-muted);margin-right:2px;">選擇：</span>' +
+                                            candidates.map(c =>
+                                                `<button type="button" onclick="document.getElementById('${cityInputId}').value='${c.replace(/'/g, "\\'")}'; this.parentElement.querySelectorAll('button').forEach(b=>b.style.background=''); this.style.background='#d1fae5';" style="font-size:12px;padding:2px 8px;border-radius:20px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-main);cursor:pointer;transition:background 0.15s;">${c}</button>`
+                                            ).join('');
+                                        candidatesEl.style.display = 'flex';
+                                    } else {
+                                        candidatesEl.style.display = 'none';
+                                        candidatesEl.innerHTML = '';
+                                    }
                                 }
                             }
                         }
@@ -1911,6 +2310,7 @@
         localStorage.setItem('pikmin_sync_id', inputId);
         currentSyncId = inputId;
         if (favoritesListenerRef) { favoritesListenerRef.off(); favoritesListenerRef = null; }
+        if (favPcListenerRef) { favPcListenerRef.off(); favPcListenerRef = null; }
         if (inputId) {
             statusEl.innerText = '已連線🟢'; statusEl.classList.add('active');
             if(indicator) indicator.innerText = '🟢 已連線';
@@ -1920,10 +2320,16 @@
                 cloudFavorites = Array.isArray(data) ? data : (data ? Object.values(data) : []); 
                 updateView(); 
             });
+            favPcListenerRef = database.ref('user_pc_fav/' + inputId);
+            favPcListenerRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                cloudPcFav = Array.isArray(data) ? data : (data ? Object.values(data) : []);
+                updateView();
+            });
         } else {
             statusEl.innerText = '未啟用'; statusEl.classList.remove('active');
             if(indicator) indicator.innerText = '⚪ 未連線';
-            cloudFavorites = []; updateView();
+            cloudFavorites = []; cloudPcFav = []; updateView();
         }
     }
 
@@ -1935,20 +2341,40 @@
         database.ref('user_favorites/' + currentSyncId).set(updatedFavorites);
     }
 
+    function togglePcFav(id) {
+        if (!currentSyncId) { alert('請先切換到「設定」頁面輸入您的「同步代號」，才能啟用我的最愛功能喔！'); switchTab('settings'); document.getElementById('sync-user-id').focus(); return; }
+        let updated = [...cloudPcFav];
+        if (updated.includes(id)) updated = updated.filter(x => x !== id);
+        else updated.push(id);
+        database.ref('user_pc_fav/' + currentSyncId).set(updated);
+    }
+
     database.ref('user_profiles').on('value', (snapshot) => {
         userProfiles = snapshot.val() || {};
+        renderPlayerRoster();
         if (typeof updateView === 'function') updateView();
     });
 
-    database.ref('mushrooms').on('value', (snapshot) => {
+    // 一次性從舊版 mushrooms 轉移到 mushrooms_v2（用來擺脫舊版客戶端的自動刪除機制）
+    database.ref('mushrooms_v2').once('value', snap => {
+        if (!snap.exists()) {
+            database.ref('mushrooms').once('value', oldSnap => {
+                if (oldSnap.exists()) {
+                    database.ref('mushrooms_v2').set(oldSnap.val());
+                }
+            });
+        }
+    });
+
+    database.ref('mushrooms_v2').on('value', (snapshot) => {
         const cloudData = snapshot.val();
         dataList = [];
         const now = Date.now();
         if (cloudData) {
             Object.keys(cloudData).forEach((key) => {
                 const item = cloudData[key];
-                if (item.targetTime != null && (now - item.targetTime >= 7200000)) {
-                    database.ref('mushrooms/' + key).remove();
+                if (isAutoDeleteOn && item.targetTime != null && (now - item.targetTime >= 7200000)) {
+                    database.ref('mushrooms_v2/' + key).remove();
                 } else {
                     dataList.push({
                         id: key, sn: item.sn, user: item.user || "",
@@ -1973,7 +2399,8 @@
                     country: toTW(cloudData[key].country || ""), city: cloudData[key].city || "",
                     coords: cloudData[key].coords || "",
                     tag: cloudData[key].tag || "", image: cloudData[key].image || "無圖片",
-                    targetTime: cloudData[key].targetTime, provider: cloudData[key].provider || ""
+                    targetTime: cloudData[key].targetTime, provider: cloudData[key].provider || "",
+                    discontinued: cloudData[key].discontinued === true
                 });
             });
         }
@@ -1985,8 +2412,30 @@
 
     const nowMonth = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0');
     database.ref('settings/mapUsage/' + nowMonth + '/count').on('value', snap => {
+        const count = snap.val() || 0;
         const el = document.getElementById('map-usage-count');
-        if (el) el.innerText = snap.val() || 0;
+        const bar = document.getElementById('map-usage-bar');
+        if (el) el.innerText = count;
+        if (bar) {
+            const pct = Math.min(100, Math.round(count / 28000 * 100));
+            bar.style.width = pct + '%';
+            bar.style.background = pct >= 90 ? 'linear-gradient(90deg,#f97316,#ef4444)' : 'linear-gradient(90deg,#0ea5e9,#6366f1)';
+        }
+    });
+
+    // 全域自動刪除開關（從 Firebase 同步）
+    let isAutoDeleteOn = false;
+    database.ref('settings/autoDelete').on('value', snap => {
+        isAutoDeleteOn = snap.val() === true;
+        const cb = document.getElementById('auto-delete-toggle');
+        const slider = document.getElementById('auto-delete-slider');
+        const status = document.getElementById('auto-delete-status');
+        if (cb) cb.checked = isAutoDeleteOn;
+        if (slider) slider.style.background = isAutoDeleteOn ? '#22c55e' : '#ccc';
+        if (status) {
+            status.textContent = isAutoDeleteOn ? '✅ 自動清理已啟用（全域生效）' : '⛔ 目前已關閉自動清理';
+            status.style.color = isAutoDeleteOn ? '#15803d' : '#dc2626';
+        }
     });
 
     // 純點監聽器
@@ -2199,6 +2648,17 @@
         localStorage.setItem('pikmin_vision_api_key', key);
     }
 
+    function saveAutoDeletePref() {
+        const cb = document.getElementById('auto-delete-toggle');
+        if (!cb) return;
+        // 寫入 Firebase，全域生效
+        database.ref('settings/autoDelete').set(cb.checked);
+    }
+
+    function loadAutoDeletePref() {
+        // UI 狀態已由 Firebase 監聽器自動更新，此處不需要做任何事
+    }
+
     function getCurrentMonth() {
         const now = new Date();
         return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -2263,6 +2723,37 @@
         // 由 listenVisionUsage 即時監聽更新，此函式保留為空以兼容舊呼叫
     }
 
+    function extractCoordsFromUrl(url) {
+        if (!url) return null;
+        
+        // Pattern 1: @lat,lon (e.g. Google Maps style @22.252961,114.166483)
+        let m = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+        if (m) return `${parseFloat(m[1]).toFixed(6)},${parseFloat(m[2]).toFixed(6)}`;
+        
+        // Pattern 2: ll=lat,lon or pll=lat,lon
+        m = url.match(/[p]?ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
+        if (m) return `${parseFloat(m[1]).toFixed(6)},${parseFloat(m[2]).toFixed(6)}`;
+        
+        // Pattern 3: lat=...&lng=... or lat=...&lon=...
+        const latM = url.match(/lat(?:itude)?=(-?\d+\.\d+)/i);
+        const lonM = url.match(/l(?:on|ng)(?:gitude)?=(-?\d+\.\d+)/i);
+        if (latM && lonM) {
+            return `${parseFloat(latM[1]).toFixed(6)},${parseFloat(lonM[1]).toFixed(6)}`;
+        }
+        
+        // Pattern 4: any pair of coords in URL path like /22.252961/114.166483 or /22.252961,114.166483
+        m = url.match(/\/(-?\d{1,3}\.\d+)[,\/](-?\d{1,3}\.\d+)/);
+        if (m) {
+            const lat = parseFloat(m[1]);
+            const lon = parseFloat(m[2]);
+            if (Math.abs(lat) <= 90 && Math.abs(lon) <= 180) {
+                return `${lat.toFixed(6)},${lon.toFixed(6)}`;
+            }
+        }
+        
+        return null;
+    }
+
     async function processVisionOcr(resultDivId, imagePayload) {
         const apiKey = localStorage.getItem('pikmin_vision_api_key');
         const resDiv = document.getElementById(resultDivId);
@@ -2293,7 +2784,10 @@
                     requests: [
                         {
                             image: imagePayload,
-                            features: [{ type: "TEXT_DETECTION" }]
+                            features: [
+                                { type: "TEXT_DETECTION" },
+                                { type: "WEB_DETECTION" }
+                            ]
                         }
                     ]
                 })
@@ -2364,11 +2858,11 @@
                 
                 if (isPostcard) {
                     let autoFilled = [];
+                    const nameField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-name' : 'edit-post-name');
+                    const coordsField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-coords' : 'edit-post-coords');
+                    const tagField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-tag' : 'edit-post-tag');
+                    
                     if (lines.length > 0) {
-                        const nameField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-name' : 'edit-post-name');
-                        const coordsField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-coords' : 'edit-post-coords');
-                        const tagField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-tag' : 'edit-post-tag');
-                        
                         if (nameField && (!nameField.value || nameField.value.trim() === '')) {
                             nameField.value = lines[0];
                             autoFilled.push('名稱');
@@ -2380,7 +2874,7 @@
                             if (coordRegex.test(secondLine)) {
                                 if (coordsField && (!coordsField.value || coordsField.value.trim() === '')) {
                                     coordsField.value = secondLine.match(coordRegex)[0];
-                                    autoFilled.push('座標');
+                                    autoFilled.push('OCR座標');
                                     coordsField.dispatchEvent(new Event('blur')); // 觸發自動抓國家
                                 }
                             } else {
@@ -2391,8 +2885,66 @@
                             }
                         }
                     }
+
+                    // 2. 利用 Google Vision Web Detection 比對網路資料庫中的明信片與 Ingress 資訊
+                    const webAnn = data.responses[0].webDetection;
+                    let webCoords = null;
+                    let webGeoContext = '';
+                    
+                    if (webAnn) {
+                        const urlsToParse = [];
+                        if (webAnn.pagesWithMatchingImages) {
+                            webAnn.pagesWithMatchingImages.forEach(p => { if (p.url) urlsToParse.push(p.url); });
+                        }
+                        if (webAnn.visuallySimilarImages) {
+                            webAnn.visuallySimilarImages.forEach(img => { if (img.url) urlsToParse.push(img.url); });
+                        }
+                        
+                        for (const url of urlsToParse) {
+                            const parsed = extractCoordsFromUrl(url);
+                            if (parsed) {
+                                webCoords = parsed;
+                                break;
+                            }
+                        }
+                        
+                        if (webAnn.webEntities) {
+                            const ignoreWords = ['pikmin', 'postcard', 'product', 'image', 'photo', 'graphic', 'art', 'drawing', 'illustration', 'toy', 'water', 'sky', 'tree', 'building', 'sign', 'nature', 'outdoor', 'indoor', 'design'];
+                            const geoEntities = webAnn.webEntities
+                                .filter(e => e.description && !ignoreWords.includes(e.description.toLowerCase()) && e.score > 0.5)
+                                .map(e => e.description);
+                            if (geoEntities.length > 0) {
+                                webGeoContext = geoEntities.slice(0, 2).join(' ');
+                            }
+                        }
+                    }
+
+                    // 優先填寫透過圖片網頁比對出來的真實座標
+                    if (webCoords) {
+                        if (coordsField && (!coordsField.value || coordsField.value.trim() === '')) {
+                            coordsField.value = webCoords;
+                            autoFilled.push('網頁圖片比對座標');
+                            coordsField.dispatchEvent(new Event('blur')); // 觸發自動偵測國家與時區
+                        }
+                    }
+
+                    // 如果沒標籤，就用網頁偵測的實體特徵填補
+                    if (webGeoContext && tagField && (!tagField.value || tagField.value.trim() === '')) {
+                        tagField.value = webGeoContext;
+                        autoFilled.push('圖片地緣標籤');
+                    }
+
                     if (autoFilled.length > 0) {
-                        displayHtml = `<div style="color:green; font-weight:bold; margin-bottom:5px;">✨ 已自動填寫：${autoFilled.join('、')}</div>` + displayHtml;
+                        displayHtml = `<div style="color:#0f766e; font-weight:bold; margin-bottom:5px; font-size:12px;">✨ 已自動填寫：${autoFilled.join('、')}</div>` + displayHtml;
+                    }
+
+                    // 展示配對到的相關網頁連結，讓玩家可以手動點擊比對
+                    if (webAnn && webAnn.pagesWithMatchingImages && webAnn.pagesWithMatchingImages.length > 0) {
+                        const matchingUrls = webAnn.pagesWithMatchingImages.slice(0, 3).map(p => {
+                            const title = p.pageTitle || p.url;
+                            return `<a href="${p.url}" target="_blank" style="display:block; font-size:10px; color:#2563eb; text-decoration:underline; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:2px;">🔗 ${escapeHtml(title)}</a>`;
+                        }).join('');
+                        displayHtml += `<div style="margin-top:6px; border-top:1px dashed var(--border); padding-top:6px;"><span style="font-size:11px; font-weight:bold; color:var(--text-muted); display:block; margin-bottom:3px;">🌐 網路上皮克敏/地標社群比對網頁：</span>${matchingUrls}</div>`;
                     }
                 }
                 
@@ -2464,9 +3016,258 @@
         }
     }
 
+    async function searchCoordsByName(nameId, cityId, countryId, coordsId, tagId = null) {
+        const nameVal = document.getElementById(nameId).value.trim();
+        const cityVal = document.getElementById(cityId).value.trim();
+        const countryVal = document.getElementById(countryId).value.trim();
+        const tagVal = tagId ? document.getElementById(tagId).value.trim() : '';
+        const candidatesEl = document.getElementById(coordsId + '-candidates');
+        
+        if (!nameVal && !tagVal) {
+            alert('請先填寫「名稱」或「標籤」欄位！');
+            return;
+        }
+        
+        candidatesEl.style.display = 'block';
+        candidatesEl.innerHTML = '<span style="font-size:11px; color:var(--text-muted);">🔄 正在搜尋地圖...</span>';
+        
+        // 收集多個可能的研究語句
+        const queries = [];
+        
+        // 1. 基於名稱與當前填寫區域的搜尋 (例如: 哥倫比亞 考卡省 totoro)
+        if (nameVal) {
+            let q1 = '';
+            if (countryVal && countryVal !== '台灣') q1 += countryVal + ' ';
+            if (cityVal) q1 += cityVal + ' ';
+            q1 += nameVal;
+            queries.push(q1.trim());
+            
+            // 如果有填地區，也加一個只搜名稱的 fallback
+            if (cityVal || countryVal) {
+                queries.push(nameVal);
+            }
+        }
+        
+        // 2. 基於標籤 (Tag) 的搜尋 (例如: Popular Sta Teresa Tlalpan)
+        if (tagVal) {
+            queries.push(tagVal);
+            // 也可以組合地區與標籤
+            if (cityVal || countryVal) {
+                let qTag = '';
+                if (countryVal && countryVal !== '台灣') qTag += countryVal + ' ';
+                if (cityVal) qTag += cityVal + ' ';
+                qTag += tagVal;
+                queries.push(qTag.trim());
+            }
+        }
+        
+        // 去重
+        const uniqueQueries = [...new Set(queries.filter(Boolean))];
+        
+        try {
+            // 平行發送所有搜尋請求
+            const searchPromises = uniqueQueries.map(q => 
+                fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&accept-language=zh-TW&limit=4`, {
+                    headers: { 'User-Agent': 'PikminTrackerWeb/1.0' }
+                })
+                .then(res => res.json())
+                .catch(() => [])
+            );
+            
+            const resultsArray = await Promise.all(searchPromises);
+            
+            // 合併所有搜尋結果並依 place_id 去重
+            const mergedResults = [];
+            const seenPlaceIds = new Set();
+            
+            resultsArray.forEach(list => {
+                if (Array.isArray(list)) {
+                    list.forEach(item => {
+                        if (item && item.place_id && !seenPlaceIds.has(item.place_id)) {
+                            seenPlaceIds.add(item.place_id);
+                            mergedResults.push(item);
+                        }
+                    });
+                }
+            });
+            
+            if (mergedResults.length > 0) {
+                candidatesEl.innerHTML = '<span style="font-size:11px; color:var(--text-muted); margin-bottom:2px;">點擊以填入座標（系統將同步更新地區）：</span>' +
+                    mergedResults.map(item => {
+                        const displayName = item.display_name.split(',')[0] || item.type;
+                        const addressName = item.display_name.split(',').slice(1, 4).join(',').trim() || '';
+                        const coords = `${parseFloat(item.lat).toFixed(6)},${parseFloat(item.lon).toFixed(6)}`;
+                        return `<button type="button" onclick="document.getElementById('${coordsId}').value='${coords}'; document.getElementById('${coordsId}').dispatchEvent(new Event('blur')); this.parentElement.style.display='none'; this.parentElement.innerHTML='';" style="font-size:12px; padding:6px 8px; border-radius:6px; border:1px solid var(--border); background:var(--card-bg); color:var(--text-main); cursor:pointer; text-align:left; line-height:1.2; width:100%; display:block; margin-bottom:2px; transition:background 0.15s;">` +
+                            `<strong>🗺️ ${escapeHtml(displayName)}</strong><br>` +
+                            `<span style="font-size:10px; color:var(--text-muted); font-weight:normal;">${escapeHtml(addressName)} (${coords})</span>` +
+                            `</button>`;
+                    }).join('');
+            } else {
+                candidatesEl.innerHTML = '<span style="font-size:11px; color:#ef4444;">❌ 找不到對應的地理座標，請嘗試修改名稱/標籤或改為手動貼上。</span>';
+            }
+        } catch (err) {
+            candidatesEl.innerHTML = '<span style="font-size:11px; color:#ef4444;">❌ 搜尋失敗，請檢查網路連線。</span>';
+        }
+    }
+
+    function checkDatabaseForImage(imageUrl, prefix) {
+        if (!imageUrl || imageUrl === '無圖片' || !imageUrl.startsWith('http')) return false;
+        if (typeof postcardList === 'undefined' || postcardList.length === 0) return false;
+        
+        // 找到相同圖片且有座標的明信片
+        const match = postcardList.find(pc => pc.image && pc.image === imageUrl && pc.coords);
+        if (match) {
+            document.getElementById(prefix + '-coords').value = match.coords;
+            document.getElementById(prefix + '-name').value = match.name;
+            document.getElementById(prefix + '-city').value = match.city || '';
+            document.getElementById(prefix + '-country').value = match.country || '';
+            
+            const tagEl = document.getElementById(prefix + '-tag');
+            if (tagEl) tagEl.value = match.tag || '';
+            
+            // 直接呼叫 autoDetectCountry 以確保國家與城市正確帶入（dispatchEvent('blur') 不觸發 inline onblur）
+            autoDetectCountry(match.coords, prefix + '-country', prefix + '-tz-hint', prefix + '-city');
+            
+            // 顯示提示
+            const resDiv = document.getElementById(prefix + '-ocr-result');
+            if (resDiv) {
+                resDiv.style.display = 'block';
+                resDiv.innerHTML = `<div style="color:#0f766e; font-weight:bold; padding:8px; border:1px solid #10b981; background:#f0fdf4; border-radius:8px; font-size:12px; line-height:1.4;">✨ 歷史資料庫比對成功！已自動填入座標與名稱。</div>`;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    async function searchImageOnGoogle(inputId) {
+        const input = document.getElementById(inputId);
+        const url = input ? input.value.trim() : '';
+        if (!url || !url.startsWith('http')) {
+            alert('請先填寫或貼上有效的圖片網址！');
+            return;
+        }
+
+        // 根據 inputId 判斷前綴（用於操作對應表單欄位）
+        const prefix = inputId.includes('edit-post') ? 'edit-post' : 'post';
+        const resDiv = document.getElementById(prefix + '-ocr-result');
+        const fallbackUrl = 'https://lens.google.com/uploadbyurl?url=' + encodeURIComponent(url);
+
+        // 若未設定 Vision API 金鑰，直接開啟 Google AI 搜尋
+        const apiKey = localStorage.getItem('pikmin_vision_api_key') || '';
+        if (!apiKey) {
+            if (resDiv) {
+                resDiv.style.display = 'block';
+                resDiv.innerHTML = `<div style="color:#92400e; padding:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; font-size:12px; line-height:1.6;">
+                    ⚠️ 尚未設定 Vision API 金鑰，無法自動辨識。<br>
+                    <a href="${fallbackUrl}" target="_blank" style="color:#0369a1; font-weight:bold; text-decoration:none;">🔗 點此改用 Google AI 模式搜尋座標 →</a>
+                </div>`;
+            } else {
+                window.open(fallbackUrl, '_blank');
+            }
+            return;
+        }
+
+        // 顯示載入中
+        if (resDiv) {
+            resDiv.style.display = 'block';
+            resDiv.innerHTML = `<div style="color:#0369a1; padding:8px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; font-size:12px;">
+                ⏳ AI 正在辨識圖片地標與座標，請稍候...
+            </div>`;
+        }
+
+        try {
+            // 呼叫 Vision API：LANDMARK_DETECTION 可直接回傳地標 GPS 座標
+            const visionUrl = `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`;
+            const resp = await fetch(visionUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    requests: [{
+                        image: { source: { imageUri: url } },
+                        features: [
+                            { type: 'LANDMARK_DETECTION', maxResults: 5 }
+                        ]
+                    }]
+                })
+            });
+
+            const data = await resp.json();
+            const annotations = data.responses?.[0]?.landmarkAnnotations;
+
+            if (annotations && annotations.length > 0) {
+                // 取信心度最高的地標
+                const best = annotations[0];
+                const latLng = best.locations?.[0]?.latLng;
+
+                if (latLng && latLng.latitude != null && latLng.longitude != null) {
+                    const coords = `${parseFloat(latLng.latitude).toFixed(6)},${parseFloat(latLng.longitude).toFixed(6)}`;
+
+                    // 自動填入座標欄，直接呼叫 autoDetectCountry 確保國家/城市正確帶入
+                    const coordsField = document.getElementById(prefix + '-coords');
+                    if (coordsField) coordsField.value = coords;
+                    autoDetectCountry(coords, prefix + '-country', prefix + '-tz-hint', prefix + '-city');
+
+                    // 若名稱欄位為空，自動填入地標名稱
+                    const nameField = document.getElementById(prefix + '-name');
+                    if (nameField && !nameField.value.trim()) {
+                        nameField.value = best.description || '';
+                    }
+
+                    // 顯示多個候選地標供參考（候選按鈕也直接呼叫 autoDetectCountry）
+                    const candidateHtml = annotations.map((lm, i) => {
+                        const ll = lm.locations?.[0]?.latLng;
+                        if (!ll) return '';
+                        const c = `${parseFloat(ll.latitude).toFixed(6)},${parseFloat(ll.longitude).toFixed(6)}`;
+                        return `<button type="button" onclick="
+                            document.getElementById('${prefix}-coords').value='${c}';
+                            autoDetectCountry('${c}', '${prefix}-country', '${prefix}-tz-hint', '${prefix}-city');
+                        " style="font-size:11px; padding:4px 8px; margin-top:4px; border-radius:6px; border:1px solid #10b981; background:${i===0?'#d1fae5':'#f0fdf4'}; color:#065f46; cursor:pointer; width:100%; text-align:left; display:block; line-height:1.4;">
+                            ${i===0?'✅':'📍'} ${escapeHtml(lm.description)} <span style="color:#6b7280;">(${c}) — ${(lm.score*100).toFixed(0)}%</span>
+                        </button>`;
+                    }).join('');
+
+                    if (resDiv) {
+                        resDiv.style.display = 'block';
+                        resDiv.innerHTML = `<div style="color:#0f766e; padding:8px; background:#f0fdf4; border:1px solid #10b981; border-radius:8px; font-size:12px; line-height:1.6;">
+                            ✅ <strong>AI 地標辨識成功！座標已自動填入。</strong><br>
+                            ${candidateHtml}
+                            <div style="margin-top:6px; font-size:11px; color:#6b7280;">如結果不正確，可點擊上方其他候選地標替換，或改用 <a href="${fallbackUrl}" target="_blank" style="color:#0369a1;">Google AI 模式搜尋</a>。</div>
+                        </div>`;
+                    }
+                    return;
+                }
+            }
+
+            // 找不到地標：退回 Google AI 搜尋
+            if (resDiv) {
+                resDiv.style.display = 'block';
+                resDiv.innerHTML = `<div style="color:#92400e; padding:8px; background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; font-size:12px; line-height:1.6;">
+                    ⚠️ AI 無法從此圖片辨識已知地標。<br>
+                    <a href="${fallbackUrl}" target="_blank" style="color:#0369a1; font-weight:bold; text-decoration:none;">🔗 點此用 Google AI 模式搜尋座標（可手動複製）→</a>
+                </div>`;
+            } else {
+                window.open(fallbackUrl, '_blank');
+            }
+
+        } catch (err) {
+            if (resDiv) {
+                resDiv.style.display = 'block';
+                resDiv.innerHTML = `<div style="color:#dc2626; padding:8px; background:#fef2f2; border:1px solid #f87171; border-radius:8px; font-size:12px; line-height:1.6;">
+                    ❌ 呼叫 Vision API 失敗：${escapeHtml(err.message)}<br>
+                    <a href="${fallbackUrl}" target="_blank" style="color:#0369a1; font-weight:bold; text-decoration:none;">🔗 改用 Google AI 模式搜尋 →</a>
+                </div>`;
+            }
+        }
+    }
+
     async function triggerOCR(textInputId, fileInputId, resultDivId) {
         const textInput = textInputId ? document.getElementById(textInputId) : null;
         const imgUrl = textInput ? textInput.value.trim() : '';
+
+        const prefix = textInputId.includes('edit') ? 'edit-post' : 'post';
+        if (checkDatabaseForImage(imgUrl, prefix)) {
+            return; // 匹配成功，直接帶入，不用再跑 OCR
+        }
 
         if (imgUrl && imgUrl.startsWith('http')) {
             await processVisionOcr(resultDivId, { source: { imageUri: imgUrl } });
@@ -2542,11 +3343,10 @@
         const savedVisionKey = localStorage.getItem('pikmin_vision_api_key');
         if (savedVisionKey) { document.getElementById('vision-api-key').value = savedVisionKey; }
         listenVisionUsage();
+        loadAutoDeletePref();
 
-        ['1','2','3'].forEach(i => {
-            const val = localStorage.getItem('pikmin_tz_area_' + i);
-            if(val) document.getElementById('tz-select-' + i).value = val;
-        });
+        const tzVal = localStorage.getItem('pikmin_tz_area_1');
+        if(tzVal) document.getElementById('tz-select-1').value = tzVal;
 
         const savedGroupMode = localStorage.getItem('pikmin_mushroom_group');
         if (savedGroupMode) {
@@ -2602,7 +3402,7 @@
     });
 
     function saveTimezonePref() {
-        ['1','2','3'].forEach(i => localStorage.setItem('pikmin_tz_area_'+i, document.getElementById('tz-select-'+i).value));
+        localStorage.setItem('pikmin_tz_area_1', document.getElementById('tz-select-1').value);
         updateClocks();
     }
 
@@ -2610,9 +3410,8 @@
         const now = new Date();
         const utcMs = now.getTime() + (now.getTimezoneOffset() * 60000);
         document.getElementById('clock-taipei').innerText = formatTimeStr(utcMs, 8, true);
-        ['1','2','3'].forEach(i => {
-            document.getElementById('clock-custom-'+i).innerText = formatTimeStr(utcMs, parseFloat(document.getElementById('tz-select-'+i).value)||0, false);
-        });
+        const sel1 = document.getElementById('tz-select-1');
+        if(sel1) document.getElementById('clock-custom-1').innerText = formatTimeStr(utcMs, parseFloat(sel1.value)||0, false);
     }
     
     function formatTimeStr(utcTimeMs, offsetHours, includeSeconds = false) {
@@ -2642,9 +3441,10 @@
                 if (now >= midnightUTC + 3600000) shouldRemove = true;
             }
 
-            if (shouldRemove) {
+            // 動態檢查自動刪除開關
+            if (isAutoDeleteOn && shouldRemove) {
                 removingIds.add(item.id);
-                database.ref('mushrooms/' + item.id).remove();
+                database.ref('mushrooms_v2/' + item.id).remove();
             }
         });
 
@@ -2682,6 +3482,8 @@
 
             const processedUser = userEl ? userEl.value.trim() : "";
             let processedCountry = countryEl ? toTW(countryEl.value.trim()) : "";
+            const cityEl = document.getElementById('city');
+            let processedCity = cityEl ? toTW(cityEl.value.trim()) : "";
             
             if (processedCountry.includes("中華民國")) {
                 processedCountry = "台灣";
@@ -2706,14 +3508,15 @@
                 }
             }
 
-            database.ref('mushrooms').push({
-                sn: nextSn, user: processedUser, country: processedCountry,
+            database.ref('mushrooms_v2').push({
+                sn: nextSn, user: processedUser, country: processedCountry, city: processedCity,
                 name: nameEl.value.trim(), coords: normalizeCoords(coordsEl.value), tag: tagEl.value.trim(), 
                 targetTime: targetTime, slots: initSlots, kind: mushKind
             });
             
-            userEl.value = ''; countryEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = '';
+            userEl.value = ''; countryEl.value = ''; if (cityEl) cityEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = '';
             document.getElementById('tz-hint').innerText = '';
+            const cCand = document.getElementById('city-candidates'); if (cCand) cCand.style.display = 'none';
             document.getElementById('days').value = '0'; document.getElementById('hours').value = '0'; document.getElementById('minutes').value = '0';
             if (kindEl) kindEl.value = '巨菇';
             closeModal('add-modal');
@@ -2803,8 +3606,28 @@
             if (pwd !== "1215") { if (pwd !== null) alert("❌ 密碼錯誤，無法刪除！"); return; }
         }
         if (confirm(`確定要刪除這筆${mode === 'mushroom' ? '巨菇' : '明信片'}資料嗎？`)) {
-            database.ref((mode === 'mushroom' ? 'mushrooms/' : 'postcards/') + id).remove();
+            database.ref((mode === 'mushroom' ? 'mushrooms_v2/' : 'postcards/') + id).remove();
         }
+    }
+
+    function duplicatePostcard(id) {
+        const item = postcardList.find(p => p.id === id);
+        if (!item) return;
+        if (!confirm(`📋 確定要複製「${item.name}」這張明信片嗎？\n（將新增一份完全相同的資料）`)) return;
+        database.ref('postcards').push({
+            type: item.type,
+            country: item.country || '',
+            city: item.city || '',
+            name: item.name || '',
+            coords: item.coords || '',
+            tag: item.tag || '',
+            image: item.image || '無圖片',
+            provider: currentSyncId || ''
+        }).then(() => {
+            // 短暫提示
+            const btn = document.querySelector(`[onclick="duplicatePostcard('${id}')"]`);
+            if (btn) { const orig = btn.textContent; btn.textContent = '✅'; setTimeout(() => { btn.textContent = orig; }, 1200); }
+        });
     }
 
     function openClaimModalById(id) {
@@ -2830,7 +3653,7 @@
             let currentSlots = item.slots ? [...item.slots] : ['', '', '', '', ''];
             if (!currentSlots.some(s => s !== '')) { currentSlots[0] = '✔️'; updates.slots = currentSlots; }
         }
-        database.ref('mushrooms/' + currentClaimingId).update(updates);
+        database.ref('mushrooms_v2/' + currentClaimingId).update(updates);
         closeModal('claim-modal');
     }
 
@@ -2844,12 +3667,17 @@
             document.getElementById('edit-group-postcard').style.display = 'none';
             document.getElementById('edit-user').value = item.user || '';
             document.getElementById('edit-mushroom-country').value = item.country || '';
+            document.getElementById('edit-mushroom-city').value = item.city || '';
             document.getElementById('edit-name').value = item.name || '';
             document.getElementById('edit-coords').value = item.coords || '';
             document.getElementById('edit-tag').value = item.tag || '';
             const editKindEl = document.getElementById('edit-mushroom-kind');
             if (editKindEl) editKindEl.value = item.kind || '巨菇';
             showTimeDiff(item.country || '', 'edit-tz-hint');
+            
+            if (item.coords) {
+                autoDetectCountry(item.coords, 'edit-mushroom-country', 'edit-tz-hint', 'edit-mushroom-city');
+            }
             
             let d = 0, h = 0, m = 0;
             const t = Number(item.targetTime);
@@ -2867,7 +3695,28 @@
             document.getElementById('edit-post-name').value = item.name || ''; 
             document.getElementById('edit-post-tag').value = item.tag || '';
             document.getElementById('edit-post-coords').value = item.coords || ''; 
-            document.getElementById('edit-post-image').value = (item.image === "無圖片" ? "" : item.image) || ''; 
+            const imgUrl = (item.image === "無圖片" ? "" : item.image) || '';
+            document.getElementById('edit-post-image').value = imgUrl; 
+            
+            if (item.coords) {
+                autoDetectCountry(item.coords, 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city');
+            } 
+            
+            // 初始化絕版按鈕狀態
+            window._editDiscontinued = item.discontinued === true;
+            const discBtn = document.getElementById('edit-post-discontinued-btn');
+            if (discBtn) {
+                discBtn.textContent = window._editDiscontinued ? '📦 已標記為絕版 （點擊取消）' : '📦 標記為絕版';
+                discBtn.style.background = window._editDiscontinued ? '#fef2f2' : '';
+                discBtn.style.color = window._editDiscontinued ? '#dc2626' : '';
+                discBtn.style.borderColor = window._editDiscontinued ? '#f87171' : '';
+            }
+            
+            // 如果這張明信片目前沒有座標，但有圖片網址，開啟表單時自動比對本機資料庫
+            if (!item.coords && imgUrl) {
+                checkDatabaseForImage(imgUrl, 'edit-post');
+            }
+            
             showTimeDiff(item.country || '', 'edit-post-tz-hint');
             
             let pd = 0, ph = 0, pm = 0;
@@ -2904,8 +3753,10 @@
             }
 
             const editedKind = document.getElementById('edit-mushroom-kind') ? document.getElementById('edit-mushroom-kind').value : '巨菇';
+            const editCityEl = document.getElementById('edit-mushroom-city');
+            const processedCity = editCityEl ? toTW(editCityEl.value.trim()) : "";
             let updates = { 
-                user: newUser, country: processedCountry,
+                user: newUser, country: processedCountry, city: processedCity,
                 name: document.getElementById('edit-name').value.trim(), coords: normalizeCoords(document.getElementById('edit-coords').value),
                 tag: document.getElementById('edit-tag').value.trim(), targetTime: targetTime, kind: editedKind
             };
@@ -2916,7 +3767,7 @@
                     currentSlots[0] = '✔️'; updates.slots = currentSlots;
                 }
             }
-            database.ref('mushrooms/' + currentEditingTimeId).update(updates);
+            database.ref('mushrooms_v2/' + currentEditingTimeId).update(updates);
         } else {
             let processedCountry = toTW(document.getElementById('edit-post-country').value.trim());
             if (processedCountry.includes("中華民國")) {
@@ -2935,8 +3786,10 @@
                 city: document.getElementById('edit-post-city').value.trim(),
                 name: document.getElementById('edit-post-name').value.trim(), tag: document.getElementById('edit-post-tag').value.trim(),
                 coords: normalizeCoords(document.getElementById('edit-post-coords').value), image: document.getElementById('edit-post-image').value.trim() || "無圖片",
-                targetTime: targetTime
+                targetTime: targetTime,
+                discontinued: window._editDiscontinued === true
             });
+            window._editDiscontinued = false;
         }
         closeModal('time-modal');
     }
@@ -2970,9 +3823,9 @@
     function copyCoords(text, buttonElement) {
         const os = detectOS();
         const normalized = normalizeCoords(String(text));
-        // iOS / macOS：用空格替代逗號（地圖 App 直接貼上更順暢）
-        // Android / Windows / Linux：維持逗號分隔
-        const copyText = (os === 'ios' || os === 'macos')
+        // iOS / macOS / Windows：用空格替代逗號（地圖 App 直接貼上更順暢）
+        // Android / Linux：維持逗號分隔
+        const copyText = (os === 'ios' || os === 'macos' || os === 'windows')
             ? normalized.replace(/,/g, ' ')
             : normalized;
         navigator.clipboard.writeText(copyText).then(() => {
@@ -2997,7 +3850,7 @@
     function fillAllSlots(id) {
         const item = dataList.find(i => i.id === id);
         if (!item) return;
-        database.ref('mushrooms/' + id + '/slots').set(['✔️', '✔️', '✔️', '✔️', '✔️']);
+        database.ref('mushrooms_v2/' + id + '/slots').set(['✔️', '✔️', '✔️', '✔️', '✔️']);
     }
 
     function toggleSlot(id, index) {
@@ -3007,7 +3860,7 @@
         
         if (currentSlots[index]) currentSlots[index] = '';
         else currentSlots[index] = '✔️';
-        database.ref('mushrooms/' + id + '/slots').set(currentSlots);
+        database.ref('mushrooms_v2/' + id + '/slots').set(currentSlots);
     }
 
     function getShortRemainingText(targetTime, now) {
@@ -3149,6 +4002,12 @@
         updateView();
     }
 
+    function collapseAllPostcardGroups() {
+        // 把所有已知的明信片群組全部加回折疊狀態，断开不必要的圖片請求
+        knownPostcardGroups.forEach(id => collapsedGroups.add(id));
+        updateView();
+    }
+
     function saveMushroomViewPref() {
         if (document.getElementById('mushroom-group-logic')) {
             localStorage.setItem('pikmin_mushroom_group', document.getElementById('mushroom-group-logic').value);
@@ -3244,6 +4103,8 @@
         const activeEl = document.getElementById('active-list'), unclaimEl = document.getElementById('unclaimed-list'), pcEl = document.getElementById('postcard-container');
         if (!activeEl || !unclaimEl || !pcEl) return;
         const now = Date.now();
+
+        renderPlayerRoster();
 
         const mushCoordCount = {};
         dataList.forEach(item => {
@@ -3341,11 +4202,12 @@
         const recentFilter = document.getElementById('postcard-recent-filter') ? document.getElementById('postcard-recent-filter').value : 'all';
         const searchLogic = document.getElementById('search-logic') ? document.getElementById('search-logic').value : 'and';
 
-        // 建立重複判斷 Maps (在 filter 之前計算全域的重複狀況)
+        // 建立重複判斷 Maps（絕版明信片不納入重複計算）
         const nameCountryCount = {};
         const coordNameCount = {};
         
         postcardList.forEach(item => {
+            if (item.discontinued) return; // 絕版不參與重複判斷
             const n = (item.name || '').trim().toLowerCase();
             const c = (item.country || '').trim().toLowerCase();
             const coords = (item.coords || '').trim().toLowerCase();
@@ -3361,6 +4223,7 @@
         });
         
         const checkIsDuplicate = (item) => {
+            if (item.discontinued) return false; // 絕版明信片不顯示重複標記
             const n = (item.name || '').trim().toLowerCase();
             const c = (item.country || '').trim().toLowerCase();
             const coords = (item.coords || '').trim().toLowerCase();
@@ -3395,6 +4258,7 @@
             const isCol = favList.includes(item.id);
             if (filterState === 'collected' && !isCol) return false;
             if (filterState === 'uncollected' && isCol) return false;
+            if (filterState === 'fav' && !cloudPcFav.includes(item.id)) return false;
             
             if (recentFilter !== 'all') {
                 const days = parseInt(recentFilter, 10);
@@ -3407,7 +4271,8 @@
             } else if (searchKw.length > 0) {
                 const missingText = item.missingFields.length > 0 ? "缺少 缺" + item.missingFields.join(" 缺") : "";
                 const dupText = checkIsDuplicate(item) ? "重複 重複收藏" : "";
-                const text = `${item.type} ${item.country} ${item.name} ${item.tag} ${item.coords} ${missingText} ${dupText}`.toLowerCase();
+                const favText = cloudPcFav.includes(item.id) ? '最愛 我的最愛' : '';
+                const text = `${item.type} ${item.country} ${item.city || ''} ${item.name} ${item.tag} ${item.coords} ${item.discontinued ? '絕版' : ''} ${favText} ${missingText} ${dupText}`.toLowerCase();
                 if (searchLogic === 'and') {
                     if (!searchKw.every(kw => text.includes(kw))) return false;
                 } else {
@@ -3471,7 +4336,8 @@
                 pcGroups[type].forEach(item => {
                     vCount++; const safeC = toTW(escapeHtml(item.country)), safeT = escapeHtml(item.tag), safeI = escapeHtml(item.image);
                     const favList = Array.isArray(cloudFavorites) ? cloudFavorites : [];
-                    const isFav = favList.includes(item.id); 
+                    const isFav = favList.includes(item.id);
+                    const isPcFav = cloudPcFav.includes(item.id); 
                     let isReady = false;
                     let timeHtml = '';
                     if (type === '⏳ 倒數中 (菇)') {
@@ -3491,10 +4357,26 @@
                         distBadge = `<div style="color: #065f46; font-size: 10px; font-weight: bold; margin-top: 4px; background: #d1fae5; padding: 4px 6px; border-radius: 4px; border: 1px dashed #10b981; text-align: center;">📏 距離 ${distText}</div>`;
                     }
 
+                    const pTheme = getUserColorTheme(item.provider);
+                    let providerHtml = '';
+                    if (item.provider) {
+                        if (pTheme.bgImg) {
+                            providerHtml = `<span style="display:inline-flex; align-items:center; gap:4px; background:#f1f5f9; border:1px solid #cbd5e1; padding:2px 6px; border-radius:12px; font-size:11px; margin-left:4px; font-weight:bold; color:#334155; vertical-align:middle; line-height:1.2;">` +
+                                `<span style="width:14px; height:14px; border-radius:50%; background-image:${pTheme.bgImg}; background-size:cover; background-position:center; display:inline-block; border:1px solid #10b981; flex-shrink:0;"></span>` +
+                                `${escapeHtml(item.provider)}</span>`;
+                        } else {
+                            providerHtml = `<span style="background:${pTheme.bg}; color:${pTheme.color}; border:1px solid ${pTheme.border}; padding:2px 6px; border-radius:10px; font-size:11px; margin-left:4px; font-weight:bold; display:inline-flex; align-items:center; gap:2px; vertical-align:middle; line-height:1.2;">🧑 ${escapeHtml(item.provider)}</span>`;
+                        }
+                    }
+
+                    const createdDate = new Date(getCreatedAt(item.id));
+                    const formattedDate = `${createdDate.getFullYear()}/${String(createdDate.getMonth() + 1).padStart(2, '0')}/${String(createdDate.getDate()).padStart(2, '0')}`;
+                    const dateHtml = `<span style="background:var(--bg); color:var(--text-muted); padding:2px 6px; border-radius:10px; font-size:11px; font-weight:bold; display:inline-flex; align-items:center; gap:2px; vertical-align:middle; line-height:1.2;">📅 ${formattedDate}</span>`;
+
                     const card = document.createElement('div'); 
                     card.className = `grid-card ${isReady ? 'alert-pulse' : ''} ${isDuplicate ? 'duplicate-card' : ''}`;
                     
-                    const imgHtml = (safeI && safeI !== "無圖片") ? `<img src="${safeI}" class="card-img" onclick="openImageLightbox(this.src)">` : `<div class="card-img-placeholder">無圖片</div>`;
+                    const imgHtml = (safeI && safeI !== "無圖片") ? `<img src="${safeI}" loading="lazy" class="card-img" onclick="openImageLightbox(this.src)">` : `<div class="card-img-placeholder">無圖片</div>`;
                     
                     let tzBadge = '';
                     if (type === '菇窩') {
@@ -3525,14 +4407,20 @@
                         '</div></div>'
                     ) : '';
 
+                    const discWatermark = item.discontinued
+                        ? `<div style="position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; pointer-events:none; z-index:5;">
+                            <div style="transform:rotate(-30deg); font-size:28px; font-weight:900; color:rgba(220,38,38,0.82); border:4px solid rgba(220,38,38,0.82); padding:4px 10px; border-radius:6px; letter-spacing:4px; text-shadow:0 1px 4px rgba(0,0,0,0.25); font-family:serif; white-space:nowrap;">絕版</div>
+                           </div>`
+                        : '';
+
                     card.innerHTML = `
-                        <div class="card-img-box">${imgHtml}<div class="card-badge-type">${escapeHtml(item.type)}</div><button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button></div>
-                        <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}</span>${item.provider ? `<span style="background:#e0e7ff; color:#3730a3; padding:2px 6px; border-radius:10px; font-size:11px; margin-left:4px; font-weight:bold;">🧑 ${escapeHtml(item.provider)}</span>` : ''}${safeT ? `<span class="tag-badge" style="margin-left:4px;">${safeT}</span>` : ''}</div>
+                        <div class="card-img-box" style="position:relative;">${imgHtml}${discWatermark}<div class="card-badge-type">${escapeHtml(item.type)}</div><button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button><button class="card-fav-btn ${isPcFav?'fav-on':'fav-off'}" onclick="togglePcFav('${item.id}')">${isPcFav?'❤️':'🤍'}</button></div>
+                        <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}</span><div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">${dateHtml}${providerHtml}${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}</div></div>
                         ${dupBadge}
                         ${distBadge}
                         ${item.missingFields && item.missingFields.length > 0 ? `<div style="color: #ef4444; font-size: 10px; font-weight: bold; margin-top: 4px; background: #fee2e2; padding: 4px 6px; border-radius: 4px; border: 1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>` : ''}
                         ${timeSetRow}
-                        <div class="card-actions" style="display:flex; gap:4px; margin-top:auto; padding-top:4px;"><button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button><a href="https://maps.google.com/?q=${escapeHtml(item.coords)}" target="_blank" class="btn-sm btn-default" style="text-decoration:none; display:flex; align-items:center; justify-content:center; background:#f0f9ff; color:#0284c7; border:1px solid #bae6fd;">🗺️ 地圖</a><button class="btn-sm btn-edit" style="flex:0;" onclick="openTimeModalById('${item.id}', 'postcard')">✏️</button><button class="btn-sm btn-danger" style="flex:0;" onclick="deleteItem('${item.id}', 'postcard')">🗑️</button></div></div>
+                        <div class="card-actions" style="display:flex; gap:4px; margin-top:auto; padding-top:4px;"><button class="btn-sm btn-default" onclick="duplicatePostcard('${item.id}')" title="複製一張相同明信片" style="flex:0; background:#f5f3ff; color:#6d28d9; border:1px solid #ddd6fe;">📋</button><button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button>${item.coords ? `<button class="btn-sm btn-default" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}')">🗺️ 地圖</button>` : ''}<button class="btn-sm btn-edit" style="flex:0;" onclick="openTimeModalById('${item.id}', 'postcard')">✏️</button><button class="btn-sm btn-danger" style="flex:0;" onclick="deleteItem('${item.id}', 'postcard')">🗑️</button></div></div>
                     `;
                     pcEl.appendChild(card);
                 });
@@ -3845,7 +4733,9 @@
 
             marker.addListener("click", () => {
                 const imgHtml = (pc.image && pc.image !== "無圖片") 
-                    ? `<div style="margin-bottom:8px; display:flex; justify-content:center; background:#111; border-radius:8px; padding:2px;"><img src="${pc.image}" style="width:140px; height:140px; object-fit:contain; border-radius:6px;"></div>` 
+                    ? `<div style="margin-bottom:8px; display:flex; justify-content:center; background:#111; border-radius:8px; padding:2px; cursor:zoom-in;" onclick="openMapLightbox('${pc.image.replace(/'/g, "\\'")}')">
+                        <img src="${pc.image}" style="width:140px; height:140px; object-fit:contain; border-radius:6px; pointer-events:none;">
+                       </div>` 
                     : '';
 
                 const content = `<div style="min-width:160px; padding:6px; font-family:var(--font-family); text-align:center;">
@@ -3869,6 +4759,19 @@
                 markers: mapMarkers 
             });
         }
+    }
+
+    function openMapLightbox(src) {
+        const lb = document.getElementById('map-lightbox');
+        const img = document.getElementById('map-lightbox-img');
+        if (!lb || !img) return;
+        img.src = src;
+        lb.style.display = 'flex';
+    }
+
+    function closeMapLightbox() {
+        const lb = document.getElementById('map-lightbox');
+        if (lb) lb.style.display = 'none';
     }
 </script>
 </body>
