@@ -1592,11 +1592,16 @@
                 </div>
                 <div class="input-group">
                     <label>座標</label>
-                    <input type="text" id="edit-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-mushroom-country', 'edit-tz-hint')">
+                    <input type="text" id="edit-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-mushroom-country', 'edit-tz-hint', 'edit-mushroom-city')">
                 </div>
                 <div class="input-group">
                     <label>國家 <span id="edit-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
                     <input type="text" id="edit-mushroom-country" class="input-base" oninput="showTimeDiff(this.value, 'edit-tz-hint')">
+                </div>
+                <div class="input-group">
+                    <label>城市</label>
+                    <input type="text" id="edit-mushroom-city" class="input-base" placeholder="例如：東京">
+                    <div id="edit-mushroom-city-candidates" style="display:none; margin-top:5px; flex-wrap:wrap; gap:5px;"></div>
                 </div>
                 <div class="input-group">
                     <label>名稱</label>
@@ -1704,7 +1709,7 @@
     </div>
 
 <script>
-    const APP_VERSION = "2026.07.23.1538";
+    const APP_VERSION = "2026.07.23.1643";
     function checkForUpdate() {
         // 從 raw.github 抓取以繞過 GitHub Pages CDN 快取
         const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + new Date().getTime();
@@ -2145,10 +2150,9 @@
                 }
 
                 if(data && data.countryName) {
-                        countryName = data.countryName;
-                        if (window.OpenCC) {
-                            const converter = OpenCC.Converter({ from: 'cn', to: 'tw' });
-                            countryName = converter(countryName);
+                        countryName = toTW(data.countryName);
+                        if (typeof countryName === 'string' && countryName.includes("/")) {
+                            countryName = countryName.split('/')[0].trim();
                         }
                         if (countryName.includes("中華民國")) {
                             countryName = "台灣";
@@ -2169,9 +2173,9 @@
                                 const localAdmin = admins.find(a => a.adminLevel > 3 && a.adminLevel < 10);
                                 if (localAdmin) combined = localAdmin.name;
                             }
-                            if (window.OpenCC) {
-                                const converter = OpenCC.Converter({ from: 'cn', to: 'tw' });
-                                combined = converter(combined);
+                            combined = toTW(combined);
+                            if (typeof combined === 'string' && combined.includes("/")) {
+                                combined = combined.split('/')[0].trim();
                             }
                             if (cityInputId === 'append') {
                                 if (combined && countryInput) {
@@ -2190,11 +2194,8 @@
                                     const candidates = [];
                                     const addCandidate = (name) => {
                                         if (!name) return;
-                                        let n = name.trim();
-                                        if (window.OpenCC) {
-                                            const cv = OpenCC.Converter({ from: 'cn', to: 'tw' });
-                                            n = cv(n);
-                                        }
+                                        let n = toTW(name.trim());
+                                        if (typeof n === 'string' && n.includes("/")) n = n.split('/')[0].trim();
                                         if (n && !seen.has(n) && n !== countryName) {
                                             seen.add(n);
                                             candidates.push(n);
@@ -3149,7 +3150,7 @@
         // 根據 inputId 判斷前綴（用於操作對應表單欄位）
         const prefix = inputId.includes('edit-post') ? 'edit-post' : 'post';
         const resDiv = document.getElementById(prefix + '-ocr-result');
-        const fallbackUrl = 'https://www.google.com/searchbyimage?image_url=' + encodeURIComponent(url) + '&q=' + encodeURIComponent('Pikmin Bloom 座標');
+        const fallbackUrl = 'https://lens.google.com/uploadbyurl?url=' + encodeURIComponent(url);
 
         // 若未設定 Vision API 金鑰，直接開啟 Google AI 搜尋
         const apiKey = localStorage.getItem('pikmin_vision_api_key') || '';
@@ -3481,6 +3482,8 @@
 
             const processedUser = userEl ? userEl.value.trim() : "";
             let processedCountry = countryEl ? toTW(countryEl.value.trim()) : "";
+            const cityEl = document.getElementById('city');
+            let processedCity = cityEl ? toTW(cityEl.value.trim()) : "";
             
             if (processedCountry.includes("中華民國")) {
                 processedCountry = "台灣";
@@ -3506,13 +3509,14 @@
             }
 
             database.ref('mushrooms_v2').push({
-                sn: nextSn, user: processedUser, country: processedCountry,
+                sn: nextSn, user: processedUser, country: processedCountry, city: processedCity,
                 name: nameEl.value.trim(), coords: normalizeCoords(coordsEl.value), tag: tagEl.value.trim(), 
                 targetTime: targetTime, slots: initSlots, kind: mushKind
             });
             
-            userEl.value = ''; countryEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = '';
+            userEl.value = ''; countryEl.value = ''; if (cityEl) cityEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = '';
             document.getElementById('tz-hint').innerText = '';
+            const cCand = document.getElementById('city-candidates'); if (cCand) cCand.style.display = 'none';
             document.getElementById('days').value = '0'; document.getElementById('hours').value = '0'; document.getElementById('minutes').value = '0';
             if (kindEl) kindEl.value = '巨菇';
             closeModal('add-modal');
@@ -3663,12 +3667,17 @@
             document.getElementById('edit-group-postcard').style.display = 'none';
             document.getElementById('edit-user').value = item.user || '';
             document.getElementById('edit-mushroom-country').value = item.country || '';
+            document.getElementById('edit-mushroom-city').value = item.city || '';
             document.getElementById('edit-name').value = item.name || '';
             document.getElementById('edit-coords').value = item.coords || '';
             document.getElementById('edit-tag').value = item.tag || '';
             const editKindEl = document.getElementById('edit-mushroom-kind');
             if (editKindEl) editKindEl.value = item.kind || '巨菇';
             showTimeDiff(item.country || '', 'edit-tz-hint');
+            
+            if (item.coords) {
+                autoDetectCountry(item.coords, 'edit-mushroom-country', 'edit-tz-hint', 'edit-mushroom-city');
+            }
             
             let d = 0, h = 0, m = 0;
             const t = Number(item.targetTime);
@@ -3688,6 +3697,10 @@
             document.getElementById('edit-post-coords').value = item.coords || ''; 
             const imgUrl = (item.image === "無圖片" ? "" : item.image) || '';
             document.getElementById('edit-post-image').value = imgUrl; 
+            
+            if (item.coords) {
+                autoDetectCountry(item.coords, 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city');
+            } 
             
             // 初始化絕版按鈕狀態
             window._editDiscontinued = item.discontinued === true;
@@ -3740,8 +3753,10 @@
             }
 
             const editedKind = document.getElementById('edit-mushroom-kind') ? document.getElementById('edit-mushroom-kind').value : '巨菇';
+            const editCityEl = document.getElementById('edit-mushroom-city');
+            const processedCity = editCityEl ? toTW(editCityEl.value.trim()) : "";
             let updates = { 
-                user: newUser, country: processedCountry,
+                user: newUser, country: processedCountry, city: processedCity,
                 name: document.getElementById('edit-name').value.trim(), coords: normalizeCoords(document.getElementById('edit-coords').value),
                 tag: document.getElementById('edit-tag').value.trim(), targetTime: targetTime, kind: editedKind
             };
