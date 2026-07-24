@@ -524,6 +524,9 @@
                         if (countryName.includes("大韓民國")) {
                             countryName = "南韓";
                         }
+                        if (countryName.includes("澳大利亞")) {
+                            countryName = countryName.replace(/澳大利亞/g, "澳洲");
+                        }
                         const countryInput = document.getElementById(countryInputId);
                         if(countryInput) {
                             countryInput.value = countryName;
