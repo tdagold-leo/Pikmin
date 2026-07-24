@@ -513,8 +513,9 @@
 
                 if(data && data.countryName) {
                         countryName = await translateToTW(data.countryName);
-                        if (typeof countryName === 'string' && countryName.includes("/")) {
-                            countryName = countryName.split('/')[0].trim();
+                        if (typeof countryName === 'string') {
+                            if (countryName.includes("/")) countryName = countryName.split('/')[0].trim();
+                            if (countryName.includes(";")) countryName = countryName.split(';')[0].trim();
                         }
                         if (countryName.includes("中華民國")) {
                             countryName = "台灣";
@@ -536,8 +537,9 @@
                                 if (localAdmin) combined = localAdmin.name;
                             }
                             combined = await translateToTW(combined);
-                            if (typeof combined === 'string' && combined.includes("/")) {
-                                combined = combined.split('/')[0].trim();
+                            if (typeof combined === 'string') {
+                                if (combined.includes("/")) combined = combined.split('/')[0].trim();
+                                if (combined.includes(";")) combined = combined.split(';')[0].trim();
                             }
                             if (cityInputId === 'append') {
                                 if (combined && countryInput) {
@@ -557,7 +559,10 @@
                                     const addCandidate = (name) => {
                                         if (!name) return;
                                         let n = toTW(name.trim());
-                                        if (typeof n === 'string' && n.includes("/")) n = n.split('/')[0].trim();
+                                        if (typeof n === 'string') {
+                                            if (n.includes("/")) n = n.split('/')[0].trim();
+                                            if (n.includes(";")) n = n.split(';')[0].trim();
+                                        }
                                         if (n && !seen.has(n) && n !== countryName) {
                                             seen.add(n);
                                             candidates.push(n);
