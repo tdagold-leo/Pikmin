@@ -1,4 +1,4 @@
-    const APP_VERSION = "2026.07.23.1643";
+// JS logic begins
     function checkForUpdate() {
         // 從 raw.github 抓取以繞過 GitHub Pages CDN 快取
         const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + new Date().getTime();
