@@ -1,4 +1,5 @@
 // JS logic begins
+    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.07.24.2104";
     function checkForUpdate() {
         // 從 raw.github 抓取以繞過 GitHub Pages CDN 快取
         const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + new Date().getTime();
@@ -6,7 +7,7 @@
             .then(res => res.text())
             .then(html => {
                 const match = html.match(/const APP_VERSION = ['"]([^'"]+)['"]/);
-                if (match && match[1] !== APP_VERSION) {
+                if (match && match[1] !== CURRENT_APP_VERSION) {
                     console.log('發現新版本，準備重新載入...', match[1]);
                     // 如果用戶正在編輯，則不強制更新（避免資料遺失）
                     const editModal = document.getElementById('edit-modal');
@@ -1799,7 +1800,7 @@
     }
 
     function updateVersionTag() {
-        document.getElementById('header-version-tag').textContent = "v" + APP_VERSION;
+        document.getElementById('header-version-tag').textContent = "v" + CURRENT_APP_VERSION;
     }
 
     window.addEventListener('DOMContentLoaded', () => {
