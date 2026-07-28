@@ -1,0 +1,112 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1BR3PSKVDX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-1BR3PSKVDX');
+    </script>
+    <title>
+	蘑菇地圖｜Pipi Mushroom
+</title>    <meta name="description" content="查看皮克敏蘑菇、煙霧、花苞與花朵位置，支援篩選、定位與分享。" />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://pipimushroom.com/mfmap.aspx" />
+    <meta property="og:locale" content="zh_TW" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Pipi Mushroom" />
+    <meta property="og:title" content="蘑菇地圖｜Pipi Mushroom" />
+    <meta property="og:description" content="查看皮克敏蘑菇、煙霧、花苞與花朵位置，支援篩選、定位與分享。" />
+    <meta property="og:url" content="https://pipimushroom.com/mfmap.aspx" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="蘑菇地圖｜Pipi Mushroom" />
+    <meta name="twitter:description" content="查看皮克敏蘑菇、煙霧、花苞與花朵位置，支援篩選、定位與分享。" /><link rel="stylesheet" href="Content/vendor/leaflet/leaflet.css" /><link rel="stylesheet" href="Content/vendor/fontawesome/all.min.css" /><link rel="stylesheet" href="Content/mfmap.css?v=20260724-flower-ring-static-center3" /></head>
+<body class="is-production">
+    <form method="post" action="./mfmap.aspx" id="form1">
+<div class="aspNetHidden">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="dljewayBUt5RcVGhaGZLHNacVrjisaHbVM4/43ce7yKjq9ycLelkmYrxL8r2Df9+TpdaqGqjFjBQF4VpV7xUYWWfRGx6GHRHoqXaigGqEtU=" />
+</div>
+
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="204074C7" />
+</div>
+        <div class="app-shell">
+            <header class="topbar">
+                <h1><i class="fa-solid fa-cloud"></i> 蘑菇地圖</h1>
+                <button id="mapMenuButton" class="map-menu-button" type="button" aria-label="開啟選單" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
+                <nav class="page-nav" aria-label="主選單">
+                    <a class="active" href="mfmap.aspx"><i class="fa-solid fa-cloud"></i> 蘑菇地圖</a>
+                    <a href="accmap.aspx"><i class="fa-solid fa-map-location-dot"></i> 純點</a>
+                    <a href="mfhelp.aspx"><i class="fa-solid fa-circle-question"></i> 說明</a>
+                </nav>
+                <div class="topbar-auth">
+                    
+                    <a href="login.aspx?ReturnUrl=%2fmfmap.aspx"><i class="fa-solid fa-right-to-bracket"></i> 登入</a>
+                    
+                </div>
+            </header>
+            <main>
+                <div id="mfMap" role="application" aria-label="蘑菇地圖"></div>
+                <button id="mfLoadingButton" class="map-loading-button" type="button" title="重新整理" aria-label="重新整理"><i class="fa-solid fa-rotate"></i></button>
+                <button id="mfFilterButton" class="map-filter-button" type="button" title="篩選" aria-label="篩選"><i class="fa-solid fa-filter"></i></button>
+                <button id="mfLocateButton" class="map-locate-button" type="button" title="定位到目前位置" aria-label="定位到目前位置"><i class="fa-solid fa-location-crosshairs"></i></button>
+                <button id="mfAddPoiButton" class="map-add-poi-button" type="button" title="回報蘑菇地點" aria-label="回報蘑菇地點"><i class="fa-solid fa-plus"></i></button>
+                <div id="mfStatus" class="map-status-overlay">載入...</div>
+            </main>
+            <section class="location-permission-guide" aria-label="定位權限說明">
+                <details>
+                    <summary><i class="fa-solid fa-location-crosshairs"></i> 定位權限被封鎖時怎麼開啟</summary>
+                    <div class="location-guide-grid">
+                        <article>
+                            <h2>電腦版 Chrome / Edge</h2>
+                            <ol>
+                                <li>點網址列左邊的鎖頭、調整圖示或資訊圖示。</li>
+                                <li>找到「位置」。</li>
+                                <li>改成「允許」。</li>
+                                <li>重新整理頁面。</li>
+                            </ol>
+                            <p>如果瀏覽器出現「管理」按鈕，也可以點進去把此網站的位置權限改回允許。</p>
+                        </article>
+                        <article>
+                            <h2>手機 Safari</h2>
+                            <ol>
+                                <li>開啟 iPhone「設定」。</li>
+                                <li>找到「Safari」。</li>
+                                <li>找到「位置」。</li>
+                                <li>改成「詢問」或「允許」。</li>
+                                <li>回到網站重新整理。</li>
+                            </ol>
+                            <p>也可以在 Safari 網址列左邊點 aA 或網站設定，查看單一網站的位置權限。</p>
+                        </article>
+                        <article>
+                            <h2>手機 Chrome / Android</h2>
+                            <ol>
+                                <li>點網址列左邊的鎖頭或網站資訊。</li>
+                                <li>進入「權限」。</li>
+                                <li>找到「位置」。</li>
+                                <li>改成「允許」。</li>
+                                <li>重新整理頁面。</li>
+                            </ol>
+                        </article>
+                    </div>
+                </details>
+            </section>
+        </div>
+    </form>
+    <script src="Scripts/vendor/leaflet.js"></script>
+    <script>window.pikminTileUrl="/osm1/{z}/{x}/{y}.png";window.pikminTileMaxZoom=18;window.pikminTileMaxNativeZoom=18;window.pikminTileAttribution="Leaflet | © OpenStreetMap contributors";window.pikminTileFallbackUrl="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";window.pikminTileFallbackAttribution="Leaflet | © OpenStreetMap contributors";window.pikminTileFallbackMaxNativeZoom=18;window.pikminTileTaiwanBounds={south:21.7,west:118.0,north:26.4,east:122.3};</script>
+    <script>
+        window.mfMapDetailZoom = 16;
+        window.mfMapIsAuthenticated = false;
+        window.mfMapLoginUrl = "login.aspx?ReturnUrl=%2fmfmap.aspx";
+    </script>
+    <script src="Scripts/dist/api-security.min.js?v=20260724-flower-ring-static-center3" charset="utf-8"></script>
+    <script src="Scripts/dist/mfmap.min.js?v=20260724-flower-ring-static-center3" charset="utf-8"></script>
+</body>
+</html>
+
