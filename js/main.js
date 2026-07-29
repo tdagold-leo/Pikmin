@@ -2897,19 +2897,34 @@
 
         let hasReadyGoldBasin = false;
         for (let item of postcardList) {
-            if (item.type === '特殊金盆' && item.sgCooldown) {
-                if (!item.sgLast) hasReadyGoldBasin = true;
-                else {
-                    const lastDate = new Date(item.sgLast + 'T00:00:00');
-                    const nextDate = new Date(lastDate.getTime() + parseInt(item.sgCooldown, 10) * 86400000);
+            if (item.type === '特殊金盆' && item.sgType !== '常駐' && item.sgCooldown && !item.discontinued) {
+                let hasStarted = true;
+                if (item.sgStart) {
+                    const startDate = new Date(item.sgStart + 'T00:00:00');
                     const today = new Date();
                     today.setHours(0,0,0,0);
-                    if (nextDate <= today) hasReadyGoldBasin = true;
+                    if (startDate > today) hasStarted = false;
+                }
+                if (hasStarted) {
+                    if (!item.sgLast) hasReadyGoldBasin = true;
+                    else {
+                        const lastDate = new Date(item.sgLast + 'T00:00:00');
+                        const nextDate = new Date(lastDate.getTime() + parseInt(item.sgCooldown, 10) * 86400000);
+                        const today = new Date();
+                        today.setHours(0,0,0,0);
+                        if (nextDate <= today) hasReadyGoldBasin = true;
+                    }
                 }
             }
         }
-        const gbBadge = document.getElementById('nav-goldbasin-badge');
-        if (gbBadge) gbBadge.style.display = hasReadyGoldBasin ? 'block' : 'none';
+        const gbNavBtn = document.getElementById('nav-goldbasin');
+        if (gbNavBtn) {
+            if (hasReadyGoldBasin) {
+                gbNavBtn.classList.add('nav-notify');
+            } else {
+                gbNavBtn.classList.remove('nav-notify');
+            }
+        }
 
         let vCount = 0; const pcGroups = {};
         // 張倒數中的菇即時提出，不分群，排最前
@@ -3076,7 +3091,17 @@
                 sgDateBadge = `<div style="color: #6d28d9; font-size: 10px; font-weight: bold; margin-top: 4px; background: #f5f3ff; padding: 4px 6px; border-radius: 4px; border: 1px dashed #8b5cf6; text-align: center;">📅 期間：${s} ~ ${e}</div>`;
                 
                 if (item.sgCooldown) {
-                    if (!item.sgLast) {
+                    let hasStarted = true;
+                    if (item.sgStart) {
+                        const startDate = new Date(item.sgStart + 'T00:00:00');
+                        const today = new Date();
+                        today.setHours(0,0,0,0);
+                        if (startDate > today) hasStarted = false;
+                    }
+
+                    if (!hasStarted) {
+                        sgDateBadge += `<div style="color: #b45309; font-size: 11px; font-weight: bold; margin-top: 6px; background: #fef3c7; padding: 4px 8px; border-radius: 6px; border: 1px solid #fde68a; text-align: center; letter-spacing:0.5px;">⏳ 尚未開始</div>`;
+                    } else if (!item.sgLast) {
                         sgDateBadge += `<div style="color: #15803d; font-size: 11px; font-weight: bold; margin-top: 6px; background: #dcfce7; padding: 4px 8px; border-radius: 6px; border: 1px solid #86efac; text-align: center; letter-spacing:0.5px;">✅ 可領取！</div>`;
                     } else {
                         const lastDate = new Date(item.sgLast + 'T00:00:00');
@@ -3203,6 +3228,35 @@
                                 const isActCol = collapsedGroups.has(actId);
                                 const ah = document.createElement('div');
                                 ah.className = 'sq-group-header';
+                                
+                                let hasClaimable = false;
+                                actMap[act].forEach(item => {
+                                    if (item.sgCooldown && !item.discontinued) {
+                                        let hasStarted = true;
+                                        if (item.sgStart) {
+                                            const startDate = new Date(item.sgStart + 'T00:00:00');
+                                            const today = new Date();
+                                            today.setHours(0,0,0,0);
+                                            if (startDate > today) hasStarted = false;
+                                        }
+                                        if (hasStarted) {
+                                            if (!item.sgLast) hasClaimable = true;
+                                            else {
+                                                const lastDate = new Date(item.sgLast + 'T00:00:00');
+                                                const nextDate = new Date(lastDate.getTime() + parseInt(item.sgCooldown, 10) * 86400000);
+                                                const today = new Date();
+                                                today.setHours(0,0,0,0);
+                                                if (nextDate <= today) hasClaimable = true;
+                                            }
+                                        }
+                                    }
+                                });
+
+                                if (hasClaimable) {
+                                    ah.className += ' alert-pulse';
+                                    ah.style.position = 'relative';
+                                }
+
                                 // 正方形內：數字、圖示+活動名稱
                                 let dateSubtitle = '';
                                 const firstItem = actMap[act][0];
@@ -3211,6 +3265,7 @@
                                     const eStr = firstItem.sgEnd ? firstItem.sgEnd.substring(5).replace('-', '/') : '未定';
                                     dateSubtitle = `<div style="font-size:11px; color:#5b21b6; background:#e0e7ff; padding:3px 8px; border-radius:12px; margin-top:6px; font-weight:bold; display:inline-block; border:1px solid #c7d2fe; letter-spacing:0.5px;">📅 ${sStr} ~ ${eStr}</div>`;
                                 }
+                                
                                 ah.innerHTML = `
                                     <div class="count">${actMap[act].length}</div>
                                     <div class="title">${isActCol ? '▶' : '▼'} ${escapeHtml(act)}</div>

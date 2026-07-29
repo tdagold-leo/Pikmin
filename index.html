@@ -761,6 +761,21 @@
             70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); border-color: rgba(239, 68, 68, 0.3); }
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); border-color: rgba(239, 68, 68, 1); }
         }
+        @keyframes ping {
+            75%, 100% { transform: scale(2.5); opacity: 0; }
+        }
+        @keyframes icon-jump {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-4px) scale(1.15); }
+        }
+        .nav-notify {
+            color: #ef4444 !important;
+            font-weight: 900 !important;
+        }
+        .nav-notify .nav-icon {
+            animation: icon-jump 1s ease-in-out infinite;
+            filter: drop-shadow(0 2px 4px rgba(239, 68, 68, 0.6));
+        }
         .alert-pulse {
             animation: pulse-red 1.5s infinite;
             border: 2px solid #ef4444 !important;
@@ -1455,10 +1470,9 @@
             <span class="nav-icon">🖼️</span>
             <span>明信片</span>
         </button>
-        <button class="nav-item" id="nav-goldbasin" onclick="switchTab('goldbasin')" style="position:relative;">
+        <button class="nav-item" id="nav-goldbasin" onclick="switchTab('goldbasin')">
             <span class="nav-icon">🏺</span>
             <span>特殊金盆</span>
-            <div id="nav-goldbasin-badge" style="display:none; position:absolute; top:4px; right:12px; width:8px; height:8px; background:#ef4444; border-radius:50%; box-shadow: 0 0 2px #fff;"></div>
         </button>
 
         
@@ -1537,6 +1551,7 @@
                         <option value="菇窩">菇窩</option>
                         <option value="隱藏">隱藏</option>
                         <option value="特殊金盆">特殊金盆</option>
+                        <option value="節慶蘑菇">節慶蘑菇</option>
                     </select>
                 </div>
                 <div id="post-sg-fields" style="display:none; flex-direction:column; gap:10px; background:#fefce8; border:1px solid #fef08a; padding:10px; border-radius:8px; margin-bottom:4px;">
@@ -1753,7 +1768,7 @@
                 <div class="input-group">
                     <label>種類</label>
                     <select id="edit-post-type" class="input-base" onchange="togglePostcardTimeEdit(); if(typeof togglePostcardSgFields==='function') togglePostcardSgFields('edit-post')">
-                        <option value="菇">菇</option><option value="花">花</option><option value="菇窩">菇窩</option><option value="隱藏">隱藏</option><option value="特殊金盆">特殊金盆</option>
+                        <option value="菇">菇</option><option value="花">花</option><option value="菇窩">菇窩</option><option value="隱藏">隱藏</option><option value="特殊金盆">特殊金盆</option><option value="節慶蘑菇">節慶蘑菇</option>
                     </select>
                 </div>
                 <div id="edit-post-sg-fields" style="display:none; flex-direction:column; gap:10px; background:#fefce8; border:1px solid #fef08a; padding:10px; border-radius:8px; margin-bottom:4px;">
@@ -1914,10 +1929,17 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.07.28.1811";</script>
+    <script>const APP_VERSION = "2026.07.28.2045";</script>
     <script src="js/main.min.js?v=202607281811"></script>
 </body>
 </html>
+
+
+
+
+
+
+
 
 
 
