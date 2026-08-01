@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -905,18 +905,19 @@
             background: #f8f9fa;
             border-radius: 12px;
             padding: 12px;
+            padding: 10px 8px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             margin: 0;
             cursor: pointer;
             border: 1px solid var(--border);
             box-shadow: 0 2px 4px rgba(0,0,0,0.06);
             transition: all 0.2s;
             width: 100%;
-            aspect-ratio: 1 / 1;
+            min-height: 170px;
             align-self: start;
             box-sizing: border-box;
             text-align: center;
@@ -927,21 +928,59 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.08);
         }
         .sq-group-header .count {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 900;
             color: #5b21b6;
             line-height: 1;
         }
         .sq-group-header .title {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
             color: #334155;
             width: 100%;
             display: -webkit-box;
-            -webkit-line-clamp: 3;
+            -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
             word-break: break-word;
+        }
+        .sq-group-header .group-claim-btn {
+            margin-top: 4px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #ffffff;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(34,197,94,0.3);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            white-space: nowrap;
+            transition: all 0.15s ease-in-out;
+            z-index: 2;
+        }
+        .sq-group-header .group-claim-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 3px 6px rgba(34,197,94,0.45);
+        }
+        .sq-group-header .group-claim-btn:active {
+            transform: scale(0.96);
+        }
+        .sq-group-header .group-claim-btn.claimed {
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #cbd5e1;
+            box-shadow: none;
+            font-weight: 600;
+        }
+        .sq-group-header .group-claim-btn.claimed:hover {
+            background: #e2e8f0;
+            color: #334155;
+            transform: scale(1.03);
         }
         /* 純點導航卡片樣式 */
         .lm-nav-grid {
@@ -1408,32 +1447,84 @@
                 </header>
 
                 <div class="card">
-                    <div class="input-group">
-                        <label for="cloud-referralCode">Pikmin 邀請碼</label>
-                        <input type="text" id="cloud-referralCode" placeholder="請輸入大寫英文字母" value="NLSPYIBHN">
+                    <!-- 頂部快捷按鈕 -->
+                    <div style="display: flex; gap: 12px; margin-bottom: 25px;">
+                        <button id="cloud-startBtn" class="btn-primary" style="flex: 1; margin: 0; border-radius: 12px; font-weight: 700; background: linear-gradient(135deg, #60a5fa, #3b82f6); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); border: none; font-size: 15px; padding: 14px 0; transition: transform 0.2s, box-shadow 0.2s; color: white; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity: 0.9"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            開始產生
+                        </button>
+                        <a id="cloud-openPikminBtn" href="https://pikminbloom.onelink.me/pWSt/73s4bj4n" target="_blank" class="btn-primary" style="flex: 1; margin: 0; display: flex; align-items: center; justify-content: center; text-decoration: none; background: linear-gradient(135deg, #10b981, #059669); border: none; padding: 14px 0; border-radius: 12px; color: white; font-weight: 700; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); text-shadow: 0 1px 2px rgba(0,0,0,0.2); font-size: 15px; transition: transform 0.2s, box-shadow 0.2s; gap: 6px;">
+                            🍄 開啟 Pikmin
+                        </a>
                     </div>
-                    
-                    <button id="cloud-startBtn" class="btn-primary" style="margin-top: 20px;">開始產生信箱</button>
 
                     <!-- 信箱顯示區塊 -->
-                    <div id="cloud-emailBox" class="info-box">
+                    <div id="cloud-emailBox" class="info-box" style="margin-bottom: 20px;">
                         <div class="info-title">臨時任天堂信箱</div>
-                        <div id="cloud-emailDisplay" class="info-value">--</div>
+                        <div id="cloud-emailDisplay" class="info-value" style="font-size: 18px; word-break: break-all; margin: 10px 0;">--</div>
                         <button id="cloud-copyEmailBtn" class="copy-btn">
                             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                            <span>複製信箱 (去任天堂註冊)</span>
+                            <span>複製信箱 & 開啟 Pikmin</span>
                         </button>
                     </div>
 
+                    <!-- Nintendo 密碼 -->
+                    <div class="input-group" style="margin-bottom: 20px;">
+                        <label for="cloud-password">Nintendo 密碼</label>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <input type="text" id="cloud-password" value="Pikmin123!@" style="width: 100%; border-radius: 8px; font-size: 16px; padding: 10px 15px; box-sizing: border-box;" readonly>
+                            <button id="cloud-copyPwdBtn" class="copy-btn" style="width: 100%; margin: 0;">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                <span>複製密碼 & 開啟 Pikmin</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- 驗證碼顯示區塊 -->
-                    <div id="cloud-codeBox" class="info-box">
+                    <div id="cloud-codeBox" class="info-box" style="margin-bottom: 20px;">
                         <div id="cloud-loadingBar" class="pulsing"></div>
                         <div class="info-title">任天堂驗證碼 (等待中...)</div>
                         <div id="cloud-codeDisplay" class="info-value">--</div>
                         <button id="cloud-copyCodeBtn" class="copy-btn" disabled>
                             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                            <span>複製驗證碼</span>
+                            <span>複製驗證碼 & 開啟 Pikmin</span>
                         </button>
+                    </div>
+
+                    <!-- Pikmin 邀請連結（自訂）與儲存管理 -->
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <label for="cloud-inviteLink" style="margin: 0;">Pikmin 邀請連結 (自訂)</label>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <label style="font-size: 13px; color: #a1a1aa; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                    <input type="checkbox" id="cloud-isPublic" checked style="cursor: pointer;"> 公開
+                                </label>
+                                <button id="cloud-saveInviteBtn" type="button" style="background: none; border: none; color: #38bdf8; cursor: pointer; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 4px; padding: 0;">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                    儲存
+                                </button>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="cloud-inviteName" placeholder="名稱 (例:小明)" style="width: 110px; border-radius: 8px; padding: 10px; box-sizing: border-box; font-size: 14px; flex-shrink: 0;">
+                            <input type="text" id="cloud-inviteLink" placeholder="例如: https://pikminbloom.onelink.me/..." style="flex: 1; border-radius: 8px; padding: 10px; box-sizing: border-box; font-size: 14px; min-width: 0;">
+                        </div>
+
+                        <!-- 雙清單管理（折疊式） -->
+                        <details style="margin-top: 15px;">
+                            <summary style="cursor: pointer; font-size: 14px; color: #94a3b8; outline: none; padding: 5px 0; user-select: none; font-weight: bold;">
+                                🔒 私有清單 (點此展開)
+                            </summary>
+                            <div id="cloud-savedLocalLinksList" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+                            </div>
+                        </details>
+                        <details style="margin-top: 10px;">
+                            <summary style="cursor: pointer; font-size: 14px; color: #94a3b8; outline: none; padding: 5px 0; user-select: none; font-weight: bold;">
+                                🌐 公開清單 (點此展開)
+                            </summary>
+                            <div id="cloud-savedPublicLinksList" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+                            </div>
+                        </details>
                     </div>
                 </div>
 
@@ -1542,10 +1633,10 @@
                 </div>
             </div>
 
-            <div id="form-postcard" style="display:none; flex-direction:column; gap:10px;">
-                <div class="input-group">
-                    <label>種類</label>
-                    <select id="post-type" class="input-base" onchange="if(typeof togglePostcardSgFields==='function') togglePostcardSgFields('post')">
+            <div id="form-postcard" style="display:none; flex-direction:column; gap:6px;">
+                <div class="input-group" style="margin:0;">
+                    <label style="font-size:11px; margin-bottom:2px;">種類</label>
+                    <select id="post-type" class="input-base" style="padding:6px 8px; font-size:13px;" onchange="if(typeof togglePostcardSgFields==='function') togglePostcardSgFields('post')">
                         <option value="菇">菇</option>
                         <option value="花">花</option>
                         <option value="菇窩">菇窩</option>
@@ -1554,209 +1645,161 @@
                         <option value="節慶蘑菇">節慶蘑菇</option>
                     </select>
                 </div>
-                <div id="post-sg-fields" style="display:none; flex-direction:column; gap:10px; background:#fefce8; border:1px solid #fef08a; padding:10px; border-radius:8px; margin-bottom:4px;">
-                    <div class="input-group" style="margin:0;">
-                        <label style="color:#854d0e;">活動名稱 (以此名稱作為子分類)</label>
-                        <input type="text" id="post-sg-activity" class="input-base" placeholder="例如：2026櫻花季" style="border-color:#fde047; background:#fffbeb;">
+                <div id="post-sg-fields" style="display:none; flex-direction:column; gap:5px; background:#fffbeb; border:1px solid #fef08a; padding:6px 8px; border-radius:8px;">
+                    <div style="display:flex; gap:6px;">
+                        <div class="input-group" style="flex:2; margin:0;">
+                            <label style="color:#854d0e; font-size:11px; margin-bottom:2px;">活動名稱 (子分類)</label>
+                            <input type="text" id="post-sg-activity" class="input-base" placeholder="例如：IKEA / 櫻花季" style="border-color:#fde047; background:#fff; padding:5px 8px; font-size:13px;">
+                        </div>
+                        <div class="input-group" style="flex:1; margin:0; min-width:70px;">
+                            <label style="color:#854d0e; font-size:11px; margin-bottom:2px;">型態</label>
+                            <select id="post-sg-type" class="input-base" onchange="if(typeof togglePostcardSgDates==='function') togglePostcardSgDates('post')" style="border-color:#fde047; background:#fff; padding:5px 8px; font-size:13px;">
+                                <option value="常駐">常駐</option>
+                                <option value="期間">期間</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="input-group" style="margin:0;">
-                        <label style="color:#854d0e;">金盆型態</label>
-                        <select id="post-sg-type" class="input-base" onchange="if(typeof togglePostcardSgDates==='function') togglePostcardSgDates('post')" style="border-color:#fde047; background:#fffbeb;">
-                            <option value="常駐">常駐</option>
-                            <option value="期間">期間</option>
-                        </select>
-                    </div>
-                    <div id="post-sg-dates" style="display:none; flex-direction:column; gap:8px;">
-                        <div style="display:flex; flex-direction:row; gap:8px;">
+                    <div id="post-sg-dates" style="display:none; flex-direction:column; gap:5px;">
+                        <div style="display:flex; flex-direction:row; gap:6px;">
                             <div class="input-group" style="flex:1; margin:0;">
-                                <label style="color:#854d0e;">開始日期</label>
-                                <input type="date" id="post-sg-start" class="input-base" style="border-color:#fde047; background:#fffbeb;">
+                                <label style="color:#854d0e; font-size:11px; margin-bottom:2px;">開始日期</label>
+                                <input type="date" id="post-sg-start" class="input-base" style="border-color:#fde047; background:#fff; padding:4px 6px; font-size:12px;">
                             </div>
                             <div class="input-group" style="flex:1; margin:0;">
-                                <label style="color:#854d0e;">結束日期</label>
-                                <input type="date" id="post-sg-end" class="input-base" style="border-color:#fde047; background:#fffbeb;">
+                                <label style="color:#854d0e; font-size:11px; margin-bottom:2px;">結束日期</label>
+                                <input type="date" id="post-sg-end" class="input-base" style="border-color:#fde047; background:#fff; padding:4px 6px; font-size:12px;">
                             </div>
                         </div>
-                        <div style="display:flex; flex-direction:row; gap:8px;">
+                        <div style="display:flex; flex-direction:row; gap:6px;">
                             <div class="input-group" style="flex:1; margin:0;">
-                                <label style="color:#854d0e;">幾天可領取</label>
-                                <select id="post-sg-cooldown" class="input-base" style="border-color:#fde047; background:#fffbeb;">
+                                <label style="color:#854d0e; font-size:11px; margin-bottom:2px;">幾天可領取</label>
+                                <select id="post-sg-cooldown" class="input-base" style="border-color:#fde047; background:#fff; padding:4px 6px; font-size:12px;">
                                     <option value="">(不設定)</option>
                                     <option value="1">1天</option>
                                     <option value="7">7天</option>
-                                    <option value="30">30天</option>
+                                    <option value="30">一個月</option>
                                 </select>
                             </div>
                             <div class="input-group" style="flex:1; margin:0;">
-                                <label style="color:#854d0e;">上次領取日期</label>
-                                <input type="date" id="post-sg-last" class="input-base" style="border-color:#fde047; background:#fffbeb;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                                    <label style="color:#854d0e; margin:0; font-size:11px;">上次領取日期</label>
+                                    <button type="button" onclick="setTodayDate('post-sg-last')" style="background:#fef08a; border:1px solid #facc15; color:#854d0e; border-radius:4px; font-size:10px; padding:1px 5px; cursor:pointer; font-weight:bold; line-height:1.2;">今日</button>
+                                </div>
+                                <input type="date" id="post-sg-last" class="input-base" style="border-color:#fde047; background:#fff; padding:4px 6px; font-size:12px;">
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="input-group">
+                <div style="display:flex; gap:6px;">
+                    <div class="input-group" style="flex:1;">
+                        <label style="font-size:11px; margin-bottom:2px;">名稱</label>
+                        <input type="text" id="post-name" class="input-base" placeholder="例如：櫻花美菇" style="padding:5px 8px; font-size:13px;">
+                    </div>
+                    <div class="input-group" id="post-tag-container" style="flex:1;">
+                        <label style="font-size:11px; margin-bottom:2px;">標籤</label>
+                        <input type="text" id="post-tag" class="input-base" placeholder="例如：2026櫻花季、稀有" style="padding:5px 8px; font-size:13px;">
+                    </div>
+                </div>
+                <div class="input-group" style="margin:0;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
-                        <label style="margin:0;">座標 (貼上經緯度將自動抓取國家)</label>
+                        <label style="margin:0; font-size:11px;">座標 (貼上經緯度將自動抓取國家)</label>
                         <button type="button" onclick="searchCoordsByName('post-name', 'post-city', 'post-country', 'post-coords', 'post-tag')" style="display:none; font-size:11px; padding:2px 8px; border-radius:12px; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; cursor:pointer; line-height:1.2;">🔍 搜尋定位</button>
                     </div>
-                    <input type="text" id="post-coords" class="input-base" placeholder="貼上點座標"
+                    <input type="text" id="post-coords" class="input-base" placeholder="貼上點座標" style="padding:5px 8px; font-size:13px;"
                         onblur="autoDetectCountry(this.value, 'post-country', 'post-tz-hint', 'post-city')"
                         oninput="clearTimeout(window._geoTimer); window._geoTimer = setTimeout(() => autoDetectCountry(this.value, 'post-country', 'post-tz-hint', 'post-city'), 1200)">
-                    <div id="post-coords-candidates" style="margin-top:5px; display:none; flex-direction:column; gap:4px;"></div>
+                    <div id="post-coords-candidates" style="margin-top:4px; display:none; flex-direction:column; gap:4px;"></div>
                 </div>
-                <div style="display: flex; gap: 8px;">
+                <div style="display: flex; gap: 6px;">
                     <div class="input-group" style="flex:1;">
-                        <label>國家 <span id="post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
-                        <input type="text" id="post-country" class="input-base" placeholder="例如：日本" oninput="showTimeDiff(this.value, 'post-tz-hint')">
+                        <label style="font-size:11px; margin-bottom:2px;">國家 <span id="post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
+                        <input type="text" id="post-country" class="input-base" placeholder="例如：日本" style="padding:5px 8px; font-size:13px;" oninput="showTimeDiff(this.value, 'post-tz-hint')">
                     </div>
                     <div class="input-group" style="flex:1;">
-                        <label>城市</label>
-                        <input type="text" id="post-city" class="input-base" placeholder="例如：東京">
+                        <label style="font-size:11px; margin-bottom:2px;">城市</label>
+                        <input type="text" id="post-city" class="input-base" placeholder="例如：東京" style="padding:5px 8px; font-size:13px;">
                     </div>
                 </div>
-                <div id="post-city-candidates" style="display:none; margin-top:5px; display:flex; flex-wrap:wrap; gap:5px;"></div>
-                <div class="input-group">
-                    <label>名稱</label>
-                    <input type="text" id="post-name" class="input-base" placeholder="例如：櫻花美菇">
-                </div>
-                <div class="input-group" id="post-tag-container">
-                    <label>標籤</label>
-                    <input type="text" id="post-tag" class="input-base" placeholder="例如：2026櫻花季、稀有">
-                </div>
-                <div class="input-group">
-                    <label>圖片網址</label>
-                    <div style="display:flex; gap:8px;">
-                        <input type="text" id="post-image" class="input-base" placeholder="請貼上圖片網址，或留空" style="flex:1;" oninput="checkDatabaseForImage(this.value, 'post')">
+                <div id="post-city-candidates" style="display:none; margin-top:4px; display:flex; flex-wrap:wrap; gap:4px;"></div>
+                <div class="input-group" style="margin:0;">
+                    <label style="font-size:11px; margin-bottom:2px;">圖片網址</label>
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <input type="text" id="post-image" class="input-base" placeholder="請貼上圖片網址，或留空" style="flex:1; padding:5px 8px; font-size:13px;" oninput="checkDatabaseForImage(this.value, 'post')">
                         <input type="file" id="post-ocr-file" accept="image/*" style="display:none;" onchange="handleVisionOcrUpload(event, 'post-ocr-result')">
-                        <button type="button" class="btn-sm btn-default" onclick="triggerOCR('post-image', 'post-ocr-file', 'post-ocr-result')" style="white-space:nowrap; border-radius:8px; background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; padding:6px 10px; line-height:1.3;">
-                            <div style="font-weight:bold;">🔍 文字辨識</div>
-                            <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#475569;">辨識左側網址</div>
+                        <button type="button" class="btn-sm btn-default" onclick="triggerOCR('post-image', 'post-ocr-file', 'post-ocr-result')" style="white-space:nowrap; border-radius:6px; background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; padding:5px 8px; font-size:11px; font-weight:bold;">
+                            🔍 辨識
                         </button>
                     </div>
-                    <div id="post-image-ocr-buttons" style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
-                        <button type="button" class="btn-sm btn-default" onclick="document.getElementById('post-ocr-file').click()" style="flex:1; min-width:80px; border-radius:8px; background:#f5f3ff; color:#5b21b6; border:1px dashed #8b5cf6; padding:6px; line-height:1.3;">
-                            <div style="font-weight:bold;">📁 上傳截圖</div>
-                            <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#64748b;">從裝置相簿檔案</div>
+                    <div id="post-image-ocr-buttons" style="display:flex; gap:6px; margin-top:4px; flex-wrap:wrap;">
+                        <button type="button" class="btn-sm btn-default" onclick="document.getElementById('post-ocr-file').click()" style="flex:1; min-width:70px; border-radius:6px; background:#f5f3ff; color:#5b21b6; border:1px dashed #8b5cf6; padding:4px 6px; font-size:11px; font-weight:bold; white-space:nowrap; text-align:center;">
+                            📁 上傳截圖
                         </button>
-                        <button type="button" class="btn-sm btn-default" onclick="pasteFromClipboard('post-ocr-result')" style="flex:1; min-width:80px; border-radius:8px; background:#f0fdf4; color:#166534; border:1px dashed #22c55e; padding:6px; line-height:1.3;">
-                            <div style="font-weight:bold;">📋 貼上圖片</div>
-                            <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#475569;">讀取剪貼簿圖片</div>
+                        <button type="button" class="btn-sm btn-default" onclick="pasteFromClipboard('post-ocr-result')" style="flex:1; min-width:70px; border-radius:6px; background:#f0fdf4; color:#166534; border:1px dashed #22c55e; padding:4px 6px; font-size:11px; font-weight:bold; white-space:nowrap; text-align:center;">
+                            📋 貼上圖片
                         </button>
-                        <button type="button" class="btn-sm btn-default" onclick="openGoogleLensSearch('post-image', 'post-coords')" style="flex:1; min-width:80px; border-radius:8px; background:#fff7ed; color:#c2410c; border:1px dashed #f97316; padding:6px; line-height:1.3;">
-                            <div style="font-weight:bold;">🤖 AI 座標搜尋</div>
-                            <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#b45309;">Google AI 模式查座標</div>
+                        <button type="button" class="btn-sm btn-default" onclick="openGoogleLensSearch('post-image', 'post-coords')" style="flex:1; min-width:70px; border-radius:6px; background:#fff7ed; color:#c2410c; border:1px dashed #f97316; padding:4px 6px; font-size:11px; font-weight:bold; white-space:nowrap; text-align:center;">
+                            🤖 AI 查座標
                         </button>
                     </div>
-                    <div id="post-ocr-result" style="display:none; margin-top:5px; font-size:12px; background:#fef3c7; padding:8px; border-radius:4px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:150px; overflow-y:auto; color:#92400e;"></div>
+                    <div id="post-ocr-result" style="display:none; margin-top:4px; font-size:11px; background:#fef3c7; padding:6px 8px; border-radius:4px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:100px; overflow-y:auto; color:#92400e;"></div>
                 </div>
             </div>
             
             
-            <div id="form-landmark" style="display:none; flex-direction:column; gap:10px;">
-                <div class="input-group">
-                    <label>種類</label>
-                    <input type="text" id="lm-type" class="input-base" placeholder="手動輸入或選擇現有種類" list="lm-type-list">
-                    <datalist id="lm-type-list"></datalist>
-                </div>
-                                <div class="input-group">
-                    <label>座標 (貼上經緯度自動抓國家與城市)</label>
-                    <input type="text" id="lm-coords" class="input-base" placeholder="貼上或輸入座標" onblur="autoDetectCountry(this.value, 'lm-country', 'lm-tz-hint', 'lm-city')">
-                </div>
-                <div style="display:grid; grid-template-columns:3fr 2fr; gap:8px;">
-                    <div class="input-group">
-                        <label>國家 <span id="lm-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
-                        <input type="text" id="lm-country" class="input-base" placeholder="例如：日本">
-                    </div>
-                    <div class="input-group">
-                        <label>城市</label>
-                        <input type="text" id="lm-city" class="input-base" placeholder="例如：東京">
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>備註 (選填)</label>
-                    <input type="text" id="lm-note" class="input-base" placeholder="例如：大花、名稱等">
-                </div>
-            </div>
-            <div id="form-time" style="display:none; flex-direction:column; gap:10px; margin-top:5px;">
-                <label style="font-size:11px; color:var(--text-muted); font-weight:bold; text-align:center;">設定剩餘時間 (皆為0即未設定)</label>
-                <div class="time-container">
-                    <div class="time-box"><label>天</label><input type="number" id="days" class="input-base" min="0" value="0"></div>
-                    <div class="time-box"><label>時</label><input type="number" id="hours" class="input-base" min="0" max="23" value="0"></div>
-                    <div class="time-box"><label>分</label><input type="number" id="minutes" class="input-base" min="0" max="59" value="0"></div>
-                </div>
-            </div>
-            
-            <button class="btn-sm btn-primary btn-block" style="margin-top:10px; padding:12px; background:var(--primary); color:white; border:none; font-size:14px; font-weight:bold; border-radius:8px;" onclick="addItem()">確定新增</button>
+            <button class="btn-block" id="modal-submit-btn" style="margin-top:8px; padding:10px; font-size:14px; font-weight:bold; border-radius:8px;">➕ 新增</button>
         </div>
     </div>
 
-    <div id="claim-modal" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h4 id="modal-title">認領巨菇</h4>
-                <button class="modal-close" onclick="closeModal('claim-modal')">&times;</button>
-            </div>
-            <div class="input-group">
-                <label>認領人名字</label>
-                <input type="text" id="modal-username" class="input-base" placeholder="請輸入名字">
-            </div>
-            <div class="input-group" style="margin-top:10px;">
-                <label style="text-align:center;">設定剩餘時間 (不確定保持 0)</label>
-                <div class="time-container" style="margin-top: 5px;">
-                    <div class="time-box"><label>天</label><input type="number" id="modal-days" class="input-base" min="0" value="0"></div>
-                    <div class="time-box"><label>時</label><input type="number" id="modal-hours" class="input-base" min="0" max="23" value="0"></div>
-                    <div class="time-box"><label>分</label><input type="number" id="modal-minutes" class="input-base" min="0" max="59" value="0"></div>
-                </div>
-            </div>
-            <button class="btn-sm btn-claim btn-block" style="margin-top:10px;" id="modal-submit-btn">確定認領</button>
-        </div>
-    </div>
-
+    <!-- 彈窗：修改資料 / 時間 (共用) -->
     <div id="time-modal" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h4>✏️ 修改資料</h4>
-                <button class="modal-close" onclick="closeModal('time-modal')">&times;</button>
+        <div class="modal-box" style="max-height:92vh; overflow-y:auto; padding:16px; min-height:unset; gap:0;">
+            <div class="modal-header" style="margin-bottom:10px;">
+                <h3 id="time-modal-title" style="font-size:15px; margin:0;">✏️ 修改資料</h3>
+                <button class="modal-close" onclick="closeModal('time-modal')">✕</button>
             </div>
             
-            <div id="edit-group-mushroom" style="display:none; flex-direction:column; gap:8px;">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                    <div class="input-group">
-                        <label>種類</label>
-                        <select id="edit-mushroom-kind" class="input-base">
+            <div id="edit-group-mushroom" style="display:flex; flex-direction:column; gap:6px;">
+                <div style="display:flex; gap:6px;">
+                    <div class="input-group" style="flex:1;">
+                        <label style="font-size:11px; margin-bottom:2px;">認領人</label>
+                        <input type="text" id="edit-user" class="input-base" style="padding:5px 8px; font-size:13px;">
+                    </div>
+                    <div class="input-group" style="flex:1;">
+                        <label style="font-size:11px; margin-bottom:2px;">蘑菇分類</label>
+                        <select id="edit-mushroom-kind" class="input-base" style="padding:5px 8px; font-size:13px;">
                             <option value="巨菇">🍄 巨菇</option>
-                            <option value="元素菇">🌿 元素菇</option>
+                            <option value="元素菇">🍄 元素菇</option>
                         </select>
                     </div>
-                    <div class="input-group">
-                        <label>使用者</label>
-                        <input type="text" id="edit-user" class="input-base" placeholder="留空為待認領">
+                </div>
+                <div class="input-group" style="margin:0;">
+                    <label style="font-size:11px; margin-bottom:2px;">座標</label>
+                    <input type="text" id="edit-coords" class="input-base" style="padding:5px 8px; font-size:13px;" onblur="autoDetectCountry(this.value, 'edit-mushroom-country', 'edit-tz-hint', 'edit-mushroom-city')">
+                </div>
+                <div style="display:flex; gap:6px;">
+                    <div class="input-group" style="flex:1;">
+                        <label style="font-size:11px; margin-bottom:2px;">國家 <span id="edit-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
+                        <input type="text" id="edit-mushroom-country" class="input-base" style="padding:5px 8px; font-size:13px;" oninput="showTimeDiff(this.value, 'edit-tz-hint')">
+                    </div>
+                    <div class="input-group" style="flex:1;">
+                        <label style="font-size:11px; margin-bottom:2px;">城市</label>
+                        <input type="text" id="edit-mushroom-city" class="input-base" style="padding:5px 8px; font-size:13px;" placeholder="例如：東京">
                     </div>
                 </div>
-                <div class="input-group">
-                    <label>座標</label>
-                    <input type="text" id="edit-coords" class="input-base" onblur="autoDetectCountry(this.value, 'edit-mushroom-country', 'edit-tz-hint', 'edit-mushroom-city')">
-                </div>
-                <div class="input-group">
-                    <label>國家 <span id="edit-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
-                    <input type="text" id="edit-mushroom-country" class="input-base" oninput="showTimeDiff(this.value, 'edit-tz-hint')">
-                </div>
-                <div class="input-group">
-                    <label>城市</label>
-                    <input type="text" id="edit-mushroom-city" class="input-base" placeholder="例如：東京">
-                    <div id="edit-mushroom-city-candidates" style="display:none; margin-top:5px; flex-wrap:wrap; gap:5px;"></div>
-                </div>
-                <div class="input-group">
-                    <label>名稱</label>
-                    <input type="text" id="edit-name" class="input-base">
-                </div>
-                <div class="input-group">
-                    <label>標籤</label>
-                    <input type="text" id="edit-tag" class="input-base">
+                <div id="edit-mushroom-city-candidates" style="display:none; margin-top:4px; flex-wrap:wrap; gap:4px;"></div>
+                <div style="display:flex; gap:6px;">
+                    <div class="input-group" style="flex:1.2;">
+                        <label style="font-size:11px; margin-bottom:2px;">名稱</label>
+                        <input type="text" id="edit-name" class="input-base" style="padding:5px 8px; font-size:13px;">
+                    </div>
+                    <div class="input-group" style="flex:1;">
+                        <label style="font-size:11px; margin-bottom:2px;">標籤</label>
+                        <input type="text" id="edit-tag" class="input-base" style="padding:5px 8px; font-size:13px;">
+                    </div>
                 </div>
                 <div class="input-group" style="margin-top:2px;">
-                    <label style="text-align:center;">重新設定剩餘時間</label>
-                    <div class="time-container" style="margin-top:5px;">
+                    <label style="text-align:center; font-size:11px;">重新設定剩餘時間</label>
+                    <div class="time-container" style="margin-top:4px;">
                         <div class="time-box"><label>天</label><input type="number" id="edit-days" class="input-base" min="0" value="0"></div>
                         <div class="time-box"><label>時</label><input type="number" id="edit-hours" class="input-base" min="0" max="23" value="0"></div>
                         <div class="time-box"><label>分</label><input type="number" id="edit-minutes" class="input-base" min="0" max="59" value="0"></div>
@@ -1764,132 +1807,139 @@
                 </div>
             </div>
 
-            <div id="edit-group-postcard" style="display:none; flex-direction:column; gap:8px;">
-                <div class="input-group">
-                    <label>種類</label>
-                    <select id="edit-post-type" class="input-base" onchange="togglePostcardTimeEdit(); if(typeof togglePostcardSgFields==='function') togglePostcardSgFields('edit-post')">
-                        <option value="菇">菇</option><option value="花">花</option><option value="菇窩">菇窩</option><option value="隱藏">隱藏</option><option value="特殊金盆">特殊金盆</option><option value="節慶蘑菇">節慶蘑菇</option>
-                    </select>
-                </div>
-                <div id="edit-post-sg-fields" style="display:none; flex-direction:column; gap:10px; background:#fefce8; border:1px solid #fef08a; padding:10px; border-radius:8px; margin-bottom:4px;">
-                    <div class="input-group" style="margin:0;">
-                        <label style="color:#854d0e;">活動名稱 (以此名稱作為子分類)</label>
-                        <input type="text" id="edit-post-sg-activity" class="input-base" placeholder="例如：2026櫻花季" style="border-color:#fde047; background:#fffbeb;">
-                    </div>
-                    <div class="input-group" style="margin:0;">
-                        <label style="color:#854d0e;">金盆型態</label>
-                        <select id="edit-post-sg-type" class="input-base" onchange="if(typeof togglePostcardSgDates==='function') togglePostcardSgDates('edit-post')" style="border-color:#fde047; background:#fffbeb;">
-                            <option value="常駐">常駐</option>
-                            <option value="期間">期間</option>
+            <div id="edit-group-postcard" style="display:none; flex-direction:column; gap:6px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin:0;">
+                    <div class="input-group" style="flex:1; margin:0;">
+                        <label style="margin:0; font-size:11px;">種類</label>
+                        <select id="edit-post-type" class="input-base" style="padding:6px 8px; font-size:13px;" onchange="togglePostcardTimeEdit(); if(typeof togglePostcardSgFields==='function') togglePostcardSgFields('edit-post')">
+                            <option value="菇">菇</option><option value="花">花</option><option value="菇窩">菇窩</option><option value="隱藏">隱藏</option><option value="特殊金盆">特殊金盆</option><option value="節慶蘑菇">節慶蘑菇</option>
                         </select>
                     </div>
-                    <div id="edit-post-sg-dates" style="display:none; flex-direction:column; gap:8px;">
-                        <div style="display:flex; flex-direction:row; gap:8px;">
+                    <div style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-end;">
+                        <span id="edit-post-created-date" style="font-size:11px; color:var(--text-muted); font-weight:bold;"></span>
+                    </div>
+                </div>
+                <div id="edit-post-sg-fields" style="display:none; flex-direction:column; gap:5px; background:#fffbeb; border:1px solid #fef08a; padding:6px 8px; border-radius:8px;">
+                    <div style="display:flex; gap:6px;">
+                        <div class="input-group" style="flex:2; margin:0;">
+                            <label style="color:#854d0e; font-size:11px; margin-bottom:2px;">活動名稱 (子分類)</label>
+                            <input type="text" id="edit-post-sg-activity" class="input-base" placeholder="例如：IKEA / 櫻花季" style="border-color:#fde047; background:#fff; padding:5px 8px; font-size:13px;">
+                        </div>
+                        <div class="input-group" style="flex:1; margin:0; min-width:70px;">
+                            <label style="color:#854d0e; font-size:11px; margin-bottom:2px;">型態</label>
+                            <select id="edit-post-sg-type" class="input-base" onchange="if(typeof togglePostcardSgDates==='function') togglePostcardSgDates('edit-post')" style="border-color:#fde047; background:#fff; padding:5px 8px; font-size:13px;">
+                                <option value="常駐">常駐</option>
+                                <option value="期間">期間</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="edit-post-sg-dates" style="display:none; flex-direction:column; gap:5px;">
+                        <div style="display:flex; flex-direction:row; gap:6px;">
                             <div class="input-group" style="flex:1; margin:0;">
-                                <label style="color:#854d0e;">開始日期</label>
-                                <input type="date" id="edit-post-sg-start" class="input-base" style="border-color:#fde047; background:#fffbeb;">
+                                <label style="color:#854d0e; font-size:11px; margin-bottom:2px;">開始日期</label>
+                                <input type="date" id="edit-post-sg-start" class="input-base" style="border-color:#fde047; background:#fff; padding:4px 6px; font-size:12px;">
                             </div>
                             <div class="input-group" style="flex:1; margin:0;">
-                                <label style="color:#854d0e;">結束日期</label>
-                                <input type="date" id="edit-post-sg-end" class="input-base" style="border-color:#fde047; background:#fffbeb;">
+                                <label style="color:#854d0e; font-size:11px; margin-bottom:2px;">結束日期</label>
+                                <input type="date" id="edit-post-sg-end" class="input-base" style="border-color:#fde047; background:#fff; padding:4px 6px; font-size:12px;">
                             </div>
                         </div>
-                        <div style="display:flex; flex-direction:row; gap:8px;">
+                        <div style="display:flex; flex-direction:row; gap:6px;">
                             <div class="input-group" style="flex:1; margin:0;">
-                                <label style="color:#854d0e;">幾天可領取</label>
-                                <select id="edit-post-sg-cooldown" class="input-base" style="border-color:#fde047; background:#fffbeb;">
+                                <label style="color:#854d0e; font-size:11px; margin-bottom:2px;">幾天可領取</label>
+                                <select id="edit-post-sg-cooldown" class="input-base" style="border-color:#fde047; background:#fff; padding:4px 6px; font-size:12px;">
                                     <option value="">(不設定)</option>
                                     <option value="1">1天</option>
                                     <option value="7">7天</option>
-                                    <option value="30">30天</option>
+                                    <option value="30">一個月</option>
                                 </select>
                             </div>
                             <div class="input-group" style="flex:1; margin:0;">
-                                <label style="color:#854d0e;">上次領取日期</label>
-                                <input type="date" id="edit-post-sg-last" class="input-base" style="border-color:#fde047; background:#fffbeb;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                                    <label style="color:#854d0e; margin:0; font-size:11px;">上次領取日期</label>
+                                    <button type="button" onclick="setTodayDate('edit-post-sg-last')" style="background:#fef08a; border:1px solid #facc15; color:#854d0e; border-radius:4px; font-size:10px; padding:1px 5px; cursor:pointer; font-weight:bold; line-height:1.2;">今日</button>
+                                </div>
+                                <input type="date" id="edit-post-sg-last" class="input-base" style="border-color:#fde047; background:#fff; padding:4px 6px; font-size:12px;">
                             </div>
                         </div>
                     </div>
                 </div>
-                <div id="edit-post-created-date" style="font-size:11px; color:var(--text-muted); font-weight:bold; padding:4px 8px; background:var(--bg); border-radius:8px; border:1px solid var(--border-color,#e5e7eb);"></div>
-                <div class="input-group">
+                <div style="display:flex; gap:6px;">
+                    <div class="input-group" style="flex:1.2;">
+                        <label style="font-size:11px; margin-bottom:2px;">名稱</label>
+                        <input type="text" id="edit-post-name" class="input-base" style="padding:5px 8px; font-size:13px;">
+                    </div>
+                    <div class="input-group" id="edit-post-tag-container" style="flex:1;">
+                        <label style="font-size:11px; margin-bottom:2px;">標籤</label>
+                        <input type="text" id="edit-post-tag" class="input-base" style="padding:5px 8px; font-size:13px;">
+                    </div>
+                </div>
+                <div class="input-group" style="margin:0;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
-                        <label style="margin:0;">座標</label>
+                        <label style="margin:0; font-size:11px;">座標</label>
                         <button type="button" onclick="searchCoordsByName('edit-post-name', 'edit-post-city', 'edit-post-country', 'edit-post-coords', 'edit-post-tag')" style="display:none; font-size:11px; padding:2px 8px; border-radius:12px; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; cursor:pointer; line-height:1.2;">🔍 搜尋定位</button>
                     </div>
-                    <input type="text" id="edit-post-coords" class="input-base"
+                    <input type="text" id="edit-post-coords" class="input-base" style="padding:5px 8px; font-size:13px;"
                         onblur="autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city')"
                         oninput="clearTimeout(window._editGeoTimer); window._editGeoTimer = setTimeout(() => autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city'), 1200)">
-                    <div id="edit-post-coords-candidates" style="margin-top:5px; display:none; flex-direction:column; gap:4px;"></div>
+                    <div id="edit-post-coords-candidates" style="margin-top:4px; display:none; flex-direction:column; gap:4px;"></div>
                 </div>
-                <div style="display: flex; gap: 8px;">
+                <div style="display: flex; gap: 6px;">
                     <div class="input-group" style="flex:1;">
-                        <label>國家 <span id="edit-post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
-                        <input type="text" id="edit-post-country" class="input-base" oninput="showTimeDiff(this.value, 'edit-post-tz-hint')">
+                        <label style="font-size:11px; margin-bottom:2px;">國家 <span id="edit-post-tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
+                        <input type="text" id="edit-post-country" class="input-base" style="padding:5px 8px; font-size:13px;" oninput="showTimeDiff(this.value, 'edit-post-tz-hint')">
                     </div>
                     <div class="input-group" style="flex:1;">
-                        <label>城市</label>
-                        <input type="text" id="edit-post-city" class="input-base" placeholder="例如：東京">
+                        <label style="font-size:11px; margin-bottom:2px;">城市</label>
+                        <input type="text" id="edit-post-city" class="input-base" style="padding:5px 8px; font-size:13px;" placeholder="例如：東京">
                     </div>
                 </div>
-                <div id="edit-post-city-candidates" style="margin-top:5px; display:none; flex-wrap:wrap; gap:5px;"></div>
-                <div class="input-group">
-                    <label>名稱</label>
-                    <input type="text" id="edit-post-name" class="input-base">
-                </div>
-                <div class="input-group" id="edit-post-tag-container">
-                    <label>標籤</label>
-                    <input type="text" id="edit-post-tag" class="input-base">
-                </div>
-                <div class="input-group">
-                    <label>圖片網址</label>
+                <div id="edit-post-city-candidates" style="display:none; margin-top:4px; display:flex; flex-wrap:wrap; gap:4px;"></div>
+                <div class="input-group" style="margin:0;">
+                    <label style="font-size:11px; margin-bottom:2px;">圖片網址</label>
                     <div style="display:flex; gap:6px; align-items:center;">
-                        <input type="text" id="edit-post-image" class="input-base" style="flex:1;" placeholder="貼上圖片網址，或留空" oninput="checkDatabaseForImage(this.value, 'edit-post')">
+                        <input type="text" id="edit-post-image" class="input-base" style="flex:1; padding:5px 8px; font-size:13px;" placeholder="貼上圖片網址，或留空" oninput="checkDatabaseForImage(this.value, 'edit-post')">
                         <input type="file" id="edit-post-ocr-file" accept="image/*" style="display:none;" onchange="handleVisionOcrUpload(event, 'edit-post-ocr-result')">
-                        <button type="button" class="btn-sm btn-default" onclick="triggerOCR('edit-post-image', 'edit-post-ocr-file', 'edit-post-ocr-result')" style="white-space:nowrap; border-radius:8px; background:#e0e7ff; color:#3730a3; border:1px solid #6366f1; padding:6px 10px; line-height:1.3;">
-                            <div style="font-weight:bold;">🔍 文字辨識</div>
-                            <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#475569;">辨識左側網址</div>
+                        <button type="button" class="btn-sm btn-default" onclick="triggerOCR('edit-post-image', 'edit-post-ocr-file', 'edit-post-ocr-result')" style="white-space:nowrap; border-radius:6px; background:#e0e7ff; color:#3730a3; border:1px solid #6366f1; padding:5px 8px; font-size:11px; font-weight:bold;">
+                            🔍 辨識
                         </button>
                     </div>
-                    <div id="edit-post-image-ocr-buttons" style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
-                        <button type="button" class="btn-sm btn-default" onclick="document.getElementById('edit-post-ocr-file').click()" style="flex:1; min-width:80px; border-radius:8px; background:#f5f3ff; color:#5b21b6; border:1px solid #8b5cf6; padding:6px; line-height:1.3;">
-                            <div style="font-weight:bold;">📁 上傳截圖</div>
-                            <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#64748b;">從裝置相簿檔案</div>
+                    <div id="edit-post-image-ocr-buttons" style="display:flex; gap:6px; margin-top:4px; flex-wrap:wrap;">
+                        <button type="button" class="btn-sm btn-default" onclick="document.getElementById('edit-post-ocr-file').click()" style="flex:1; min-width:70px; border-radius:6px; background:#f5f3ff; color:#5b21b6; border:1px solid #8b5cf6; padding:4px 6px; font-size:11px; font-weight:bold; white-space:nowrap; text-align:center;">
+                            📁 上傳截圖
                         </button>
-                        <button type="button" class="btn-sm btn-default" onclick="pasteFromClipboard('edit-post-ocr-result')" style="flex:1; min-width:80px; border-radius:8px; background:#f0fdf4; color:#166534; border:1px solid #22c55e; padding:6px; line-height:1.3;">
-                            <div style="font-weight:bold;">📋 貼上圖片</div>
-                            <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#475569;">讀取剪貼簿圖片</div>
+                        <button type="button" class="btn-sm btn-default" onclick="pasteFromClipboard('edit-post-ocr-result')" style="flex:1; min-width:70px; border-radius:6px; background:#f0fdf4; color:#166534; border:1px solid #22c55e; padding:4px 6px; font-size:11px; font-weight:bold; white-space:nowrap; text-align:center;">
+                            📋 貼上圖片
                         </button>
-                        <button type="button" class="btn-sm btn-default" onclick="openGoogleLensSearch('edit-post-image', 'edit-post-coords')" style="flex:1; min-width:80px; border-radius:8px; background:#fff7ed; color:#c2410c; border:1px solid #f97316; padding:6px; line-height:1.3;">
-                            <div style="font-weight:bold;">🤖 AI 座標搜尋</div>
-                            <div style="font-size:11px; font-weight:normal; margin-top:2px; color:#b45309;">Google AI 模式查座標</div>
+                        <button type="button" class="btn-sm btn-default" onclick="openGoogleLensSearch('edit-post-image', 'edit-post-coords')" style="flex:1; min-width:70px; border-radius:6px; background:#fff7ed; color:#c2410c; border:1px solid #f97316; padding:4px 6px; font-size:11px; font-weight:bold; white-space:nowrap; text-align:center;">
+                            🤖 AI 查座標
                         </button>
                     </div>
-                    <div id="edit-post-ocr-result" style="display:none; margin-top:5px; font-size:12px; background:#fef3c7; padding:8px; border-radius:6px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:120px; overflow-y:auto; color:#92400e;"></div>
+                    <div id="edit-post-ocr-result" style="display:none; margin-top:4px; font-size:11px; background:#fef3c7; padding:6px 8px; border-radius:6px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:100px; overflow-y:auto; color:#92400e;"></div>
                 </div>
                 
                 <div id="edit-post-time-container" class="input-group" style="margin-top:2px; display:none;">
-                    <label style="text-align:center;">設定「菇」剩餘時間</label>
-                    <div class="time-container" style="margin-top:5px;">
+                    <label style="text-align:center; font-size:11px;">設定「菇」剩餘時間</label>
+                    <div class="time-container" style="margin-top:4px;">
                         <div class="time-box"><label>天</label><input type="number" id="edit-post-days" class="input-base" min="0" value="0"></div>
                         <div class="time-box"><label>時</label><input type="number" id="edit-post-hours" class="input-base" min="0" max="23" value="0"></div>
                         <div class="time-box"><label>分</label><input type="number" id="edit-post-minutes" class="input-base" min="0" max="59" value="0"></div>
                     </div>
                 </div>
-                <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
+                <div style="display:flex; gap:6px; margin-top:6px; align-items:center;">
                     <button type="button" id="edit-post-discontinued-btn"
                         onclick="window._editDiscontinued = !window._editDiscontinued; this.style.background = window._editDiscontinued ? '#fef2f2' : ''; this.style.color = window._editDiscontinued ? '#dc2626' : 'var(--text-muted)'; this.style.borderColor = window._editDiscontinued ? '#f87171' : '#d1d5db'; this.innerHTML = window._editDiscontinued ? '📦 絕版 ✓' : '📦 絕版';"
-                        style="flex-shrink:0; padding:8px 12px; border-radius:10px; border:1px dashed #d1d5db; background:var(--card-bg); color:var(--text-muted); font-size:12px; font-weight:600; cursor:pointer; transition:all 0.2s; white-space:nowrap;">
+                        style="flex-shrink:0; padding:6px 10px; border-radius:8px; border:1px dashed #d1d5db; background:var(--card-bg); color:var(--text-muted); font-size:11px; font-weight:600; cursor:pointer; transition:all 0.2s; white-space:nowrap;">
                         📦 絕版
                     </button>
-                    <button type="button" onclick="duplicatePostcard(currentEditingTimeId); closeModal('time-modal');" style="flex:1; padding:8px 12px; border-radius:10px; border:1px solid #ddd6fe; background:#f5f3ff; color:#6d28d9; font-size:12px; font-weight:600; cursor:pointer;">📋 複製</button>
-                    <button type="button" onclick="deleteItem(currentEditingTimeId, 'postcard'); closeModal('time-modal');" style="flex:1; padding:8px 12px; border-radius:10px; border:1px solid #fecaca; background:#fef2f2; color:#ef4444; font-size:12px; font-weight:600; cursor:pointer;">🗑️ 刪除</button>
+                    <button type="button" onclick="duplicatePostcard(currentEditingTimeId); closeModal('time-modal');" style="flex:1; padding:6px 10px; border-radius:8px; border:1px solid #ddd6fe; background:#f5f3ff; color:#6d28d9; font-size:11px; font-weight:600; cursor:pointer;">📋 複製</button>
+                    <button type="button" onclick="deleteItem(currentEditingTimeId, 'postcard'); closeModal('time-modal');" style="flex:1; padding:6px 10px; border-radius:8px; border:1px solid #fecaca; background:#fef2f2; color:#ef4444; font-size:11px; font-weight:600; cursor:pointer;">🗑️ 刪除</button>
                 </div>
             </div>
 
             <!-- 底部操作列：儲存 -->
-            <div style="display:flex; gap:8px; margin-top:12px; align-items:center;">
-                <button class="btn-sm btn-edit btn-block" style="flex:1; padding:11px; font-size:14px; font-weight:bold; border-radius:10px;" id="time-modal-submit-btn">💾 儲存修改</button>
+            <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
+                <button class="btn-sm btn-edit btn-block" style="flex:1; padding:9px; font-size:14px; font-weight:bold; border-radius:8px;" id="time-modal-submit-btn">💾 儲存修改</button>
             </div>
         </div>
     </div>
@@ -1929,10 +1979,13 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.07.30.0230";</script>
-    <script src="js/main.min.js?v=202607281811"></script>
+    <script>const APP_VERSION = "2026.08.02.0142";</script>
+    <script src="js/main.js?v=1785606000000"></script>
+    <script src="js/autofill.js?v=1785606000000"></script>
 </body>
 </html>
+
+
 
 
 
