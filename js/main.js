@@ -2851,6 +2851,7 @@
         const uTheme = getUserColorTheme(item.user);
 
         let actionHtml = item.user === "" ? `<button class="btn-sm btn-claim" onclick="openClaimModalById('${item.id}')">認領</button>` : '';
+        actionHtml += item.coords ? `<button class="btn-sm btn-default" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}')">🗺️ 地圖</button>` : '';
         actionHtml += `<button class="btn-sm btn-edit" onclick="openTimeModalById('${item.id}', 'mushroom')">修改</button><button class="btn-sm btn-danger" onclick="deleteItem('${item.id}', 'mushroom')">刪除</button>`;
 
         const currentSlots = item.slots || ['', '', '', '', ''];
