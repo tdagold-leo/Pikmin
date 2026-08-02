@@ -5005,14 +5005,21 @@
                 });
 
                 marker.addListener('click', () => {
-                    const claimed = mush.user ? `<div style="font-size:12px; color:#15803d; font-weight:700; margin-bottom:4px;">✅ ${escapeHtml(mush.user)}</div>` : `<div style="font-size:12px; color:#dc2626; font-weight:700; margin-bottom:4px;">⏳ 待認領</div>`;
-                    const content = `<div style="min-width:160px; padding:6px; font-family:var(--font-family); text-align:center;">
-                        <div style="font-size:22px; margin-bottom:4px;">🍄</div>
+                    const isUnclaimed = !mush.user || mush.user === '';
+                    const claimed = isUnclaimed
+                        ? `<div style="font-size:12px; color:#dc2626; font-weight:700; margin-bottom:8px;">⏳ 待認領</div>`
+                        : `<div style="font-size:12px; color:#15803d; font-weight:700; margin-bottom:8px;">✅ ${escapeHtml(mush.user)}</div>`;
+                    const claimBtn = isUnclaimed
+                        ? `<button onclick="mapInfoWindow.close(); openClaimModalById('${mush.id}')" style="width:100%; padding:7px 0; background:linear-gradient(135deg, #6366f1, #4f46e5); color:white; border:none; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; margin-bottom:6px;">🙋 認領</button>`
+                        : '';
+                    const content = `<div style="min-width:170px; padding:8px 6px 6px; font-family:var(--font-family); text-align:center;">
+                        <div style="font-size:24px; margin-bottom:4px;">🍄</div>
                         <div style="font-size:14px; font-weight:bold; color:#1e293b; margin-bottom:4px;">${escapeHtml(mush.name || '未命名')}</div>
                         ${claimed}
                         <div style="font-size:12px; color:#64748b; margin-bottom:6px;">🌍 ${escapeHtml(mush.country || '未提供')}${mush.city ? ' · ' + escapeHtml(mush.city) : ''}</div>
                         <div style="font-size:11px; font-weight:700; color:white; background:#16a34a; padding:2px 8px; border-radius:4px; display:inline-block; margin-bottom:10px;">${escapeHtml(mush.kind || '巨菇')}</div>
-                        <button onclick="copyCoords('${escapeHtml(mush.coords).replace(/'/g, "\\'")}', this)" style="width:100%; padding:6px 0; background:linear-gradient(135deg, #16a34a, #15803d); color:white; border:none; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">📍 複製座標</button>
+                        ${claimBtn}
+                        <button onclick="copyCoords('${escapeHtml(mush.coords).replace(/'/g, "\\'")}', this)" style="width:100%; padding:6px 0; background:#f1f5f9; color:#1e293b; border:1.5px solid #e2e8f0; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">📍 複製座標</button>
                     </div>`;
                     mapInfoWindow.setContent(content);
                     mapInfoWindow.open(mapInstance, marker);
