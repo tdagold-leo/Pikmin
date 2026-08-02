@@ -711,6 +711,173 @@
         .time-box label { text-align: center; font-size: 11px; color: #64748b; font-weight: 600; }
         .time-box input { text-align: center; font-weight: bold; font-size: 14px; border-radius: 8px; padding: 6px 4px; }
 
+        /* ===== 新增巨菇表單 ===== */
+        .mush-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .mush-tz-hint {
+            font-size: 10px;
+            color: #f59e0b;
+            font-weight: 600;
+        }
+        .mush-form-row {
+            display: flex;
+            gap: 8px;
+        }
+        .mush-form-field {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 0;
+        }
+        .mush-input {
+            padding: 8px 12px;
+            font-size: 13px;
+            border-radius: 10px;
+            border: 1.5px solid #e2e8f0;
+            background: #f8fafc;
+            transition: border-color 0.18s, box-shadow 0.18s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .mush-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+        }
+        .mush-coords-row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .mush-coords-row .mush-input { flex: 1; }
+        .mush-paste-btn {
+            flex-shrink: 0;
+            padding: 8px 13px;
+            border-radius: 10px;
+            background: #f0fdf4;
+            color: #15803d;
+            border: 1.5px solid #86efac;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: background 0.15s, box-shadow 0.15s;
+        }
+        .mush-paste-btn:hover { background: #dcfce7; box-shadow: 0 2px 6px rgba(21,128,61,0.12); }
+        .mush-time-section {
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px 14px;
+            text-align: center;
+        }
+        .mush-time-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            margin-bottom: 8px;
+            letter-spacing: 0.3px;
+        }
+        .mush-time-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .mush-time-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .mush-time-input {
+            width: 64px;
+            text-align: center;
+            font-weight: 800;
+            font-size: 20px;
+            padding: 6px 4px;
+            border-radius: 10px;
+            border: 1.5px solid #e2e8f0;
+            background: #fff;
+            color: #1e293b;
+            transition: border-color 0.18s, box-shadow 0.18s;
+            -moz-appearance: textfield;
+        }
+        .mush-time-input::-webkit-outer-spin-button,
+        .mush-time-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+        .mush-time-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+        }
+        .mush-time-unit {
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+        }
+        .mush-time-sep {
+            font-size: 20px;
+            font-weight: 900;
+            color: #cbd5e1;
+            margin-bottom: 16px;
+        }
+        .mush-ocr-row {
+            display: flex;
+            gap: 8px;
+        }
+        .mush-ocr-btn {
+            flex: 1;
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: background 0.15s, box-shadow 0.15s;
+            border: 1.5px solid;
+        }
+        .mush-ocr-upload {
+            background: #f5f3ff;
+            color: #6d28d9;
+            border-color: #c4b5fd;
+        }
+        .mush-ocr-upload:hover { background: #ede9fe; box-shadow: 0 2px 6px rgba(109,40,217,0.12); }
+        .mush-ocr-paste {
+            background: #f0fdf4;
+            color: #15803d;
+            border-color: #86efac;
+        }
+        .mush-ocr-paste:hover { background: #dcfce7; box-shadow: 0 2px 6px rgba(21,128,61,0.12); }
+        .mush-ocr-result {
+            display: none;
+            margin-top: 2px;
+            font-size: 11px;
+            background: linear-gradient(135deg, #fef9c3, #fef3c7);
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1.5px solid #f59e0b;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 110px;
+            overflow-y: auto;
+            color: #78350f;
+            line-height: 1.5;
+        }
+
         .empty-message {
             color: #9ca3af;
             text-align: center;
@@ -1975,76 +2142,94 @@
                 <button class="modal-close" onclick="closeModal('add-modal')">&times;</button>
             </div>
             
-            <div id="form-mushroom" style="display:none; flex-direction:column; gap:8px;">
-                <div style="display:flex; gap:8px;">
-                    <div class="input-group" style="flex:1;">
-                        <label style="font-size:11px; margin-bottom:2px;">認領人</label>
-                        <input type="text" id="user" class="input-base" placeholder="路人 或 名字" style="padding:6px 10px; font-size:13px;">
+            <div id="form-mushroom" style="display:none; flex-direction:column; gap:10px;">
+
+                <!-- 認領人 + 分類 -->
+                <div class="mush-form-row">
+                    <div class="mush-form-field">
+                        <label class="mush-label">👤 認領人</label>
+                        <input type="text" id="user" class="input-base mush-input" placeholder="路人 或 名字">
                     </div>
-                    <div class="input-group" style="flex:1;">
-                        <label style="font-size:11px; margin-bottom:2px;">蘑菇分類</label>
-                        <select id="mushroom-kind" class="input-base" style="padding:6px 10px; font-size:13px;">
+                    <div class="mush-form-field" style="max-width:130px;">
+                        <label class="mush-label">🍄 種類</label>
+                        <select id="mushroom-kind" class="input-base mush-input">
                             <option value="巨菇">🍄 巨菇</option>
                             <option value="元素菇">🌿 元素菇</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="input-group" style="margin:0;">
-                    <label style="font-size:11px; margin-bottom:2px;">座標 (貼上自動辨識國家/城市)</label>
-                    <div style="display:flex; gap:6px; align-items:center;">
-                        <input type="text" id="coords" class="input-base" placeholder="貼上或輸入經緯度座標" style="flex:1; padding:6px 10px; font-size:13px;"
+                <!-- 座標 -->
+                <div class="mush-form-field">
+                    <label class="mush-label">📍 座標</label>
+                    <div class="mush-coords-row">
+                        <input type="text" id="coords" class="input-base mush-input" placeholder="貼上或輸入經緯度座標"
                             onblur="autoDetectCountry(this.value, 'country', 'tz-hint', 'city')"
                             oninput="clearTimeout(window._mushroomGeoTimer); window._mushroomGeoTimer = setTimeout(() => autoDetectCountry(this.value, 'country', 'tz-hint', 'city'), 1200)">
-                        <button type="button" onclick="navigator.clipboard.readText().then(t => { document.getElementById('coords').value = t.trim(); autoDetectCountry(t.trim(), 'country', 'tz-hint', 'city'); }).catch(() => alert('無法讀取剪貼簿，請手動貼上'))"
-                            style="white-space:nowrap; padding:6px 12px; border-radius:8px; background:#f0fdf4; color:#15803d; border:1px solid #86efac; font-size:12px; font-weight:bold; cursor:pointer; height:34px; display:flex; align-items:center; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                        <button type="button" class="mush-paste-btn"
+                            onclick="navigator.clipboard.readText().then(t => { document.getElementById('coords').value = t.trim(); autoDetectCountry(t.trim(), 'country', 'tz-hint', 'city'); }).catch(() => alert('無法讀取剪貼簿，請手動貼上'))">
                             📋 貼上
                         </button>
                     </div>
                 </div>
 
-                <div style="display:flex; gap:8px;">
-                    <div class="input-group" style="flex:1;">
-                        <label style="font-size:11px; margin-bottom:2px;">國家 <span id="tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
-                        <input type="text" id="country" class="input-base" placeholder="例如：日本" style="padding:6px 10px; font-size:13px;" oninput="showTimeDiff(this.value, 'tz-hint')">
+                <!-- 國家 + 城市 -->
+                <div class="mush-form-row">
+                    <div class="mush-form-field">
+                        <label class="mush-label">🌍 國家 <span id="tz-hint" class="mush-tz-hint"></span></label>
+                        <input type="text" id="country" class="input-base mush-input" placeholder="例如：日本" oninput="showTimeDiff(this.value, 'tz-hint')">
                     </div>
-                    <div class="input-group" style="flex:1;">
-                        <label style="font-size:11px; margin-bottom:2px;">城市</label>
-                        <input type="text" id="city" class="input-base" placeholder="例如：東京" style="padding:6px 10px; font-size:13px;">
-                    </div>
-                </div>
-                <div id="city-candidates" style="display:none; margin-top:2px; flex-wrap:wrap; gap:4px;"></div>
-
-                <div style="display:flex; gap:8px;">
-                    <div class="input-group" style="flex:1.2;">
-                        <label style="font-size:11px; margin-bottom:2px;">名稱</label>
-                        <input type="text" id="name" class="input-base" placeholder="例如：巨大火菇" style="padding:6px 10px; font-size:13px;">
-                    </div>
-                    <div class="input-group" style="flex:1;">
-                        <label style="font-size:11px; margin-bottom:2px;">標籤</label>
-                        <input type="text" id="tag" class="input-base" placeholder="例如：大安區、五星" style="padding:6px 10px; font-size:13px;">
+                    <div class="mush-form-field">
+                        <label class="mush-label">🏙️ 城市</label>
+                        <input type="text" id="city" class="input-base mush-input" placeholder="例如：東京">
                     </div>
                 </div>
+                <div id="city-candidates" style="display:none; margin-top:-4px; flex-wrap:wrap; gap:4px;"></div>
 
-                <div class="input-group" style="margin-top:2px;">
-                    <label style="text-align:center; font-size:11px; color:#64748b;">⏱️ 設定剩餘時間</label>
-                    <div class="time-container" style="margin-top:4px;">
-                        <div class="time-box"><label>天</label><input type="number" id="days" class="input-base" min="0" value="0"></div>
-                        <div class="time-box"><label>時</label><input type="number" id="hours" class="input-base" min="0" max="23" value="0"></div>
-                        <div class="time-box"><label>分</label><input type="number" id="minutes" class="input-base" min="0" max="59" value="0"></div>
+                <!-- 名稱 + 標籤 -->
+                <div class="mush-form-row">
+                    <div class="mush-form-field" style="flex:1.2;">
+                        <label class="mush-label">📝 名稱</label>
+                        <input type="text" id="name" class="input-base mush-input" placeholder="例如：巨大火菇">
+                    </div>
+                    <div class="mush-form-field" style="flex:1;">
+                        <label class="mush-label">🏷️ 標籤</label>
+                        <input type="text" id="tag" class="input-base mush-input" placeholder="例如：五星">
                     </div>
                 </div>
 
-                <div style="display:flex; gap:8px; margin-top:4px;">
+                <!-- 剩餘時間 -->
+                <div class="mush-time-section">
+                    <div class="mush-time-label">⏱️ 設定剩餘時間</div>
+                    <div class="mush-time-row">
+                        <div class="mush-time-cell">
+                            <input type="number" id="days" class="input-base mush-time-input" min="0" value="0">
+                            <span class="mush-time-unit">天</span>
+                        </div>
+                        <span class="mush-time-sep">:</span>
+                        <div class="mush-time-cell">
+                            <input type="number" id="hours" class="input-base mush-time-input" min="0" max="23" value="0">
+                            <span class="mush-time-unit">時</span>
+                        </div>
+                        <span class="mush-time-sep">:</span>
+                        <div class="mush-time-cell">
+                            <input type="number" id="minutes" class="input-base mush-time-input" min="0" max="59" value="0">
+                            <span class="mush-time-unit">分</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 截圖辨識 -->
+                <div class="mush-ocr-row">
                     <input type="file" id="mush-ocr-file" accept="image/*" style="display:none;" onchange="handleVisionOcrUpload(event, 'mush-ocr-result')">
-                    <button type="button" onclick="document.getElementById('mush-ocr-file').click()" style="flex:1; border-radius:8px; background:#f5f3ff; color:#6d28d9; border:1px solid #c4b5fd; padding:7px 8px; font-size:11px; font-weight:bold; white-space:nowrap; text-align:center; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+                    <button type="button" class="mush-ocr-btn mush-ocr-upload" onclick="document.getElementById('mush-ocr-file').click()">
                         📁 上傳截圖辨識
                     </button>
-                    <button type="button" onclick="pasteFromClipboard('mush-ocr-result')" style="flex:1; border-radius:8px; background:#f0fdf4; color:#15803d; border:1px solid #86efac; padding:7px 8px; font-size:11px; font-weight:bold; white-space:nowrap; text-align:center; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,0.04);">
+                    <button type="button" class="mush-ocr-btn mush-ocr-paste" onclick="pasteFromClipboard('mush-ocr-result')">
                         📋 貼上圖片
                     </button>
                 </div>
-                <div id="mush-ocr-result" style="display:none; margin-top:4px; font-size:11px; background:#fef3c7; padding:8px; border-radius:6px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:100px; overflow-y:auto; color:#92400e;"></div>
+                <div id="mush-ocr-result" class="mush-ocr-result"></div>
             </div>
 
             <div id="form-postcard" style="display:none; flex-direction:column; gap:6px;">
