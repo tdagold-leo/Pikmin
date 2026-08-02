@@ -1,5 +1,13 @@
 // JS logic begins
     const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.07.24.2104";
+
+    // 自動清理網址列上的版本號參數，保持網址乾淨漂亮 (例如保持為 https://tdagold-leo.github.io/Pikmin/)
+    if (window.location.search && (window.location.search.includes('v=') || window.location.search.includes('_t='))) {
+        try {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } catch(e) {}
+    }
+
     function checkForUpdate(isManual = false) {
         // 從 raw.github 抓取最新版號以完全穿透 GitHub Pages CDN 快取
         const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + Date.now();
@@ -30,7 +38,7 @@
                     document.body.appendChild(toast);
 
                     setTimeout(() => {
-                        window.location.replace(window.location.origin + window.location.pathname + '?_v=' + match[1] + '&_t=' + Date.now());
+                        window.location.reload();
                     }, 500);
                 } else if (isManual) {
                     alert('✅ 當前已是最新版本 (v' + CURRENT_APP_VERSION + ')！');
