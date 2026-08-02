@@ -2401,7 +2401,46 @@
                 </div>
             </div>
             
-            <button class="btn-block" id="modal-submit-btn" onclick="addItem()" style="margin-top:6px; padding:12px; font-size:15px; font-weight:800; border-radius:12px; border:none; cursor:pointer; background:linear-gradient(135deg, #16a34a, #15803d); color:white; box-shadow:0 4px 14px rgba(22,163,74,0.35); transition:all 0.2s;">➕ 新增</button>
+            <button class="btn-block" id="add-submit-btn" onclick="addItem()" style="margin-top:6px; padding:12px; font-size:15px; font-weight:800; border-radius:12px; border:none; cursor:pointer; background:linear-gradient(135deg, #16a34a, #15803d); color:white; box-shadow:0 4px 14px rgba(22,163,74,0.35); transition:all 0.2s;">➕ 新增</button>
+        </div>
+    </div>
+
+    <!-- 彈窗：認領巨菇 -->
+    <div id="claim-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h4 id="modal-title">🙋 認領巨菇</h4>
+                <button class="modal-close" onclick="closeModal('claim-modal')">&times;</button>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <div class="mush-form-field">
+                    <label class="mush-label">👤 認領人名字</label>
+                    <input type="text" id="modal-username" class="input-base mush-input" placeholder="請輸入你的名字">
+                </div>
+                <div class="mush-time-section">
+                    <div class="mush-time-label">⏱️ 設定剩餘時間（可不填）</div>
+                    <div class="mush-time-row">
+                        <div class="mush-time-cell">
+                            <input type="number" id="modal-days" class="input-base mush-time-input" min="0" value="0">
+                            <span class="mush-time-unit">天</span>
+                        </div>
+                        <span class="mush-time-sep">:</span>
+                        <div class="mush-time-cell">
+                            <input type="number" id="modal-hours" class="input-base mush-time-input" min="0" max="23" value="0">
+                            <span class="mush-time-unit">時</span>
+                        </div>
+                        <span class="mush-time-sep">:</span>
+                        <div class="mush-time-cell">
+                            <input type="number" id="modal-minutes" class="input-base mush-time-input" min="0" max="59" value="0">
+                            <span class="mush-time-unit">分</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-block" id="modal-submit-btn" onclick="submitClaim()"
+                    style="padding:12px; font-size:15px; font-weight:800; border-radius:12px; border:none; cursor:pointer; background:linear-gradient(135deg, #6366f1, #4f46e5); color:white; box-shadow:0 4px 14px rgba(99,102,241,0.35); transition:all 0.2s;">
+                    ✅ 確認認領
+                </button>
+            </div>
         </div>
     </div>
 

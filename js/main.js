@@ -513,7 +513,7 @@
             if (fLand) fLand.style.display = 'flex';
         }
 
-        const submitBtn = document.getElementById('modal-submit-btn');
+        const submitBtn = document.getElementById('add-submit-btn');
         if (submitBtn) {
             submitBtn.onclick = addItem;
             if (currentMode === 'mushroom') {
