@@ -453,6 +453,9 @@
         } else {
             document.body.style.overflow = ''; // 恢復滾動
         }
+        if (tab === 'landmark' && typeof renderLandmarks === 'function') {
+            renderLandmarks();
+        }
         updateView();
     }
 
@@ -511,7 +514,26 @@
         }
 
         const submitBtn = document.getElementById('modal-submit-btn');
-        if (submitBtn) submitBtn.onclick = addItem;
+        if (submitBtn) {
+            submitBtn.onclick = addItem;
+            if (currentMode === 'mushroom') {
+                submitBtn.style.background = 'linear-gradient(135deg, #16a34a, #15803d)';
+                submitBtn.style.boxShadow = '0 4px 14px rgba(22, 163, 74, 0.35)';
+                submitBtn.innerText = '➕ 新增巨菇';
+            } else if (currentMode === 'goldbasin') {
+                submitBtn.style.background = 'linear-gradient(135deg, #d97706, #b45309)';
+                submitBtn.style.boxShadow = '0 4px 14px rgba(217, 119, 6, 0.35)';
+                submitBtn.innerText = '➕ 新增特殊金盆';
+            } else if (currentMode === 'postcard') {
+                submitBtn.style.background = 'linear-gradient(135deg, #0284c7, #0369a1)';
+                submitBtn.style.boxShadow = '0 4px 14px rgba(2, 132, 199, 0.35)';
+                submitBtn.innerText = '➕ 新增明信片';
+            } else if (currentMode === 'landmark') {
+                submitBtn.style.background = 'linear-gradient(135deg, #4f46e5, #4338ca)';
+                submitBtn.style.boxShadow = '0 4px 14px rgba(79, 70, 229, 0.35)';
+                submitBtn.innerText = '➕ 新增純點';
+            }
+        }
         
         const addModal = document.getElementById('add-modal');
         if (addModal) addModal.style.display = 'flex';
@@ -1027,6 +1049,7 @@
                     note: cloudData[key].note || '',
                     country: cloudData[key].country || '',
                     city: cloudData[key].city || '',
+                    confirmed: cloudData[key].confirmed || false,
                     timestamp: cloudData[key].timestamp || 0
                 });
             });
@@ -1089,7 +1112,7 @@
 
         const summary = document.createElement('div');
         summary.style.width = '100%';
-        summary.innerHTML = `<div style="font-size:15px; font-weight:900; color:var(--text-main); margin-bottom:8px;">📊 純點總計：${filtered.length} 筆</div>`;
+        summary.innerHTML = `<div style="font-size:14px; font-weight:800; color:var(--text-main); margin-bottom:8px;">📊 純點總計：${filtered.length} 筆</div>`;
         container.appendChild(summary);
 
         // 建立導航卡片的通用函數
@@ -1099,24 +1122,21 @@
             const card = document.createElement('div');
             card.className = 'lm-nav-card' + (isDuplicate ? ' lm-dup' : '');
             card.innerHTML = `
-                <div class="lm-nav-left">
+                <div class="lm-nav-body">
                     <div class="lm-nav-title">📍 ${location || '(未填地點)'}</div>
-                    <div class="lm-nav-sub">
-                        <span class="lm-type-pill">${escapeHtml(item.type)}</span>
-                        ${isDuplicate ? '<span style="color:#b45309;font-weight:700;">⚠️重複</span>' : ''}
+                    <div class="lm-nav-badges">
+                        <span class="lm-type-pill">${escapeHtml(item.type || '純點')}</span>
+                        ${item.confirmed ? '<span class="lm-confirmed-pill">✅ 已確認</span>' : ''}
+                        ${isDuplicate ? '<span class="lm-dup-pill">⚠️ 重複</span>' : ''}
                         ${extraBadge || ''}
-                        ${item.note ? `<span>💬 ${escapeHtml(item.note)}</span>` : ''}
                     </div>
+                    ${item.note ? `<div class="lm-nav-note">💬 ${escapeHtml(item.note)}</div>` : ''}
                 </div>
-                <div class="lm-nav-right">
-                    <div style="display:flex; flex-direction:column; gap:4px;">
-                        <button class="lm-copy-btn" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍<span>複製</span></button>
-                        <a class="lm-copy-btn" href="https://maps.google.com/?q=${escapeHtml(item.coords)}" target="_blank" style="text-decoration:none; display:flex; align-items:center; justify-content:center; background:#f0f9ff; color:#0284c7; border-color:#bae6fd;">🗺️<span>地圖</span></a>
-                    </div>
-                    <div class="lm-icon-actions">
-                        <button class="lm-icon-btn edit" onclick="editLandmark('${item.id}')">✏️</button>
-                        <button class="lm-icon-btn del"  onclick="deleteLandmark('${item.id}')">🗑️</button>
-                    </div>
+                <div class="lm-nav-actions">
+                    <button class="lm-copy-btn" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button>
+                    <a class="lm-icon-btn map" href="https://maps.google.com/?q=${escapeHtml(item.coords)}" target="_blank" title="開啟 Google 地圖">🗺️</a>
+                    <button class="lm-icon-btn edit" onclick="editLandmark('${item.id}')" title="修改">✏️</button>
+                    <button class="lm-icon-btn del"  onclick="deleteLandmark('${item.id}')" title="刪除">🗑️</button>
                 </div>
             `;
             return card;
@@ -1188,29 +1208,8 @@
         });
     }
 
-    let editingLandmarkId = null;
-
     function editLandmark(id) {
-        const item = landmarkList.find(i => i.id === id);
-        if (!item) return;
-        editingLandmarkId = id;
-        // 切換到純點模式並開啟表單
-        currentMode = 'landmark';
-        document.getElementById('add-modal-title').innerText = '✏️ 編輯純點紀錄';
-        document.getElementById('form-mushroom').style.display = 'none';
-        document.getElementById('form-postcard').style.display = 'none';
-        document.getElementById('form-landmark').style.display = 'flex';
-        document.getElementById('form-time').style.display = 'none';
-        // 帶入現有資料
-        document.getElementById('lm-type').value = item.type || '';
-        document.getElementById('lm-coords').value = item.coords || '';
-        document.getElementById('lm-country').value = item.country || '';
-        document.getElementById('lm-city').value = item.city || '';
-        document.getElementById('lm-note').value = item.note || '';
-        // 修改按鈕文字
-        const btn = document.querySelector('#add-modal .btn-primary');
-        if (btn) btn.innerText = '確定修改';
-        document.getElementById('add-modal').style.display = 'flex';
+        openTimeModalById(id, 'landmark');
     }
 
     function deleteLandmark(id) {
@@ -2234,36 +2233,41 @@
             const lmType = document.getElementById('lm-type').value.trim();
             const lmCoords = document.getElementById('lm-coords').value.trim();
             const lmNote = document.getElementById('lm-note').value.trim();
-            const lmCountry = document.getElementById('lm-country').value.trim();
-            const lmCity = document.getElementById('lm-city').value.trim();
+            let lmCountry = toTW(document.getElementById('lm-country').value.trim());
+            if (lmCountry.includes("中華民國")) lmCountry = "台灣";
+            const lmCity = toTW(document.getElementById('lm-city').value.trim());
+            const confEl = document.getElementById('lm-confirmed');
+            const lmConfirmed = confEl ? confEl.checked : false;
+
             if(!lmType || !lmCoords) { alert('種類與座標為必填！'); return; }
 
-            const lmData = { type: lmType, coords: normalizeCoords(lmCoords), note: lmNote, country: lmCountry, city: lmCity, timestamp: Date.now() };
+            const lmData = {
+                type: lmType,
+                coords: normalizeCoords(lmCoords),
+                note: lmNote,
+                country: lmCountry,
+                city: lmCity,
+                confirmed: lmConfirmed,
+                timestamp: Date.now()
+            };
 
-            if (editingLandmarkId) {
-                // 修改模式
-                dbRef('landmarks/' + editingLandmarkId).update(lmData);
-                editingLandmarkId = null;
-            } else {
-                // 重複判斷：座標完全相同視為重複
-                const lmCoordsNorm = normalizeCoords(lmCoords).toLowerCase();
-                const isDup = landmarkList.some(item => {
-                    return normalizeCoords(item.coords || '').toLowerCase() === lmCoordsNorm;
-                });
-                if (isDup) {
-                    if (!confirm('⚠️ 偵測到重複！\n此座標已有相同的純點紀錄。\n\n確定要繼續新增嗎？')) return;
-                }
-                dbRef('landmarks').push(lmData);
+            // 重複判斷：座標完全相同視為重複
+            const lmCoordsNorm = normalizeCoords(lmCoords).toLowerCase();
+            const isDup = landmarkList.some(item => {
+                return normalizeCoords(item.coords || '').toLowerCase() === lmCoordsNorm;
+            });
+            if (isDup) {
+                if (!confirm('⚠️ 偵測到重複！\n此座標已有相同的純點紀錄。\n\n確定要繼續新增嗎？')) return;
             }
+            dbRef('landmarks').push(lmData);
 
             document.getElementById('lm-type').value = '';
             document.getElementById('lm-coords').value = '';
             document.getElementById('lm-country').value = '';
             document.getElementById('lm-city').value = '';
             document.getElementById('lm-note').value = '';
-            // 還原按鈕文字
-            const btn = document.querySelector('#add-modal .btn-primary');
-            if (btn) btn.innerText = '確定新增';
+            if (confEl) confEl.checked = false;
+            document.getElementById('lm-tz-hint').innerText = '';
             closeModal('add-modal');
         }
     }
@@ -2332,13 +2336,26 @@
     }
 
     function openTimeModalById(id, mode) {
-        let item = (mode === 'mushroom') ? dataList.find(i => i.id === id) : postcardList.find(i => i.id === id);
+        let item;
+        if (mode === 'mushroom') {
+            item = dataList.find(i => i.id === id);
+        } else if (mode === 'landmark') {
+            item = landmarkList.find(i => i.id === id);
+        } else {
+            item = postcardList.find(i => i.id === id);
+        }
         if (!item) return;
-        currentEditingTimeId = item.id; currentEditingType = mode;
+        currentEditingTimeId = item.id;
+        currentEditingType = mode;
+
+        document.getElementById('edit-group-mushroom').style.display = 'none';
+        document.getElementById('edit-group-postcard').style.display = 'none';
+        const egLand = document.getElementById('edit-group-landmark');
+        if (egLand) egLand.style.display = 'none';
         
         if (mode === 'mushroom') {
             document.getElementById('edit-group-mushroom').style.display = 'flex';
-            document.getElementById('edit-group-postcard').style.display = 'none';
+            document.getElementById('time-modal-title').innerText = '✏️ 修改巨菇資料';
             document.getElementById('edit-user').value = item.user || '';
             document.getElementById('edit-mushroom-country').value = item.country || '';
             document.getElementById('edit-mushroom-city').value = item.city || '';
@@ -2360,9 +2377,23 @@
                 d = Math.floor(totalMins / 1440); h = Math.floor((totalMins % 1440) / 60); m = totalMins % 60;
             }
             document.getElementById('edit-days').value = d; document.getElementById('edit-hours').value = h; document.getElementById('edit-minutes').value = m;
+        } else if (mode === 'landmark') {
+            if (egLand) egLand.style.display = 'flex';
+            document.getElementById('time-modal-title').innerText = '✏️ 修改純點資料';
+            document.getElementById('edit-lm-type').value = item.type || '';
+            document.getElementById('edit-lm-note').value = item.note || '';
+            document.getElementById('edit-lm-coords').value = item.coords || '';
+            document.getElementById('edit-lm-country').value = item.country || '';
+            document.getElementById('edit-lm-city').value = item.city || '';
+            const confEl = document.getElementById('edit-lm-confirmed');
+            if (confEl) confEl.checked = !!item.confirmed;
+            showTimeDiff(item.country || '', 'edit-lm-tz-hint');
+            if (item.coords) {
+                autoDetectCountry(item.coords, 'edit-lm-country', 'edit-lm-tz-hint', 'edit-lm-city');
+            }
         } else {
-            document.getElementById('edit-group-mushroom').style.display = 'none';
             document.getElementById('edit-group-postcard').style.display = 'flex';
+            document.getElementById('time-modal-title').innerText = item.type === '特殊金盆' ? '✏️ 修改金盆資料' : '✏️ 修改明信片資料';
             document.getElementById('edit-post-type').value = item.type || '菇'; 
             
             if (item.type === '特殊金盆') {
@@ -2491,6 +2522,27 @@
                 }
             }
             dbRef('mushrooms_v2/' + currentEditingTimeId).update(updates);
+        } else if (currentEditingType === 'landmark') {
+            const lmType = document.getElementById('edit-lm-type').value.trim();
+            const lmCoords = document.getElementById('edit-lm-coords').value.trim();
+            const lmNote = document.getElementById('edit-lm-note').value.trim();
+            let lmCountry = toTW(document.getElementById('edit-lm-country').value.trim());
+            if (lmCountry.includes("中華民國")) lmCountry = "台灣";
+            const lmCity = toTW(document.getElementById('edit-lm-city').value.trim());
+            const confEl = document.getElementById('edit-lm-confirmed');
+            const lmConfirmed = confEl ? confEl.checked : false;
+
+            if (!lmType || !lmCoords) { alert('種類與座標為必填！'); return; }
+
+            const updates = {
+                type: lmType,
+                coords: normalizeCoords(lmCoords),
+                note: lmNote,
+                country: lmCountry,
+                city: lmCity,
+                confirmed: lmConfirmed
+            };
+            dbRef('landmarks/' + currentEditingTimeId).update(updates);
         } else {
             let processedCountry = toTW(document.getElementById('edit-post-country').value.trim());
             if (processedCountry.includes("中華民國")) {
