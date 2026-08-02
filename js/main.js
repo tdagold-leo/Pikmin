@@ -3621,9 +3621,9 @@
                 if (dynamicBtnSub) dynamicBtnSub.textContent = '請稍候，即將自動複製並跳轉至遊戲';
                 dynamicActionBtn.disabled = true;
             } else if (state === 'waiting') {
-                if (dynamicBtnIcon) dynamicBtnIcon.textContent = '📬';
-                if (dynamicBtnText) dynamicBtnText.textContent = '等待驗證信中... (點此重開遊戲)';
-                if (dynamicBtnSub) dynamicBtnSub.textContent = '信箱已在剪貼簿！請在遊戲貼上並發送驗證碼';
+                if (dynamicBtnIcon) dynamicBtnIcon.textContent = '🍄';
+                if (dynamicBtnText) dynamicBtnText.textContent = '信箱已複製！點此開啟 Pikmin 遊戲';
+                if (dynamicBtnSub) dynamicBtnSub.textContent = '請在遊戲貼上信箱並發送驗證碼 (後台自動接收中)';
                 dynamicActionBtn.disabled = false;
             } else if (state === 'code_ready') {
                 const code = data.code || latestReceivedCode || '----';
@@ -4390,18 +4390,9 @@
                     };
                 }
 
-                // 🚀 自動跳轉至 Pikmin Bloom 遊戲 (在新視窗開啟，防止當前背景輪詢中斷)
-                if (openPikminBtn && openPikminBtn.href) {
-                    log('🍄 自動開啟 Pikmin Bloom 遊戲...', 'log-info');
-                    try {
-                        window.open(openPikminBtn.href, '_blank');
-                    } catch(e) {
-                        window.location.href = openPikminBtn.href;
-                    }
-                }
-
-                // 切換動態按鈕至「等待信件中」狀態
+                // 切換動態按鈕至「已複製信箱，準備進入遊戲」狀態 (避免 iOS 彈出空白頁)
                 setActionState('waiting');
+                log('📬 信箱已複製！請切換至 Pikmin 遊戲貼上，後台持續接收驗證信中...', 'log-info');
                 
                 log('📬 後台開始監聽任天堂驗證信 (收到將自動推播通知)...');
                 if (codeBox) codeBox.classList.add('active');
@@ -4510,12 +4501,14 @@
                 if (currentState === 'ready' || currentState === 'completed') {
                     runAutomation();
                 } else if (currentState === 'waiting') {
-                    // 如果在等待中點擊，再次複製信箱並嘗試手動跳轉回 Pikmin
+                    // 如果在等待中點擊，再次複製信箱並開啟 Pikmin
                     if (currentGeneratedEmail) {
                         navigator.clipboard.writeText(currentGeneratedEmail);
                         log('📋 已再次複製信箱到剪貼簿！');
                     }
-                    if (openPikminBtn) window.location.href = openPikminBtn.href;
+                    if (openPikminBtn && openPikminBtn.href) {
+                        window.location.href = openPikminBtn.href;
+                    }
                 } else if (currentState === 'code_ready') {
                     // 複製驗證碼並開啟遊戲，切換到 completed
                     if (latestReceivedCode) {

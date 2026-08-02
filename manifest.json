@@ -2,7 +2,7 @@
   "name": "皮克敏追蹤器 & 免洗號",
   "short_name": "Pikmin",
   "start_url": "./",
-  "display": "standalone",
+  "display": "minimal-ui",
   "background_color": "#0f172a",
   "theme_color": "#0284c7",
   "icons": [
