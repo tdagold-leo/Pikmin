@@ -3863,23 +3863,53 @@
             }
         }
 
-        async function copyToClipboard(text, btnElement) {
+        function copyToClipboard(text, btnElement) {
+            if (!text) return;
+            let success = false;
+
+            // 優先嘗試現代 Clipboard API
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    // Success
+                }).catch(() => {
+                    fallbackCopy(text);
+                });
+                success = true;
+            } else {
+                success = fallbackCopy(text);
+            }
+
+            if (btnElement) {
+                const originalText = btnElement.innerHTML;
+                btnElement.classList.add('success');
+                btnElement.innerHTML = `
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <span>已複製！</span>
+                `;
+                setTimeout(() => {
+                    btnElement.classList.remove('success');
+                    btnElement.innerHTML = originalText;
+                }, 2000);
+            }
+            return success;
+        }
+
+        function fallbackCopy(text) {
             try {
-                await navigator.clipboard.writeText(text);
-                if (btnElement) {
-                    const originalText = btnElement.innerHTML;
-                    btnElement.classList.add('success');
-                    btnElement.innerHTML = `
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        <span>已複製！</span>
-                    `;
-                    setTimeout(() => {
-                        btnElement.classList.remove('success');
-                        btnElement.innerHTML = originalText;
-                    }, 2000);
-                }
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.top = '-9999px';
+                textArea.style.left = '-9999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                return successful;
             } catch (err) {
-                log(`複製失敗: ${err.message}`, 'log-error');
+                console.warn('Fallback copy failed', err);
+                return false;
             }
         }
 
@@ -4464,6 +4494,16 @@
             } catch(e) {}
         }
 
+        let cachedMailDomain = localStorage.getItem('pikmin_mail_domain') || 'web-library.net';
+        
+        // 背景自動更新網域快取
+        fetch('https://api.mail.tm/domains').then(r => r.json()).then(data => {
+            if (data && data['hydra:member'] && data['hydra:member'][0]) {
+                cachedMailDomain = data['hydra:member'][0].domain;
+                localStorage.setItem('pikmin_mail_domain', cachedMailDomain);
+            }
+        }).catch(() => {});
+
         // ===== 執行自動化核心函式 =====
         async function runAutomation() {
             getAudioContext(); // 預先解鎖音效
@@ -4475,14 +4515,35 @@
             latestReceivedCode = null;
             if (logContainer) logContainer.innerHTML = '<div class="log-entry">準備就緒。正在建立信箱並準備跳轉...</div>';
             
+            // 1. 同步生成信箱並立即寫入剪貼簿 (在使用者點擊手勢當下立即複製，100% 避免被 iOS 攔截)
+            const randomString = Date.now().toString();
+            let domain = cachedMailDomain;
+            let address = `nintendo${randomString}@${domain}`;
+            const password = (pwdInput && pwdInput.value) ? pwdInput.value.trim() : 'Pikmin123!@';
+            
+            currentGeneratedEmail = address;
+            copyToClipboard(address); // 同步寫入剪貼簿
+            log(`📋 已將預備信箱複製到剪貼簿：${address}`, 'log-success');
+
+            if (emailDisplay) emailDisplay.textContent = address;
+            if (emailBox) emailBox.classList.add('active');
+
             try {
-                log('🚀 開始向 mail.tm 產生免洗信箱...');
-                const domainsRes = await fetchWithRetry('https://api.mail.tm/domains', { method: 'GET' });
-                const domain = domainsRes['hydra:member'][0].domain;
-                
-                const randomString = Date.now().toString();
-                const address = `nintendo${randomString}@${domain}`;
-                const password = (pwdInput && pwdInput.value) ? pwdInput.value.trim() : 'Pikmin123!@';
+                log('🚀 正在向 mail.tm 註冊信箱...');
+                try {
+                    const domainsRes = await fetchWithRetry('https://api.mail.tm/domains', { method: 'GET' }, 2, 1000);
+                    if (domainsRes && domainsRes['hydra:member'] && domainsRes['hydra:member'][0]) {
+                        domain = domainsRes['hydra:member'][0].domain;
+                        cachedMailDomain = domain;
+                        localStorage.setItem('pikmin_mail_domain', domain);
+                        address = `nintendo${randomString}@${domain}`;
+                        currentGeneratedEmail = address;
+                        copyToClipboard(address);
+                        if (emailDisplay) emailDisplay.textContent = address;
+                    }
+                } catch(e) {
+                    console.warn('Domain fetch fallback:', e);
+                }
                 
                 await fetchWithRetry('https://api.mail.tm/accounts', {
                     method: 'POST',
@@ -4497,18 +4558,8 @@
                 });
                 const token = tokenRes.token;
                 
-                currentGeneratedEmail = address;
                 saveMailSession(address, token); // 持久化儲存
-
-                log(`✅ 成功建立信箱：${address}`, 'log-success');
-                if (emailDisplay) emailDisplay.textContent = address;
-                if (emailBox) emailBox.classList.add('active');
-                
-                // 自動複製信箱到剪貼簿
-                try {
-                    await navigator.clipboard.writeText(address);
-                    log('📋 已自動將信箱複製到剪貼簿！', 'log-success');
-                } catch(e) {}
+                log(`✅ 成功建立並確認信箱：${address}`, 'log-success');
 
                 if (copyEmailBtn) {
                     copyEmailBtn.onclick = () => {
