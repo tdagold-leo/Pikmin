@@ -2900,12 +2900,13 @@
 
         const currentSearch = (document.getElementById('postcard-search')?.value || '').trim();
 
-        // 統計資料庫內所有標籤、活動、分類與國家
+        // 統計資料庫內所有標籤、活動、分類與國家（排除黑名單關鍵字）
+        const blacklist = new Set(['特殊金盆', '隱藏', '菇窩', '京都漫步', '巨菇', '缺', '無圖片', '常駐', '期間']);
         const tagCounts = {};
         const addCount = (name) => {
             if (!name) return;
             const clean = name.trim();
-            if (!clean || clean.length < 2 || clean === '無圖片' || clean === '常駐' || clean === '期間') return;
+            if (!clean || clean.length < 2 || blacklist.has(clean)) return;
             tagCounts[clean] = (tagCounts[clean] || 0) + 1;
         };
 
@@ -2922,10 +2923,10 @@
             });
         }
 
-        // 排除「缺」由獨立按鈕呈現
-        delete tagCounts['缺'];
+        // 雙重確認排除指定項目與「缺」
+        ['特殊金盆', '隱藏', '菇窩', '京都漫步', '巨菇', '缺'].forEach(k => delete tagCounts[k]);
 
-        // 依出現頻率高至低排序，取前 15 個熱門項目
+        // 依出現頻率高至低排序，取前 16 個熱門項目
         const sortedTags = Object.keys(tagCounts)
             .sort((a, b) => tagCounts[b] - tagCounts[a])
             .slice(0, 16);
