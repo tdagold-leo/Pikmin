@@ -475,33 +475,46 @@
     }
 
     function openAddModal() {
-        document.getElementById('form-mushroom').style.display = 'none';
-        document.getElementById('form-postcard').style.display = 'none';
-        document.getElementById('form-landmark').style.display = 'none';
-        document.getElementById('form-time').style.display = 'none';
+        const fMush = document.getElementById('form-mushroom');
+        const fPost = document.getElementById('form-postcard');
+        const fLand = document.getElementById('form-landmark');
+        const fTime = document.getElementById('form-time');
 
-        if(currentMode === 'mushroom') {
-            document.getElementById('add-modal-title').innerText = '🍄 新增倒數巨菇';
-            document.getElementById('form-mushroom').style.display = 'flex';
-            document.getElementById('form-time').style.display = 'flex';
+        if (fMush) fMush.style.display = 'none';
+        if (fPost) fPost.style.display = 'none';
+        if (fLand) fLand.style.display = 'none';
+        if (fTime) fTime.style.display = 'none';
+
+        if (currentMode === 'mushroom') {
+            const titleEl = document.getElementById('add-modal-title');
+            if (titleEl) titleEl.innerText = '🍄 新增倒數巨菇';
+            if (fMush) fMush.style.display = 'flex';
+            if (fTime) fTime.style.display = 'flex';
         } else if (currentMode === 'postcard' || currentMode === 'goldbasin') {
-            document.getElementById('add-modal-title').innerText = currentMode === 'goldbasin' ? '🏺 新增金盆' : '🖼️ 新增明信片';
-            document.getElementById('form-postcard').style.display = 'flex';
+            const titleEl = document.getElementById('add-modal-title');
+            if (titleEl) titleEl.innerText = currentMode === 'goldbasin' ? '🏺 新增金盆' : '🖼️ 新增明信片';
+            if (fPost) fPost.style.display = 'flex';
             const typeEl = document.getElementById('post-type');
-            if (currentMode === 'goldbasin') {
-                typeEl.value = '特殊金盆';
-                typeEl.disabled = true;
-            } else {
-                typeEl.disabled = false;
+            if (typeEl) {
+                if (currentMode === 'goldbasin') {
+                    typeEl.value = '特殊金盆';
+                    typeEl.disabled = true;
+                } else {
+                    typeEl.disabled = false;
+                }
             }
-            if(typeof togglePostcardSgFields === 'function') togglePostcardSgFields('post');
+            if (typeof togglePostcardSgFields === 'function') togglePostcardSgFields('post');
         } else if (currentMode === 'landmark') {
-            document.getElementById('add-modal-title').innerText = '🚩 新增純點紀錄';
-            document.getElementById('form-landmark').style.display = 'flex';
-        } 
+            const titleEl = document.getElementById('add-modal-title');
+            if (titleEl) titleEl.innerText = '🚩 新增純點紀錄';
+            if (fLand) fLand.style.display = 'flex';
+        }
+
         const submitBtn = document.getElementById('modal-submit-btn');
         if (submitBtn) submitBtn.onclick = addItem;
-        document.getElementById('add-modal').style.display = 'flex';
+        
+        const addModal = document.getElementById('add-modal');
+        if (addModal) addModal.style.display = 'flex';
     }
     
     function closeModal(id) {
