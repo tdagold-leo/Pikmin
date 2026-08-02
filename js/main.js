@@ -4390,9 +4390,14 @@
                     };
                 }
 
-                // 切換動態按鈕至「已複製信箱，準備進入遊戲」狀態 (避免 iOS 彈出空白頁)
+                // 🚀 自動跳轉至 Pikmin Bloom 遊戲 (使用 location.href 喚醒 App，不會產生空白彈窗)
+                if (openPikminBtn && openPikminBtn.href) {
+                    log('🍄 自動開啟 Pikmin Bloom 遊戲...', 'log-info');
+                    window.location.href = openPikminBtn.href;
+                }
+
+                // 切換動態按鈕至「等待信件中」狀態
                 setActionState('waiting');
-                log('📬 信箱已複製！請切換至 Pikmin 遊戲貼上，後台持續接收驗證信中...', 'log-info');
                 
                 log('📬 後台開始監聽任天堂驗證信 (收到將自動推播通知)...');
                 if (codeBox) codeBox.classList.add('active');
