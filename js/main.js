@@ -8,22 +8,37 @@
         } catch(e) {}
     }
 
+    // 防無限循環重載保護
+    const RELOAD_KEY = 'pikmin_last_reload_ts';
+    const lastReload = parseInt(sessionStorage.getItem(RELOAD_KEY) || '0', 10);
+    const now = Date.now();
+
     function checkForUpdate(isManual = false) {
-        // 從 raw.github 抓取最新版號以完全穿透 GitHub Pages CDN 快取
-        const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + Date.now();
-        fetch(rawUrl, { cache: 'no-store' })
+        // 檢查距離上次重載是否小於 15 秒（避免 GitHub Pages 部署延遲時造成無限重整）
+        if (!isManual && (Date.now() - lastReload < 15000)) {
+            console.log('剛重載過，暫停自動檢查以防循環');
+            return;
+        }
+
+        // 檢查當前部署站點的 index.html（確保 GitHub Pages 已完成發布才重整）
+        const checkUrl = window.location.origin + window.location.pathname + (window.location.pathname.endsWith('/') ? '' : '/') + 'index.html?nocache=' + Date.now();
+        fetch(checkUrl, { cache: 'no-store' })
             .then(res => res.text())
             .then(html => {
                 const match = html.match(/const APP_VERSION = ['"]([^'"]+)['"]/);
                 if (match && match[1] && match[1] !== CURRENT_APP_VERSION) {
                     console.log('🚀 發現新版本：', match[1], '（當前版本：' + CURRENT_APP_VERSION + '）');
+                    
                     // 如果用戶正在編輯，則不強制更新（避免資料遺失）
                     const editModal = document.getElementById('time-modal');
                     if (editModal && editModal.style.display === 'flex') {
                         console.log('用戶正在編輯中，稍後更新');
                         return;
                     }
-                    
+
+                    // 記錄重載時間防止循環
+                    sessionStorage.setItem(RELOAD_KEY, Date.now().toString());
+
                     // 清除瀏覽器 Cache API 快取
                     if ('caches' in window) {
                         caches.keys().then(names => {
@@ -31,15 +46,16 @@
                         });
                     }
 
-                    // 提示並強制載入最新版本
+                    // 提示並載入最新版本
                     const toast = document.createElement('div');
-                    toast.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#0284c7; color:#fff; padding:12px 20px; border-radius:12px; font-size:14px; font-weight:bold; z-index:999999; box-shadow:0 8px 24px rgba(0,0,0,0.4); text-align:center; animation:fadeIn 0.3s ease;';
+                    toast.id = 'update-toast';
+                    toast.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#0284c7; color:#fff; padding:12px 24px; border-radius:12px; font-size:14px; font-weight:bold; z-index:999999; box-shadow:0 8px 24px rgba(0,0,0,0.4); text-align:center; animation:fadeIn 0.3s ease; cursor:pointer;';
                     toast.innerHTML = '🚀 發現新版本 (v' + match[1] + ')，正在載入最新版...';
                     document.body.appendChild(toast);
 
                     setTimeout(() => {
                         window.location.reload();
-                    }, 500);
+                    }, 600);
                 } else if (isManual) {
                     alert('✅ 當前已是最新版本 (v' + CURRENT_APP_VERSION + ')！');
                 }
