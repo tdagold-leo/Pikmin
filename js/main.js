@@ -4899,9 +4899,19 @@
         });
         mapInfoWindow = new google.maps.InfoWindow();
 
-        if (postcardList && postcardList.length > 0) {
+        if ((postcardList && postcardList.length > 0) || (dataList && dataList.length > 0)) {
             updateMapMarkers();
         }
+    }
+
+    // 地圖圖層狀態
+    const mapLayerActive = { mushroom: true, postcard: true };
+
+    function toggleMapLayer(layer) {
+        mapLayerActive[layer] = !mapLayerActive[layer];
+        const btn = document.getElementById('map-layer-' + layer);
+        if (btn) btn.classList.toggle('active', mapLayerActive[layer]);
+        updateMapMarkers();
     }
 
     function updateMapMarkers() {
@@ -4917,12 +4927,14 @@
         const filterSelect = document.getElementById('map-filter-type');
         const selectedType = filterSelect ? filterSelect.value : 'all';
         
+        // 收集所有類型（來自兩個資料源）
         const types = new Set();
-        postcardList.forEach(pc => { if(pc.type) types.add(pc.type); });
+        if (mapLayerActive.postcard) postcardList.forEach(pc => { if(pc.type) types.add(pc.type); });
+        if (mapLayerActive.mushroom) dataList.forEach(m => { if(m.kind) types.add('🍄 ' + m.kind); });
         
         if (filterSelect) {
             const curr = filterSelect.value;
-            let html = '<option value="all">全部顯示</option>';
+            let html = '<option value="all">全部</option>';
             Array.from(types).sort().forEach(t => {
                 html += `<option value="${t}">${escapeHtml(t)}</option>`;
             });
@@ -4930,48 +4942,83 @@
             if (Array.from(types).includes(curr)) filterSelect.value = curr;
         }
 
-        postcardList.forEach(pc => {
-            if (!pc.coords) return;
-            if (selectedType !== 'all' && pc.type !== selectedType) return;
-            
-            const match = pc.coords.match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
-            if (!match) return;
-            
-            const lat = parseFloat(match[1]);
-            const lng = parseFloat(match[2]);
-            
-            const bgColor = getColorForType(pc.type || '');
-            
-            const tag = document.createElement("div");
-            tag.innerHTML = `<div style="width:14px; height:14px; background:${bgColor}; border:2px solid white; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.5); cursor:pointer; transform:translate(-50%, -50%);"></div>`;
+        // ── 明信片標記 ──
+        if (mapLayerActive.postcard) {
+            postcardList.forEach(pc => {
+                if (!pc.coords) return;
+                const pcTypeKey = pc.type || '';
+                if (selectedType !== 'all' && pcTypeKey !== selectedType) return;
+                
+                const match = pc.coords.match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
+                if (!match) return;
+                const lat = parseFloat(match[1]), lng = parseFloat(match[2]);
+                
+                const bgColor = getColorForType(pcTypeKey);
+                const tag = document.createElement('div');
+                tag.innerHTML = `<div style="width:13px; height:13px; background:${bgColor}; border:2px solid white; border-radius:50%; box-shadow:0 1px 4px rgba(0,0,0,0.5); cursor:pointer;"></div>`;
 
-            const marker = new google.maps.marker.AdvancedMarkerElement({
-                map: mapInstance,
-                position: { lat, lng },
-                content: tag,
-                title: pc.name
+                const marker = new google.maps.marker.AdvancedMarkerElement({
+                    map: mapInstance, position: { lat, lng }, content: tag, title: pc.name
+                });
+
+                marker.addListener('click', () => {
+                    const imgHtml = (pc.image && pc.image !== '無圖片') 
+                        ? `<div style="margin-bottom:8px; display:flex; justify-content:center; background:#111; border-radius:8px; padding:2px; cursor:zoom-in;" onclick="openMapLightbox('${pc.image.replace(/'/g, "\\'")}')"><img src="${pc.image}" style="width:140px; height:140px; object-fit:contain; border-radius:6px; pointer-events:none;"></div>` 
+                        : '';
+                    const content = `<div style="min-width:160px; padding:6px; font-family:var(--font-family); text-align:center;">
+                        ${imgHtml}
+                        <div style="font-size:14px; font-weight:bold; color:#1e293b; margin-bottom:4px;">${escapeHtml(pc.name)}</div>
+                        <div style="font-size:12px; color:#64748b; margin-bottom:6px;">🌍 ${escapeHtml(pc.country || '未提供')}</div>
+                        ${pc.type ? `<div style="font-size:11px; font-weight:bold; color:white; background:${bgColor}; padding:2px 8px; border-radius:4px; display:inline-block; margin-bottom:10px;">${escapeHtml(pc.type)}</div>` : ''}
+                        <button onclick="copyCoords('${escapeHtml(pc.coords).replace(/'/g, "\\'")}', this)" style="width:100%; padding:6px 0; background:linear-gradient(135deg, #0ea5e9, #6366f1); color:white; border:none; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">📍 複製座標</button>
+                    </div>`;
+                    mapInfoWindow.setContent(content);
+                    mapInfoWindow.open(mapInstance, marker);
+                });
+                mapMarkers.push(marker);
             });
+        }
 
-            marker.addListener("click", () => {
-                const imgHtml = (pc.image && pc.image !== "無圖片") 
-                    ? `<div style="margin-bottom:8px; display:flex; justify-content:center; background:#111; border-radius:8px; padding:2px; cursor:zoom-in;" onclick="openMapLightbox('${pc.image.replace(/'/g, "\\'")}')">
-                        <img src="${pc.image}" style="width:140px; height:140px; object-fit:contain; border-radius:6px; pointer-events:none;">
-                       </div>` 
-                    : '';
+        // ── 巨菇標記 ──
+        if (mapLayerActive.mushroom) {
+            dataList.forEach(mush => {
+                if (!mush.coords) return;
+                const mushTypeKey = '🍄 ' + (mush.kind || '巨菇');
+                if (selectedType !== 'all' && mushTypeKey !== selectedType) return;
 
-                const content = `<div style="min-width:160px; padding:6px; font-family:var(--font-family); text-align:center;">
-                    ${imgHtml}
-                    <div style="font-size:14px; font-weight:bold; color:var(--text-main); margin-bottom:4px;">${escapeHtml(pc.name)}</div>
-                    <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">🌍 ${escapeHtml(pc.country || '未提供')}</div>
-                    ${pc.type ? `<div style="font-size:11px; font-weight:bold; color:white; background:${bgColor}; padding:2px 6px; border-radius:4px; display:inline-block; margin-bottom:10px;">${escapeHtml(pc.type)}</div>` : ''}
-                    <button onclick="copyCoords('${escapeHtml(pc.coords).replace(/'/g, "\\'")}', this)" style="width:100%; padding:6px 0; background:linear-gradient(135deg, #0ea5e9, #6366f1); color:white; border:none; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">📍 複製座標</button>
+                const match = mush.coords.match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
+                if (!match) return;
+                const lat = parseFloat(match[1]), lng = parseFloat(match[2]);
+
+                // 巨菇用紅色圓形 + 蘑菇圖示
+                const isActive = mush.user && mush.user !== '';
+                const dotColor = isActive ? '#16a34a' : '#ef4444';
+                const tag = document.createElement('div');
+                tag.innerHTML = `<div style="position:relative; width:22px; height:26px; cursor:pointer;">
+                    <div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:16px; height:16px; background:${dotColor}; border:2.5px solid white; border-radius:50%; box-shadow:0 2px 5px rgba(0,0,0,0.45);"></div>
+                    <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); font-size:12px; line-height:1; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));">🍄</div>
                 </div>`;
-                mapInfoWindow.setContent(content);
-                mapInfoWindow.open(mapInstance, marker);
+
+                const marker = new google.maps.marker.AdvancedMarkerElement({
+                    map: mapInstance, position: { lat, lng }, content: tag, title: mush.name || '巨菇'
+                });
+
+                marker.addListener('click', () => {
+                    const claimed = mush.user ? `<div style="font-size:12px; color:#15803d; font-weight:700; margin-bottom:4px;">✅ ${escapeHtml(mush.user)}</div>` : `<div style="font-size:12px; color:#dc2626; font-weight:700; margin-bottom:4px;">⏳ 待認領</div>`;
+                    const content = `<div style="min-width:160px; padding:6px; font-family:var(--font-family); text-align:center;">
+                        <div style="font-size:22px; margin-bottom:4px;">🍄</div>
+                        <div style="font-size:14px; font-weight:bold; color:#1e293b; margin-bottom:4px;">${escapeHtml(mush.name || '未命名')}</div>
+                        ${claimed}
+                        <div style="font-size:12px; color:#64748b; margin-bottom:6px;">🌍 ${escapeHtml(mush.country || '未提供')}${mush.city ? ' · ' + escapeHtml(mush.city) : ''}</div>
+                        <div style="font-size:11px; font-weight:700; color:white; background:#16a34a; padding:2px 8px; border-radius:4px; display:inline-block; margin-bottom:10px;">${escapeHtml(mush.kind || '巨菇')}</div>
+                        <button onclick="copyCoords('${escapeHtml(mush.coords).replace(/'/g, "\\'")}', this)" style="width:100%; padding:6px 0; background:linear-gradient(135deg, #16a34a, #15803d); color:white; border:none; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">📍 複製座標</button>
+                    </div>`;
+                    mapInfoWindow.setContent(content);
+                    mapInfoWindow.open(mapInstance, marker);
+                });
+                mapMarkers.push(marker);
             });
-            
-            mapMarkers.push(marker);
-        });
+        }
         
         // 建立群集
         if (window.markerClusterer && mapMarkers.length > 0) {
@@ -5044,6 +5091,7 @@ window.setTodayDate = setTodayDate;
 window.togglePostcardTimeEdit = togglePostcardTimeEdit;
 window.toggleSlot = toggleSlot;
 window.triggerOCR = triggerOCR;
+window.toggleMapLayer = toggleMapLayer;
 window.updateMapMarkers = updateMapMarkers;
 window.updateView = updateView;
 
