@@ -499,6 +499,8 @@
             document.getElementById('add-modal-title').innerText = '🚩 新增純點紀錄';
             document.getElementById('form-landmark').style.display = 'flex';
         } 
+        const submitBtn = document.getElementById('modal-submit-btn');
+        if (submitBtn) submitBtn.onclick = addItem;
         document.getElementById('add-modal').style.display = 'flex';
     }
     
@@ -2295,7 +2297,7 @@
         document.getElementById('modal-title').innerText = `🙋‍♂️ 認領 - ${item.name}`;
         document.getElementById('modal-username').value = '';
         document.getElementById('modal-days').value = '0'; document.getElementById('modal-hours').value = '0'; document.getElementById('modal-minutes').value = '0';
-        document.getElementById('modal-submit-btn').onclick = submitClaim;
+        const mSub = document.getElementById('modal-submit-btn'); if (mSub) mSub.onclick = submitClaim;
         document.getElementById('claim-modal').style.display = 'flex';
     }
 
