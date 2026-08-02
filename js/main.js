@@ -3661,33 +3661,88 @@
             }
         }
 
-        // 請求通知權限
-        function requestNotificationPermission() {
-            if ('Notification' in window && Notification.permission === 'default') {
-                Notification.requestPermission().then(permission => {
-                    if (permission === 'granted') {
-                        log('🔔 已啟用手機通知推播！驗證碼送達時將直接彈出於螢幕頂部。', 'log-success');
-                        if (enableNotifBtn) enableNotifBtn.textContent = '🔔 通知已開啟';
-                    }
-                });
+        // 註冊 Service Worker (支援 Android Chrome 手機推播)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js?v=202608021730').catch(err => {
+                console.warn('ServiceWorker registration failed:', err);
+            });
+        }
+
+        // 更新通知按鈕 UI 狀態
+        function updateNotifBtnStatus() {
+            if (!enableNotifBtn) return;
+            if (!('Notification' in window)) {
+                enableNotifBtn.textContent = '💡 點此說明通知';
+                return;
+            }
+            if (Notification.permission === 'granted') {
+                enableNotifBtn.textContent = '🔔 通知已開啟 ✓';
+                enableNotifBtn.style.color = '#34d399';
+                enableNotifBtn.style.borderColor = 'rgba(52,211,153,0.4)';
+                enableNotifBtn.style.background = 'rgba(16,185,129,0.15)';
+            } else if (Notification.permission === 'denied') {
+                enableNotifBtn.textContent = '⚠️ 通知被封鎖 (點此)';
+                enableNotifBtn.style.color = '#f87171';
+                enableNotifBtn.style.borderColor = 'rgba(239,68,68,0.4)';
+            } else {
+                enableNotifBtn.textContent = '🔔 開啟手機通知';
             }
         }
-        if (enableNotifBtn) {
-            if ('Notification' in window && Notification.permission === 'granted') {
-                enableNotifBtn.textContent = '🔔 通知已開啟';
+
+        // 請求通知權限
+        function requestNotificationPermission() {
+            if (!('Notification' in window)) {
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                if (isIOS) {
+                    alert('💡 iPhone (iOS) 用戶推播說明：\n\n由於 Apple 系統限制，一般 Safari 分頁無法直接跳出推播通知。\n\n【開啟方法】：\n1. 點擊 Safari 底部「分享」按鈕 📤\n2. 選擇「加入主畫面」➕\n3. 從手機桌面點開此 APP，即可接收頂部推播通知！');
+                } else {
+                    alert('⚠️ 此手機瀏覽器環境不支援系統推播通知。請使用 Chrome 瀏覽器開啟。');
+                }
+                return;
             }
+            
+            if (Notification.permission === 'denied') {
+                alert('⚠️ 系統通知權限已被瀏覽器封鎖！\n\n【解除方法】：\n請點擊網址列左側的 🔒 (鎖頭/設定圖示) ➜ 網站設定 ➜ 將「通知」改為【允許】。');
+                updateNotifBtnStatus();
+                return;
+            }
+
+            Notification.requestPermission().then(permission => {
+                updateNotifBtnStatus();
+                if (permission === 'granted') {
+                    log('🔔 已成功啟用系統推播通知！驗證碼送達時將直接彈出於螢幕頂部。', 'log-success');
+                    pushCodeNotification('TEST', '🎉 通知功能已啟用！驗證碼將會像這樣推播給您。');
+                } else {
+                    log('⚠️ 未允許通知權限', 'log-error');
+                }
+            });
+        }
+        if (enableNotifBtn) {
+            updateNotifBtnStatus();
             enableNotifBtn.addEventListener('click', requestNotificationPermission);
+        }
+
+        // Web Audio API 音訊上下文 (預先解鎖)
+        let globalAudioCtx = null;
+        function getAudioContext() {
+            if (!globalAudioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) globalAudioCtx = new AudioContext();
+            }
+            if (globalAudioCtx && globalAudioCtx.state === 'suspended') {
+                globalAudioCtx.resume();
+            }
+            return globalAudioCtx;
         }
 
         // 清脆雙音提示 (Web Audio API 合成音，不需任何外部音效檔)
         function playCodeChime() {
             try {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                if (!AudioContext) return;
-                const ctx = new AudioContext();
+                const ctx = getAudioContext();
+                if (!ctx) return;
                 const now = ctx.currentTime;
                 
-                // 第一聲 G5
+                // 第一聲 G5 (784Hz)
                 const osc1 = ctx.createOscillator();
                 const gain1 = ctx.createGain();
                 osc1.type = 'sine';
@@ -3699,7 +3754,7 @@
                 osc1.start(now);
                 osc1.stop(now + 0.3);
 
-                // 第二聲 C6
+                // 第二聲 C6 (1046Hz)
                 const osc2 = ctx.createOscillator();
                 const gain2 = ctx.createGain();
                 osc2.type = 'sine';
@@ -3713,24 +3768,49 @@
             } catch(e) {}
         }
 
-        // 手機/電腦系統通知推播
-        function pushCodeNotification(code) {
+        // 手機/電腦系統通知推播 (同時支援 ServiceWorker 與一般 Notification)
+        async function pushCodeNotification(code, customBody) {
+            const title = code === 'TEST' ? '🍄 Pikmin 測試通知' : '🍄 Pikmin 驗證碼：' + code;
+            const bodyText = customBody || `驗證碼：${code}（點此返回遊戲或自動複製）`;
+            const options = {
+                body: bodyText,
+                icon: 'https://cdn-icons-png.flaticon.com/512/888/888879.png',
+                badge: 'https://cdn-icons-png.flaticon.com/512/888/888879.png',
+                tag: 'pikmin-code-' + (code === 'TEST' ? 'test' : Date.now()),
+                renotify: true,
+                requireInteraction: true,
+                vibrate: [200, 100, 200, 100, 200],
+                data: {
+                    code: code,
+                    url: openPikminBtn ? openPikminBtn.href : ''
+                }
+            };
+
+            // 1. 優先使用 ServiceWorkerRegistration.showNotification (Android Chrome 唯一支援方式)
+            if ('serviceWorker' in navigator) {
+                try {
+                    const reg = await navigator.serviceWorker.ready;
+                    if (reg && typeof reg.showNotification === 'function') {
+                        await reg.showNotification(title, options);
+                        return;
+                    }
+                } catch(e) {
+                    console.warn('SW showNotification error:', e);
+                }
+            }
+
+            // 2. 備援一般 Notification API (桌面瀏覽器 / iOS PWA)
             if ('Notification' in window && Notification.permission === 'granted') {
                 try {
-                    const notif = new Notification('🍄 Pikmin 驗證碼：' + code, {
-                        body: '點擊複製驗證碼並返回 Pikmin 遊戲！',
-                        icon: 'https://cdn-icons-png.flaticon.com/512/888/888879.png',
-                        badge: 'https://cdn-icons-png.flaticon.com/512/888/888879.png',
-                        tag: 'pikmin-code-tag',
-                        renotify: true,
-                        requireInteraction: true
-                    });
+                    const notif = new Notification(title, options);
                     notif.onclick = function() {
                         window.focus();
-                        navigator.clipboard.writeText(code);
-                        if (openPikminBtn) window.location.href = openPikminBtn.href;
+                        if (code !== 'TEST') navigator.clipboard.writeText(code);
+                        if (openPikminBtn) window.open(openPikminBtn.href, '_blank');
                     };
-                } catch(e) {}
+                } catch(e) {
+                    console.warn('Standard notification error:', e);
+                }
             }
         }
 
@@ -4259,6 +4339,7 @@
 
         // ===== 執行自動化核心函式 =====
         async function runAutomation() {
+            getAudioContext(); // 預先解鎖音效
             requestNotificationPermission();
             setActionState('generating');
 
@@ -4309,10 +4390,14 @@
                     };
                 }
 
-                // 🚀 自動跳轉至 Pikmin Bloom 遊戲
+                // 🚀 自動跳轉至 Pikmin Bloom 遊戲 (在新視窗開啟，防止當前背景輪詢中斷)
                 if (openPikminBtn && openPikminBtn.href) {
                     log('🍄 自動開啟 Pikmin Bloom 遊戲...', 'log-info');
-                    window.location.href = openPikminBtn.href;
+                    try {
+                        window.open(openPikminBtn.href, '_blank');
+                    } catch(e) {
+                        window.location.href = openPikminBtn.href;
+                    }
                 }
 
                 // 切換動態按鈕至「等待信件中」狀態
@@ -4333,10 +4418,12 @@
                 }
                 
                 let verificationCode = null;
-                const maxAttempts = 30;
+                const maxAttempts = 40; // 每 3 秒檢查一次，最多等待 120 秒
                 
                 for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-                    log(`⏳ 等待信件中... (${attempt}/${maxAttempts})`);
+                    if (attempt === 1 || attempt % 3 === 0) {
+                        log(`⏳ 等待信件中... (${attempt}/${maxAttempts})`);
+                    }
                     const msgsRes = await fetchWithRetry('https://api.mail.tm/messages', {
                         method: 'GET',
                         headers: { 'Authorization': `Bearer ${token}` }
@@ -4359,7 +4446,7 @@
                             log('⚠️ 信件中沒有找到 4 位數驗證碼', 'log-error');
                         }
                     }
-                    await sleep(20000);
+                    await sleep(3000);
                 }
                 
                 if (verificationCode) {
@@ -4654,4 +4741,4 @@ window.togglePostcardTimeEdit = togglePostcardTimeEdit;
 window.toggleSlot = toggleSlot;
 window.triggerOCR = triggerOCR;
 window.updateMapMarkers = updateMapMarkers;
-window.updateView = updateView;
+window.updateView = updateView;
