@@ -1,1 +1,6 @@
+node_modules/
+*/node_modules/
 upload_to_github.ps1
+*.log
+.DS_Store
+Thumbs.db
