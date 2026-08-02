@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -847,12 +847,58 @@
         .cloud-app .info-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #38bdf8; margin-bottom: 8px; font-weight: 700; }
         .cloud-app .info-value { font-size: 22px; font-weight: 600; word-break: break-all; margin-bottom: 15px; }
         .cloud-app .copy-btn {
-            background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 10px 15px; border-radius: 8px; font-size: 14px; cursor: pointer; width: 100%;
-            display: flex; justify-content: center; align-items: center; gap: 8px; transition: all 0.2s;
+            padding: 12px 16px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%;
+            display: flex; justify-content: center; align-items: center; gap: 8px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent; text-shadow: 0 1px 2px rgba(0,0,0,0.25);
         }
-        .cloud-app .copy-btn:hover { background: rgba(255,255,255,0.15); }
-        .cloud-app .copy-btn.success { background: rgba(34, 197, 94, 0.2); border-color: #22c55e; color: #22c55e; }
+        .cloud-app .copy-btn:disabled {
+            opacity: 0.45; cursor: not-allowed; background: rgba(255, 255, 255, 0.06) !important;
+            border-color: rgba(255, 255, 255, 0.08) !important; color: #64748b !important;
+            box-shadow: none !important; animation: none !important; transform: none !important;
+        }
+        /* 步驟 1: 複製信箱按鈕 (亮藍色漸層) */
+        .cloud-app .btn-copy-email {
+            background: linear-gradient(135deg, #0284c7, #0369a1); color: white;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4); border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+        .cloud-app .btn-copy-email:hover:not(:disabled) {
+            background: linear-gradient(135deg, #0369a1, #075985);
+            box-shadow: 0 6px 18px rgba(2, 132, 199, 0.6); transform: translateY(-2px);
+        }
+        /* 步驟 2: 複製密碼按鈕 (紫羅蘭色漸層) */
+        .cloud-app .btn-copy-pwd {
+            background: linear-gradient(135deg, #6366f1, #4f46e5); color: white;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4); border: 1px solid rgba(165, 180, 252, 0.3);
+        }
+        .cloud-app .btn-copy-pwd:hover:not(:disabled) {
+            background: linear-gradient(135deg, #4f46e5, #4338ca);
+            box-shadow: 0 6px 18px rgba(99, 102, 241, 0.6); transform: translateY(-2px);
+        }
+        /* 步驟 3: 複製驗證碼按鈕 (收到後超醒目翠綠脈衝光) */
+        .cloud-app .btn-copy-code {
+            background: linear-gradient(135deg, #10b981, #059669); color: white;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4); border: 1px solid rgba(52, 211, 153, 0.3);
+        }
+        .cloud-app .btn-copy-code.code-ready {
+            background: linear-gradient(135deg, #10b981, #047857) !important; color: white !important;
+            border: 1px solid #34d399 !important; animation: readyPulse 1.6s infinite ease-in-out;
+        }
+        .cloud-app .btn-copy-code:hover:not(:disabled) {
+            transform: translateY(-2px); box-shadow: 0 6px 18px rgba(16, 185, 129, 0.6);
+        }
+        @keyframes readyPulse {
+            0%, 100% { box-shadow: 0 0 12px rgba(16, 185, 129, 0.7), 0 4px 12px rgba(0,0,0,0.3); transform: scale(1); }
+            50% { box-shadow: 0 0 24px rgba(16, 185, 129, 0.95), 0 6px 16px rgba(0,0,0,0.4); transform: scale(1.02); }
+        }
+        /* 提示氣泡提醒卡 */
+        .cloud-app .ready-toast {
+            margin-bottom: 12px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.1));
+            border: 1px solid rgba(52, 211, 153, 0.5); border-radius: 8px; padding: 10px 14px;
+            color: #6ee7b7; font-size: 13px; font-weight: 700; text-align: center;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            animation: slideDown 0.3s ease-out; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+        }
+        .cloud-app .copy-btn.success { background: #22c55e !important; border-color: #22c55e !important; color: white !important; }
         .cloud-app .log-container {
             margin-top: 10px; background: rgba(0, 0, 0, 0.3); border-radius: 12px; padding: 15px;
             height: 150px; overflow-y: auto; font-family: monospace; font-size: 12px;
@@ -1121,7 +1167,45 @@
             margin-top: -2px;
             filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
         }
-    </style>
+    
+        .dynamic-action-btn.state-ready {
+            background: linear-gradient(135deg, #0284c7, #2563eb) !important;
+            box-shadow: 0 4px 20px rgba(37, 99, 235, 0.45) !important;
+        }
+        .dynamic-action-btn.state-ready:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(37, 99, 235, 0.6) !important;
+        }
+        .dynamic-action-btn.state-generating {
+            background: linear-gradient(135deg, #475569, #334155) !important;
+            cursor: wait !important;
+        }
+        .dynamic-action-btn.state-waiting {
+            background: linear-gradient(135deg, #d97706, #b45309) !important;
+            animation: actionWaitingPulse 2s infinite !important;
+            box-shadow: 0 4px 20px rgba(217, 119, 6, 0.45) !important;
+        }
+        @keyframes actionWaitingPulse {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+            70% { box-shadow: 0 0 0 14px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+        .dynamic-action-btn.state-code-ready {
+            background: linear-gradient(135deg, #10b981, #059669) !important;
+            animation: actionCodeReadyPulse 1.2s infinite !important;
+            box-shadow: 0 4px 25px rgba(16, 185, 129, 0.7) !important;
+        }
+        @keyframes actionCodeReadyPulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.8); }
+            50% { transform: scale(1.02); box-shadow: 0 0 0 16px rgba(52, 211, 153, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+        }
+        .dynamic-action-btn.state-completed {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9) !important;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.45) !important;
+        }
+    
+</style>
     <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
 </head>
 <body>
@@ -1443,39 +1527,59 @@
             <div class="container">
                 <header>
                     <h1>Pikmin 自動註冊</h1>
-                    <div class="subtitle">Cloud SPA 版・完全免費無超時</div>
+                    <div class="subtitle">極速 1-Click 模式・自動複製信箱與系統推播驗證碼</div>
                 </header>
 
                 <div class="card">
-                    <!-- 頂部快捷按鈕 -->
-                    <div style="display: flex; gap: 12px; margin-bottom: 25px;">
-                        <button id="cloud-startBtn" class="btn-primary" style="flex: 1; margin: 0; border-radius: 12px; font-weight: 700; background: linear-gradient(135deg, #60a5fa, #3b82f6); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); border: none; font-size: 15px; padding: 14px 0; transition: transform 0.2s, box-shadow 0.2s; color: white; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity: 0.9"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                            開始產生
+                    <!-- 動態引導單一主按鈕 Hero 區塊 -->
+                    <div class="dynamic-hero-card" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 16px; padding: 20px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); text-align: center;">
+                        
+                        <!-- 當前邀請對象資訊 -->
+                        <div id="cloud-currentInviterBadge" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); padding: 5px 14px; border-radius: 20px; font-size: 13px; color: #38bdf8; margin-bottom: 15px;">
+                            <span>🎯 目標邀請人：<strong id="cloud-activeInviterName">載入中...</strong></span>
+                            <span id="cloud-activeInviterCount" style="font-weight: bold; background: rgba(56, 189, 248, 0.25); padding: 2px 8px; border-radius: 6px; font-size: 11px;">0/4 次</span>
+                        </div>
+
+                        <!-- 動態引導主按鈕 -->
+                        <button id="cloud-dynamicActionBtn" class="dynamic-action-btn state-ready" style="width: 100%; padding: 18px 20px; border-radius: 14px; font-size: 17px; font-weight: 800; border: 1px solid rgba(255,255,255,0.25); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(37, 99, 235, 0.45); color: white;">
+                            <div class="btn-main-label" style="display: flex; align-items: center; gap: 8px;">
+                                <span id="cloud-dynamicBtnIcon" style="font-size: 20px;">🚀</span>
+                                <span id="cloud-dynamicBtnText">第 1 步：產生免洗帳號並出發</span>
+                            </div>
+                            <div id="cloud-dynamicBtnSub" style="font-size: 12px; opacity: 0.88; font-weight: 500;">
+                                自動複製信箱 ➜ 自動輪替名單 ➜ 開啟 Pikmin
+                            </div>
                         </button>
-                        <a id="cloud-openPikminBtn" href="https://pikminbloom.onelink.me/pWSt/73s4bj4n" target="_blank" class="btn-primary" style="flex: 1; margin: 0; display: flex; align-items: center; justify-content: center; text-decoration: none; background: linear-gradient(135deg, #10b981, #059669); border: none; padding: 14px 0; border-radius: 12px; color: white; font-weight: 700; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); text-shadow: 0 1px 2px rgba(0,0,0,0.2); font-size: 15px; transition: transform 0.2s, box-shadow 0.2s; gap: 6px;">
-                            🍄 開啟 Pikmin
-                        </a>
+
+                        <!-- 底部快捷列 -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 12px; padding: 0 4px;">
+                            <a id="cloud-openPikminBtn" href="https://pikminbloom.onelink.me/pWSt/73s4bj4n" target="_blank" style="color: #10b981; text-decoration: none; font-weight: bold; display: flex; align-items: center; gap: 4px;">
+                                🍄 手動開啟 Pikmin
+                            </a>
+                            <button id="cloud-enableNotifBtn" type="button" style="background: none; border: none; color: #38bdf8; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 0; font-weight: 500;">
+                                🔔 開啟手機通知推播
+                            </button>
+                        </div>
                     </div>
 
                     <!-- 信箱顯示區塊 -->
                     <div id="cloud-emailBox" class="info-box" style="margin-bottom: 20px;">
-                        <div class="info-title">臨時任天堂信箱</div>
-                        <div id="cloud-emailDisplay" class="info-value" style="font-size: 18px; word-break: break-all; margin: 10px 0;">--</div>
-                        <button id="cloud-copyEmailBtn" class="copy-btn">
+                        <div class="info-title">步驟 1：臨時任天堂信箱</div>
+                        <div id="cloud-emailDisplay" class="info-value" style="font-size: 18px; word-break: break-all; margin: 10px 0; color: #38bdf8;">--</div>
+                        <button id="cloud-copyEmailBtn" class="copy-btn btn-copy-email">
                             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                            <span>複製信箱 & 開啟 Pikmin</span>
+                            <span>📋 複製信箱 & 開啟 Pikmin</span>
                         </button>
                     </div>
 
                     <!-- Nintendo 密碼 -->
                     <div class="input-group" style="margin-bottom: 20px;">
-                        <label for="cloud-password">Nintendo 密碼</label>
+                        <label for="cloud-password">步驟 2：Nintendo 密碼</label>
                         <div style="display: flex; flex-direction: column; gap: 8px;">
                             <input type="text" id="cloud-password" value="Pikmin123!@" style="width: 100%; border-radius: 8px; font-size: 16px; padding: 10px 15px; box-sizing: border-box;" readonly>
-                            <button id="cloud-copyPwdBtn" class="copy-btn" style="width: 100%; margin: 0;">
+                            <button id="cloud-copyPwdBtn" class="copy-btn btn-copy-pwd" style="width: 100%; margin: 0;">
                                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                <span>複製密碼 & 開啟 Pikmin</span>
+                                <span>🔑 複製密碼 & 開啟 Pikmin</span>
                             </button>
                         </div>
                     </div>
@@ -1483,20 +1587,31 @@
                     <!-- 驗證碼顯示區塊 -->
                     <div id="cloud-codeBox" class="info-box" style="margin-bottom: 20px;">
                         <div id="cloud-loadingBar" class="pulsing"></div>
-                        <div class="info-title">任天堂驗證碼 (等待中...)</div>
-                        <div id="cloud-codeDisplay" class="info-value">--</div>
-                        <button id="cloud-copyCodeBtn" class="copy-btn" disabled>
+                        <div class="info-title">步驟 3：任天堂驗證碼 (等待中...)</div>
+                        <div id="cloud-codeReminder" class="ready-toast" style="display: none;">
+                            🎉 驗證碼已送達！請點擊下方按鈕複製並完成註冊！
+                        </div>
+                        <div id="cloud-codeDisplay" class="info-value" style="color: #34d399;">--</div>
+                        <button id="cloud-copyCodeBtn" class="copy-btn btn-copy-code" disabled>
                             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                            <span>複製驗證碼 & 開啟 Pikmin</span>
+                            <span>✨ 複製驗證碼 & 開啟 Pikmin</span>
                         </button>
                     </div>
 
                     <!-- Pikmin 邀請連結（自訂）與儲存管理 -->
                     <div class="input-group" style="margin-bottom: 0;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <label for="cloud-inviteLink" style="margin: 0;">Pikmin 邀請連結 (自訂)</label>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <label for="cloud-inviteLink" style="margin: 0; font-weight: 700;">Pikmin 邀請連結</label>
+                                <label style="font-size: 12px; color: #38bdf8; cursor: pointer; display: flex; align-items: center; gap: 4px; background: rgba(56, 189, 248, 0.1); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.25);">
+                                    <input type="checkbox" id="cloud-autoRotate" checked style="cursor: pointer;"> 🔄 自動輪替名單
+                                </label>
+                            </div>
                             <div style="display: flex; align-items: center; gap: 12px;">
-                                <label style="font-size: 13px; color: #a1a1aa; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                <button id="cloud-resetAllCountsBtn" type="button" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 4px; padding: 0;" title="將所有名單的執行次數重置為 0">
+                                    🔄 重置全部次數
+                                </button>
+                                <label style="font-size: 12px; color: #a1a1aa; cursor: pointer; display: flex; align-items: center; gap: 4px;">
                                     <input type="checkbox" id="cloud-isPublic" checked style="cursor: pointer;"> 公開
                                 </label>
                                 <button id="cloud-saveInviteBtn" type="button" style="background: none; border: none; color: #38bdf8; cursor: pointer; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 4px; padding: 0;">
@@ -1512,15 +1627,17 @@
 
                         <!-- 雙清單管理（折疊式） -->
                         <details style="margin-top: 15px;">
-                            <summary style="cursor: pointer; font-size: 14px; color: #94a3b8; outline: none; padding: 5px 0; user-select: none; font-weight: bold;">
-                                🔒 私有清單 (點此展開)
+                            <summary style="cursor: pointer; font-size: 14px; color: #94a3b8; outline: none; padding: 5px 0; user-select: none; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+                                <span>🔒 私有清單 (點此展開)</span>
+                                <span style="font-size: 11px; color: #64748b; font-weight: normal;">☑️ 勾選者參與輪替</span>
                             </summary>
                             <div id="cloud-savedLocalLinksList" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
                             </div>
                         </details>
                         <details style="margin-top: 10px;">
-                            <summary style="cursor: pointer; font-size: 14px; color: #94a3b8; outline: none; padding: 5px 0; user-select: none; font-weight: bold;">
-                                🌐 公開清單 (點此展開)
+                            <summary style="cursor: pointer; font-size: 14px; color: #94a3b8; outline: none; padding: 5px 0; user-select: none; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+                                <span>🌐 公開清單 (點此展開)</span>
+                                <span style="font-size: 11px; color: #64748b; font-weight: normal;">☑️ 勾選者參與輪替</span>
                             </summary>
                             <div id="cloud-savedPublicLinksList" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
                             </div>
@@ -1979,11 +2096,17 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.08.02.0142";</script>
-    <script src="js/main.js?v=1785606000000"></script>
-    <script src="js/autofill.js?v=1785606000000"></script>
+    <script>const APP_VERSION = "2026.08.02.1635";</script>
+    <script src="js/main.js?v=1785659749255"></script>
+    <script src="js/autofill.js?v=1785659749263"></script>
 </body>
 </html>
+
+
+
+
+
+
 
 
 

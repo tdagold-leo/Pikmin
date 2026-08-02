@@ -3505,9 +3505,13 @@
     // ===== 雲端自動註冊小幫手邏輯 =====
     (function() {
         const logContainer = document.getElementById('cloud-logContainer');
-        const startBtn = document.getElementById('cloud-startBtn');
-        const referralCodeInput = document.getElementById('cloud-referralCode');
-        const copyRefCodeBtn = document.getElementById('cloud-copyRefCodeBtn');
+        const dynamicActionBtn = document.getElementById('cloud-dynamicActionBtn');
+        const dynamicBtnIcon = document.getElementById('cloud-dynamicBtnIcon');
+        const dynamicBtnText = document.getElementById('cloud-dynamicBtnText');
+        const dynamicBtnSub = document.getElementById('cloud-dynamicBtnSub');
+        const activeInviterName = document.getElementById('cloud-activeInviterName');
+        const activeInviterCount = document.getElementById('cloud-activeInviterCount');
+
         const pwdInput = document.getElementById('cloud-password');
         const copyPwdBtn = document.getElementById('cloud-copyPwdBtn');
         const inviteLinkInput = document.getElementById('cloud-inviteLink');
@@ -3517,6 +3521,9 @@
         const isPublicCheckbox = document.getElementById('cloud-isPublic');
         const savedLocalLinksList = document.getElementById('cloud-savedLocalLinksList');
         const savedPublicLinksList = document.getElementById('cloud-savedPublicLinksList');
+        const autoRotateCheckbox = document.getElementById('cloud-autoRotate');
+        const resetAllCountsBtn = document.getElementById('cloud-resetAllCountsBtn');
+        const enableNotifBtn = document.getElementById('cloud-enableNotifBtn');
 
         const emailBox = document.getElementById('cloud-emailBox');
         const emailDisplay = document.getElementById('cloud-emailDisplay');
@@ -3526,6 +3533,208 @@
         const codeDisplay = document.getElementById('cloud-codeDisplay');
         const copyCodeBtn = document.getElementById('cloud-copyCodeBtn');
         const loadingBar = document.getElementById('cloud-loadingBar');
+        const codeReminder = document.getElementById('cloud-codeReminder');
+
+        let currentActiveInvite = null;
+        let latestReceivedCode = null;
+        let currentGeneratedEmail = null;
+        let currentState = 'ready'; // 'ready' | 'generating' | 'waiting' | 'code_ready' | 'completed'
+
+        // ===== 動態引導單一按鈕狀態管理 =====
+        function setActionState(state, data = {}) {
+            currentState = state;
+            if (!dynamicActionBtn) return;
+
+            dynamicActionBtn.className = 'dynamic-action-btn state-' + state;
+
+            if (state === 'ready') {
+                if (dynamicBtnIcon) dynamicBtnIcon.textContent = '🚀';
+                if (dynamicBtnText) dynamicBtnText.textContent = '第 1 步：產生免洗帳號並出發';
+                if (dynamicBtnSub) dynamicBtnSub.textContent = '自動複製信箱 ➜ 自動輪替名單 ➜ 開啟 Pikmin';
+                dynamicActionBtn.disabled = false;
+            } else if (state === 'generating') {
+                if (dynamicBtnIcon) dynamicBtnIcon.textContent = '⏳';
+                if (dynamicBtnText) dynamicBtnText.textContent = '正在建立免洗信箱...';
+                if (dynamicBtnSub) dynamicBtnSub.textContent = '請稍候，即將自動複製並跳轉至遊戲';
+                dynamicActionBtn.disabled = true;
+            } else if (state === 'waiting') {
+                if (dynamicBtnIcon) dynamicBtnIcon.textContent = '📬';
+                if (dynamicBtnText) dynamicBtnText.textContent = '等待驗證信中... (點此重開遊戲)';
+                if (dynamicBtnSub) dynamicBtnSub.textContent = '信箱已在剪貼簿！請在遊戲貼上並發送驗證碼';
+                dynamicActionBtn.disabled = false;
+            } else if (state === 'code_ready') {
+                const code = data.code || latestReceivedCode || '----';
+                if (dynamicBtnIcon) dynamicBtnIcon.textContent = '🎉';
+                if (dynamicBtnText) dynamicBtnText.textContent = `驗證碼：${code} (點擊複製並開啟遊戲)`;
+                if (dynamicBtnSub) dynamicBtnSub.textContent = '🔔 驗證碼已自動複製！點此直接跳回 Pikmin 填寫';
+                dynamicActionBtn.disabled = false;
+            } else if (state === 'completed') {
+                if (dynamicBtnIcon) dynamicBtnIcon.textContent = '✨';
+                if (dynamicBtnText) dynamicBtnText.textContent = '完成！點此產生下一隻 (已就緒下一位)';
+                if (dynamicBtnSub) dynamicBtnSub.textContent = '當前次數 +1，已自動切換至下一位朋友';
+                dynamicActionBtn.disabled = false;
+            }
+        }
+
+        function updateInviterBadge() {
+            if (activeInviterName && activeInviterCount) {
+                if (currentActiveInvite) {
+                    const icon = currentActiveInvite.isLocal ? '🔒 ' : '🌐 ';
+                    activeInviterName.textContent = icon + currentActiveInvite.name;
+                    const c = currentActiveInvite.count || 0;
+                    const t = currentActiveInvite.target || 4;
+                    activeInviterCount.textContent = `${c}/${t} 次`;
+                    if (c >= t) {
+                        activeInviterCount.style.background = 'rgba(16, 185, 129, 0.3)';
+                        activeInviterCount.style.color = '#34d399';
+                    } else {
+                        activeInviterCount.style.background = 'rgba(56, 189, 248, 0.25)';
+                        activeInviterCount.style.color = '#38bdf8';
+                    }
+                } else {
+                    activeInviterName.textContent = '預設連結';
+                    activeInviterCount.textContent = '0/4 次';
+                }
+            }
+        }
+
+        // 請求通知權限
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        log('🔔 已啟用手機通知推播！驗證碼送達時將直接彈出於螢幕頂部。', 'log-success');
+                        if (enableNotifBtn) enableNotifBtn.textContent = '🔔 通知已開啟';
+                    }
+                });
+            }
+        }
+        if (enableNotifBtn) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                enableNotifBtn.textContent = '🔔 通知已開啟';
+            }
+            enableNotifBtn.addEventListener('click', requestNotificationPermission);
+        }
+
+        // 清脆雙音提示 (Web Audio API 合成音，不需任何外部音效檔)
+        function playCodeChime() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+                const now = ctx.currentTime;
+                
+                // 第一聲 G5
+                const osc1 = ctx.createOscillator();
+                const gain1 = ctx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(783.99, now);
+                gain1.gain.setValueAtTime(0.3, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc1.connect(gain1);
+                gain1.connect(ctx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.3);
+
+                // 第二聲 C6
+                const osc2 = ctx.createOscillator();
+                const gain2 = ctx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(1046.50, now + 0.15);
+                gain2.gain.setValueAtTime(0.4, now + 0.15);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                osc2.connect(gain2);
+                gain2.connect(ctx.destination);
+                osc2.start(now + 0.15);
+                osc2.stop(now + 0.6);
+            } catch(e) {}
+        }
+
+        // 手機/電腦系統通知推播
+        function pushCodeNotification(code) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                try {
+                    const notif = new Notification('🍄 Pikmin 驗證碼：' + code, {
+                        body: '點擊複製驗證碼並返回 Pikmin 遊戲！',
+                        icon: 'https://cdn-icons-png.flaticon.com/512/888/888879.png',
+                        badge: 'https://cdn-icons-png.flaticon.com/512/888/888879.png',
+                        tag: 'pikmin-code-tag',
+                        renotify: true,
+                        requireInteraction: true
+                    });
+                    notif.onclick = function() {
+                        window.focus();
+                        navigator.clipboard.writeText(code);
+                        if (openPikminBtn) window.location.href = openPikminBtn.href;
+                    };
+                } catch(e) {}
+            }
+        }
+
+        // 切回焦點時自動複製驗證碼 (Auto-Copy on Focus)
+        function handleAutoCopyOnFocus() {
+            if (latestReceivedCode) {
+                navigator.clipboard.writeText(latestReceivedCode).then(() => {
+                    log(`📋 已自動將驗證碼 ${latestReceivedCode} 寫入剪貼簿！`, 'log-success');
+                }).catch(() => {});
+            }
+        }
+        window.addEventListener('focus', handleAutoCopyOnFocus);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                handleAutoCopyOnFocus();
+            }
+        });
+
+        function log(message, type = 'log-info') {
+            if (!logContainer) return;
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const time = new Date().toLocaleTimeString('zh-TW', { hour12: false });
+            entry.textContent = `[${time}] ${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function fetchWithRetry(url, options = {}, retries = 3, delay = 2000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const res = await fetch(url, options);
+                    if (!res.ok) {
+                        const errBody = await res.text();
+                        throw new Error(`HTTP ${res.status}: ${errBody}`);
+                    }
+                    return await res.json();
+                } catch (err) {
+                    if (i === retries - 1) throw err;
+                    await sleep(delay);
+                }
+            }
+        }
+
+        async function copyToClipboard(text, btnElement) {
+            try {
+                await navigator.clipboard.writeText(text);
+                if (btnElement) {
+                    const originalText = btnElement.innerHTML;
+                    btnElement.classList.add('success');
+                    btnElement.innerHTML = `
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <span>已複製！</span>
+                    `;
+                    setTimeout(() => {
+                        btnElement.classList.remove('success');
+                        btnElement.innerHTML = originalText;
+                    }, 2000);
+                }
+            } catch (err) {
+                log(`複製失敗: ${err.message}`, 'log-error');
+            }
+        }
 
         // 綁定複製密碼按鈕 (複製並開啟 Pikmin)
         if (copyPwdBtn && pwdInput) {
@@ -3545,121 +3754,323 @@
             });
         }
 
-        // ===== 邀請連結管理邏輯 (Firebase 公開清單 & LocalStorage 私有清單) =====
-        if (inviteLinkInput && openPikminBtn && saveInviteBtn && savedLocalLinksList && savedPublicLinksList) {
-            function getLocalInvites() {
-                try {
-                    return JSON.parse(localStorage.getItem('pikmin_local_invites') || '{}');
-                } catch(e) { return {}; }
+        // ===== 邀請連結管理邏輯 (Firebase 公開清單 & LocalStorage 私有清單 + 自動輪替與計數) =====
+        function getLocalInvites() {
+            try {
+                return JSON.parse(localStorage.getItem('pikmin_local_invites') || '{}');
+            } catch(e) { return {}; }
+        }
+        function setLocalInvites(data) {
+            localStorage.setItem('pikmin_local_invites', JSON.stringify(data));
+        }
+
+        function selectInvite(item, flash = true) {
+            currentActiveInvite = item;
+            updateInviterBadge();
+
+            if (inviteNameInput) {
+                inviteNameInput.value = item.name;
+                if (flash) inviteNameInput.style.border = '2px solid #10b981';
             }
-            function setLocalInvites(data) {
-                localStorage.setItem('pikmin_local_invites', JSON.stringify(data));
+            if (inviteLinkInput) {
+                inviteLinkInput.value = item.link;
+                if (flash) inviteLinkInput.style.border = '2px solid #10b981';
             }
+            if (openPikminBtn) {
+                openPikminBtn.href = item.link;
+            }
+            if (flash) {
+                setTimeout(() => {
+                    if (inviteLinkInput) inviteLinkInput.style.border = '';
+                    if (inviteNameInput) inviteNameInput.style.border = '';
+                }, 1000);
+            }
+        }
+
+        function toggleItemEnabled(item, isEnabled) {
+            if (item.isLocal) {
+                const data = getLocalInvites();
+                if (data[item.id]) {
+                    data[item.id].enabled = isEnabled;
+                    setLocalInvites(data);
+                    renderAllInvites();
+                }
+            } else if (typeof database !== 'undefined') {
+                database.ref('shared_invites/' + item.id).update({ enabled: isEnabled });
+            }
+        }
+
+        function updateItemCount(item, delta) {
+            let newCount = (item.count || 0) + delta;
+            if (newCount < 0) newCount = 0;
             
-            function createListElement(item) {
-                const el = document.createElement('div');
-                el.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08);';
-                
-                const leftDiv = document.createElement('div');
-                leftDiv.style.cssText = 'flex: 1; cursor: pointer; overflow: hidden;';
-                const icon = item.isLocal ? '🔒 ' : '🌐 ';
-                leftDiv.innerHTML = `
-                    <div style="font-weight: bold; font-size: 13px; color: #f8fafc;">${icon}${escapeHtml(item.name)}</div>
-                    <div style="font-size: 11px; color: #94a3b8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(item.link)}</div>
-                `;
-                leftDiv.onclick = () => {
-                    if (inviteNameInput) {
-                        inviteNameInput.value = item.name;
-                        inviteNameInput.style.border = '2px solid #10b981';
-                    }
-                    inviteLinkInput.value = item.link;
-                    openPikminBtn.href = item.link;
-                    inviteLinkInput.style.border = '2px solid #10b981';
-                    setTimeout(() => {
-                        inviteLinkInput.style.border = '';
-                        if (inviteNameInput) inviteNameInput.style.border = '';
-                    }, 1000);
-                };
-
-                const rightDiv = document.createElement('div');
-                rightDiv.style.cssText = 'display: flex; gap: 8px; margin-left: 10px;';
-
-                const editBtn = document.createElement('button');
-                editBtn.type = 'button';
-                editBtn.innerHTML = '✏️';
-                editBtn.title = '修改名稱';
-                editBtn.style.cssText = 'background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 13px;';
-                editBtn.onclick = () => {
-                    const newName = prompt('修改名稱：', item.name);
-                    if (newName && newName.trim() && newName.trim() !== item.name) {
-                        if (item.isLocal) {
-                            const data = getLocalInvites();
-                            if(data[item.id]) data[item.id].name = newName.trim();
-                            setLocalInvites(data);
-                            renderAllInvites();
-                        } else if (typeof database !== 'undefined') {
-                            database.ref('shared_invites/' + item.id).update({ name: newName.trim() });
-                        }
-                    }
-                };
-
-                const delBtn = document.createElement('button');
-                delBtn.type = 'button';
-                delBtn.innerHTML = '🗑️';
-                delBtn.title = '刪除連結';
-                delBtn.style.cssText = 'background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 13px;';
-                delBtn.onclick = () => {
-                    if (confirm(`確定要刪除「${item.name}」的連結嗎？`)) {
-                        if (item.isLocal) {
-                            const data = getLocalInvites();
-                            delete data[item.id];
-                            setLocalInvites(data);
-                            renderAllInvites();
-                        } else if (typeof database !== 'undefined') {
-                            database.ref('shared_invites/' + item.id).remove();
-                        }
-                    }
-                };
-
-                rightDiv.appendChild(editBtn);
-                rightDiv.appendChild(delBtn);
-                
-                el.appendChild(leftDiv);
-                el.appendChild(rightDiv);
-                return el;
+            if (item.isLocal) {
+                const data = getLocalInvites();
+                if (data[item.id]) {
+                    data[item.id].count = newCount;
+                    setLocalInvites(data);
+                    renderAllInvites();
+                }
+            } else if (typeof database !== 'undefined') {
+                database.ref('shared_invites/' + item.id).update({ count: newCount });
             }
+        }
 
-            function renderAllInvites() {
-                savedLocalLinksList.innerHTML = '';
-                savedPublicLinksList.innerHTML = '';
-                
-                // Fetch local
-                const localData = getLocalInvites();
-                let localEntries = Object.keys(localData).map(key => ({ id: key, isLocal: true, ...localData[key] }));
-                localEntries.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-                
-                if (localEntries.length === 0) {
-                    savedLocalLinksList.innerHTML = '<div style="font-size:12px; color:#64748b; text-align:center; padding:4px 0;">目前沒有私有連結</div>';
-                } else {
-                    localEntries.forEach(item => savedLocalLinksList.appendChild(createListElement(item)));
-                }
-
-                // Fetch public
-                let publicEntries = [];
-                if (window._latestFirebaseInvites) {
-                    const fbData = window._latestFirebaseInvites;
-                    publicEntries = Object.keys(fbData).map(key => ({ id: key, isLocal: false, ...fbData[key] }));
-                }
-                publicEntries.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-                
-                if (publicEntries.length === 0) {
-                    savedPublicLinksList.innerHTML = '<div style="font-size:12px; color:#64748b; text-align:center; padding:4px 0;">目前沒有公開連結</div>';
-                } else {
-                    publicEntries.forEach(item => savedPublicLinksList.appendChild(createListElement(item)));
+        function resetItemCount(item) {
+            if (confirm(`確定要將「${item.name}」的執行次數重置為 0 嗎？`)) {
+                if (item.isLocal) {
+                    const data = getLocalInvites();
+                    if (data[item.id]) {
+                        data[item.id].count = 0;
+                        setLocalInvites(data);
+                        renderAllInvites();
+                    }
+                } else if (typeof database !== 'undefined') {
+                    database.ref('shared_invites/' + item.id).update({ count: 0 });
                 }
             }
+        }
 
-            // 儲存邏輯
+        function createListElement(item) {
+            const el = document.createElement('div');
+            const isEnabled = item.enabled !== false;
+            
+            el.style.cssText = `display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); transition: all 0.2s; ${isEnabled ? '' : 'opacity: 0.6;'}`;
+            
+            const count = item.count || 0;
+            const target = item.target || 4;
+            const isDone = count >= target;
+
+            // 勾選框容器 (自訂勾選需輪替之人)
+            const checkWrap = document.createElement('label');
+            checkWrap.style.cssText = 'display: flex; align-items: center; cursor: pointer; margin-right: 8px; flex-shrink: 0; padding: 2px;';
+            const chk = document.createElement('input');
+            chk.type = 'checkbox';
+            chk.checked = isEnabled;
+            chk.title = isEnabled ? '已勾選參與輪替 (點擊取消)' : '未勾選 (不參與輪替，點擊加入)';
+            chk.style.cssText = 'width: 16px; height: 16px; accent-color: #0284c7; cursor: pointer;';
+            chk.onclick = (e) => e.stopPropagation();
+            chk.onchange = () => toggleItemEnabled(item, chk.checked);
+            checkWrap.appendChild(chk);
+
+            const leftDiv = document.createElement('div');
+            leftDiv.style.cssText = 'flex: 1; cursor: pointer; overflow: hidden; margin-right: 8px;';
+            const icon = item.isLocal ? '🔒 ' : '🌐 ';
+            
+            let badgeHtml = '';
+            if (!isEnabled) {
+                badgeHtml = `<span style="background: rgba(148, 163, 184, 0.15); color: #94a3b8; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: bold; border: 1px solid rgba(148, 163, 184, 0.3);">⏸️ 暫不輪替 (${count}/${target})</span>`;
+            } else if (isDone) {
+                badgeHtml = `<span style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: bold; border: 1px solid rgba(52, 211, 153, 0.4);">✓ 達標 ${count}/${target}</span>`;
+            } else {
+                badgeHtml = `<span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: bold; border: 1px solid rgba(56, 189, 248, 0.3);">${count}/${target} 次</span>`;
+            }
+
+            leftDiv.innerHTML = `
+                <div style="font-weight: bold; font-size: 13px; color: #f8fafc; display: flex; align-items: center; flex-wrap: wrap;">
+                    <span>${icon}${escapeHtml(item.name)}</span>
+                    ${badgeHtml}
+                </div>
+                <div style="font-size: 11px; color: #94a3b8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px;">${escapeHtml(item.link)}</div>
+            `;
+            leftDiv.onclick = () => selectInvite(item, true);
+
+            const rightDiv = document.createElement('div');
+            rightDiv.style.cssText = 'display: flex; gap: 4px; align-items: center; flex-shrink: 0;';
+
+            // +1 按鈕
+            const plusBtn = document.createElement('button');
+            plusBtn.type = 'button';
+            plusBtn.innerHTML = '+1';
+            plusBtn.title = '增加 1 次';
+            plusBtn.style.cssText = 'background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); border-radius: 4px; cursor: pointer; padding: 2px 6px; font-size: 11px; font-weight: bold;';
+            plusBtn.onclick = (e) => { e.stopPropagation(); updateItemCount(item, 1); };
+
+            // -1 按鈕
+            const minusBtn = document.createElement('button');
+            minusBtn.type = 'button';
+            minusBtn.innerHTML = '-1';
+            minusBtn.title = '減少 1 次';
+            minusBtn.style.cssText = 'background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; cursor: pointer; padding: 2px 5px; font-size: 11px; font-weight: bold;';
+            minusBtn.onclick = (e) => { e.stopPropagation(); updateItemCount(item, -1); };
+
+            // 🔄 重置單一按鈕
+            const resetBtn = document.createElement('button');
+            resetBtn.type = 'button';
+            resetBtn.innerHTML = '🔄';
+            resetBtn.title = '次數歸零';
+            resetBtn.style.cssText = 'background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 12px; opacity: 0.7;';
+            resetBtn.onclick = (e) => { e.stopPropagation(); resetItemCount(item); };
+
+            // ✏️ 編輯按鈕
+            const editBtn = document.createElement('button');
+            editBtn.type = 'button';
+            editBtn.innerHTML = '✏️';
+            editBtn.title = '修改名稱或目標上限';
+            editBtn.style.cssText = 'background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 12px;';
+            editBtn.onclick = (e) => {
+                e.stopPropagation();
+                const newName = prompt('修改名稱：', item.name);
+                if (newName && newName.trim()) {
+                    const newTargetStr = prompt('修改目標次數 (預設 4)：', item.target || 4);
+                    const newTarget = parseInt(newTargetStr, 10) || 4;
+                    if (item.isLocal) {
+                        const data = getLocalInvites();
+                        if (data[item.id]) {
+                            data[item.id].name = newName.trim();
+                            data[item.id].target = newTarget;
+                        }
+                        setLocalInvites(data);
+                        renderAllInvites();
+                    } else if (typeof database !== 'undefined') {
+                        database.ref('shared_invites/' + item.id).update({
+                            name: newName.trim(),
+                            target: newTarget
+                        });
+                    }
+                }
+            };
+
+            // 🗑️ 刪除按鈕
+            const delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.innerHTML = '🗑️';
+            delBtn.title = '刪除連結';
+            delBtn.style.cssText = 'background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 12px;';
+            delBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (confirm(`確定要刪除「${item.name}」的連結嗎？`)) {
+                    if (item.isLocal) {
+                        const data = getLocalInvites();
+                        delete data[item.id];
+                        setLocalInvites(data);
+                        renderAllInvites();
+                    } else if (typeof database !== 'undefined') {
+                        database.ref('shared_invites/' + item.id).remove();
+                    }
+                }
+            };
+
+            rightDiv.appendChild(plusBtn);
+            rightDiv.appendChild(minusBtn);
+            rightDiv.appendChild(resetBtn);
+            rightDiv.appendChild(editBtn);
+            rightDiv.appendChild(delBtn);
+            
+            el.appendChild(checkWrap);
+            el.appendChild(leftDiv);
+            el.appendChild(rightDiv);
+            return el;
+        }
+
+        function getAllInviteEntries() {
+            const localData = getLocalInvites();
+            let entries = Object.keys(localData).map(key => ({ id: key, isLocal: true, ...localData[key] }));
+            if (window._latestFirebaseInvites) {
+                const fbData = window._latestFirebaseInvites;
+                entries = entries.concat(Object.keys(fbData).map(key => ({ id: key, isLocal: false, ...fbData[key] })));
+            }
+            entries.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+            return entries;
+        }
+
+        function renderAllInvites() {
+            if (!savedLocalLinksList || !savedPublicLinksList) return;
+            savedLocalLinksList.innerHTML = '';
+            savedPublicLinksList.innerHTML = '';
+            
+            // Fetch local
+            const localData = getLocalInvites();
+            let localEntries = Object.keys(localData).map(key => ({ id: key, isLocal: true, ...localData[key] }));
+            localEntries.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+            
+            if (localEntries.length === 0) {
+                savedLocalLinksList.innerHTML = '<div style="font-size:12px; color:#64748b; text-align:center; padding:4px 0;">目前沒有私有連結</div>';
+            } else {
+                localEntries.forEach(item => savedLocalLinksList.appendChild(createListElement(item)));
+            }
+
+            // Fetch public
+            let publicEntries = [];
+            if (window._latestFirebaseInvites) {
+                const fbData = window._latestFirebaseInvites;
+                publicEntries = Object.keys(fbData).map(key => ({ id: key, isLocal: false, ...fbData[key] }));
+            }
+            publicEntries.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+            
+            if (publicEntries.length === 0) {
+                savedPublicLinksList.innerHTML = '<div style="font-size:12px; color:#64748b; text-align:center; padding:4px 0;">目前沒有公開連結</div>';
+            } else {
+                publicEntries.forEach(item => savedPublicLinksList.appendChild(createListElement(item)));
+            }
+
+            // If no active invite selected yet, select the first pending enabled one
+            if (!currentActiveInvite || (inviteLinkInput && !inviteLinkInput.value.trim())) {
+                const all = getAllInviteEntries();
+                const nextAvailable = all.find(i => (i.enabled !== false) && (i.count || 0) < (i.target || 4)) || all.find(i => i.enabled !== false) || all[0];
+                if (nextAvailable) {
+                    selectInvite(nextAvailable, false);
+                }
+            } else {
+                updateInviterBadge();
+            }
+        }
+
+        // 自動輪替至下一位勾選且未達標的邀請人
+        window.rotateToNextInvite = function() {
+            const all = getAllInviteEntries();
+            if (all.length === 0) return;
+
+            // 1. 如果有當前選取的對象，幫他 +1
+            const currentLink = inviteLinkInput ? inviteLinkInput.value.trim() : '';
+            let activeItem = all.find(i => i.link === currentLink || (currentActiveInvite && i.id === currentActiveInvite.id));
+            
+            if (activeItem) {
+                updateItemCount(activeItem, 1);
+            }
+
+            // 2. 尋找下一位【已勾選參與輪替】且未達標的名單 (目標預設 4)
+            const pendingList = all.filter(i => (i.enabled !== false) && (i.count || 0) < (i.target || 4));
+            if (pendingList.length > 0) {
+                let nextItem = pendingList.find(i => !activeItem || i.id !== activeItem.id);
+                if (!nextItem) nextItem = pendingList[0];
+                
+                selectInvite(nextItem, true);
+                log(`🔄 自動輪替邀請人：${nextItem.name} (${(nextItem.count || 0)}/${(nextItem.target || 4)}次)`, 'log-success');
+            } else {
+                log('🎉 所有勾選的名單皆已達標（滿 4 次）！', 'log-success');
+            }
+            updateInviterBadge();
+        };
+
+        // 重置全部名單次數
+        if (resetAllCountsBtn) {
+            resetAllCountsBtn.addEventListener('click', () => {
+                if (confirm('確定要將「所有名單 (公開與私有)」的執行次數全部歸零重置嗎？')) {
+                    // Reset local
+                    const localData = getLocalInvites();
+                    Object.keys(localData).forEach(k => localData[k].count = 0);
+                    setLocalInvites(localData);
+
+                    // Reset public
+                    if (typeof database !== 'undefined') {
+                        database.ref('shared_invites').once('value', snap => {
+                            const fbData = snap.val() || {};
+                            const updates = {};
+                            Object.keys(fbData).forEach(k => {
+                                updates['shared_invites/' + k + '/count'] = 0;
+                            });
+                            database.ref().update(updates);
+                        });
+                    }
+                    renderAllInvites();
+                    alert('✅ 所有名單次數已全數歸零！');
+                }
+            });
+        }
+
+        // Save logic
+        if (saveInviteBtn && inviteLinkInput) {
             saveInviteBtn.addEventListener('click', () => {
                 const link = inviteLinkInput.value.trim();
                 const name = inviteNameInput ? inviteNameInput.value.trim() : '';
@@ -3676,11 +4087,16 @@
                 const newObj = {
                     name: name,
                     link: link,
+                    count: 0,
+                    target: 4,
+                    enabled: true,
                     createdAt: Date.now()
                 };
 
-                if (isPublic && typeof database !== 'undefined') {
-                    database.ref('shared_invites').push(newObj);
+                if (isPublic) {
+                    if (typeof database !== 'undefined') {
+                        database.ref('shared_invites').push(newObj);
+                    }
                 } else {
                     const localData = getLocalInvites();
                     const newId = 'local_' + Date.now() + '_' + Math.floor(Math.random()*1000);
@@ -3692,70 +4108,29 @@
                 if (inviteNameInput) inviteNameInput.value = '';
                 inviteLinkInput.value = '';
             });
-
-            // 監聽 Firebase 雲端公開清單
-            window._latestFirebaseInvites = {};
-            if (typeof database !== 'undefined') {
-                database.ref('shared_invites').on('value', snap => {
-                    window._latestFirebaseInvites = snap.val() || {};
-                    renderAllInvites();
-                });
-            }
-            
-            // 初次渲染私有清單
-            renderAllInvites();
         }
 
-        function log(msg, type = '') {
-            if(!logContainer) return;
-            const entry = document.createElement('div');
-            entry.className = `log-entry ${type}`;
-            const time = new Date().toLocaleTimeString();
-            entry.textContent = `[${time}] ${msg}`;
-            logContainer.appendChild(entry);
-            logContainer.scrollTop = logContainer.scrollHeight;
+        // Listen to Firebase
+        window._latestFirebaseInvites = {};
+        if (typeof database !== 'undefined') {
+            database.ref('shared_invites').on('value', snap => {
+                window._latestFirebaseInvites = snap.val() || {};
+                renderAllInvites();
+            });
         }
+        
+        // Initial render
+        renderAllInvites();
 
-        function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
-
-        async function fetchWithRetry(url, options, maxRetries = 3) {
-            for (let i = 0; i < maxRetries; i++) {
-                try {
-                    const res = await fetch(url, options);
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    return await res.json();
-                } catch (err) {
-                    log(`連線失敗 (${err.message})，正在重試 (${i + 1}/${maxRetries})...`, 'log-error');
-                    await sleep(2000);
-                }
-            }
-            throw new Error('達到最大重試次數，網路連線失敗');
-        }
-
-        async function copyToClipboard(text, btnElement) {
-            try {
-                await navigator.clipboard.writeText(text);
-                const originalText = btnElement.innerHTML;
-                btnElement.classList.add('success');
-                btnElement.innerHTML = `
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                    <span>已複製！</span>
-                `;
-                setTimeout(() => {
-                    btnElement.classList.remove('success');
-                    btnElement.innerHTML = originalText;
-                }, 2000);
-            } catch (err) {
-                log(`複製失敗: ${err.message}`, 'log-error');
-            }
-        }
-
+        // ===== 執行自動化核心函式 =====
         async function runAutomation() {
-            startBtn.disabled = true;
-            startBtn.textContent = "執行中...";
-            emailBox.classList.remove('active');
-            codeBox.classList.remove('active');
-            logContainer.innerHTML = '<div class="log-entry">準備就緒。點擊「開始」以啟動純網頁版自動化流程...</div>';
+            requestNotificationPermission();
+            setActionState('generating');
+
+            if (emailBox) emailBox.classList.remove('active');
+            if (codeBox) codeBox.classList.remove('active');
+            latestReceivedCode = null;
+            if (logContainer) logContainer.innerHTML = '<div class="log-entry">準備就緒。正在建立信箱並準備跳轉...</div>';
             
             try {
                 log('🚀 開始產生免洗信箱...');
@@ -3779,24 +4154,48 @@
                 });
                 const token = tokenRes.token;
                 
+                currentGeneratedEmail = address;
                 log('✅ 成功取得信箱！', 'log-success');
-                emailDisplay.textContent = address;
-                emailBox.classList.add('active');
-                copyEmailBtn.onclick = () => {
-                    copyToClipboard(address, copyEmailBtn);
-                    if (openPikminBtn) {
-                        window.location.href = openPikminBtn.href;
-                    }
-                };
+                if (emailDisplay) emailDisplay.textContent = address;
+                if (emailBox) emailBox.classList.add('active');
                 
-                log('📬 開始監聽任天堂驗證信...');
-                codeBox.classList.add('active');
-                loadingBar.style.display = 'block';
-                codeDisplay.textContent = '--';
+                // 自動複製信箱到剪貼簿
+                try {
+                    await navigator.clipboard.writeText(address);
+                    log('📋 已自動將信箱複製到剪貼簿！', 'log-success');
+                } catch(e) {}
+
+                if (copyEmailBtn) {
+                    copyEmailBtn.onclick = () => {
+                        copyToClipboard(address, copyEmailBtn);
+                        if (openPikminBtn) {
+                            window.location.href = openPikminBtn.href;
+                        }
+                    };
+                }
+
+                // 🚀 自動跳轉至 Pikmin Bloom 遊戲
+                if (openPikminBtn && openPikminBtn.href) {
+                    log('🍄 自動開啟 Pikmin Bloom 遊戲...', 'log-info');
+                    window.location.href = openPikminBtn.href;
+                }
+
+                // 切換動態按鈕至「等待信件中」狀態
+                setActionState('waiting');
+                
+                log('📬 後台開始監聽任天堂驗證信 (收到將自動推播通知)...');
+                if (codeBox) codeBox.classList.add('active');
+                if (loadingBar) loadingBar.style.display = 'block';
+                if (codeDisplay) codeDisplay.textContent = '--';
+                if (codeReminder) codeReminder.style.display = 'none';
+                
                 const codeTitle = document.querySelector('#cloud-codeBox .info-title');
-                if (codeTitle) codeTitle.textContent = '任天堂驗證碼 (等待中...)';
-                copyCodeBtn.disabled = true;
-                copyCodeBtn.onclick = null;
+                if (codeTitle) codeTitle.textContent = '步驟 3：任天堂驗證碼 (等待信件中...)';
+                if (copyCodeBtn) {
+                    copyCodeBtn.disabled = true;
+                    copyCodeBtn.classList.remove('code-ready');
+                    copyCodeBtn.onclick = null;
+                }
                 
                 let verificationCode = null;
                 const maxAttempts = 30;
@@ -3829,17 +4228,41 @@
                 }
                 
                 if (verificationCode) {
+                    latestReceivedCode = verificationCode;
                     log(`✅ 成功取得驗證碼：${verificationCode}`, 'log-success');
-                    loadingBar.style.display = 'none';
-                    if (codeTitle) codeTitle.textContent = '任天堂驗證碼 (點擊下方複製)';
-                    codeDisplay.textContent = verificationCode;
-                    copyCodeBtn.disabled = false;
-                    copyCodeBtn.onclick = () => {
-                        copyToClipboard(verificationCode, copyCodeBtn);
-                        if (openPikminBtn) {
-                            window.location.href = openPikminBtn.href;
-                        }
-                    };
+                    if (loadingBar) loadingBar.style.display = 'none';
+                    if (codeTitle) codeTitle.textContent = '步驟 3：任天堂驗證碼 (已送達！)';
+                    if (codeReminder) codeReminder.style.display = 'flex';
+                    if (codeDisplay) codeDisplay.textContent = verificationCode;
+                    if (copyCodeBtn) {
+                        copyCodeBtn.disabled = false;
+                        copyCodeBtn.classList.add('code-ready');
+                        copyCodeBtn.onclick = () => {
+                            copyToClipboard(verificationCode, copyCodeBtn);
+                            if (openPikminBtn) {
+                                window.location.href = openPikminBtn.href;
+                            }
+                        };
+                    }
+                    
+                    // 🔔 1. 播放清脆提示音
+                    playCodeChime();
+
+                    // 📱 2. 手機震動
+                    if (navigator.vibrate) {
+                        try { navigator.vibrate([200, 100, 200, 100, 200]); } catch(e) {}
+                    }
+
+                    // 📢 3. 手機/電腦系統通知推播 (直接顯示 4 位數驗證碼)
+                    pushCodeNotification(verificationCode);
+
+                    // 🔄 4. 自動輪替邀請人（並將當前使用者計數 +1）
+                    if (autoRotateCheckbox && autoRotateCheckbox.checked && typeof window.rotateToNextInvite === 'function') {
+                        window.rotateToNextInvite();
+                    }
+
+                    // 🌟 5. 更新動態單一主按鈕至「驗證碼送達 (Code Ready)」狀態
+                    setActionState('code_ready', { code: verificationCode });
                     
                     try {
                         await navigator.clipboard.writeText(verificationCode);
@@ -3849,23 +4272,42 @@
                     }
                 } else {
                     log('❌ 等待超時，請重新執行', 'log-error');
-                    loadingBar.style.display = 'none';
+                    if (loadingBar) loadingBar.style.display = 'none';
                     if (codeTitle) codeTitle.textContent = '等待超時';
+                    setActionState('ready');
                 }
             } catch (err) {
                 log(`❌ 發生錯誤: ${err.message}`, 'log-error');
-            } finally {
-                startBtn.disabled = false;
-                startBtn.textContent = "再次產生新信箱";
+                setActionState('ready');
             }
         }
 
-        if(startBtn) {
-            startBtn.addEventListener('click', runAutomation);
+        // ===== 綁定動態引導按鈕點擊事件 =====
+        if (dynamicActionBtn) {
+            dynamicActionBtn.addEventListener('click', () => {
+                if (currentState === 'ready' || currentState === 'completed') {
+                    runAutomation();
+                } else if (currentState === 'waiting') {
+                    // 如果在等待中點擊，再次複製信箱並嘗試手動跳轉回 Pikmin
+                    if (currentGeneratedEmail) {
+                        navigator.clipboard.writeText(currentGeneratedEmail);
+                        log('📋 已再次複製信箱到剪貼簿！');
+                    }
+                    if (openPikminBtn) window.location.href = openPikminBtn.href;
+                } else if (currentState === 'code_ready') {
+                    // 複製驗證碼並開啟遊戲，切換到 completed
+                    if (latestReceivedCode) {
+                        navigator.clipboard.writeText(latestReceivedCode);
+                        log(`📋 已複製驗證碼 ${latestReceivedCode}！`, 'log-success');
+                    }
+                    if (openPikminBtn) window.location.href = openPikminBtn.href;
+                    setActionState('completed');
+                }
+            });
         }
     })();
-
-    // ===== Google Maps 邏輯 =====
+    
+// ===== Google Maps 邏輯 =====
 
 
     function getColorForType(type) {
