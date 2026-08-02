@@ -1,29 +1,66 @@
 // JS logic begins
     const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.07.24.2104";
-    function checkForUpdate() {
-        // 從 raw.github 抓取以繞過 GitHub Pages CDN 快取
-        const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + new Date().getTime();
+    function checkForUpdate(isManual = false) {
+        // 從 raw.github 抓取最新版號以完全穿透 GitHub Pages CDN 快取
+        const rawUrl = 'https://raw.githubusercontent.com/tdagold-leo/Pikmin/main/index.html?nocache=' + Date.now();
         fetch(rawUrl, { cache: 'no-store' })
             .then(res => res.text())
             .then(html => {
                 const match = html.match(/const APP_VERSION = ['"]([^'"]+)['"]/);
-                if (match && match[1] !== CURRENT_APP_VERSION) {
-                    console.log('發現新版本，準備重新載入...', match[1]);
+                if (match && match[1] && match[1] !== CURRENT_APP_VERSION) {
+                    console.log('🚀 發現新版本：', match[1], '（當前版本：' + CURRENT_APP_VERSION + '）');
                     // 如果用戶正在編輯，則不強制更新（避免資料遺失）
                     const editModal = document.getElementById('time-modal');
                     if (editModal && editModal.style.display === 'flex') {
-                        console.log('用戶正在編輯，稍後更新');
+                        console.log('用戶正在編輯中，稍後更新');
                         return;
                     }
-                    window.location.replace(window.location.pathname + '?v=' + match[1]);
+                    
+                    // 清除瀏覽器 Cache API 快取
+                    if ('caches' in window) {
+                        caches.keys().then(names => {
+                            names.forEach(name => caches.delete(name));
+                        });
+                    }
+
+                    // 提示並強制載入最新版本
+                    const toast = document.createElement('div');
+                    toast.style.cssText = 'position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#0284c7; color:#fff; padding:12px 20px; border-radius:12px; font-size:14px; font-weight:bold; z-index:999999; box-shadow:0 8px 24px rgba(0,0,0,0.4); text-align:center; animation:fadeIn 0.3s ease;';
+                    toast.innerHTML = '🚀 發現新版本 (v' + match[1] + ')，正在載入最新版...';
+                    document.body.appendChild(toast);
+
+                    setTimeout(() => {
+                        window.location.replace(window.location.origin + window.location.pathname + '?_v=' + match[1] + '&_t=' + Date.now());
+                    }, 500);
+                } else if (isManual) {
+                    alert('✅ 當前已是最新版本 (v' + CURRENT_APP_VERSION + ')！');
                 }
             })
-            .catch(err => console.log('檢查更新失敗:', err));
+            .catch(err => {
+                console.log('檢查更新失敗:', err);
+                if (isManual) alert('⚠️ 檢查更新失敗，請檢查網路連線。');
+            });
     }
 
-    // 每次網頁切換回前景時檢查
+    // 1. 頁面載入後 1 秒立刻執行檢查
+    setTimeout(() => checkForUpdate(false), 1000);
+
+    // 2. 每次網頁切換回前景時檢查
     window.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') checkForUpdate();
+        if (document.visibilityState === 'visible') checkForUpdate(false);
+    });
+
+    // 3. 背景每 60 秒自動輪詢一次
+    setInterval(() => checkForUpdate(false), 60000);
+
+    // 4. 點擊頂部版號標籤可手動強制檢查更新
+    window.addEventListener('DOMContentLoaded', () => {
+        const verTag = document.getElementById('header-version-tag');
+        if (verTag) {
+            verTag.style.cursor = 'pointer';
+            verTag.title = '點擊手動檢查更新';
+            verTag.addEventListener('click', () => checkForUpdate(true));
+        }
     });
 
     function escapeHtml(str) { 
