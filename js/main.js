@@ -3814,8 +3814,12 @@
             }
         }
 
-        // 切回焦點時自動複製驗證碼 (Auto-Copy on Focus)
-        function handleAutoCopyOnFocus() {
+        // 切回焦點時：1. 立即檢查收件匣 2. 自動複製驗證碼
+        async function handleAutoCopyOnFocus() {
+            if (!latestReceivedCode && currentState === 'waiting') {
+                log('👁️ 偵測到切回網頁，立即檢查收件匣...', 'log-info');
+                await checkInboxNow();
+            }
             if (latestReceivedCode) {
                 navigator.clipboard.writeText(latestReceivedCode).then(() => {
                     log(`📋 已自動將驗證碼 ${latestReceivedCode} 寫入剪貼簿！`, 'log-success');
@@ -4337,6 +4341,129 @@
         // Initial render
         renderAllInvites();
 
+        // ===== 驗證信輪詢與 Session 持久化管理 =====
+        let activePollingSession = null;
+
+        function saveMailSession(address, token) {
+            const session = { address, token, timestamp: Date.now() };
+            activePollingSession = session;
+            try {
+                localStorage.setItem('pikmin_mail_session', JSON.stringify(session));
+            } catch(e) {}
+        }
+
+        function getMailSession() {
+            if (activePollingSession && (Date.now() - activePollingSession.timestamp < 10 * 60 * 1000)) {
+                return activePollingSession;
+            }
+            try {
+                const raw = localStorage.getItem('pikmin_mail_session');
+                if (raw) {
+                    const session = JSON.parse(raw);
+                    if (Date.now() - session.timestamp < 10 * 60 * 1000) {
+                        activePollingSession = session;
+                        return session;
+                    }
+                }
+            } catch(e) {}
+            return null;
+        }
+
+        function clearMailSession() {
+            activePollingSession = null;
+            try {
+                localStorage.removeItem('pikmin_mail_session');
+            } catch(e) {}
+        }
+
+        // 獨立收信檢查函式
+        async function checkInboxNow() {
+            const session = getMailSession();
+            if (!session || !session.token) {
+                log('ℹ️ 目前沒有進行中的驗證信階段。請點擊第 1 步產生帳號。');
+                return null;
+            }
+
+            try {
+                const msgsRes = await fetchWithRetry('https://api.mail.tm/messages', {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${session.token}` }
+                }, 2, 1000);
+
+                const messages = msgsRes['hydra:member'];
+                if (messages && messages.length > 0) {
+                    const mailId = messages[0].id;
+                    const mailSubject = messages[0].subject || '新信件';
+                    log(`📧 收到信件 [${mailSubject}]，正在解析驗證碼...`);
+
+                    const mailRes = await fetchWithRetry(`https://api.mail.tm/messages/${mailId}`, {
+                        method: 'GET',
+                        headers: { 'Authorization': `Bearer ${session.token}` }
+                    }, 2, 1000);
+
+                    const htmlContent = mailRes.html ? (mailRes.html[0] || mailRes.html) : (mailRes.text || '');
+                    const match = htmlContent.match(/\b(\d{4})\b/);
+                    if (match) {
+                        const verificationCode = match[1];
+                        handleCodeReceived(verificationCode);
+                        return verificationCode;
+                    }
+                }
+            } catch (err) {
+                console.warn('Check inbox error:', err);
+            }
+            return null;
+        }
+
+        // 處理成功取得驗證碼後的 UI、音效、複製與輪替
+        function handleCodeReceived(verificationCode) {
+            if (latestReceivedCode === verificationCode) return; // 避免重複觸發
+            latestReceivedCode = verificationCode;
+            
+            log(`✅ 成功取得任天堂驗證碼：${verificationCode}`, 'log-success');
+            if (loadingBar) loadingBar.style.display = 'none';
+            if (codeBox) codeBox.classList.add('active');
+            
+            const codeTitle = document.querySelector('#cloud-codeBox .info-title');
+            if (codeTitle) codeTitle.textContent = '步驟 3：任天堂驗證碼 (已送達！)';
+            if (codeReminder) codeReminder.style.display = 'flex';
+            if (codeDisplay) codeDisplay.textContent = verificationCode;
+            
+            if (copyCodeBtn) {
+                copyCodeBtn.disabled = false;
+                copyCodeBtn.classList.add('code-ready');
+                copyCodeBtn.onclick = () => {
+                    copyToClipboard(verificationCode, copyCodeBtn);
+                    if (openPikminBtn) window.location.href = openPikminBtn.href;
+                };
+            }
+
+            // 1. 播放提示音
+            playCodeChime();
+
+            // 2. 震動
+            if (navigator.vibrate) {
+                try { navigator.vibrate([200, 100, 200, 100, 200]); } catch(e) {}
+            }
+
+            // 3. 系統通知推播
+            pushCodeNotification(verificationCode);
+
+            // 4. 自動輪替邀請人
+            if (autoRotateCheckbox && autoRotateCheckbox.checked && typeof window.rotateToNextInvite === 'function') {
+                window.rotateToNextInvite();
+            }
+
+            // 5. 更新動態按鈕
+            setActionState('code_ready', { code: verificationCode });
+
+            // 6. 自動寫入剪貼簿
+            try {
+                navigator.clipboard.writeText(verificationCode);
+                log('📋 驗證碼已自動複製到剪貼簿！回遊戲直接貼上即可！', 'log-success');
+            } catch(e) {}
+        }
+
         // ===== 執行自動化核心函式 =====
         async function runAutomation() {
             getAudioContext(); // 預先解鎖音效
@@ -4349,7 +4476,7 @@
             if (logContainer) logContainer.innerHTML = '<div class="log-entry">準備就緒。正在建立信箱並準備跳轉...</div>';
             
             try {
-                log('🚀 開始產生免洗信箱...');
+                log('🚀 開始向 mail.tm 產生免洗信箱...');
                 const domainsRes = await fetchWithRetry('https://api.mail.tm/domains', { method: 'GET' });
                 const domain = domainsRes['hydra:member'][0].domain;
                 
@@ -4371,7 +4498,9 @@
                 const token = tokenRes.token;
                 
                 currentGeneratedEmail = address;
-                log('✅ 成功取得信箱！', 'log-success');
+                saveMailSession(address, token); // 持久化儲存
+
+                log(`✅ 成功建立信箱：${address}`, 'log-success');
                 if (emailDisplay) emailDisplay.textContent = address;
                 if (emailBox) emailBox.classList.add('active');
                 
@@ -4384,22 +4513,14 @@
                 if (copyEmailBtn) {
                     copyEmailBtn.onclick = () => {
                         copyToClipboard(address, copyEmailBtn);
-                        if (openPikminBtn) {
-                            window.location.href = openPikminBtn.href;
-                        }
+                        if (openPikminBtn) window.location.href = openPikminBtn.href;
                     };
-                }
-
-                // 🚀 自動跳轉至 Pikmin Bloom 遊戲 (使用 location.href 喚醒 App，不會產生空白彈窗)
-                if (openPikminBtn && openPikminBtn.href) {
-                    log('🍄 自動開啟 Pikmin Bloom 遊戲...', 'log-info');
-                    window.location.href = openPikminBtn.href;
                 }
 
                 // 切換動態按鈕至「等待信件中」狀態
                 setActionState('waiting');
                 
-                log('📬 後台開始監聽任天堂驗證信 (收到將自動推播通知)...');
+                log('📬 後台開始監聽任天堂驗證信 (每 2.5 秒檢查一次)...');
                 if (codeBox) codeBox.classList.add('active');
                 if (loadingBar) loadingBar.style.display = 'block';
                 if (codeDisplay) codeDisplay.textContent = '--';
@@ -4412,87 +4533,46 @@
                     copyCodeBtn.classList.remove('code-ready');
                     copyCodeBtn.onclick = null;
                 }
-                
-                let verificationCode = null;
-                const maxAttempts = 40; // 每 3 秒檢查一次，最多等待 120 秒
-                
-                for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-                    if (attempt === 1 || attempt % 3 === 0) {
-                        log(`⏳ 等待信件中... (${attempt}/${maxAttempts})`);
+
+                // 喚醒 Pikmin 遊戲（透過隱藏點擊觸發，避免頁面卸載）
+                if (openPikminBtn && openPikminBtn.href) {
+                    log('🍄 開啟 Pikmin Bloom 遊戲...', 'log-info');
+                    try {
+                        const dummyA = document.createElement('a');
+                        dummyA.href = openPikminBtn.href;
+                        dummyA.target = '_blank';
+                        dummyA.rel = 'noopener noreferrer';
+                        document.body.appendChild(dummyA);
+                        dummyA.click();
+                        setTimeout(() => dummyA.remove(), 500);
+                    } catch(e) {
+                        window.location.href = openPikminBtn.href;
                     }
-                    const msgsRes = await fetchWithRetry('https://api.mail.tm/messages', {
-                        method: 'GET',
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    
-                    const messages = msgsRes['hydra:member'];
-                    if (messages && messages.length > 0) {
-                        const mailId = messages[0].id;
-                        log('📧 收到信件了！正在讀取內容...');
-                        const mailRes = await fetchWithRetry(`https://api.mail.tm/messages/${mailId}`, {
-                            method: 'GET',
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        });
-                        const htmlContent = mailRes.html[0] || mailRes.text;
-                        const match = htmlContent.match(/\b(\d{4})\b/);
-                        if (match) {
-                            verificationCode = match[1];
-                            break;
-                        } else {
-                            log('⚠️ 信件中沒有找到 4 位數驗證碼', 'log-error');
-                        }
-                    }
-                    await sleep(3000);
                 }
                 
-                if (verificationCode) {
-                    latestReceivedCode = verificationCode;
-                    log(`✅ 成功取得驗證碼：${verificationCode}`, 'log-success');
+                let verificationCode = null;
+                const maxAttempts = 50; // 每 2.5 秒檢查一次，共 125 秒
+                
+                for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                    if (latestReceivedCode) {
+                        verificationCode = latestReceivedCode;
+                        break;
+                    }
+
+                    if (attempt === 1 || attempt % 4 === 0) {
+                        log(`⏳ 等待信件中... (${attempt}/${maxAttempts})`);
+                    }
+
+                    verificationCode = await checkInboxNow();
+                    if (verificationCode) break;
+
+                    await sleep(2500);
+                }
+                
+                if (!verificationCode && !latestReceivedCode) {
+                    log('⚠️ 等待超時，您可隨時切換回網頁點擊主按鈕手動檢查最新信件。', 'log-error');
                     if (loadingBar) loadingBar.style.display = 'none';
-                    if (codeTitle) codeTitle.textContent = '步驟 3：任天堂驗證碼 (已送達！)';
-                    if (codeReminder) codeReminder.style.display = 'flex';
-                    if (codeDisplay) codeDisplay.textContent = verificationCode;
-                    if (copyCodeBtn) {
-                        copyCodeBtn.disabled = false;
-                        copyCodeBtn.classList.add('code-ready');
-                        copyCodeBtn.onclick = () => {
-                            copyToClipboard(verificationCode, copyCodeBtn);
-                            if (openPikminBtn) {
-                                window.location.href = openPikminBtn.href;
-                            }
-                        };
-                    }
-                    
-                    // 🔔 1. 播放清脆提示音
-                    playCodeChime();
-
-                    // 📱 2. 手機震動
-                    if (navigator.vibrate) {
-                        try { navigator.vibrate([200, 100, 200, 100, 200]); } catch(e) {}
-                    }
-
-                    // 📢 3. 手機/電腦系統通知推播 (直接顯示 4 位數驗證碼)
-                    pushCodeNotification(verificationCode);
-
-                    // 🔄 4. 自動輪替邀請人（並將當前使用者計數 +1）
-                    if (autoRotateCheckbox && autoRotateCheckbox.checked && typeof window.rotateToNextInvite === 'function') {
-                        window.rotateToNextInvite();
-                    }
-
-                    // 🌟 5. 更新動態單一主按鈕至「驗證碼送達 (Code Ready)」狀態
-                    setActionState('code_ready', { code: verificationCode });
-                    
-                    try {
-                        await navigator.clipboard.writeText(verificationCode);
-                        log('✅ 驗證碼已自動複製到剪貼簿！');
-                    } catch (e) {
-                        // ignore
-                    }
-                } else {
-                    log('❌ 等待超時，請重新執行', 'log-error');
-                    if (loadingBar) loadingBar.style.display = 'none';
-                    if (codeTitle) codeTitle.textContent = '等待超時';
-                    setActionState('ready');
+                    if (codeTitle) codeTitle.textContent = '等待超時 (點主按鈕重新整理)';
                 }
             } catch (err) {
                 log(`❌ 發生錯誤: ${err.message}`, 'log-error');
@@ -4506,14 +4586,14 @@
                 if (currentState === 'ready' || currentState === 'completed') {
                     runAutomation();
                 } else if (currentState === 'waiting') {
-                    // 如果在等待中點擊，再次複製信箱並開啟 Pikmin
-                    if (currentGeneratedEmail) {
-                        navigator.clipboard.writeText(currentGeneratedEmail);
-                        log('📋 已再次複製信箱到剪貼簿！');
-                    }
-                    if (openPikminBtn && openPikminBtn.href) {
-                        window.location.href = openPikminBtn.href;
-                    }
+                    // 如果在等待中點擊：立即手動檢查一次信件，並複製信箱
+                    log('🔄 手動立即檢查收件匣...', 'log-info');
+                    checkInboxNow().then(code => {
+                        if (!code && currentGeneratedEmail) {
+                            navigator.clipboard.writeText(currentGeneratedEmail);
+                            log('📋 已再次複製信箱到剪貼簿！');
+                        }
+                    });
                 } else if (currentState === 'code_ready') {
                     // 複製驗證碼並開啟遊戲，切換到 completed
                     if (latestReceivedCode) {
