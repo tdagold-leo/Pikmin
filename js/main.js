@@ -3522,6 +3522,8 @@
         const savedLocalLinksList = document.getElementById('cloud-savedLocalLinksList');
         const savedPublicLinksList = document.getElementById('cloud-savedPublicLinksList');
         const autoRotateCheckbox = document.getElementById('cloud-autoRotate');
+        const selectAllBtn = document.getElementById('cloud-selectAllBtn');
+        const deselectAllBtn = document.getElementById('cloud-deselectAllBtn');
         const resetAllCountsBtn = document.getElementById('cloud-resetAllCountsBtn');
         const enableNotifBtn = document.getElementById('cloud-enableNotifBtn');
 
@@ -3550,7 +3552,7 @@
             if (state === 'ready') {
                 if (dynamicBtnIcon) dynamicBtnIcon.textContent = '🚀';
                 if (dynamicBtnText) dynamicBtnText.textContent = '第 1 步：產生免洗帳號並出發';
-                if (dynamicBtnSub) dynamicBtnSub.textContent = '自動複製信箱 ➜ 自動輪替名單 ➜ 開啟 Pikmin';
+                if (dynamicBtnSub) dynamicBtnSub.textContent = '自動複製信箱 ➜ 開啟 Pikmin 遊戲';
                 dynamicActionBtn.disabled = false;
             } else if (state === 'generating') {
                 if (dynamicBtnIcon) dynamicBtnIcon.textContent = '⏳';
@@ -3592,7 +3594,7 @@
                         activeInviterCount.style.color = '#38bdf8';
                     }
                 } else {
-                    activeInviterName.textContent = '預設連結';
+                    activeInviterName.textContent = '請在下方勾選名單';
                     activeInviterCount.textContent = '0/4 次';
                 }
             }
@@ -3723,7 +3725,7 @@
                     const originalText = btnElement.innerHTML;
                     btnElement.classList.add('success');
                     btnElement.innerHTML = `
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         <span>已複製！</span>
                     `;
                     setTimeout(() => {
@@ -3833,9 +3835,10 @@
 
         function createListElement(item) {
             const el = document.createElement('div');
-            const isEnabled = item.enabled !== false;
+            // 預設全部不勾選：只有明確等於 true 時才視為勾選
+            const isEnabled = item.enabled === true;
             
-            el.style.cssText = `display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); transition: all 0.2s; ${isEnabled ? '' : 'opacity: 0.6;'}`;
+            el.style.cssText = `display: flex; justify-content: space-between; align-items: center; background: ${isEnabled ? 'rgba(56, 189, 248, 0.08)' : 'rgba(255,255,255,0.03)'}; padding: 8px 10px; border-radius: 8px; border: 1px solid ${isEnabled ? 'rgba(56, 189, 248, 0.3)' : 'rgba(255,255,255,0.06)'}; transition: all 0.2s;`;
             
             const count = item.count || 0;
             const target = item.target || 4;
@@ -3843,47 +3846,47 @@
 
             // 勾選框容器 (自訂勾選需輪替之人)
             const checkWrap = document.createElement('label');
-            checkWrap.style.cssText = 'display: flex; align-items: center; cursor: pointer; margin-right: 8px; flex-shrink: 0; padding: 2px;';
+            checkWrap.style.cssText = 'display: flex; align-items: center; cursor: pointer; margin-right: 6px; flex-shrink: 0; padding: 4px 2px;';
             const chk = document.createElement('input');
             chk.type = 'checkbox';
             chk.checked = isEnabled;
-            chk.title = isEnabled ? '已勾選參與輪替 (點擊取消)' : '未勾選 (不參與輪替，點擊加入)';
-            chk.style.cssText = 'width: 16px; height: 16px; accent-color: #0284c7; cursor: pointer;';
+            chk.title = isEnabled ? '已勾選參與輪替 (點擊取消)' : '未勾選 (點擊加入輪替)';
+            chk.style.cssText = 'width: 17px; height: 17px; accent-color: #0284c7; cursor: pointer;';
             chk.onclick = (e) => e.stopPropagation();
             chk.onchange = () => toggleItemEnabled(item, chk.checked);
             checkWrap.appendChild(chk);
 
             const leftDiv = document.createElement('div');
-            leftDiv.style.cssText = 'flex: 1; cursor: pointer; overflow: hidden; margin-right: 8px;';
+            leftDiv.style.cssText = 'flex: 1; cursor: pointer; overflow: hidden; margin-right: 6px; min-width: 0;';
             const icon = item.isLocal ? '🔒 ' : '🌐 ';
             
             let badgeHtml = '';
             if (!isEnabled) {
-                badgeHtml = `<span style="background: rgba(148, 163, 184, 0.15); color: #94a3b8; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: bold; border: 1px solid rgba(148, 163, 184, 0.3);">⏸️ 暫不輪替 (${count}/${target})</span>`;
+                badgeHtml = `<span style="background: rgba(148, 163, 184, 0.12); color: #94a3b8; font-size: 10px; padding: 1px 5px; border-radius: 4px; margin-left: 4px; font-weight: bold; border: 1px solid rgba(148, 163, 184, 0.2);">未勾選 ${count}/${target}</span>`;
             } else if (isDone) {
-                badgeHtml = `<span style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: bold; border: 1px solid rgba(52, 211, 153, 0.4);">✓ 達標 ${count}/${target}</span>`;
+                badgeHtml = `<span style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 10px; padding: 1px 5px; border-radius: 4px; margin-left: 4px; font-weight: bold; border: 1px solid rgba(52, 211, 153, 0.4);">✓ 達標 ${count}/${target}</span>`;
             } else {
-                badgeHtml = `<span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: bold; border: 1px solid rgba(56, 189, 248, 0.3);">${count}/${target} 次</span>`;
+                badgeHtml = `<span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; font-size: 10px; padding: 1px 5px; border-radius: 4px; margin-left: 4px; font-weight: bold; border: 1px solid rgba(56, 189, 248, 0.35);">輪替中 ${count}/${target}</span>`;
             }
 
             leftDiv.innerHTML = `
-                <div style="font-weight: bold; font-size: 13px; color: #f8fafc; display: flex; align-items: center; flex-wrap: wrap;">
-                    <span>${icon}${escapeHtml(item.name)}</span>
+                <div style="font-weight: bold; font-size: 13px; color: ${isEnabled ? '#f8fafc' : '#94a3b8'}; display: flex; align-items: center; overflow: hidden;">
+                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${icon}${escapeHtml(item.name)}</span>
                     ${badgeHtml}
                 </div>
-                <div style="font-size: 11px; color: #94a3b8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px;">${escapeHtml(item.link)}</div>
+                <div style="font-size: 10px; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px;">${escapeHtml(item.link)}</div>
             `;
             leftDiv.onclick = () => selectInvite(item, true);
 
             const rightDiv = document.createElement('div');
-            rightDiv.style.cssText = 'display: flex; gap: 4px; align-items: center; flex-shrink: 0;';
+            rightDiv.style.cssText = 'display: flex; gap: 3px; align-items: center; flex-shrink: 0;';
 
             // +1 按鈕
             const plusBtn = document.createElement('button');
             plusBtn.type = 'button';
             plusBtn.innerHTML = '+1';
             plusBtn.title = '增加 1 次';
-            plusBtn.style.cssText = 'background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); border-radius: 4px; cursor: pointer; padding: 2px 6px; font-size: 11px; font-weight: bold;';
+            plusBtn.style.cssText = 'background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); border-radius: 4px; cursor: pointer; padding: 2px 5px; font-size: 10px; font-weight: bold;';
             plusBtn.onclick = (e) => { e.stopPropagation(); updateItemCount(item, 1); };
 
             // -1 按鈕
@@ -3891,7 +3894,7 @@
             minusBtn.type = 'button';
             minusBtn.innerHTML = '-1';
             minusBtn.title = '減少 1 次';
-            minusBtn.style.cssText = 'background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; cursor: pointer; padding: 2px 5px; font-size: 11px; font-weight: bold;';
+            minusBtn.style.cssText = 'background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; cursor: pointer; padding: 2px 4px; font-size: 10px; font-weight: bold;';
             minusBtn.onclick = (e) => { e.stopPropagation(); updateItemCount(item, -1); };
 
             // 🔄 重置單一按鈕
@@ -3899,7 +3902,7 @@
             resetBtn.type = 'button';
             resetBtn.innerHTML = '🔄';
             resetBtn.title = '次數歸零';
-            resetBtn.style.cssText = 'background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 12px; opacity: 0.7;';
+            resetBtn.style.cssText = 'background: none; border: none; cursor: pointer; padding: 2px 3px; font-size: 11px; opacity: 0.7;';
             resetBtn.onclick = (e) => { e.stopPropagation(); resetItemCount(item); };
 
             // ✏️ 編輯按鈕
@@ -3907,7 +3910,7 @@
             editBtn.type = 'button';
             editBtn.innerHTML = '✏️';
             editBtn.title = '修改名稱或目標上限';
-            editBtn.style.cssText = 'background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 12px;';
+            editBtn.style.cssText = 'background: none; border: none; cursor: pointer; padding: 2px 3px; font-size: 11px;';
             editBtn.onclick = (e) => {
                 e.stopPropagation();
                 const newName = prompt('修改名稱：', item.name);
@@ -3936,7 +3939,7 @@
             delBtn.type = 'button';
             delBtn.innerHTML = '🗑️';
             delBtn.title = '刪除連結';
-            delBtn.style.cssText = 'background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 12px;';
+            delBtn.style.cssText = 'background: none; border: none; cursor: pointer; padding: 2px 3px; font-size: 11px;';
             delBtn.onclick = (e) => {
                 e.stopPropagation();
                 if (confirm(`確定要刪除「${item.name}」的連結嗎？`)) {
@@ -3985,7 +3988,7 @@
             localEntries.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
             
             if (localEntries.length === 0) {
-                savedLocalLinksList.innerHTML = '<div style="font-size:12px; color:#64748b; text-align:center; padding:4px 0;">目前沒有私有連結</div>';
+                savedLocalLinksList.innerHTML = '<div style="font-size:11px; color:#64748b; text-align:center; padding:4px 0;">目前沒有私有連結</div>';
             } else {
                 localEntries.forEach(item => savedLocalLinksList.appendChild(createListElement(item)));
             }
@@ -3999,21 +4002,67 @@
             publicEntries.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
             
             if (publicEntries.length === 0) {
-                savedPublicLinksList.innerHTML = '<div style="font-size:12px; color:#64748b; text-align:center; padding:4px 0;">目前沒有公開連結</div>';
+                savedPublicLinksList.innerHTML = '<div style="font-size:11px; color:#64748b; text-align:center; padding:4px 0;">目前沒有公開連結</div>';
             } else {
                 publicEntries.forEach(item => savedPublicLinksList.appendChild(createListElement(item)));
             }
 
             // If no active invite selected yet, select the first pending enabled one
-            if (!currentActiveInvite || (inviteLinkInput && !inviteLinkInput.value.trim())) {
-                const all = getAllInviteEntries();
-                const nextAvailable = all.find(i => (i.enabled !== false) && (i.count || 0) < (i.target || 4)) || all.find(i => i.enabled !== false) || all[0];
-                if (nextAvailable) {
-                    selectInvite(nextAvailable, false);
+            const all = getAllInviteEntries();
+            const checkedPending = all.find(i => i.enabled === true && (i.count || 0) < (i.target || 4));
+            if (checkedPending) {
+                selectInvite(checkedPending, false);
+            } else if (!currentActiveInvite || (inviteLinkInput && !inviteLinkInput.value.trim())) {
+                const anyChecked = all.find(i => i.enabled === true);
+                if (anyChecked) {
+                    selectInvite(anyChecked, false);
+                } else if (all.length > 0) {
+                    selectInvite(all[0], false);
                 }
             } else {
                 updateInviterBadge();
             }
+        }
+
+        // 全選 / 全部取消勾選
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', () => {
+                const localData = getLocalInvites();
+                Object.keys(localData).forEach(k => localData[k].enabled = true);
+                setLocalInvites(localData);
+
+                if (typeof database !== 'undefined') {
+                    database.ref('shared_invites').once('value', snap => {
+                        const fbData = snap.val() || {};
+                        const updates = {};
+                        Object.keys(fbData).forEach(k => {
+                            updates['shared_invites/' + k + '/enabled'] = true;
+                        });
+                        database.ref().update(updates);
+                    });
+                }
+                renderAllInvites();
+            });
+        }
+
+        if (deselectAllBtn) {
+            deselectAllBtn.addEventListener('click', () => {
+                const localData = getLocalInvites();
+                Object.keys(localData).forEach(k => localData[k].enabled = false);
+                setLocalInvites(localData);
+
+                if (typeof database !== 'undefined') {
+                    database.ref('shared_invites').once('value', snap => {
+                        const fbData = snap.val() || {};
+                        const updates = {};
+                        Object.keys(fbData).forEach(k => {
+                            updates['shared_invites/' + k + '/enabled'] = false;
+                        });
+                        database.ref().update(updates);
+                    });
+                }
+                renderAllInvites();
+            });
         }
 
         // 自動輪替至下一位勾選且未達標的邀請人
@@ -4029,8 +4078,8 @@
                 updateItemCount(activeItem, 1);
             }
 
-            // 2. 尋找下一位【已勾選參與輪替】且未達標的名單 (目標預設 4)
-            const pendingList = all.filter(i => (i.enabled !== false) && (i.count || 0) < (i.target || 4));
+            // 2. 尋找下一位【已勾選 (enabled === true)】且未達標的名單 (目標預設 4)
+            const pendingList = all.filter(i => i.enabled === true && (i.count || 0) < (i.target || 4));
             if (pendingList.length > 0) {
                 let nextItem = pendingList.find(i => !activeItem || i.id !== activeItem.id);
                 if (!nextItem) nextItem = pendingList[0];
@@ -4038,7 +4087,12 @@
                 selectInvite(nextItem, true);
                 log(`🔄 自動輪替邀請人：${nextItem.name} (${(nextItem.count || 0)}/${(nextItem.target || 4)}次)`, 'log-success');
             } else {
-                log('🎉 所有勾選的名單皆已達標（滿 4 次）！', 'log-success');
+                const anyChecked = all.some(i => i.enabled === true);
+                if (anyChecked) {
+                    log('🎉 所有已勾選的名單皆已達標（滿 4 次）！', 'log-success');
+                } else {
+                    log('ℹ️ 目前沒有勾選任何參與輪替的名單。', 'log-info');
+                }
             }
             updateInviterBadge();
         };
@@ -4069,7 +4123,7 @@
             });
         }
 
-        // Save logic
+        // Save logic (預設新增時也不主動勾選，需使用者自行勾選)
         if (saveInviteBtn && inviteLinkInput) {
             saveInviteBtn.addEventListener('click', () => {
                 const link = inviteLinkInput.value.trim();
@@ -4089,7 +4143,7 @@
                     link: link,
                     count: 0,
                     target: 4,
-                    enabled: true,
+                    enabled: false, // 預設不勾選
                     createdAt: Date.now()
                 };
 

@@ -1523,130 +1523,144 @@
             </div> <!-- end settings-grid -->
         </section>
 
-        <section id="view-cloud" class="view-section cloud-app">
-            <div class="container">
-                <header>
-                    <h1>Pikmin 自動註冊</h1>
-                    <div class="subtitle">極速 1-Click 模式・自動複製信箱與系統推播驗證碼</div>
+        <section id="view-cloud" class="view-section cloud-app" style="padding: 12px 10px 80px;">
+            <div class="container" style="max-width: 540px; margin: 0 auto; padding: 0;">
+                <header style="margin-bottom: 12px; text-align: center;">
+                    <h1 style="font-size: 24px; margin-bottom: 4px; font-weight: 800; background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Pikmin 自動註冊</h1>
+                    <div class="subtitle" style="font-size: 12px; color: #94a3b8;">極速 1-Click・自動複製信箱與系統推播驗證碼</div>
                 </header>
 
-                <div class="card">
+                <div class="card" style="padding: 14px; border-radius: 16px; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); backdrop-filter: blur(12px);">
+                    
                     <!-- 動態引導單一主按鈕 Hero 區塊 -->
-                    <div class="dynamic-hero-card" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 16px; padding: 20px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); backdrop-filter: blur(10px); text-align: center;">
+                    <div class="dynamic-hero-card" style="background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 14px; padding: 14px; margin-bottom: 14px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25); text-align: center;">
                         
                         <!-- 當前邀請對象資訊 -->
-                        <div id="cloud-currentInviterBadge" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); padding: 5px 14px; border-radius: 20px; font-size: 13px; color: #38bdf8; margin-bottom: 15px;">
-                            <span>🎯 目標邀請人：<strong id="cloud-activeInviterName">載入中...</strong></span>
-                            <span id="cloud-activeInviterCount" style="font-weight: bold; background: rgba(56, 189, 248, 0.25); padding: 2px 8px; border-radius: 6px; font-size: 11px;">0/4 次</span>
+                        <div id="cloud-currentInviterBadge" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); padding: 4px 12px; border-radius: 20px; font-size: 12px; color: #38bdf8; margin-bottom: 12px; max-width: 100%; box-sizing: border-box;">
+                            <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">🎯 目標邀請人：<strong id="cloud-activeInviterName">請在下方勾選名單</strong></span>
+                            <span id="cloud-activeInviterCount" style="font-weight: bold; background: rgba(56, 189, 248, 0.25); padding: 1px 6px; border-radius: 6px; font-size: 11px; flex-shrink: 0;">0/4 次</span>
                         </div>
 
                         <!-- 動態引導主按鈕 -->
-                        <button id="cloud-dynamicActionBtn" class="dynamic-action-btn state-ready" style="width: 100%; padding: 18px 20px; border-radius: 14px; font-size: 17px; font-weight: 800; border: 1px solid rgba(255,255,255,0.25); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(37, 99, 235, 0.45); color: white;">
-                            <div class="btn-main-label" style="display: flex; align-items: center; gap: 8px;">
-                                <span id="cloud-dynamicBtnIcon" style="font-size: 20px;">🚀</span>
-                                <span id="cloud-dynamicBtnText">第 1 步：產生免洗帳號並出發</span>
+                        <button id="cloud-dynamicActionBtn" class="dynamic-action-btn state-ready" style="width: 100%; padding: 14px 12px; border-radius: 12px; font-size: 15px; font-weight: 800; border: 1px solid rgba(255,255,255,0.25); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; box-shadow: 0 4px 18px rgba(37, 99, 235, 0.4); color: white;">
+                            <div class="btn-main-label" style="display: flex; align-items: center; gap: 6px;">
+                                <span id="cloud-dynamicBtnIcon" style="font-size: 18px;">🚀</span>
+                                <span id="cloud-dynamicBtnText" style="letter-spacing: 0.5px;">第 1 步：產生免洗帳號並出發</span>
                             </div>
-                            <div id="cloud-dynamicBtnSub" style="font-size: 12px; opacity: 0.88; font-weight: 500;">
-                                自動複製信箱 ➜ 自動輪替名單 ➜ 開啟 Pikmin
+                            <div id="cloud-dynamicBtnSub" style="font-size: 11px; opacity: 0.9; font-weight: 500;">
+                                自動複製信箱 ➜ 開啟 Pikmin 遊戲
                             </div>
                         </button>
 
-                        <!-- 底部快捷列 -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 12px; padding: 0 4px;">
-                            <a id="cloud-openPikminBtn" href="https://pikminbloom.onelink.me/pWSt/73s4bj4n" target="_blank" style="color: #10b981; text-decoration: none; font-weight: bold; display: flex; align-items: center; gap: 4px;">
+                        <!-- 底部快捷觸控列 (雙膠囊按鈕) -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px;">
+                            <a id="cloud-openPikminBtn" href="https://pikminbloom.onelink.me/pWSt/73s4bj4n" target="_blank" style="text-decoration: none; color: #34d399; font-size: 11px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 4px; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); padding: 7px 4px; border-radius: 8px; transition: background 0.2s;">
                                 🍄 手動開啟 Pikmin
                             </a>
-                            <button id="cloud-enableNotifBtn" type="button" style="background: none; border: none; color: #38bdf8; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 0; font-weight: 500;">
-                                🔔 開啟手機通知推播
+                            <button id="cloud-enableNotifBtn" type="button" style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 7px 4px; border-radius: 8px; font-weight: bold; transition: background 0.2s;">
+                                🔔 開啟手機通知
                             </button>
                         </div>
                     </div>
 
                     <!-- 信箱顯示區塊 -->
-                    <div id="cloud-emailBox" class="info-box" style="margin-bottom: 20px;">
-                        <div class="info-title">步驟 1：臨時任天堂信箱</div>
-                        <div id="cloud-emailDisplay" class="info-value" style="font-size: 18px; word-break: break-all; margin: 10px 0; color: #38bdf8;">--</div>
-                        <button id="cloud-copyEmailBtn" class="copy-btn btn-copy-email">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    <div id="cloud-emailBox" class="info-box" style="margin-bottom: 12px; padding: 12px; border-radius: 12px; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.08);">
+                        <div class="info-title" style="font-size: 12px; color: #94a3b8; font-weight: bold;">步驟 1：臨時任天堂信箱</div>
+                        <div id="cloud-emailDisplay" class="info-value" style="font-size: 15px; word-break: break-all; margin: 6px 0; color: #38bdf8; font-family: monospace;">--</div>
+                        <button id="cloud-copyEmailBtn" class="copy-btn btn-copy-email" style="margin: 0; padding: 10px; font-size: 13px; border-radius: 8px;">
+                            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                             <span>📋 複製信箱 & 開啟 Pikmin</span>
                         </button>
                     </div>
 
-                    <!-- Nintendo 密碼 -->
-                    <div class="input-group" style="margin-bottom: 20px;">
-                        <label for="cloud-password">步驟 2：Nintendo 密碼</label>
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                            <input type="text" id="cloud-password" value="Pikmin123!@" style="width: 100%; border-radius: 8px; font-size: 16px; padding: 10px 15px; box-sizing: border-box;" readonly>
-                            <button id="cloud-copyPwdBtn" class="copy-btn btn-copy-pwd" style="width: 100%; margin: 0;">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                <span>🔑 複製密碼 & 開啟 Pikmin</span>
-                            </button>
-                        </div>
+                    <!-- Nintendo 密碼 (手機極簡單行) -->
+                    <div style="margin-bottom: 12px; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                        <input type="hidden" id="cloud-password" value="Pikmin123!@">
+                        <div style="font-size: 12px; color: #94a3b8; flex-shrink: 0;">步驟 2 密碼：<strong style="color: #f8fafc; font-family: monospace; font-size: 13px;">Pikmin123!@</strong></div>
+                        <button id="cloud-copyPwdBtn" class="copy-btn btn-copy-pwd" style="margin: 0; padding: 6px 10px; font-size: 12px; border-radius: 6px; flex-shrink: 0; width: auto;">
+                            <span>🔑 複製密碼</span>
+                        </button>
                     </div>
 
                     <!-- 驗證碼顯示區塊 -->
-                    <div id="cloud-codeBox" class="info-box" style="margin-bottom: 20px;">
+                    <div id="cloud-codeBox" class="info-box" style="margin-bottom: 14px; padding: 12px; border-radius: 12px; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.08);">
                         <div id="cloud-loadingBar" class="pulsing"></div>
-                        <div class="info-title">步驟 3：任天堂驗證碼 (等待中...)</div>
-                        <div id="cloud-codeReminder" class="ready-toast" style="display: none;">
-                            🎉 驗證碼已送達！請點擊下方按鈕複製並完成註冊！
+                        <div class="info-title" style="font-size: 12px; color: #94a3b8; font-weight: bold;">步驟 3：任天堂驗證碼 (等待中...)</div>
+                        <div id="cloud-codeReminder" class="ready-toast" style="display: none; font-size: 12px; padding: 8px; margin: 6px 0;">
+                            🎉 驗證碼已送達！點擊複製填寫！
                         </div>
-                        <div id="cloud-codeDisplay" class="info-value" style="color: #34d399;">--</div>
-                        <button id="cloud-copyCodeBtn" class="copy-btn btn-copy-code" disabled>
-                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        <div id="cloud-codeDisplay" class="info-value" style="color: #34d399; font-size: 26px; font-weight: 800; margin: 4px 0; letter-spacing: 2px;">--</div>
+                        <button id="cloud-copyCodeBtn" class="copy-btn btn-copy-code" disabled style="margin: 0; padding: 10px; font-size: 13px; border-radius: 8px;">
+                            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                             <span>✨ 複製驗證碼 & 開啟 Pikmin</span>
                         </button>
                     </div>
 
-                    <!-- Pikmin 邀請連結（自訂）與儲存管理 -->
-                    <div class="input-group" style="margin-bottom: 0;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <label for="cloud-inviteLink" style="margin: 0; font-weight: 700;">Pikmin 邀請連結</label>
-                                <label style="font-size: 12px; color: #38bdf8; cursor: pointer; display: flex; align-items: center; gap: 4px; background: rgba(56, 189, 248, 0.1); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.25);">
-                                    <input type="checkbox" id="cloud-autoRotate" checked style="cursor: pointer;"> 🔄 自動輪替名單
-                                </label>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <button id="cloud-resetAllCountsBtn" type="button" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 4px; padding: 0;" title="將所有名單的執行次數重置為 0">
-                                    🔄 重置全部次數
-                                </button>
-                                <label style="font-size: 12px; color: #a1a1aa; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-                                    <input type="checkbox" id="cloud-isPublic" checked style="cursor: pointer;"> 公開
-                                </label>
-                                <button id="cloud-saveInviteBtn" type="button" style="background: none; border: none; color: #38bdf8; cursor: pointer; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 4px; padding: 0;">
-                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                    儲存
-                                </button>
-                            </div>
+                    <!-- 邀請人清單管理模組 -->
+                    <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 12px;">
+                        
+                        <!-- 工具列：標題 + 自動輪替開關 -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span style="font-size: 13px; font-weight: 800; color: #f8fafc; display: flex; align-items: center; gap: 4px;">
+                                👥 邀請人輪替清單
+                            </span>
+                            <label style="font-size: 11px; color: #38bdf8; cursor: pointer; display: flex; align-items: center; gap: 4px; background: rgba(56, 189, 248, 0.12); padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.25);">
+                                <input type="checkbox" id="cloud-autoRotate" checked style="cursor: pointer; width: 14px; height: 14px; accent-color: #0284c7;"> 自動輪替
+                            </label>
                         </div>
-                        <div style="display: flex; gap: 8px;">
-                            <input type="text" id="cloud-inviteName" placeholder="名稱 (例:小明)" style="width: 110px; border-radius: 8px; padding: 10px; box-sizing: border-box; font-size: 14px; flex-shrink: 0;">
-                            <input type="text" id="cloud-inviteLink" placeholder="例如: https://pikminbloom.onelink.me/..." style="flex: 1; border-radius: 8px; padding: 10px; box-sizing: border-box; font-size: 14px; min-width: 0;">
+
+                        <!-- 快捷操作列 (全選 / 取消 / 重置) -->
+                        <div style="display: flex; gap: 6px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 2px;">
+                            <button id="cloud-selectAllBtn" type="button" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #e2e8f0; font-size: 11px; padding: 4px 8px; border-radius: 6px; cursor: pointer; white-space: nowrap;">
+                                ☑️ 全選
+                            </button>
+                            <button id="cloud-deselectAllBtn" type="button" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #e2e8f0; font-size: 11px; padding: 4px 8px; border-radius: 6px; cursor: pointer; white-space: nowrap;">
+                                ⬜ 全部取消
+                            </button>
+                            <button id="cloud-resetAllCountsBtn" type="button" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #f87171; font-size: 11px; padding: 4px 8px; border-radius: 6px; cursor: pointer; white-space: nowrap; margin-left: auto;">
+                                🔄 重置全部次數
+                            </button>
+                        </div>
+
+                        <!-- 新增名單輸入列 (手機極致緊湊) -->
+                        <div style="display: flex; flex-direction: column; gap: 6px; background: rgba(15, 23, 42, 0.5); padding: 8px; border-radius: 10px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="display: flex; gap: 6px;">
+                                <input type="text" id="cloud-inviteName" placeholder="名稱 (例:小明)" style="width: 95px; border-radius: 6px; padding: 7px 8px; box-sizing: border-box; font-size: 12px; flex-shrink: 0; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); color: white;">
+                                <input type="text" id="cloud-inviteLink" placeholder="Pikmin 邀請連結 URL..." style="flex: 1; border-radius: 6px; padding: 7px 8px; box-sizing: border-box; font-size: 12px; min-width: 0; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); color: white;">
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <label style="font-size: 11px; color: #94a3b8; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                    <input type="checkbox" id="cloud-isPublic" checked style="cursor: pointer; width: 14px; height: 14px; accent-color: #0284c7;"> 🌐 設為公開名單
+                                </label>
+                                <button id="cloud-saveInviteBtn" type="button" style="background: linear-gradient(135deg, #0284c7, #2563eb); border: none; color: white; cursor: pointer; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 6px;">
+                                    <span>＋ 儲存新增</span>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- 雙清單管理（折疊式） -->
-                        <details style="margin-top: 15px;">
-                            <summary style="cursor: pointer; font-size: 14px; color: #94a3b8; outline: none; padding: 5px 0; user-select: none; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+                        <details style="margin-bottom: 8px;">
+                            <summary style="cursor: pointer; font-size: 12px; color: #94a3b8; outline: none; padding: 4px 0; user-select: none; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
                                 <span>🔒 私有清單 (點此展開)</span>
-                                <span style="font-size: 11px; color: #64748b; font-weight: normal;">☑️ 勾選者參與輪替</span>
+                                <span style="font-size: 11px; color: #64748b; font-weight: normal;">僅本機可見</span>
                             </summary>
-                            <div id="cloud-savedLocalLinksList" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+                            <div id="cloud-savedLocalLinksList" style="margin-top: 8px; display: flex; flex-direction: column; gap: 6px;">
                             </div>
                         </details>
-                        <details style="margin-top: 10px;">
-                            <summary style="cursor: pointer; font-size: 14px; color: #94a3b8; outline: none; padding: 5px 0; user-select: none; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
-                                <span>🌐 公開清單 (點此展開)</span>
-                                <span style="font-size: 11px; color: #64748b; font-weight: normal;">☑️ 勾選者參與輪替</span>
+
+                        <details open style="margin-bottom: 4px;">
+                            <summary style="cursor: pointer; font-size: 12px; color: #38bdf8; outline: none; padding: 4px 0; user-select: none; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+                                <span>🌐 公開清單 (點此收合)</span>
+                                <span style="font-size: 11px; color: #38bdf8; font-weight: normal;">☑️ 勾選者參與輪替</span>
                             </summary>
-                            <div id="cloud-savedPublicLinksList" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+                            <div id="cloud-savedPublicLinksList" style="margin-top: 8px; display: flex; flex-direction: column; gap: 6px;">
                             </div>
                         </details>
                     </div>
                 </div>
 
-                <div class="log-container" id="cloud-logContainer">
-                    <div class="log-entry">準備就緒。點擊「開始」以啟動純網頁版自動化流程...</div>
+                <div class="log-container" id="cloud-logContainer" style="margin-top: 12px; border-radius: 12px; max-height: 120px; font-size: 11px; padding: 10px;">
+                    <div class="log-entry">準備就緒。點擊上方大按鈕即可一鍵開始！</div>
                 </div>
             </div>
         </section>
@@ -2096,11 +2110,12 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.08.02.1641";</script>
-    <script src="js/main.js?v=1785660115087"></script>
-    <script src="js/autofill.js?v=1785660115096"></script>
+    <script>const APP_VERSION = "2026.08.02.1648";</script>
+    <script src="js/main.js?v=1785660528345"></script>
+    <script src="js/autofill.js?v=1785660528352"></script>
 </body>
 </html>
+
 
 
 
