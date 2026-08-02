@@ -1919,47 +1919,73 @@
                 <button class="modal-close" onclick="closeModal('add-modal')">&times;</button>
             </div>
             
-            <div id="form-mushroom" style="display:none; flex-direction:column; gap:10px;">
-                <div style="margin-bottom:5px;">
+            <div id="form-mushroom" style="display:none; flex-direction:column; gap:6px;">
+                <div style="display:flex; gap:6px;">
+                    <div class="input-group" style="flex:1;">
+                        <label style="font-size:11px; margin-bottom:2px;">認領人</label>
+                        <input type="text" id="user" class="input-base" placeholder="路人 或 名字" style="padding:5px 8px; font-size:13px;">
+                    </div>
+                    <div class="input-group" style="flex:1;">
+                        <label style="font-size:11px; margin-bottom:2px;">蘑菇分類</label>
+                        <select id="mushroom-kind" class="input-base" style="padding:5px 8px; font-size:13px;">
+                            <option value="巨菇">🍄 巨菇</option>
+                            <option value="元素菇">🌿 元素菇</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-group" style="margin:0;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                        <label style="margin:0; font-size:11px;">座標</label>
+                        <button type="button" class="btn-sm btn-default" onclick="navigator.clipboard.readText().then(t => { document.getElementById('coords').value = t.trim(); autoDetectCountry(t.trim(), 'country', 'tz-hint', 'city'); }).catch(() => alert('無法讀取剪貼簿，請手動貼上'))" style="border-radius:4px; padding:1px 6px; font-size:11px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; cursor:pointer;">📋 貼上</button>
+                    </div>
+                    <input type="text" id="coords" class="input-base" placeholder="貼上或輸入座標" style="padding:5px 8px; font-size:13px;"
+                        onblur="autoDetectCountry(this.value, 'country', 'tz-hint', 'city')"
+                        oninput="clearTimeout(window._mushroomGeoTimer); window._mushroomGeoTimer = setTimeout(() => autoDetectCountry(this.value, 'country', 'tz-hint', 'city'), 1200)">
+                </div>
+
+                <div style="display:flex; gap:6px;">
+                    <div class="input-group" style="flex:1;">
+                        <label style="font-size:11px; margin-bottom:2px;">國家 <span id="tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
+                        <input type="text" id="country" class="input-base" placeholder="例如：日本" style="padding:5px 8px; font-size:13px;" oninput="showTimeDiff(this.value, 'tz-hint')">
+                    </div>
+                    <div class="input-group" style="flex:1;">
+                        <label style="font-size:11px; margin-bottom:2px;">城市</label>
+                        <input type="text" id="city" class="input-base" placeholder="例如：東京" style="padding:5px 8px; font-size:13px;">
+                    </div>
+                </div>
+                <div id="city-candidates" style="display:none; margin-top:4px; flex-wrap:wrap; gap:4px;"></div>
+
+                <div style="display:flex; gap:6px;">
+                    <div class="input-group" style="flex:1.2;">
+                        <label style="font-size:11px; margin-bottom:2px;">名稱</label>
+                        <input type="text" id="name" class="input-base" placeholder="例如：巨大火菇" style="padding:5px 8px; font-size:13px;">
+                    </div>
+                    <div class="input-group" style="flex:1;">
+                        <label style="font-size:11px; margin-bottom:2px;">標籤</label>
+                        <input type="text" id="tag" class="input-base" placeholder="例如：大安區、五星" style="padding:5px 8px; font-size:13px;">
+                    </div>
+                </div>
+
+                <div class="input-group" style="margin-top:2px;">
+                    <label style="text-align:center; font-size:11px;">設定剩餘時間</label>
+                    <div class="time-container" style="margin-top:4px;">
+                        <div class="time-box"><label>天</label><input type="number" id="days" class="input-base" min="0" value="0"></div>
+                        <div class="time-box"><label>時</label><input type="number" id="hours" class="input-base" min="0" max="23" value="0"></div>
+                        <div class="time-box"><label>分</label><input type="number" id="minutes" class="input-base" min="0" max="59" value="0"></div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:6px; margin-top:4px;">
                     <input type="file" id="mush-ocr-file" accept="image/*" style="display:none;" onchange="handleVisionOcrUpload(event, 'mush-ocr-result')">
-                    <button class="btn-sm btn-default btn-block" onclick="document.getElementById('mush-ocr-file').click()" style="background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; border-radius:8px; padding:8px; width:100%; font-weight:bold;">🔍 上傳截圖進行文字辨識 (OCR)</button>
-                    <div style="display:flex; gap:6px; margin-top:6px;">
-                        <button class="btn-sm btn-default btn-block" onclick="pasteFromClipboard('mush-ocr-result')" style="background:#f0fdf4; color:#166534; border:1px dashed #22c55e; border-radius:8px; padding:8px; font-weight:bold; flex:1;">📋 貼上圖片</button>
-                    </div>
-                    <div id="mush-ocr-result" style="display:none; margin-top:5px; font-size:12px; background:#fef3c7; padding:8px; border-radius:4px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:150px; overflow-y:auto; color:#92400e;"></div>
+                    <button type="button" class="btn-sm btn-default" onclick="document.getElementById('mush-ocr-file').click()" style="flex:1; border-radius:6px; background:#f5f3ff; color:#5b21b6; border:1px dashed #8b5cf6; padding:4px 6px; font-size:11px; font-weight:bold; white-space:nowrap; text-align:center;">
+                        📁 上傳截圖辨識
+                    </button>
+                    <button type="button" class="btn-sm btn-default" onclick="pasteFromClipboard('mush-ocr-result')" style="flex:1; border-radius:6px; background:#f0fdf4; color:#166534; border:1px dashed #22c55e; padding:4px 6px; font-size:11px; font-weight:bold; white-space:nowrap; text-align:center;">
+                        📋 貼上圖片
+                    </button>
                 </div>
-                <div class="input-group">
-                    <label>種類</label>
-                    <select id="mushroom-kind" class="input-base">
-                        <option value="巨菇">🍄 巨菇</option>
-                        <option value="元素菇">🌿 元素菇</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label>使用者 (留空待認領)</label>
-                    <input type="text" id="user" class="input-base" placeholder="名字或留空">
-                </div>
-                <div class="input-group">
-                    <label>座標 (貼上經緯度將自動抓取國家)</label>
-                    <div style="display:flex; gap:6px; align-items:center;">
-                        <input type="text" id="coords" class="input-base" placeholder="貼上或輸入座標" style="flex:1;"
-                            onblur="autoDetectCountry(this.value, 'country', 'tz-hint')"
-                            oninput="clearTimeout(window._mushroomGeoTimer); window._mushroomGeoTimer = setTimeout(() => autoDetectCountry(this.value, 'country', 'tz-hint'), 1200)">
-                        <button type="button" class="btn-sm btn-default" onclick="navigator.clipboard.readText().then(t => { document.getElementById('coords').value = t.trim(); autoDetectCountry(t.trim(), 'country', 'tz-hint'); }).catch(() => alert('無法讀取剪貼簿，請手動貼上'))" style="white-space:nowrap; padding:6px 10px; border-radius:8px; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; font-size:13px;">📋 貼上</button>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>國家 <span id="tz-hint" style="color:#f59e0b; font-size:10px;"></span></label>
-                    <input type="text" id="country" class="input-base" placeholder="例如：日本" oninput="showTimeDiff(this.value, 'tz-hint')">
-                </div>
-                <div class="input-group">
-                    <label>名稱</label>
-                    <input type="text" id="name" class="input-base" placeholder="例如：巨大火菇">
-                </div>
-                <div class="input-group">
-                    <label>標籤</label>
-                    <input type="text" id="tag" class="input-base" placeholder="例如：大安區、五星">
-                </div>
+                <div id="mush-ocr-result" style="display:none; margin-top:4px; font-size:11px; background:#fef3c7; padding:6px 8px; border-radius:4px; border:1px solid #f59e0b; white-space:pre-wrap; word-break:break-all; max-height:100px; overflow-y:auto; color:#92400e;"></div>
             </div>
 
             <div id="form-postcard" style="display:none; flex-direction:column; gap:6px;">
@@ -2308,11 +2334,12 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.08.02.1953";</script>
-    <script src="js/main.js?v=1785671590310"></script>
-    <script src="js/autofill.js?v=1785671590316"></script>
+    <script>const APP_VERSION = "2026.08.02.1955";</script>
+    <script src="js/main.js?v=1785671749776"></script>
+    <script src="js/autofill.js?v=1785671749785"></script>
 </body>
 </html>
+
 
 
 
