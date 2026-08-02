@@ -2926,10 +2926,10 @@
         // 雙重確認排除指定項目與「缺」
         ['特殊金盆', '隱藏', '菇窩', '京都漫步', '巨菇', '缺'].forEach(k => delete tagCounts[k]);
 
-        // 依出現頻率高至低排序，取前 16 個熱門項目
+        // 依出現頻率高至低排序，取前 4 個熱門項目
         const sortedTags = Object.keys(tagCounts)
             .sort((a, b) => tagCounts[b] - tagCounts[a])
-            .slice(0, 16);
+            .slice(0, 4);
 
         const isMissingActive = currentSearch === '缺';
         let html = `
