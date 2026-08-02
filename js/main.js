@@ -3896,82 +3896,103 @@
 
         function createListElement(item) {
             const el = document.createElement('div');
-            // 預設全部不勾選：只有明確等於 true 時才視為勾選
             const isEnabled = item.enabled === true;
-            
-            el.style.cssText = `display: flex; justify-content: space-between; align-items: center; background: ${isEnabled ? 'rgba(56, 189, 248, 0.08)' : 'rgba(255,255,255,0.03)'}; padding: 8px 10px; border-radius: 8px; border: 1px solid ${isEnabled ? 'rgba(56, 189, 248, 0.3)' : 'rgba(255,255,255,0.06)'}; transition: all 0.2s;`;
-            
             const count = item.count || 0;
             const target = item.target || 4;
             const isDone = count >= target;
 
-            // 勾選框容器 (自訂勾選需輪替之人)
-            const checkWrap = document.createElement('label');
-            checkWrap.style.cssText = 'display: flex; align-items: center; cursor: pointer; margin-right: 6px; flex-shrink: 0; padding: 4px 2px;';
-            const chk = document.createElement('input');
-            chk.type = 'checkbox';
-            chk.checked = isEnabled;
-            chk.title = isEnabled ? '已勾選參與輪替 (點擊取消)' : '未勾選 (點擊加入輪替)';
-            chk.style.cssText = 'width: 17px; height: 17px; accent-color: #0284c7; cursor: pointer;';
-            chk.onclick = (e) => e.stopPropagation();
-            chk.onchange = () => toggleItemEnabled(item, chk.checked);
-            checkWrap.appendChild(chk);
+            el.className = `invite-card ${isEnabled ? 'enabled' : ''} ${isDone ? 'completed' : ''}`;
 
-            const leftDiv = document.createElement('div');
-            leftDiv.style.cssText = 'flex: 1; cursor: pointer; overflow: hidden; margin-right: 6px; min-width: 0;';
-            const icon = item.isLocal ? '🔒 ' : '🌐 ';
-            
-            let badgeHtml = '';
-            if (!isEnabled) {
-                badgeHtml = `<span style="background: rgba(148, 163, 184, 0.12); color: #94a3b8; font-size: 10px; padding: 1px 5px; border-radius: 4px; margin-left: 4px; font-weight: bold; border: 1px solid rgba(148, 163, 184, 0.2);">未勾選 ${count}/${target}</span>`;
-            } else if (isDone) {
-                badgeHtml = `<span style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-size: 10px; padding: 1px 5px; border-radius: 4px; margin-left: 4px; font-weight: bold; border: 1px solid rgba(52, 211, 153, 0.4);">✓ 達標 ${count}/${target}</span>`;
-            } else {
-                badgeHtml = `<span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; font-size: 10px; padding: 1px 5px; border-radius: 4px; margin-left: 4px; font-weight: bold; border: 1px solid rgba(56, 189, 248, 0.35);">輪替中 ${count}/${target}</span>`;
+            // 狀態徽章 HTML
+            let badgeClass = 'badge-disabled';
+            let badgeText = `未勾選 (${count}/${target})`;
+            if (isEnabled) {
+                if (isDone) {
+                    badgeClass = 'badge-done';
+                    badgeText = `✓ 達標 (${count}/${target})`;
+                } else {
+                    badgeClass = 'badge-rotating';
+                    badgeText = `🚀 輪替中 (${count}/${target})`;
+                }
             }
 
-            leftDiv.innerHTML = `
-                <div style="font-weight: bold; font-size: 13px; color: ${isEnabled ? '#f8fafc' : '#94a3b8'}; display: flex; align-items: center; overflow: hidden;">
-                    <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${icon}${escapeHtml(item.name)}</span>
-                    ${badgeHtml}
-                </div>
-                <div style="font-size: 10px; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px;">${escapeHtml(item.link)}</div>
+            const icon = item.isLocal ? '🔒 ' : '🌐 ';
+
+            // 第一列：[勾選框 + 姓名 + 狀態徽章] | [+1 / -1 步進按鈕]
+            const topRow = document.createElement('div');
+            topRow.className = 'invite-card-row-top';
+
+            const leftBox = document.createElement('div');
+            leftBox.className = 'invite-card-left';
+
+            const chk = document.createElement('input');
+            chk.type = 'checkbox';
+            chk.className = 'invite-custom-checkbox';
+            chk.checked = isEnabled;
+            chk.title = isEnabled ? '已勾選參與輪替 (點擊取消)' : '未勾選 (點擊加入輪替)';
+            chk.onclick = (e) => e.stopPropagation();
+            chk.onchange = () => toggleItemEnabled(item, chk.checked);
+
+            const nameBadgeWrap = document.createElement('div');
+            nameBadgeWrap.style.cssText = 'display: flex; align-items: center; gap: 6px; overflow: hidden; min-width: 0; flex: 1;';
+            nameBadgeWrap.innerHTML = `
+                <span class="invite-name-text" title="${escapeHtml(item.name)}">${icon}${escapeHtml(item.name)}</span>
+                <span class="invite-status-badge ${badgeClass}">${badgeText}</span>
             `;
-            leftDiv.onclick = () => selectInvite(item, true);
 
-            const rightDiv = document.createElement('div');
-            rightDiv.style.cssText = 'display: flex; gap: 3px; align-items: center; flex-shrink: 0;';
+            leftBox.appendChild(chk);
+            leftBox.appendChild(nameBadgeWrap);
+            leftBox.onclick = () => selectInvite(item, true);
 
-            // +1 按鈕
-            const plusBtn = document.createElement('button');
-            plusBtn.type = 'button';
-            plusBtn.innerHTML = '+1';
-            plusBtn.title = '增加 1 次';
-            plusBtn.style.cssText = 'background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); border-radius: 4px; cursor: pointer; padding: 2px 5px; font-size: 10px; font-weight: bold;';
-            plusBtn.onclick = (e) => { e.stopPropagation(); updateItemCount(item, 1); };
+            // 右側 Stepper 步進器 (+1 / -1)
+            const stepper = document.createElement('div');
+            stepper.className = 'invite-stepper';
 
-            // -1 按鈕
             const minusBtn = document.createElement('button');
             minusBtn.type = 'button';
-            minusBtn.innerHTML = '-1';
+            minusBtn.className = 'stepper-btn minus';
+            minusBtn.textContent = '－1';
             minusBtn.title = '減少 1 次';
-            minusBtn.style.cssText = 'background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; cursor: pointer; padding: 2px 4px; font-size: 10px; font-weight: bold;';
             minusBtn.onclick = (e) => { e.stopPropagation(); updateItemCount(item, -1); };
 
-            // 🔄 重置單一按鈕
+            const plusBtn = document.createElement('button');
+            plusBtn.type = 'button';
+            plusBtn.className = 'stepper-btn plus';
+            plusBtn.textContent = '＋1';
+            plusBtn.title = '增加 1 次';
+            plusBtn.onclick = (e) => { e.stopPropagation(); updateItemCount(item, 1); };
+
+            stepper.appendChild(minusBtn);
+            stepper.appendChild(plusBtn);
+
+            topRow.appendChild(leftBox);
+            topRow.appendChild(stepper);
+
+            // 第二列：[連結預覽] | [重置 / 編輯 / 刪除]
+            const bottomRow = document.createElement('div');
+            bottomRow.className = 'invite-card-row-bottom';
+
+            const linkPreview = document.createElement('div');
+            linkPreview.className = 'invite-link-preview';
+            linkPreview.innerHTML = `🔗 ${escapeHtml(item.link)}`;
+            linkPreview.title = '點擊套用此邀請連結';
+            linkPreview.onclick = () => selectInvite(item, true);
+
+            const actionsGroup = document.createElement('div');
+            actionsGroup.className = 'invite-actions-group';
+
             const resetBtn = document.createElement('button');
             resetBtn.type = 'button';
-            resetBtn.innerHTML = '🔄';
+            resetBtn.className = 'card-action-btn';
+            resetBtn.innerHTML = '🔄 重置';
             resetBtn.title = '次數歸零';
-            resetBtn.style.cssText = 'background: none; border: none; cursor: pointer; padding: 2px 3px; font-size: 11px; opacity: 0.7;';
             resetBtn.onclick = (e) => { e.stopPropagation(); resetItemCount(item); };
 
-            // ✏️ 編輯按鈕
             const editBtn = document.createElement('button');
             editBtn.type = 'button';
-            editBtn.innerHTML = '✏️';
-            editBtn.title = '修改名稱或目標上限';
-            editBtn.style.cssText = 'background: none; border: none; cursor: pointer; padding: 2px 3px; font-size: 11px;';
+            editBtn.className = 'card-action-btn';
+            editBtn.innerHTML = '✏️ 編輯';
+            editBtn.title = '修改名稱或目標';
             editBtn.onclick = (e) => {
                 e.stopPropagation();
                 const newName = prompt('修改名稱：', item.name);
@@ -3995,15 +4016,14 @@
                 }
             };
 
-            // 🗑️ 刪除按鈕
             const delBtn = document.createElement('button');
             delBtn.type = 'button';
-            delBtn.innerHTML = '🗑️';
-            delBtn.title = '刪除連結';
-            delBtn.style.cssText = 'background: none; border: none; cursor: pointer; padding: 2px 3px; font-size: 11px;';
+            delBtn.className = 'card-action-btn btn-del';
+            delBtn.innerHTML = '🗑️ 刪除';
+            delBtn.title = '刪除此名單';
             delBtn.onclick = (e) => {
                 e.stopPropagation();
-                if (confirm(`確定要刪除「${item.name}」的連結嗎？`)) {
+                if (confirm(`確定要刪除「${item.name}」的邀請連結嗎？`)) {
                     if (item.isLocal) {
                         const data = getLocalInvites();
                         delete data[item.id];
@@ -4015,15 +4035,15 @@
                 }
             };
 
-            rightDiv.appendChild(plusBtn);
-            rightDiv.appendChild(minusBtn);
-            rightDiv.appendChild(resetBtn);
-            rightDiv.appendChild(editBtn);
-            rightDiv.appendChild(delBtn);
-            
-            el.appendChild(checkWrap);
-            el.appendChild(leftDiv);
-            el.appendChild(rightDiv);
+            actionsGroup.appendChild(resetBtn);
+            actionsGroup.appendChild(editBtn);
+            actionsGroup.appendChild(delBtn);
+
+            bottomRow.appendChild(linkPreview);
+            bottomRow.appendChild(actionsGroup);
+
+            el.appendChild(topRow);
+            el.appendChild(bottomRow);
             return el;
         }
 
