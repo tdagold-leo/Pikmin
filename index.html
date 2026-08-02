@@ -1497,15 +1497,9 @@
                         顯示計時設定框
                     </label>
                 </div>
-                <!-- 新增常用字搜尋按鈕 -->
-                <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:2px;">
-                    <button type="button" onclick="document.getElementById('postcard-search').value = '缺'; updateView();" style="padding:4px 10px; border-radius:12px; border:1px solid #fca5a5; background:#fef2f2; font-size:12px; cursor:pointer; color:#b91c1c;">⚠️ 缺</button>
-                    <button type="button" onclick="document.getElementById('postcard-search').value = '日本'; updateView();" style="padding:4px 10px; border-radius:12px; border:1px solid #d1d5db; background:#f9fafb; font-size:12px; cursor:pointer; color:var(--text-main);">日本</button>
-                    <button type="button" onclick="document.getElementById('postcard-search').value = '台灣'; updateView();" style="padding:4px 10px; border-radius:12px; border:1px solid #d1d5db; background:#f9fafb; font-size:12px; cursor:pointer; color:var(--text-main);">台灣</button>
-                    <button type="button" onclick="document.getElementById('postcard-search').value = '櫻花'; updateView();" style="padding:4px 10px; border-radius:12px; border:1px solid #fbcfe8; background:#fdf2f8; font-size:12px; cursor:pointer; color:#be185d;">🌸 櫻花</button>
-                    <button type="button" onclick="document.getElementById('postcard-search').value = '車站'; updateView();" style="padding:4px 10px; border-radius:12px; border:1px solid #bfdbfe; background:#eff6ff; font-size:12px; cursor:pointer; color:#1d4ed8;">🚉 車站</button>
-                    <button type="button" onclick="document.getElementById('postcard-search').value = '機場'; updateView();" style="padding:4px 10px; border-radius:12px; border:1px solid #e5e7eb; background:#f3f4f6; font-size:12px; cursor:pointer; color:#374151;">✈️ 機場</button>
-                    <button type="button" onclick="document.getElementById('postcard-search').value = '美術館'; updateView();" style="padding:4px 10px; border-radius:12px; border:1px solid #fef08a; background:#fefce8; font-size:12px; cursor:pointer; color:#854d0e;">🖼️ 美術館</button>
+                <!-- 動態常用標籤推薦按鈕 -->
+                <div id="postcard-quick-tags" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:3px; align-items:center;">
+                    <button type="button" onclick="setPostcardSearch('缺')" style="padding:4px 10px; border-radius:12px; border:1px solid #fca5a5; background:#fef2f2; font-size:12px; cursor:pointer; color:#b91c1c; font-weight:bold;">⚠️ 缺</button>
                 </div>
             </div>
             <div id="postcard-container" class="grid"></div>
@@ -2334,11 +2328,12 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.08.02.1955";</script>
-    <script src="js/main.js?v=1785671749776"></script>
-    <script src="js/autofill.js?v=1785671749785"></script>
+    <script>const APP_VERSION = "2026.08.02.2000";</script>
+    <script src="js/main.js?v=1785672052568"></script>
+    <script src="js/autofill.js?v=1785672052576"></script>
 </body>
 </html>
+
 
 
 

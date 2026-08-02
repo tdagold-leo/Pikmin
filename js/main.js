@@ -931,6 +931,7 @@
     dbRef('user_profiles').on('value', (snapshot) => {
         userProfiles = snapshot.val() || {};
         renderPlayerRoster();
+        renderPostcardQuickSearch();
         if (typeof updateView === 'function') updateView();
     });
 
@@ -2851,6 +2852,111 @@
         return card;
     }
 
+    
+    // ===== 明信片動態常用標籤推薦 =====
+    function getTagEmoji(tag) {
+        if (!tag) return '';
+        const t = tag.toLowerCase();
+        if (t.includes('櫻花') || t.includes('花季')) return '🌸 ';
+        if (t.includes('缺')) return '⚠️ ';
+        if (t.includes('絕版')) return '📦 ';
+        if (t.includes('金盆') || t.includes('特殊金盆')) return '🏺 ';
+        if (t.includes('節慶') || t.includes('萬聖') || t.includes('聖誕')) return '🎃 ';
+        if (t.includes('菇窩')) return '🍄 ';
+        if (t.includes('日本')) return '🇯🇵 ';
+        if (t.includes('台灣') || t.includes('臺灣')) return '🇹🇼 ';
+        if (t.includes('香港')) return '🇭🇰 ';
+        if (t.includes('新加坡')) return '🇸🇬 ';
+        if (t.includes('澳洲') || t.includes('澳大利亞')) return '🇦🇺 ';
+        if (t.includes('美國')) return '🇺🇸 ';
+        if (t.includes('英國')) return '🇬🇧 ';
+        if (t.includes('南韓') || t.includes('韓國')) return '🇰🇷 ';
+        if (t.includes('車站') || t.includes('地鐵') || t.includes('火車')) return '🚉 ';
+        if (t.includes('機場')) return '✈️ ';
+        if (t.includes('美術館') || t.includes('博物館') || t.includes('展覽')) return '🖼️ ';
+        if (t.includes('溫泉')) return '♨️ ';
+        if (t.includes('咖啡')) return '☕ ';
+        if (t.includes('神社') || t.includes('寺') || t.includes('廟')) return '⛩️ ';
+        if (t.includes('公園')) return '🌲 ';
+        if (t.includes('ikea') || t.includes('宜家')) return '🛋️ ';
+        return '';
+    }
+
+    function setPostcardSearch(val) {
+        const input = document.getElementById('postcard-search');
+        if (!input) return;
+        const current = input.value.trim();
+        if (current === val.trim()) {
+            input.value = '';
+        } else {
+            input.value = val;
+        }
+        updateView();
+    }
+
+    function renderPostcardQuickSearch() {
+        const container = document.getElementById('postcard-quick-tags');
+        if (!container) return;
+
+        const currentSearch = (document.getElementById('postcard-search')?.value || '').trim();
+
+        // 統計資料庫內所有標籤、活動、分類與國家
+        const tagCounts = {};
+        const addCount = (name) => {
+            if (!name) return;
+            const clean = name.trim();
+            if (!clean || clean.length < 2 || clean === '無圖片' || clean === '常駐' || clean === '期間') return;
+            tagCounts[clean] = (tagCounts[clean] || 0) + 1;
+        };
+
+        if (Array.isArray(postcardList)) {
+            postcardList.forEach(pc => {
+                if (pc.sgActivity) addCount(pc.sgActivity);
+                if (pc.type && pc.type !== '菇' && pc.type !== '花') addCount(pc.type);
+                if (pc.country) addCount(pc.country);
+                if (pc.discontinued) addCount('絕版');
+                if (pc.tag) {
+                    const parts = pc.tag.split(/[,，、/／\s]+/).filter(Boolean);
+                    parts.forEach(p => addCount(p));
+                }
+            });
+        }
+
+        // 排除「缺」由獨立按鈕呈現
+        delete tagCounts['缺'];
+
+        // 依出現頻率高至低排序，取前 15 個熱門項目
+        const sortedTags = Object.keys(tagCounts)
+            .sort((a, b) => tagCounts[b] - tagCounts[a])
+            .slice(0, 16);
+
+        const isMissingActive = currentSearch === '缺';
+        let html = `
+            <button type="button" onclick="setPostcardSearch('缺')" style="padding:4px 10px; border-radius:12px; border:1px solid ${isMissingActive ? '#dc2626' : '#fca5a5'}; background:${isMissingActive ? '#dc2626' : '#fef2f2'}; font-size:12px; cursor:pointer; color:${isMissingActive ? '#ffffff' : '#b91c1c'}; font-weight:bold; transition:all 0.15s; display:inline-flex; align-items:center; gap:3px;">
+                ⚠️ 缺
+            </button>
+        `;
+
+        sortedTags.forEach(tag => {
+            const isActive = currentSearch.toLowerCase() === tag.toLowerCase();
+            const emoji = getTagEmoji(tag);
+            const count = tagCounts[tag];
+            const bg = isActive ? 'var(--primary, #10b981)' : '#f3f4f6';
+            const color = isActive ? '#ffffff' : 'var(--text-main, #374151)';
+            const border = isActive ? 'var(--primary, #10b981)' : '#e5e7eb';
+
+            html += `
+                <button type="button" onclick="setPostcardSearch('${escapeHtml(tag).replace(/'/g, "\\'")}')" 
+                    style="padding:4px 10px; border-radius:12px; border:1px solid ${border}; background:${bg}; font-size:12px; cursor:pointer; color:${color}; font-weight:${isActive ? 'bold' : '500'}; transition:all 0.15s; display:inline-flex; align-items:center; gap:3px;"
+                    title="搜尋：${escapeHtml(tag)} (${count} 筆)">
+                    ${emoji}${escapeHtml(tag)}
+                </button>
+            `;
+        });
+
+        container.innerHTML = html;
+    }
+
     function updateView() {
         const activeEl = document.getElementById('active-list'), unclaimEl = document.getElementById('unclaimed-list');
         const prefix = currentMode === 'goldbasin' ? 'goldbasin' : 'postcard';
@@ -2859,6 +2965,7 @@
         const now = Date.now();
 
         renderPlayerRoster();
+        renderPostcardQuickSearch();
 
         const mushCoordCount = {};
         dataList.forEach(item => {
@@ -4886,3 +4993,6 @@ window.toggleSlot = toggleSlot;
 window.triggerOCR = triggerOCR;
 window.updateMapMarkers = updateMapMarkers;
 window.updateView = updateView;
+
+window.setPostcardSearch = setPostcardSearch;
+window.renderPostcardQuickSearch = renderPostcardQuickSearch;
