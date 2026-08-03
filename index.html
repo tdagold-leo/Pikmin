@@ -904,13 +904,17 @@
         }
         .mush-search-input {
             flex: 1;
-            border: none !important;
-            background: transparent !important;
-            box-shadow: none !important;
-            padding: 6px 0 !important;
-            font-size: 13px;
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            padding: 6px 0;
+            font-size: 14px;
             color: var(--text-main);
             outline: none;
+            min-width: 0;
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
         }
         .mush-search-input::placeholder { color: #94a3b8; }
         .mush-search-clear {
@@ -1756,8 +1760,11 @@
             <div class="mushroom-search-bar">
                 <div class="mush-search-wrap">
                     <span class="mush-search-icon">🔍</span>
-                    <input type="text" id="mushroom-search" class="input-base mush-search-input"
-                        placeholder="搜尋名稱、座標…" oninput="updateView()">
+                    <input type="text" id="mushroom-search" class="mush-search-input"
+                        placeholder="搜尋名稱、座標…"
+                        oninput="updateView()"
+                        onchange="updateView()"
+                        onkeyup="updateView()">
                     <button type="button" id="mushroom-search-clear" class="mush-search-clear"
                         onclick="document.getElementById('mushroom-search').value=''; updateView();" title="清除">✕</button>
                 </div>

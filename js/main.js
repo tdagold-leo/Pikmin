@@ -85,6 +85,15 @@
             verTag.title = '點擊手動檢查更新';
             verTag.addEventListener('click', () => checkForUpdate(true));
         }
+
+        // 巨菇搜尋欄：支援行動裝置 IME 輸入法（如注音、倉頡）
+        const mushSearch = document.getElementById('mushroom-search');
+        if (mushSearch) {
+            // compositionend：中文輸入法確認後觸發
+            mushSearch.addEventListener('compositionend', () => updateView());
+            // input：一般英文/數字即時觸發（已在 HTML 上掛 oninput，此為保險備援）
+            mushSearch.addEventListener('input', () => updateView());
+        }
     });
 
     function escapeHtml(str) { 
@@ -581,18 +590,7 @@
     async function autoDetectCountry(coordsStr, countryInputId, hintId, cityInputId = null) {
         if(!coordsStr) return;
         
-        const normCoords = coordsStr.trim().toLowerCase().replace(/\s+/g, '');
-        if (currentMode === 'mushroom' && countryInputId === 'country') {
-            const isDup = dataList.some(item => (item.coords || '').trim().toLowerCase().replace(/\s+/g, '') === normCoords);
-            if (isDup) {
-                if (!confirm("⚠️ 偵測到重複！\n此座標已有相同的巨菇/元素菇紀錄。\n\n確定要繼續新增並查詢地區資訊嗎？")) return;
-            }
-        } else if (currentMode === 'landmark' && countryInputId === 'lm-country') {
-            const isDup = landmarkList.some(item => (item.coords || '').trim().toLowerCase().replace(/\s+/g, '') === normCoords);
-            if (isDup) {
-                if (!confirm("⚠️ 偵測到重複！\n此座標已有相同的純點紀錄。\n\n確定要繼續新增並查詢地區資訊嗎？")) return;
-            }
-        }
+        // 注意：重複座標檢查已移至 addItem，此處不再彈確認框（避免貼上時誤觸）
 
         const match = coordsStr.match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
         if(match) {
