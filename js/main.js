@@ -3052,7 +3052,7 @@
                 const ic = (item.coords || '').match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
                 if (!ic) return false;
                 const dist = getDistanceFromLatLonInKm(mushSearchCoords.lat, mushSearchCoords.lng, parseFloat(ic[1]), parseFloat(ic[2]));
-                return dist < 1;
+                return dist < 0.1; // 100m 內
             }
             // 關鍵字模式：名稱、座標、國家、城市、認領人
             const haystack = [item.name, item.coords, item.country, item.city, item.user, item.tag, item.kind]
