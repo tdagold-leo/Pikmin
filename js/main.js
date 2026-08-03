@@ -3033,6 +3033,35 @@
             return a.targetTime - b.targetTime;
         });
 
+        // ── 巨菇搜尋篩選 ──
+        const mushSearchInput = document.getElementById('mushroom-search');
+        const mushSearchClear = document.getElementById('mushroom-search-clear');
+        const mushSearchVal = mushSearchInput ? mushSearchInput.value.trim().toLowerCase() : '';
+        if (mushSearchClear) mushSearchClear.style.display = mushSearchVal ? 'block' : 'none';
+
+        // 判斷是否為座標搜尋
+        let mushSearchCoords = null;
+        const mushCoordMatch = mushSearchVal.match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
+        if (mushCoordMatch) {
+            mushSearchCoords = { lat: parseFloat(mushCoordMatch[1]), lng: parseFloat(mushCoordMatch[2]) };
+        }
+        const mushSearchKw = mushSearchVal.split(/\s+/).filter(Boolean);
+
+        const mushMatchesSearch = (item) => {
+            if (!mushSearchVal) return true;
+            if (mushSearchCoords) {
+                // 座標模式：找距離 < 1km 的
+                const ic = (item.coords || '').match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
+                if (!ic) return false;
+                const dist = getDistanceFromLatLonInKm(mushSearchCoords.lat, mushSearchCoords.lng, parseFloat(ic[1]), parseFloat(ic[2]));
+                return dist < 1;
+            }
+            // 關鍵字模式：名稱、座標、國家、城市、認領人
+            const haystack = [item.name, item.coords, item.country, item.city, item.user, item.tag, item.kind]
+                .map(v => (v || '').toLowerCase()).join(' ');
+            return mushSearchKw.every(kw => haystack.includes(kw));
+        };
+
         activeEl.innerHTML = ''; unclaimEl.innerHTML = '';
         let actCount = 0, uncCount = 0;
         const activeGroup1 = []; const activeGroup2 = [];
@@ -3040,6 +3069,7 @@
         const unclaimedQueue = [];
 
         sortedM.forEach(item => {
+            if (!mushMatchesSearch(item)) return; // 搜尋篩選
             let timeText = '<span class="not-set">尚未設定</span>', isExp = false;
 
             if (item.user === "") {
