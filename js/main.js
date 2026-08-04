@@ -2728,42 +2728,41 @@
             const currentSlots = i.slots || ['', '', '', '', ''];
             const filledCount = currentSlots.filter(s => s !== '').length;
             const emptyCount = 5 - filledCount;
-            const slotIcon = emptyCount === 0 ? '🈵' : `空${emptyCount}`;
+            const slotIcon = emptyCount === 0 ? '🈵額滿' : `空${emptyCount}位`;
 
             const sn = String(i.sn || '?').padStart(2, '0');
-            const name = (i.name || '未命名').substring(0, 12);
+            const name = (i.name || '未命名').substring(0, 14);
             const userName = isUnclaimed ? '待認領' : (i.user || '?').substring(0, 6);
             const country = toTW(i.country || '未知');
-            const city = i.city ? ` ${i.city.substring(0, 6)}` : '';
+            const city = i.city ? ` ${i.city.substring(0, 8)}` : '';
 
             const tzDiff = getOffsetByCountry(i.country) - 8;
-            const tzStr = tzDiff !== 0 ? `(${tzDiff > 0 ? '+' + tzDiff : tzDiff}h)` : '';
+            const tzStr = tzDiff !== 0 ? ` (${tzDiff > 0 ? '+' + tzDiff : tzDiff}h)` : '';
 
             let timeStr;
             if (isUnclaimed) {
-                timeStr = now >= i.midnightUTC ? '⚠️已過期' : `🌙換日倒數 ${getShortRemainingText(i.midnightUTC, now)}`;
+                timeStr = now >= i.midnightUTC ? '⚠️ 已換日過期' : `🌙 換日倒數 ${getShortRemainingText(i.midnightUTC, now)}`;
             } else {
                 const rem = getShortRemainingText(i.targetTime, now);
                 const isExp = i.targetTime != null && i.targetTime - now <= 0;
-                timeStr = isExp ? '🔥可開打！' : `⏱ ${rem}`;
+                timeStr = isExp ? '🔥 可開打！' : (i.targetTime == null ? '⏳ 尚未設定時間' : `⏱ ${rem}`);
             }
 
             const ke = kindEmoji(i.kind);
             const kl = kindLabel(i.kind);
-            return `${ke}#${sn}[${kl}] ${slotIcon} ${country}${city} ${tzStr}\n  👤${userName}｜${name}\n  ${timeStr}\n`;
+            return `${ke} #${sn}[${kl}] ${slotIcon}｜${country}${city}${tzStr}\n    👤 ${userName}｜${name}\n    ${timeStr}`;
         };
 
         // ── 組合輸出 ──────────────────────────────
-        const divider = '─'.repeat(18);
         let out = `🍄 巨菇追蹤 🍄\n🔗 ${finalShareUrl}\n`;
 
         if (activeItems.length > 0) {
-            out += `\n${divider}\n🟢 追蹤中（${activeItems.length} 筆）\n${divider}\n`;
-            activeItems.forEach(i => { out += formatLineText(i, false) + '\n'; });
+            out += `\n【🟢 追蹤中 ${activeItems.length} 筆】\n`;
+            activeItems.forEach(i => { out += '\n' + formatLineText(i, false) + '\n'; });
         }
         if (unclaimedItems.length > 0) {
-            out += `${divider}\n🟡 待認領（${unclaimedItems.length} 筆）\n${divider}\n`;
-            unclaimedItems.forEach(i => { out += formatLineText(i, true) + '\n'; });
+            out += `\n【🟡 待認領 ${unclaimedItems.length} 筆】\n`;
+            unclaimedItems.forEach(i => { out += '\n' + formatLineText(i, true) + '\n'; });
         }
 
         out = out.trim();
