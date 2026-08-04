@@ -1543,8 +1543,9 @@
                         }
                         
                         if (!timeFound) {
-                            const timeMatch = l.match(/剩下\s*(?:(\d+)\s*天)?\s*(?:(\d+)\s*小?時)?\s*(?:(\d+)\s*分)?/);
-                            if (timeMatch) {
+                            // 支援「剩下 16日0小時44分11秒」和「剩下 2天3小時5分」兩種格式
+                            const timeMatch = l.match(/剩[下餘]?\s*(?:(\d+)\s*[天日])?\s*(?:(\d+)\s*小?時)?\s*(?:(\d+)\s*分)?/);
+                            if (timeMatch && (timeMatch[1] || timeMatch[2] || timeMatch[3])) {
                                 let d = timeMatch[1] ? parseInt(timeMatch[1]) : 0;
                                 let h = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
                                 let m = timeMatch[3] ? parseInt(timeMatch[3]) : 0;
