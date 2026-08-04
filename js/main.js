@@ -2720,47 +2720,58 @@
 
         unclaimedItems.sort((a, b) => a.midnightUTC - b.midnightUTC);
 
-        let out = `🍄巨菇追蹤🍄\n🔗 ${finalShareUrl}\n\n`;
+        // ── 格式輔助 ──────────────────────────────
+        const kindEmoji = (kind) => kind === '元素菇' ? '🌿' : '🍄';
+        const kindLabel = (kind) => kind === '元素菇' ? '元素' : '巨';
 
-        const formatLineText = (i, userName, isUnclaimed) => {
+        const formatLineText = (i, isUnclaimed) => {
             const currentSlots = i.slots || ['', '', '', '', ''];
             const filledCount = currentSlots.filter(s => s !== '').length;
             const emptyCount = 5 - filledCount;
-            let slotInfo = emptyCount === 0 ? "🈵額滿" : `空位${emptyCount}`;
-            const snPad = String(i.sn).padStart(2, '0');
-            const itemName = (i.name || "未命名").substring(0, 8);
-            
-            const shortUserName = userName ? String(userName).substring(0, 8) : '';
+            const slotIcon = emptyCount === 0 ? '🈵' : `空${emptyCount}`;
 
-            let timeStr = "";
-            if (isUnclaimed) {
-                if (now >= i.midnightUTC) {
-                    timeStr = "已換日過期";
-                } else {
-                    timeStr = "換日倒數 " + getShortRemainingText(i.midnightUTC, now);
-                }
-            } else {
-                timeStr = getShortRemainingText(i.targetTime, now);
-            }
+            const sn = String(i.sn || '?').padStart(2, '0');
+            const name = (i.name || '未命名').substring(0, 12);
+            const userName = isUnclaimed ? '待認領' : (i.user || '?').substring(0, 6);
+            const country = toTW(i.country || '未知');
+            const city = i.city ? ` ${i.city.substring(0, 6)}` : '';
 
             const tzDiff = getOffsetByCountry(i.country) - 8;
-            const tzStr = tzDiff !== 0 ? `(${tzDiff > 0 ? '+'+tzDiff : tzDiff}h) ` : '';
-            const countryTxt = i.country ? toTW(i.country) : "未提供";
+            const tzStr = tzDiff !== 0 ? `(${tzDiff > 0 ? '+' + tzDiff : tzDiff}h)` : '';
 
-            return `${snPad}.${slotInfo} ${tzStr}${countryTxt} <${shortUserName}> ${itemName}\n    [${timeStr}]\n`;
+            let timeStr;
+            if (isUnclaimed) {
+                timeStr = now >= i.midnightUTC ? '⚠️已過期' : `🌙換日倒數 ${getShortRemainingText(i.midnightUTC, now)}`;
+            } else {
+                const rem = getShortRemainingText(i.targetTime, now);
+                const isExp = i.targetTime != null && i.targetTime - now <= 0;
+                timeStr = isExp ? '🔥可開打！' : `⏱ ${rem}`;
+            }
+
+            const ke = kindEmoji(i.kind);
+            const kl = kindLabel(i.kind);
+            return `${ke}#${sn}[${kl}] ${slotIcon} ${country}${city} ${tzStr}\n  👤${userName}｜${name}\n  ${timeStr}\n`;
         };
 
+        // ── 組合輸出 ──────────────────────────────
+        const divider = '─'.repeat(18);
+        let out = `🍄 巨菇追蹤 🍄\n🔗 ${finalShareUrl}\n`;
+
         if (activeItems.length > 0) {
-            out += `🟢追蹤中 (${activeItems.length})\n`; activeItems.forEach((i) => { out += formatLineText(i, i.user, false); }); out += `\n`;
+            out += `\n${divider}\n🟢 追蹤中（${activeItems.length} 筆）\n${divider}\n`;
+            activeItems.forEach(i => { out += formatLineText(i, false) + '\n'; });
         }
         if (unclaimedItems.length > 0) {
-            out += `🟡待認領 (${unclaimedItems.length})\n`; unclaimedItems.forEach((i) => { out += formatLineText(i, "待認領", true); });
+            out += `${divider}\n🟡 待認領（${unclaimedItems.length} 筆）\n${divider}\n`;
+            unclaimedItems.forEach(i => { out += formatLineText(i, true) + '\n'; });
         }
+
+        out = out.trim();
         
-        navigator.clipboard.writeText(out.trim()).catch(e=>console.log(e));
+        navigator.clipboard.writeText(out).catch(e => console.log(e));
         btn.innerText = '✅ 已複製並喚醒 LINE...';
         setTimeout(() => { btn.innerText = originalText; btn.disabled = false; }, 2500);
-        window.location.href = "https://line.me/R/msg/text/?" + encodeURIComponent(out.trim());
+        window.location.href = "https://line.me/R/msg/text/?" + encodeURIComponent(out);
     }
 
     function renderMGroup(container, cards, groupId, title, defaultCollapsed, groupMode = 'grouped') {
