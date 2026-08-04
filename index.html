@@ -510,42 +510,117 @@
         }
 
         /* 系統清理規則說明框 */
-        .cleanup-info-box {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            color: #166534;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            font-size: 13px;
-            line-height: 1.7;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-        }
-        .cleanup-info-box .cleanup-title {
-            font-weight: bold;
+        /* ===== 自動清理精簡列 ===== */
+        .cleanup-compact-bar {
             display: flex;
             align-items: center;
-            gap: 4px;
-            margin-bottom: 6px;
-            font-size: 13px;
+            justify-content: space-between;
+            background: var(--card-bg);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 8px 12px;
+            margin-bottom: 0;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            transition: border-radius 0.2s;
         }
-        .cleanup-info-box .cleanup-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 6px;
-            margin-bottom: 3px;
-            word-break: keep-all;
-            overflow-wrap: break-word;
-        }
-        .cleanup-info-box .cleanup-row .icon {
-            flex-shrink: 0;
-            margin-top: 1px;
-        }
-        .cleanup-info-box .cleanup-notice {
-            color: #dc2626;
+        .cleanup-compact-bar.open { border-radius: 12px 12px 0 0; border-bottom-color: transparent; }
+        .cleanup-compact-left { display: flex; align-items: center; gap: 7px; }
+        .cleanup-compact-icon { font-size: 15px; }
+        .cleanup-compact-label { font-size: 13px; font-weight: 700; color: var(--text-main); }
+        .cleanup-status-pill {
             font-size: 11px;
-            margin-top: 6px;
-            display: block;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: opacity 0.15s, transform 0.15s;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .cleanup-status-pill:hover { opacity: 0.8; transform: scale(1.04); }
+        .cleanup-status-pill.off  { background: #fff1f2; color: #dc2626; border: 1px solid #fecdd3; }
+        .cleanup-status-pill.on   { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+        .cleanup-compact-toggle {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: none;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 3px 9px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+        .cleanup-compact-toggle:hover { background: #f1f5f9; }
+        .cleanup-toggle-icon { transition: transform 0.2s; display: inline-block; }
+        .cleanup-compact-bar.open .cleanup-toggle-icon { transform: rotate(180deg); }
+        /* 展開面板 */
+        .cleanup-rules-panel {
+            display: none;
+            background: var(--card-bg);
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            color: #475569;
+            line-height: 1.6;
+        }
+        .cleanup-compact-bar.open + .cleanup-rules-panel { display: block; }
+        .cleanup-rule-item { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 4px; }
+        .cleanup-rule-item:last-child { margin-bottom: 0; }
+
+        /* ===== 個人設定列（美化版） ===== */
+        .mush-profile-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--card-bg);
+            border-radius: 14px;
+            padding: 8px 12px;
+            margin-bottom: 14px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            border: 1px solid #e2e8f0;
+        }
+        .mush-profile-avatar-wrap { position: relative; flex-shrink: 0; }
+        .mush-avatar-circle {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: #6b7280;
+            border: 2px solid #e2e8f0;
+            transition: border-color 0.2s;
+        }
+        .mush-avatar-circle:hover { border-color: var(--primary); }
+        .mush-profile-name {
+            flex: 1;
+            min-width: 0;
+            padding: 7px 10px !important;
+            font-size: 13px !important;
+            border-radius: 10px !important;
+        }
+        .mush-group-select {
+            flex-shrink: 0;
+            width: auto !important;
+            padding: 7px 8px !important;
+            font-size: 12px !important;
+            border-radius: 10px !important;
+            color: var(--primary-dark);
+            font-weight: 700;
         }
 
         /* 群組高對比度標題樣式 */
@@ -1719,31 +1794,47 @@
                 💚 一鍵產生分享文字並喚醒 LINE
             </button>
 
-            <div class="cleanup-info-box">
-                <div class="cleanup-title">💡 系統自動清理規則：</div>
-                <div class="cleanup-row">
-                    <span class="icon">▪️</span>
-                    <span><strong>已認領 / 有設時間</strong>：於設定的開打時間過後 <strong>2 小時</strong>自動刪除。</span>
+            <!-- 自動清理說明（精簡版，可展開） -->
+            <div class="cleanup-compact-bar">
+                <div class="cleanup-compact-left">
+                    <span class="cleanup-compact-icon">🗑️</span>
+                    <span class="cleanup-compact-label">自動清理</span>
+                    <!-- 狀態標籤：由 JS 動態更新 -->
+                    <span id="cleanup-home-status" class="cleanup-status-pill off"
+                          onclick="switchTab('settings'); setTimeout(()=>{ const el=document.getElementById('auto-delete-status'); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); },300);"
+                          title="點擊前往設定">⛔ 已關閉</span>
                 </div>
-                <div class="cleanup-row">
-                    <span class="icon">▪️</span>
-                    <span><strong>無人認領 (野菇)</strong>：於該巨菇所在國家的 <strong>隔日凌晨 1 點</strong>自動刪除。</span>
+                <button class="cleanup-compact-toggle" onclick="this.closest('.cleanup-compact-bar').classList.toggle('open')" title="查看規則">
+                    <span class="cleanup-toggle-icon">▾</span> 規則
+                </button>
+            </div>
+            <!-- 展開後的規則說明 -->
+            <div class="cleanup-rules-panel">
+                <div class="cleanup-rule-item">
+                    <span>⏰</span>
+                    <span><strong>已認領 / 有設時間</strong>：開打後 <strong>2 小時</strong>自動刪除</span>
                 </div>
-                <span class="cleanup-notice">*(目前暫時關閉自動清理功能)*</span>
+                <div class="cleanup-rule-item">
+                    <span>🌙</span>
+                    <span><strong>無人認領 (野菇)</strong>：所在國家 <strong>隔日凌晨 1 點</strong>自動刪除</span>
+                </div>
             </div>
 
-            <div style="background:var(--card-bg); padding:10px 15px; border-radius:12px; margin-bottom:15px; box-shadow:0 1px 3px rgba(0,0,0,0.05); display:flex; align-items:center; gap:10px; flex-wrap:nowrap;">
-                <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
-                    <div style="position:relative; flex-shrink:0;">
-                        <div id="profile-avatar-preview" style="width:40px; height:40px; border-radius:50%; background:#e5e7eb; cursor:pointer; background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold; color:#6b7280; flex-shrink:0;" onclick="document.getElementById('profile-avatar-upload').click()" title="點擊上傳個人圖像">圖像</div>
-                        <div id="profile-avatar-clear" onclick="clearProfileAvatar(event)" style="display:none; position:absolute; top:-2px; right:-2px; background:#ef4444; color:white; border-radius:50%; width:16px; height:16px; font-size:10px; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.2);" title="移除頭像">✕</div>
-                    </div>
-                    <input type="file" id="profile-avatar-upload" accept="image/*" style="display:none;" onchange="handleProfileAvatarUpload(event)">
-                    <input type="text" id="profile-name-input" class="input-base" style="width:100%; min-width:0; padding:6px 10px; font-size:14px;" placeholder="設定專屬名稱與頭像..." oninput="saveProfileName()">
+            <!-- 個人設定列 -->
+            <div class="mush-profile-row">
+                <div class="mush-profile-avatar-wrap">
+                    <div id="profile-avatar-preview" class="mush-avatar-circle"
+                         onclick="document.getElementById('profile-avatar-upload').click()" title="點擊上傳個人圖像">圖像</div>
+                    <div id="profile-avatar-clear" onclick="clearProfileAvatar(event)"
+                         style="display:none; position:absolute; top:-3px; right:-3px; background:#ef4444; color:white; border-radius:50%; width:17px; height:17px; font-size:10px; display:none; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.25);">✕</div>
                 </div>
-                <select id="mushroom-group-logic" class="input-base filter-select" onchange="saveMushroomViewPref(); updateView();" style="font-size: 13px; padding: 6px 10px; width:auto; flex-shrink:0;">
-                    <option value="grouped" selected>📂 分類模式：開啟</option>
-                    <option value="flat">📄 分類模式：關閉</option>
+                <input type="file" id="profile-avatar-upload" accept="image/*" style="display:none;" onchange="handleProfileAvatarUpload(event)">
+                <input type="text" id="profile-name-input" class="input-base mush-profile-name"
+                       placeholder="設定專屬名稱…" oninput="saveProfileName()">
+                <select id="mushroom-group-logic" class="input-base mush-group-select"
+                        onchange="saveMushroomViewPref(); updateView();">
+                    <option value="grouped" selected>📂 分群</option>
+                    <option value="flat">📄 平鋪</option>
                 </select>
             </div>
 

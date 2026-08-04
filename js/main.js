@@ -1032,6 +1032,17 @@
             status.textContent = isAutoDeleteOn ? '✅ 自動清理已啟用（全域生效）' : '⛔ 目前已關閉自動清理';
             status.style.color = isAutoDeleteOn ? '#15803d' : '#dc2626';
         }
+        // 同步首頁巨菇分頁的狀態小標籤
+        const homePill = document.getElementById('cleanup-home-status');
+        if (homePill) {
+            if (isAutoDeleteOn) {
+                homePill.textContent = '✅ 已啟用';
+                homePill.className = 'cleanup-status-pill on';
+            } else {
+                homePill.textContent = '⛔ 已關閉';
+                homePill.className = 'cleanup-status-pill off';
+            }
+        }
     });
 
     // 純點監聽器
