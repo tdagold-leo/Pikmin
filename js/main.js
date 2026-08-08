@@ -3533,7 +3533,7 @@
 
             if (!hideTopLevelGroup) {
                 if (!knownPostcardGroups.has(groupId)) { collapsedGroups.add(groupId); knownPostcardGroups.add(groupId); }
-                isCol = isSearching ? false : collapsedGroups.has(groupId);
+                isCol = collapsedGroups.has(groupId);
                 const arrow = isCol ? '▶' : '▼';
                 const gHead = document.createElement('div');
                 gHead.className = 'group-header postcard-header';
@@ -3627,7 +3627,7 @@
                         // 大分類標題
                         const topId = 'pc-sg-top-' + tName;
                         if (!knownPostcardGroups.has(topId)) { collapsedGroups.add(topId); knownPostcardGroups.add(topId); }
-                        const isTopCol = isSearching ? false : collapsedGroups.has(topId);
+                        const isTopCol = collapsedGroups.has(topId);
                         
                         let hasClaimableTop = false;
                         let hasMissingTop = false;
@@ -3692,7 +3692,7 @@
                             actOrder.sort().forEach(act => {
                                 const actId = 'pc-act-' + tName + '-' + act;
                                 if (!knownPostcardGroups.has(actId)) { collapsedGroups.add(actId); knownPostcardGroups.add(actId); }
-                                const isActCol = isSearching ? false : collapsedGroups.has(actId);
+                                const isActCol = collapsedGroups.has(actId);
                                 const ah = document.createElement('div');
                                 ah.className = 'sq-group-header';
                                 
