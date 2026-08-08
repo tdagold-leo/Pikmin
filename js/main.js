@@ -89,10 +89,20 @@
         // 巨菇搜尋欄：支援行動裝置 IME 輸入法（如注音、倉頡）
         const mushSearch = document.getElementById('mushroom-search');
         if (mushSearch) {
-            // compositionend：中文輸入法確認後觸發
             mushSearch.addEventListener('compositionend', () => updateView());
-            // input：一般英文/數字即時觸發（已在 HTML 上掛 oninput，此為保險備援）
             mushSearch.addEventListener('input', () => updateView());
+        }
+
+        // 明信片與金盆搜尋欄：支援行動裝置 IME 輸入法
+        const pcSearch = document.getElementById('postcard-search');
+        if (pcSearch) {
+            pcSearch.addEventListener('compositionend', () => updateView());
+            pcSearch.addEventListener('input', () => updateView());
+        }
+        const gbSearch = document.getElementById('goldbasin-search');
+        if (gbSearch) {
+            gbSearch.addEventListener('compositionend', () => updateView());
+            gbSearch.addEventListener('input', () => updateView());
         }
     });
 
@@ -3246,7 +3256,7 @@
                 const missingText = item.missingFields.length > 0 ? "缺少 缺" + item.missingFields.join(" 缺") : "";
                 const dupText = checkIsDuplicate(item) ? "重複 重複收藏" : "";
                 const favText = cloudPcFav.includes(item.id) ? '最愛 我的最愛' : '';
-                const text = `${item.type} ${item.country} ${item.city || ''} ${item.name} ${item.tag} ${item.coords} ${item.discontinued ? '絕版' : ''} ${favText} ${missingText} ${dupText}`.toLowerCase();
+                const text = `${item.type} ${item.country} ${item.city || ''} ${item.name} ${item.tag} ${item.provider || ''} ${item.coords} ${item.discontinued ? '絕版' : ''} ${favText} ${missingText} ${dupText}`.toLowerCase();
                 if (searchLogic === 'and') {
                     if (!searchKw.every(kw => text.includes(kw))) return false;
                 } else {

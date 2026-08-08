@@ -1901,7 +1901,7 @@
                 
                 <!-- 第三排：搜尋列和開關 -->
                 <div style="display:flex; flex-wrap:nowrap; gap:8px; align-items:center;">
-                    <input type="text" id="postcard-search" class="input-base search-input" style="flex:1; min-width:0; padding:5px 8px; font-size:13px;" oninput="updateView()" placeholder="🔍 支援多關鍵字搜尋...">
+                    <input type="text" id="postcard-search" class="input-base search-input" style="flex:1; min-width:0; padding:5px 8px; font-size:13px;" oninput="updateView()" onchange="updateView()" onkeyup="updateView()" placeholder="🔍 搜尋名稱、發表者、座標、標籤...">
                     <button type="button" onclick="collapseAllPostcardGroups()" title="全部折疊以節省流量" style="flex-shrink:0; background:transparent; border:1px solid #e5e7eb; border-radius:8px; padding:5px 8px; cursor:pointer; font-size:12px; color:var(--text-muted); white-space:nowrap;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">全部折疊</button>
                     <label style="cursor:pointer; display:flex; align-items:center; gap:4px; font-size:13px; color:var(--text-main); font-weight:bold; flex-shrink:0;">
                         <input type="checkbox" id="toggle-time-setter" onchange="saveTimeSetterPref(); updateView();"> 
@@ -1936,7 +1936,7 @@
                     </select>
                 </div>
                 <div style="display:flex; flex-wrap:nowrap; gap:8px; align-items:center;">
-                    <input type="text" id="goldbasin-search" class="input-base search-input" style="flex:1; min-width:0; padding:5px 8px; font-size:13px;" oninput="updateView()" placeholder="🔍 搜尋金盆名稱、標籤...">
+                    <input type="text" id="goldbasin-search" class="input-base search-input" style="flex:1; min-width:0; padding:5px 8px; font-size:13px;" oninput="updateView()" onchange="updateView()" onkeyup="updateView()" placeholder="🔍 搜尋金盆名稱、標籤...">
                     <button type="button" onclick="collapseAllGoldbasinGroups()" title="全部折疊以節省流量" style="flex-shrink:0; background:transparent; border:1px solid #e5e7eb; border-radius:8px; padding:5px 8px; cursor:pointer; font-size:12px; color:var(--text-muted); white-space:nowrap;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">全部折疊</button>
                 </div>
             </div>
@@ -2919,7 +2919,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.08.05.0217";</script>
+    <script>const APP_VERSION = "2026.08.08.2205";</script>
     <script src="js/main.js?v=1785672373247"></script>
     <script src="js/autofill.js?v=1785672373264"></script>
 </body>
