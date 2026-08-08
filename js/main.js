@@ -1000,7 +1000,8 @@
                     country: toTW(cloudData[key].country || ""), city: cloudData[key].city || "",
                     coords: cloudData[key].coords || "",
                     tag: cloudData[key].tag || "", image: cloudData[key].image || "無圖片",
-                    targetTime: cloudData[key].targetTime, provider: cloudData[key].provider || "",
+                    targetTime: cloudData[key].targetTime, 
+                    provider: cloudData[key].provider || cloudData[key].user || cloudData[key].userName || cloudData[key].author || cloudData[key].creator || cloudData[key].syncId || "",
                     discontinued: cloudData[key].discontinued === true,
                     sgType: cloudData[key].sgType || '常駐',
                     sgStart: cloudData[key].sgStart || null,
@@ -3173,7 +3174,9 @@
                 item._dist = ic ? getDistanceFromLatLonInKm(searchCoords.lat, searchCoords.lon, parseFloat(ic[1]), parseFloat(ic[2])) : 99999;
             });
         }
-        const searchKw = pcSearchVal.split(/\s+/).filter(Boolean);
+        const rawSearchKw = pcSearchVal.split(/\s+/).filter(Boolean);
+        const searchKw = rawSearchKw.map(kw => kw.replace(/^(?:發表者|提供者|上傳者|作者|發表人|分享者|user|provider|author)[：:]/i, ''));
+        const isSearching = (searchKw.length > 0 || searchCoords !== null);
         const filterInput = document.getElementById(prefix + '-filter');
         const filterState = filterInput ? filterInput.value : 'all';
         const recentInput = document.getElementById(prefix + '-recent-filter');
@@ -3256,7 +3259,9 @@
                 const missingText = item.missingFields.length > 0 ? "缺少 缺" + item.missingFields.join(" 缺") : "";
                 const dupText = checkIsDuplicate(item) ? "重複 重複收藏" : "";
                 const favText = cloudPcFav.includes(item.id) ? '最愛 我的最愛' : '';
-                const text = `${item.type} ${item.country} ${item.city || ''} ${item.name} ${item.tag} ${item.provider || ''} ${item.coords} ${item.discontinued ? '絕版' : ''} ${favText} ${missingText} ${dupText}`.toLowerCase();
+                const providerStr = (item.provider || '').trim();
+                const providerText = providerStr ? `發表者:${providerStr} 提供者:${providerStr} 作者:${providerStr} 發表者 提供者 上傳者 作者 發表人 分享者 ${providerStr}` : '';
+                const text = `${item.type} ${item.country} ${item.city || ''} ${item.name} ${item.tag} ${providerText} ${item.coords} ${item.discontinued ? '絕版' : ''} ${favText} ${missingText} ${dupText}`.toLowerCase();
                 if (searchLogic === 'and') {
                     if (!searchKw.every(kw => text.includes(kw))) return false;
                 } else {
@@ -3528,7 +3533,7 @@
 
             if (!hideTopLevelGroup) {
                 if (!knownPostcardGroups.has(groupId)) { collapsedGroups.add(groupId); knownPostcardGroups.add(groupId); }
-                isCol = collapsedGroups.has(groupId);
+                isCol = isSearching ? false : collapsedGroups.has(groupId);
                 const arrow = isCol ? '▶' : '▼';
                 const gHead = document.createElement('div');
                 gHead.className = 'group-header postcard-header';
@@ -3622,7 +3627,7 @@
                         // 大分類標題
                         const topId = 'pc-sg-top-' + tName;
                         if (!knownPostcardGroups.has(topId)) { collapsedGroups.add(topId); knownPostcardGroups.add(topId); }
-                        const isTopCol = collapsedGroups.has(topId);
+                        const isTopCol = isSearching ? false : collapsedGroups.has(topId);
                         
                         let hasClaimableTop = false;
                         let hasMissingTop = false;
@@ -3687,7 +3692,7 @@
                             actOrder.sort().forEach(act => {
                                 const actId = 'pc-act-' + tName + '-' + act;
                                 if (!knownPostcardGroups.has(actId)) { collapsedGroups.add(actId); knownPostcardGroups.add(actId); }
-                                const isActCol = collapsedGroups.has(actId);
+                                const isActCol = isSearching ? false : collapsedGroups.has(actId);
                                 const ah = document.createElement('div');
                                 ah.className = 'sq-group-header';
                                 
