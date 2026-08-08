@@ -3356,17 +3356,40 @@
                 }
                 const discWatermark2 = item.discontinued ? `<div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:5;"><div style="transform:rotate(-30deg);font-size:28px;font-weight:900;color:rgba(220,38,38,0.82);border:4px solid rgba(220,38,38,0.82);padding:4px 10px;border-radius:6px;letter-spacing:4px;text-shadow:0 1px 4px rgba(0,0,0,0.25);font-family:serif;white-space:nowrap;">絕版</div></div>` : '';
                 const hasClearBtn2 = item.targetTime && item.targetTime > Date.now();
-                const toggleEl2 = document.getElementById('toggle-time-setter');
-                const showTimeSetter2 = toggleEl2 ? toggleEl2.checked : true;
-                const timeSetRow2 = showTimeSetter2 ? (
-                    '<div style="margin-top:6px;padding:6px;background:linear-gradient(135deg,rgba(14,165,233,0.08),rgba(99,102,241,0.06));border-radius:10px;border:1px solid rgba(14,165,233,0.25);">'+'<div style="font-size:10px;font-weight:700;color:#0ea5e9;letter-spacing:0.5px;margin-bottom:6px;text-transform:uppercase;">⏱ 快速設定剩餘時間</div>'+'<div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap;">'+'<div style="display:flex;flex:1;min-width:0;align-items:center;justify-content:center;gap:2px;background:var(--card-bg,#fff);border:1px solid rgba(14,165,233,0.35);border-radius:6px;padding:2px 4px;">'+'<input type="text" inputmode="numeric" pattern="[0-9]*" value="0" id="pc-h-'+item.id+'" style="width:24px;padding:0;font-size:14px;font-weight:700;border:none;text-align:right;background:transparent;color:inherit;outline:none;">'+'<span style="font-size:10px;font-weight:600;color:#94a3b8;margin-right:2px;">h</span>'+'<span style="color:#cbd5e1;font-size:12px;font-weight:300;">:</span>'+'<input type="text" inputmode="numeric" pattern="[0-9]*" value="0" id="pc-m-'+item.id+'" style="width:24px;padding:0;font-size:14px;font-weight:700;border:none;text-align:right;background:transparent;color:inherit;outline:none;">'+'<span style="font-size:10px;font-weight:600;color:#94a3b8;">m</span>'+'</div>'+'<button onclick="setPostcardTime(\''+item.id+'\',\'pc-h-'+item.id+'\',\'pc-m-'+item.id+'\')" style="flex:0 0 auto;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:white;border:none;border-radius:6px;padding:4px 8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 4px rgba(14,165,233,0.35);">✓ 確定</button>'+(hasClearBtn2?'<button onclick="clearPostcardTime(\''+item.id+'\')" style="flex:0 0 auto;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:4px 6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">✕</button>':'')+
-                    '</div></div>'
-                ) : '';
+                const remSec2 = hasClearBtn2 ? Math.max(0, Math.floor((item.targetTime - Date.now()) / 1000)) : 0;
+                const initH2 = remSec2 > 0 ? Math.floor(remSec2 / 3600) : 0;
+                const initM2 = remSec2 > 0 ? Math.floor((remSec2 % 3600) / 60) : 0;
+                const timeSetRow2 = `
+                    <div id="time-setter-${item.id}" style="display:none;margin-top:6px;padding:6px;background:linear-gradient(135deg,rgba(14,165,233,0.08),rgba(99,102,241,0.06));border-radius:10px;border:1px solid rgba(14,165,233,0.25);">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                            <span style="font-size:10px;font-weight:700;color:#0ea5e9;letter-spacing:0.5px;text-transform:uppercase;">⏱ 快速設定剩餘時間</span>
+                            <button type="button" onclick="toggleCardTimeSetter('${item.id}', event)" style="background:transparent;border:none;color:#94a3b8;font-size:11px;cursor:pointer;padding:0 2px;">✕</button>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap;">
+                            <div style="display:flex;flex:1;min-width:0;align-items:center;justify-content:center;gap:2px;background:var(--card-bg,#fff);border:1px solid rgba(14,165,233,0.35);border-radius:6px;padding:2px 4px;">
+                                <input type="text" inputmode="numeric" pattern="[0-9]*" value="${initH2}" id="pc-h-${item.id}" style="width:24px;padding:0;font-size:14px;font-weight:700;border:none;text-align:right;background:transparent;color:inherit;outline:none;" onfocus="this.select()">
+                                <span style="font-size:10px;font-weight:600;color:#94a3b8;margin-right:2px;">h</span>
+                                <span style="color:#cbd5e1;font-size:12px;font-weight:300;">:</span>
+                                <input type="text" inputmode="numeric" pattern="[0-9]*" value="${initM2}" id="pc-m-${item.id}" style="width:24px;padding:0;font-size:14px;font-weight:700;border:none;text-align:right;background:transparent;color:inherit;outline:none;" onfocus="this.select()">
+                                <span style="font-size:10px;font-weight:600;color:#94a3b8;">m</span>
+                            </div>
+                            <button onclick="setPostcardTime('${item.id}','pc-h-${item.id}','pc-m-${item.id}')" style="flex:0 0 auto;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:white;border:none;border-radius:6px;padding:4px 8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 4px rgba(14,165,233,0.35);">✓ 確定</button>
+                            ${hasClearBtn2 ? `<button onclick="clearPostcardTime('${item.id}')" title="清除倒數" style="flex:0 0 auto;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:4px 6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">✕</button>` : ''}
+                        </div>
+                    </div>
+                `;
                 const cdCard = document.createElement('div');
                 cdCard.className = `grid-card ${isReady ? 'alert-pulse' : ''} ${isDuplicate ? 'duplicate-card' : ''}`;
                 const cdImgHtml = (safeI && safeI !== "無圖片") ? `<img src="${safeI}" loading="lazy" class="card-img" onclick="openImageLightbox(this.src)">` : `<div class="card-img-placeholder">無圖片</div>`;
                 cdCard.innerHTML = `
-                    <div class="card-img-box" style="position:relative;">${cdImgHtml}${discWatermark2}<div class="card-badge-type">${escapeHtml(item.type)}</div><button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button><button class="card-fav-btn ${isPcFav?'fav-on':'fav-off'}" onclick="togglePcFav('${item.id}')">${isPcFav?'❤️':'🤍'}</button></div>
+                    <div class="card-img-box" style="position:relative;">
+                        ${cdImgHtml}
+                        ${discWatermark2}
+                        <div class="card-badge-type">${escapeHtml(item.type)}</div>
+                        <button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button>
+                        <button class="card-fav-btn ${isPcFav?'fav-on':'fav-off'}" onclick="togglePcFav('${item.id}')">${isPcFav?'❤️':'🤍'}</button>
+                        <button class="card-timer-btn ${hasClearBtn2 ? 'has-timer' : ''}" onclick="toggleCardTimeSetter('${item.id}', event)" title="設定剩餘時間">⏱️</button>
+                    </div>
                     <div class="card-body"><div class="card-title">${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC||'未提供'}${item.city?` · ${escapeHtml(item.city)}`:''}</span><div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">${providerHtml2}${safeT?`<span class="tag-badge">${safeT}</span>`:''}</div></div>
                     ${dupBadge}${distBadge}
                     ${item.missingFields&&item.missingFields.length>0?`<div style="color:#ef4444;font-size:10px;font-weight:bold;margin-top:4px;background:#fee2e2;padding:4px 6px;border-radius:4px;border:1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>`:''}
@@ -3436,23 +3459,29 @@
 
             const isMushType = (item.type === '菇');
             const hasClearBtn = isMushType && item.targetTime && item.targetTime > Date.now();
-            const toggleEl = document.getElementById('toggle-time-setter');
-            const showTimeSetter = toggleEl ? toggleEl.checked : true;
-            const timeSetRow = (isMushType && showTimeSetter) ? (
-                '<div style="margin-top:6px;padding:6px;background:linear-gradient(135deg,rgba(14,165,233,0.08),rgba(99,102,241,0.06));border-radius:10px;border:1px solid rgba(14,165,233,0.25);">' +
-                '<div style="font-size:10px;font-weight:700;color:#0ea5e9;letter-spacing:0.5px;margin-bottom:6px;text-transform:uppercase;">⏱ 快速設定剩餘時間</div>' +
-                '<div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap;">' +
-                '<div style="display:flex;flex:1;min-width:0;align-items:center;justify-content:center;gap:2px;background:var(--card-bg,#fff);border:1px solid rgba(14,165,233,0.35);border-radius:6px;padding:2px 4px;">' +
-                '<input type="text" inputmode="numeric" pattern="[0-9]*" value="0" id="pc-h-' + item.id + '" style="width:24px;padding:0;font-size:14px;font-weight:700;border:none;text-align:right;background:transparent;color:inherit;outline:none;">' +
-                '<span style="font-size:10px;font-weight:600;color:#94a3b8;margin-right:2px;">h</span>' +
-                '<span style="color:#cbd5e1;font-size:12px;font-weight:300;">:</span>' +
-                '<input type="text" inputmode="numeric" pattern="[0-9]*" value="0" id="pc-m-' + item.id + '" style="width:24px;padding:0;font-size:14px;font-weight:700;border:none;text-align:right;background:transparent;color:inherit;outline:none;">' +
-                '<span style="font-size:10px;font-weight:600;color:#94a3b8;">m</span>' +
-                '</div>' +
-                '<button onclick="setPostcardTime(\'' + item.id + '\',\'pc-h-' + item.id + '\',\'pc-m-' + item.id + '\')" style="flex:0 0 auto;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:white;border:none;border-radius:6px;padding:4px 8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 4px rgba(14,165,233,0.35);">✓ 確定</button>' +
-                (hasClearBtn ? '<button onclick="clearPostcardTime(\'' + item.id + '\')" style="flex:0 0 auto;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:4px 6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">✕</button>' : '') +
-                '</div></div>'
-            ) : '';
+            const remSec = (item.targetTime && item.targetTime > Date.now()) ? Math.max(0, Math.floor((item.targetTime - Date.now()) / 1000)) : 0;
+            const initH = remSec > 0 ? Math.floor(remSec / 3600) : 0;
+            const initM = remSec > 0 ? Math.floor((remSec % 3600) / 60) : 0;
+            const timerBtnHtml = isMushType ? `<button class="card-timer-btn ${hasClearBtn ? 'has-timer' : ''}" onclick="toggleCardTimeSetter('${item.id}', event)" title="設定剩餘時間">⏱️</button>` : '';
+            const timeSetRow = isMushType ? `
+                <div id="time-setter-${item.id}" style="display:none; margin-top:6px; padding:6px; background:linear-gradient(135deg,rgba(14,165,233,0.08),rgba(99,102,241,0.06)); border-radius:10px; border:1px solid rgba(14,165,233,0.25);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <span style="font-size:10px; font-weight:700; color:#0ea5e9; letter-spacing:0.5px; text-transform:uppercase;">⏱ 快速設定剩餘時間</span>
+                        <button type="button" onclick="toggleCardTimeSetter('${item.id}', event)" style="background:transparent; border:none; color:#94a3b8; font-size:11px; cursor:pointer; padding:0 2px;">✕</button>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:4px; flex-wrap:nowrap;">
+                        <div style="display:flex; flex:1; min-width:0; align-items:center; justify-content:center; gap:2px; background:var(--card-bg,#fff); border:1px solid rgba(14,165,233,0.35); border-radius:6px; padding:2px 4px;">
+                            <input type="text" inputmode="numeric" pattern="[0-9]*" value="${initH}" id="pc-h-${item.id}" style="width:24px; padding:0; font-size:14px; font-weight:700; border:none; text-align:right; background:transparent; color:inherit; outline:none;" onfocus="this.select()">
+                            <span style="font-size:10px; font-weight:600; color:#94a3b8; margin-right:2px;">h</span>
+                            <span style="color:#cbd5e1; font-size:12px; font-weight:300;">:</span>
+                            <input type="text" inputmode="numeric" pattern="[0-9]*" value="${initM}" id="pc-m-${item.id}" style="width:24px; padding:0; font-size:14px; font-weight:700; border:none; text-align:right; background:transparent; color:inherit; outline:none;" onfocus="this.select()">
+                            <span style="font-size:10px; font-weight:600; color:#94a3b8;">m</span>
+                        </div>
+                        <button onclick="setPostcardTime('${item.id}','pc-h-${item.id}','pc-m-${item.id}')" style="flex:0 0 auto; background:linear-gradient(135deg,#0ea5e9,#6366f1); color:white; border:none; border-radius:6px; padding:4px 8px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; box-shadow:0 2px 4px rgba(14,165,233,0.35);">✓ 確定</button>
+                        ${hasClearBtn ? `<button onclick="clearPostcardTime('${item.id}')" title="清除倒數" style="flex:0 0 auto; background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.3); border-radius:6px; padding:4px 6px; font-size:11px; font-weight:600; cursor:pointer; white-space:nowrap;">✕</button>` : ''}
+                    </div>
+                </div>
+            ` : '';
 
             const discWatermark = item.discontinued
                 ? `<div style="position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; pointer-events:none; z-index:5;">
@@ -3513,7 +3542,14 @@
                 }
             }
             card.innerHTML = `
-                <div class="card-img-box" style="position:relative;">${imgHtml}${discWatermark}<div class="card-badge-type">${escapeHtml(item.type)}</div><button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button><button class="card-fav-btn ${isPcFav?'fav-on':'fav-off'}" onclick="togglePcFav('${item.id}')">${isPcFav?'❤️':'🤍'}</button></div>
+                <div class="card-img-box" style="position:relative;">
+                    ${imgHtml}
+                    ${discWatermark}
+                    <div class="card-badge-type">${escapeHtml(item.type)}</div>
+                    <button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button>
+                    <button class="card-fav-btn ${isPcFav?'fav-on':'fav-off'}" onclick="togglePcFav('${item.id}')">${isPcFav?'❤️':'🤍'}</button>
+                    ${timerBtnHtml}
+                </div>
                 <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}</span><div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">${providerHtml}${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}</div></div>
                 ${dupBadge}
                 ${distBadge}
@@ -3788,6 +3824,26 @@
             }
         }
         if (typeof updateMapMarkers === 'function') updateMapMarkers();
+    }
+
+    function toggleCardTimeSetter(id, e) {
+        if (e) {
+            if (e.stopPropagation) e.stopPropagation();
+            if (e.preventDefault) e.preventDefault();
+        }
+        const box = document.getElementById('time-setter-' + id);
+        if (!box) return;
+        const isHidden = (box.style.display === 'none' || !box.style.display);
+        box.style.display = isHidden ? 'block' : 'none';
+        if (isHidden) {
+            const hInput = document.getElementById('pc-h-' + id);
+            if (hInput) {
+                setTimeout(() => {
+                    hInput.focus();
+                    hInput.select();
+                }, 50);
+            }
+        }
     }
 
     function setPostcardTime(id, hInputId, mInputId) {
@@ -5161,6 +5217,7 @@ window.togglePcFav = togglePcFav;
 window.markPostcardClaimedToday = markPostcardClaimedToday;
 window.markGroupClaimedToday = markGroupClaimedToday;
 window.setTodayDate = setTodayDate;
+window.toggleCardTimeSetter = toggleCardTimeSetter;
 window.togglePostcardTimeEdit = togglePostcardTimeEdit;
 window.toggleSlot = toggleSlot;
 window.triggerOCR = triggerOCR;

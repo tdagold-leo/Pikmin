@@ -438,6 +438,35 @@
         .card-fav-btn:active { transform: scale(1.3); }
         .card-fav-btn.fav-on  { color: #ef4444; text-shadow: 0 0 4px rgba(239,68,68,0.4); }
         .card-fav-btn.fav-off { color: #d1d5db; }
+        .card-timer-btn {
+            position: absolute;
+            top: 70px;
+            right: 6px;
+            background: rgba(255,255,255,0.88);
+            border: 1px solid rgba(14,165,233,0.35);
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            font-size: 13px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            transition: transform 0.15s, background 0.15s, box-shadow 0.15s;
+        }
+        .card-timer-btn:hover {
+            transform: scale(1.1);
+            background: #ffffff;
+            box-shadow: 0 2px 6px rgba(14,165,233,0.3);
+        }
+        .card-timer-btn:active { transform: scale(0.92); }
+        .card-timer-btn.has-timer {
+            background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+            border-color: #0284c7;
+            box-shadow: 0 0 6px rgba(14,165,233,0.45);
+        }
 
         /* 標籤徽章 */
         .tag-badge {
@@ -1899,14 +1928,10 @@
                     </select>
                 </div>
                 
-                <!-- 第三排：搜尋列和開關 -->
+                <!-- 第三排：搜尋列和按鈕 -->
                 <div style="display:flex; flex-wrap:nowrap; gap:8px; align-items:center;">
                     <input type="text" id="postcard-search" class="input-base search-input" style="flex:1; min-width:0; padding:5px 8px; font-size:13px;" oninput="updateView()" onchange="updateView()" onkeyup="updateView()" placeholder="🔍 搜尋名稱、發表者、座標、標籤...">
                     <button type="button" onclick="collapseAllPostcardGroups()" title="全部折疊以節省流量" style="flex-shrink:0; background:transparent; border:1px solid #e5e7eb; border-radius:8px; padding:5px 8px; cursor:pointer; font-size:12px; color:var(--text-muted); white-space:nowrap;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">全部折疊</button>
-                    <label style="cursor:pointer; display:flex; align-items:center; gap:4px; font-size:13px; color:var(--text-main); font-weight:bold; flex-shrink:0;">
-                        <input type="checkbox" id="toggle-time-setter" onchange="saveTimeSetterPref(); updateView();"> 
-                        顯示計時設定框
-                    </label>
                 </div>
                 <!-- 動態常用標籤推薦按鈕 -->
                 <div id="postcard-quick-tags" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:3px; align-items:center;">
@@ -2919,9 +2944,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.08.08.2222";</script>
-    <script src="js/main.js?v=202608082222"></script>
-    <script src="js/autofill.js?v=202608082222"></script>
+    <script>const APP_VERSION = "2026.08.08.2235";</script>
+    <script src="js/main.js?v=202608082235"></script>
+    <script src="js/autofill.js?v=202608082235"></script>
 </body>
 </html>
 
