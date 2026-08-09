@@ -1120,6 +1120,12 @@
                 item._dist = ic ? getDistanceFromLatLonInKm(searchCoords.lat, searchCoords.lon, parseFloat(ic[1]), parseFloat(ic[2])) : 99999;
             });
             filtered = filtered.filter(i => i._dist <= 1);
+        } else if (searchVal) {
+            const terms = searchVal.toLowerCase().split(/\s+/).filter(Boolean);
+            filtered = filtered.filter(item => {
+                const textToSearch = [item.country, item.city, item.type, item.note].filter(Boolean).join(' ').toLowerCase();
+                return terms.every(t => textToSearch.includes(t));
+            });
         }
 
         if (filtered.length === 0) {
