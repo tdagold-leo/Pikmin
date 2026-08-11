@@ -1062,9 +1062,15 @@
         landmarkList = [];
         if (cloudData) {
             Object.keys(cloudData).forEach((key) => {
+                let typeVal = cloudData[key].type || '';
+                if (typeVal === '行李標籤') {
+                    typeVal = '行李吊牌';
+                    // 自動回寫資料庫修正舊資料
+                    dbRef('landmarks/' + key).update({ type: '行李吊牌' });
+                }
                 landmarkList.push({
                     id: key,
-                    type: cloudData[key].type || '',
+                    type: typeVal,
                     coords: cloudData[key].coords || '',
                     note: cloudData[key].note || '',
                     country: cloudData[key].country || '',
