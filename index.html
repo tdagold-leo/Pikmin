@@ -189,6 +189,48 @@
             line-height: 1.5;
         }
 
+        /* 明信片新增統計卡片 */
+        .pc-stat-card {
+            flex: 1;
+            min-width: 120px;
+            background: var(--card-bg, #fff);
+            border-radius: 14px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            border: 1.5px solid rgba(14,165,233,0.15);
+            transition: transform 0.15s, box-shadow 0.15s;
+            cursor: pointer;
+        }
+        .pc-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px rgba(14,165,233,0.18);
+        }
+        .pc-stat-card .stat-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted, #9ca3af);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .pc-stat-card .stat-value {
+            font-size: 26px;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+        .pc-stat-card .stat-sub {
+            font-size: 10px;
+            color: var(--text-muted, #9ca3af);
+        }
+        .pc-stat-card.stat-1d { border-color: rgba(99,102,241,0.3); }
+        .pc-stat-card.stat-1d .stat-value { color: #6366f1; }
+        .pc-stat-card.stat-3d { border-color: rgba(14,165,233,0.3); }
+        .pc-stat-card.stat-3d .stat-value { color: #0ea5e9; }
+        .pc-stat-card.stat-total { border-color: rgba(16,185,129,0.3); }
+        .pc-stat-card.stat-total .stat-value { color: #10b981; }
+
         /* 統一卡片網格佈局 */
         .grid {
             display: grid;
@@ -1905,6 +1947,9 @@
                 🔗 推薦免費圖床：<a href="https://meee.com.tw/" target="_blank" style="color:var(--primary-dark);">Meee 圖片上傳</a>
             </div>
             
+            <!-- 最近新增統計 -->
+            <div id="postcard-stats" style="display:none; gap:8px; margin-bottom:12px; flex-wrap:wrap;"></div>
+
             <div style="background:var(--card-bg); padding:10px 15px; border-radius:12px; margin-bottom:15px; box-shadow:0 1px 3px rgba(0,0,0,0.05); display:flex; flex-direction:column; gap:10px;">
                 <!-- 第一排：過濾選單 (三個) -->
                 <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
@@ -2945,9 +2990,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.08.11.1751";</script>
-    <script src="js/main.js?v=202608111751"></script>
-    <script src="js/autofill.js?v=202608111751"></script>
+    <script>const APP_VERSION = "2026.08.11.2228";</script>
+    <script src="js/main.js?v=202608112228"></script>
+    <script src="js/autofill.js?v=202608112228"></script>
 </body>
 </html>
 

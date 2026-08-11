@@ -3283,6 +3283,39 @@
             return true;
         });
 
+        // ===== 明信片最近新增統計 =====
+        if (currentMode === 'postcard') {
+            const statsEl = document.getElementById('postcard-stats');
+            if (statsEl) {
+                const ms1d = 1 * 86400000;
+                const ms3d = 3 * 86400000;
+                // 計算全資料庫的統計（不受過濾影響），以 postcardList 為基準，排除特殊金盆
+                const pcOnly = postcardList.filter(i => i.type !== '特殊金盆');
+                const cnt1d = pcOnly.filter(i => (now - getCreatedAt(i.id)) <= ms1d).length;
+                const cnt3d = pcOnly.filter(i => (now - getCreatedAt(i.id)) <= ms3d).length;
+                const cntAll = pcOnly.length;
+
+                const makeStatCard = (cls, label, value, sub, onclick) =>
+                    `<div class="pc-stat-card ${cls}" onclick="${onclick}" title="${label}">
+                        <div class="stat-label">${label}</div>
+                        <div class="stat-value">${value}</div>
+                        <div class="stat-sub">${sub}</div>
+                    </div>`;
+
+                statsEl.style.display = 'flex';
+                statsEl.innerHTML =
+                    makeStatCard('stat-1d', '最近 1 天新增', cnt1d, '筆明信片',
+                        `document.getElementById('postcard-recent-filter').value='1'; updateView();`) +
+                    makeStatCard('stat-3d', '最近 3 天新增', cnt3d, '筆明信片',
+                        `document.getElementById('postcard-recent-filter').value='3'; updateView();`) +
+                    makeStatCard('stat-total', '全部明信片', cntAll, '筆（不含金盆）',
+                        `document.getElementById('postcard-recent-filter').value='all'; updateView();`);
+            }
+        } else {
+            const statsEl = document.getElementById('postcard-stats');
+            if (statsEl) statsEl.style.display = 'none';
+        }
+
         let hasReadyGoldBasin = false;
         for (let item of postcardList) {
             if (item.type === '特殊金盆' && item.sgType !== '常駐' && item.sgCooldown && !item.discontinued) {
