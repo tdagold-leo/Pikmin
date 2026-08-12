@@ -1023,7 +1023,7 @@
                     sgEnd: cloudData[key].sgEnd || null,
                     sgActivity: cloudData[key].sgActivity || "",
                     sgCooldown: cloudData[key].sgCooldown || "",
-                    sgLast: cloudData[key].sgLast || ""
+                    sgLast: "" // sgLast 屬個人記錄，不從共享資料庫讀取，由下方 localStorage 合併
                 });
             });
         }
@@ -2287,7 +2287,7 @@
                     pushData.sgStart = document.getElementById('post-sg-start').value || '';
                     pushData.sgEnd = document.getElementById('post-sg-end').value || '';
                     pushData.sgCooldown = document.getElementById('post-sg-cooldown').value || '';
-                    pushData.sgLast = document.getElementById('post-sg-last').value || '';
+                    // sgLast 不寫入共享資料庫，由個人記錄管理
                 }
             }
             dbRef('postcards').push(pushData);
@@ -2636,12 +2636,12 @@
                     updates.sgStart = document.getElementById('edit-post-sg-start').value || '';
                     updates.sgEnd = document.getElementById('edit-post-sg-end').value || '';
                     updates.sgCooldown = document.getElementById('edit-post-sg-cooldown').value || '';
-                    updates.sgLast = document.getElementById('edit-post-sg-last').value || '';
+                    // sgLast 不寫入共享資料庫，由個人記錄管理
                 } else {
                     updates.sgStart = null;
                     updates.sgEnd = null;
                     updates.sgCooldown = null;
-                    updates.sgLast = null;
+                    updates.sgLast = null; // 清除舊有共享資料庫中的 sgLast
                 }
             } else {
                 updates.sgType = null;
@@ -2649,7 +2649,7 @@
                 updates.sgStart = null;
                 updates.sgEnd = null;
                 updates.sgCooldown = null;
-                updates.sgLast = null;
+                updates.sgLast = null; // 清除舊有共享資料庫中的 sgLast
             }
             dbRef('postcards/' + currentEditingTimeId).update(updates);
             window._editDiscontinued = false;
