@@ -868,6 +868,21 @@
                 cloudPcFav = Array.isArray(data) ? data : (data ? Object.values(data) : []);
                 updateView();
             });
+            // 從雲端同步個人特殊金盆領取記錄到 localStorage
+            dbRef('user_sg_last/' + inputId).once('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && typeof data === 'object') {
+                    try {
+                        let local = JSON.parse(localStorage.getItem('pikmin_sgLast_map') || '{}');
+                        // 合併：取每個 key 的較新日期
+                        Object.keys(data).forEach(k => {
+                            if (!local[k] || data[k] > local[k]) local[k] = data[k];
+                        });
+                        localStorage.setItem('pikmin_sgLast_map', JSON.stringify(local));
+                        updateView();
+                    } catch(e) {}
+                }
+            });
         } else {
             statusEl.innerText = '未啟用'; statusEl.classList.remove('active');
             if(indicator) indicator.innerText = '⚪ 未連線';
@@ -1012,6 +1027,20 @@
                 });
             });
         }
+        // 合併個人領取記錄（localStorage 優先於雲端，避免 Firebase 事件觸發時蓋掉本機剛儲存的記錄）
+        try {
+            const personalSgLast = JSON.parse(localStorage.getItem('pikmin_sgLast_map') || '{}');
+            if (Object.keys(personalSgLast).length > 0) {
+                postcardList.forEach(item => {
+                    if (personalSgLast[item.id]) {
+                        // 取較新的日期（字串比較 YYYY-MM-DD 格式可直接比較大小）
+                        if (!item.sgLast || personalSgLast[item.id] > item.sgLast) {
+                            item.sgLast = personalSgLast[item.id];
+                        }
+                    }
+                });
+            }
+        } catch(err) {}
         updateView();
     });
 
