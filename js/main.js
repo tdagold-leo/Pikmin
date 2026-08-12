@@ -1153,15 +1153,18 @@
             const location = [escapeHtml(item.country), escapeHtml(item.city)].filter(Boolean).join(' · ');
             const card = document.createElement('div');
             card.className = 'lm-nav-card' + (isDuplicate ? ' lm-dup' : '');
+
+            const headerBadges = [
+                `<span class="lm-type-pill">${escapeHtml(item.type || '純點')}</span>`,
+                item.confirmed ? `<span class="lm-confirmed-pill">✅ 已確認</span>` : '',
+                isDuplicate ? `<span class="lm-dup-pill">⚠️ 重複</span>` : '',
+                extraBadge || ''
+            ].filter(Boolean).join('');
+
             card.innerHTML = `
+                <div class="lm-nav-card-header">${headerBadges}</div>
                 <div class="lm-nav-body">
                     <div class="lm-nav-title">📍 ${location || '(未填地點)'}</div>
-                    <div class="lm-nav-badges">
-                        <span class="lm-type-pill">${escapeHtml(item.type || '純點')}</span>
-                        ${item.confirmed ? '<span class="lm-confirmed-pill">✅ 已確認</span>' : ''}
-                        ${isDuplicate ? '<span class="lm-dup-pill">⚠️ 重複</span>' : ''}
-                        ${extraBadge || ''}
-                    </div>
                     ${item.note ? `<div class="lm-nav-note">💬 ${escapeHtml(item.note)}</div>` : ''}
                 </div>
                 <div class="lm-nav-actions">
