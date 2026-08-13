@@ -4881,7 +4881,9 @@
         // ===== 執行自動化核心函式 =====
         async function runAutomation() {
             getAudioContext(); // 預先解鎖音效
-            requestNotificationPermission();
+            // 注意：不在此處呼叫 requestNotificationPermission()，
+            // 因為通知權限對話框會暫停頁面，導致後續 fetch 失敗。
+            // 通知權限應由使用者手動點擊「啟用通知」按鈕來申請。
             setActionState('generating');
 
             if (emailBox) emailBox.classList.remove('active');
@@ -4898,6 +4900,9 @@
             currentGeneratedEmail = address;
             copyToClipboard(address); // 同步寫入剪貼簿
             log(`📋 已將預備信箱複製到剪貼簿：${address}`, 'log-success');
+            if ('Notification' in window && Notification.permission !== 'granted') {
+                log('💡 提示：建議先點「🔔 啟用推播通知」按鈕，再開始流程，以確保收到驗證碼提醒。');
+            }
 
             if (emailDisplay) emailDisplay.textContent = address;
             if (emailBox) emailBox.classList.add('active');
@@ -5000,7 +5005,15 @@
                     if (codeTitle) codeTitle.textContent = '等待超時 (點主按鈕重新整理)';
                 }
             } catch (err) {
-                log(`❌ 發生錯誤: ${err.message}`, 'log-error');
+                let errMsg = err.message || String(err);
+                if (errMsg === 'Failed to fetch' || errMsg.includes('NetworkError') || errMsg.includes('network')) {
+                    errMsg = '網路連線失敗（mail.tm 可能暫時無法連線，請稍後再試）';
+                } else if (errMsg.includes('422') || errMsg.includes('Unprocessable')) {
+                    errMsg = '信箱格式或帳號已存在，系統將自動重試新帳號';
+                } else if (errMsg.includes('401') || errMsg.includes('Unauthorized')) {
+                    errMsg = '驗證失敗，請重新點擊按鈕再試一次';
+                }
+                log(`❌ 發生錯誤：${errMsg}`, 'log-error');
                 setActionState('ready');
             }
         }
