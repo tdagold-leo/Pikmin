@@ -3939,6 +3939,13 @@
 
     // ===== 雲端自動註冊小幫手邏輯 =====
     (function() {
+        window.mailApiBase = localStorage.getItem('pikmin_mail_api_base') || 'https://api.mail.gw';
+        
+        function switchMailApi() {
+            window.mailApiBase = (window.mailApiBase === 'https://api.mail.gw') ? 'https://api.mail.tm' : 'https://api.mail.gw';
+            localStorage.setItem('pikmin_mail_api_base', window.mailApiBase);
+            return window.mailApiBase;
+        }
         const logContainer = document.getElementById('cloud-logContainer');
         const dynamicActionBtn = document.getElementById('cloud-dynamicActionBtn');
         const dynamicBtnIcon = document.getElementById('cloud-dynamicBtnIcon');
@@ -4789,7 +4796,7 @@
             }
 
             try {
-                const msgsRes = await fetchWithRetry('https://api.mail.gw/messages', {
+                const msgsRes = await fetchWithRetry(window.mailApiBase + '/messages', {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${session.token}` }
                 }, 2, 1000);
@@ -4800,7 +4807,7 @@
                     const mailSubject = messages[0].subject || '新信件';
                     log(`📧 收到信件 [${mailSubject}]，正在解析驗證碼...`);
 
-                    const mailRes = await fetchWithRetry(`https://api.mail.gw/messages/${mailId}`, {
+                    const mailRes = await fetchWithRetry(`${window.mailApiBase}/messages/${mailId}`, {
                         method: 'GET',
                         headers: { 'Authorization': `Bearer ${session.token}` }
                     }, 2, 1000);
@@ -4871,7 +4878,7 @@
         let cachedMailDomain = localStorage.getItem('pikmin_mail_domain') || 'web-library.net';
         
         // 背景自動更新網域快取
-        fetch('https://api.mail.gw/domains').then(r => r.json()).then(data => {
+        fetch(window.mailApiBase + '/domains').then(r => r.json()).then(data => {
             if (data && data['hydra:member'] && data['hydra:member'][0]) {
                 cachedMailDomain = data['hydra:member'][0].domain;
                 localStorage.setItem('pikmin_mail_domain', cachedMailDomain);
@@ -4910,7 +4917,7 @@
             try {
                 log('🚀 正在向 mail.tm 註冊信箱...');
                 try {
-                    const domainsRes = await fetchWithRetry('https://api.mail.gw/domains', { method: 'GET' }, 2, 1000);
+                    const domainsRes = await fetchWithRetry(window.mailApiBase + '/domains', { method: 'GET' }, 2, 1000);
                     if (domainsRes && domainsRes['hydra:member'] && domainsRes['hydra:member'][0]) {
                         domain = domainsRes['hydra:member'][0].domain;
                         cachedMailDomain = domain;
@@ -4924,13 +4931,13 @@
                     console.warn('Domain fetch fallback:', e);
                 }
                 
-                await fetchWithRetry('https://api.mail.gw/accounts', {
+                await fetchWithRetry(window.mailApiBase + '/accounts', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ address, password })
                 });
                 
-                const tokenRes = await fetchWithRetry('https://api.mail.gw/token', {
+                const tokenRes = await fetchWithRetry(window.mailApiBase + '/token', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ address, password })
@@ -5007,13 +5014,21 @@
             } catch (err) {
                 let errMsg = err.message || String(err);
                 if (errMsg === 'Failed to fetch' || errMsg.includes('NetworkError') || errMsg.includes('network')) {
-                    errMsg = '網路連線失敗（郵件伺服器可能暫時無法連線，請稍後再試）';
+                    errMsg = '網路連線失敗（郵件伺服器可能暫時無法連線）';
+                    
+                    // 自動切換 API 並提示
+                    const newApi = switchMailApi();
+                    log(`⚠️ ${errMsg}，已自動切換備援伺服器 (${newApi})。請點擊按鈕重新嘗試。`, 'log-error');
                 } else if (errMsg.includes('422') || errMsg.includes('Unprocessable')) {
                     errMsg = '信箱格式或帳號已存在，系統將自動重試新帳號';
+                    log(`❌ 發生錯誤：${errMsg}`, 'log-error');
                 } else if (errMsg.includes('401') || errMsg.includes('Unauthorized')) {
                     errMsg = '驗證失敗，請重新點擊按鈕再試一次';
+                    log(`❌ 發生錯誤：${errMsg}`, 'log-error');
+                } else {
+                    log(`❌ 發生錯誤：${errMsg}`, 'log-error');
                 }
-                log(`❌ 發生錯誤：${errMsg}`, 'log-error');
+                
                 setActionState('ready');
             }
         }
