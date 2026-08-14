@@ -1099,6 +1099,10 @@
                     // 自動回寫資料庫修正舊資料
                     dbRef('landmarks/' + key).update({ type: '機場', subtype: '機場行李吊牌' });
                 }
+                if (typeVal === '機場' && !subtypeVal) {
+                    subtypeVal = '飛機玩具';
+                    dbRef('landmarks/' + key).update({ subtype: '飛機玩具' });
+                }
                 landmarkList.push({
                     id: key,
                     type: typeVal,

@@ -2664,13 +2664,20 @@
                         <label style="font-size:11px; margin-bottom:2px;">子分類</label>
                         <input type="text" id="lm-subtype" class="input-base" placeholder="例如：電車紙模型、票亭" style="padding:6px 10px; font-size:13px;" list="lm-subtype-list">
                         <datalist id="lm-subtype-list">
-                            <option value="電車紙模型">
-                            <option value="票亭">
-                            <option value="入口">
-                            <option value="出口">
-                            <option value="大花">
-                            <option value="小花">
-                            <option value="機場行李吊牌">
+                            <optgroup label="機場">
+                                <option value="飛機玩具">
+                                <option value="機場行李吊牌">
+                            </optgroup>
+                            <optgroup label="車站">
+                                <option value="電車紙模型">
+                                <option value="票亭">
+                            </optgroup>
+                            <optgroup label="通用 / 其他">
+                                <option value="入口">
+                                <option value="出口">
+                                <option value="大花">
+                                <option value="小花">
+                            </optgroup>
                         </datalist>
                     </div>
                 </div>
@@ -3044,9 +3051,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.08.14.2348";</script>
-    <script src="js/main.js?v=202608142348"></script>
-    <script src="js/autofill.js?v=202608142348"></script>
+    <script>const APP_VERSION = "2026.08.14.2353";</script>
+    <script src="js/main.js?v=202608142353"></script>
+    <script src="js/autofill.js?v=202608142353"></script>
 </body>
 </html>
 
