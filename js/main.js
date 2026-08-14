@@ -1266,12 +1266,10 @@
 
             if (isCollapsed) return;
 
-            // 導航卡片格狀區
-            const grid = document.createElement('div');
-            grid.className = 'lm-nav-grid';
-
-            // 按國家、緯度由北到南排序
+            // 按子分類、國家、緯度由北到南排序
             items.sort((a, b) => {
+                const sA = a.subtype || '無子分類', sB = b.subtype || '無子分類';
+                if (sA !== sB) return sA.localeCompare(sB);
                 const cA = a.country || '', cB = b.country || '';
                 if (cA !== cB) return cA.localeCompare(cB);
                 const latA = parseFloat((a.coords || '').split(/[\s,，]+/)[0]) || 0;
@@ -1279,8 +1277,41 @@
                 return latB - latA;
             });
 
-            items.forEach(item => grid.appendChild(makeLmCard(item, '')));
-            container.appendChild(grid);
+            // 判斷是否需要子分類標題 (如果該大類下有多個不同子分類，或明確有子分類)
+            const subTypes = [...new Set(items.map(i => i.subtype || '無子分類'))];
+            const hasSubtypes = subTypes.length > 1 || (subTypes.length === 1 && subTypes[0] !== '無子分類');
+
+            if (hasSubtypes) {
+                let currentSub = null;
+                let currentGrid = null;
+                items.forEach(item => {
+                    const sub = item.subtype || '無子分類';
+                    if (sub !== currentSub) {
+                        currentSub = sub;
+                        const subHead = document.createElement('div');
+                        subHead.style.width = '100%';
+                        subHead.style.padding = '10px 4px 6px';
+                        subHead.style.fontSize = '13px';
+                        subHead.style.fontWeight = '800';
+                        subHead.style.color = '#6b7280';
+                        subHead.style.borderBottom = '1.5px dashed #e5e7eb';
+                        subHead.style.marginBottom = '8px';
+                        subHead.style.marginTop = '4px';
+                        subHead.innerText = `🏷️ ${sub}`;
+                        container.appendChild(subHead);
+                        
+                        currentGrid = document.createElement('div');
+                        currentGrid.className = 'lm-nav-grid';
+                        container.appendChild(currentGrid);
+                    }
+                    currentGrid.appendChild(makeLmCard(item, ''));
+                });
+            } else {
+                const grid = document.createElement('div');
+                grid.className = 'lm-nav-grid';
+                items.forEach(item => grid.appendChild(makeLmCard(item, '')));
+                container.appendChild(grid);
+            }
         });
     }
 
