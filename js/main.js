@@ -1184,25 +1184,29 @@
             const card = document.createElement('div');
             card.className = 'lm-nav-card' + (isDuplicate ? ' lm-dup' : '');
 
+            // Header：只放種類 + 子分類 + 重複/距離標記，保持一行
             const headerBadges = [
                 `<span class="lm-type-pill">${escapeHtml(item.type || '純點')}</span>`,
                 item.subtype ? `<span class="lm-subtype-pill">${escapeHtml(item.subtype)}</span>` : '',
-                item.confirmed ? `<span class="lm-confirmed-pill">✅ 已確認</span>` : '',
                 isDuplicate ? `<span class="lm-dup-pill">⚠️ 重複</span>` : '',
                 extraBadge || ''
             ].filter(Boolean).join('');
 
+            // 已確認放在地點後方，更自然
+            const confirmedTag = item.confirmed
+                ? `<span class="lm-confirmed-dot" title="已確認">✅</span>`
+                : '';
+
             card.innerHTML = `
                 <div class="lm-nav-card-header">${headerBadges}</div>
                 <div class="lm-nav-body">
-                    <div class="lm-nav-title">📍 ${location || '(未填地點)'}</div>
-                    ${item.note ? `<div class="lm-nav-note">💬 ${escapeHtml(item.note)}</div>` : ''}
+                    <div class="lm-nav-title">📍 ${location || '(未填地點)'} ${confirmedTag}</div>
+                    ${item.note ? `<div class="lm-nav-note">${escapeHtml(item.note)}</div>` : ''}
                 </div>
                 <div class="lm-nav-actions">
-                    <button class="lm-copy-btn" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button>
+                    <button class="lm-copy-btn" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製座標</button>
                     <a class="lm-icon-btn map" href="https://maps.google.com/?q=${escapeHtml(item.coords)}" target="_blank" title="開啟 Google 地圖">🗺️</a>
                     <button class="lm-icon-btn edit" onclick="editLandmark('${item.id}')" title="修改">✏️</button>
-                    <button class="lm-icon-btn del"  onclick="deleteLandmark('${item.id}')" title="刪除">🗑️</button>
                 </div>
             `;
             return card;
