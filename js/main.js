@@ -1092,15 +1092,17 @@
         if (cloudData) {
             Object.keys(cloudData).forEach((key) => {
                 let typeVal = cloudData[key].type || '';
-                if (typeVal === '行李標籤') {
-                    typeVal = '行李吊牌';
+                let subtypeVal = cloudData[key].subtype || '';
+                if (typeVal === '行李標籤' || typeVal === '行李吊牌') {
+                    typeVal = '機場';
+                    subtypeVal = '機場行李吊牌';
                     // 自動回寫資料庫修正舊資料
-                    dbRef('landmarks/' + key).update({ type: '行李吊牌' });
+                    dbRef('landmarks/' + key).update({ type: '機場', subtype: '機場行李吊牌' });
                 }
                 landmarkList.push({
                     id: key,
                     type: typeVal,
-                    subtype: cloudData[key].subtype || '',
+                    subtype: subtypeVal,
                     coords: cloudData[key].coords || '',
                     note: cloudData[key].note || '',
                     country: cloudData[key].country || '',
