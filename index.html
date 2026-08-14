@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -1515,6 +1515,17 @@
             border: none;
             box-shadow: 0 2px 4px rgba(30,41,59,0.25);
         }
+        .lm-subtype-pill {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            color: #f5f3ff;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 12px;
+            letter-spacing: 0.2px;
+            border: none;
+            box-shadow: 0 2px 4px rgba(109,40,217,0.25);
+        }
         .lm-confirmed-pill {
             background: linear-gradient(135deg, #22c55e, #16a34a);
             color: white;
@@ -2644,9 +2655,22 @@
                         </datalist>
                     </div>
                     <div class="input-group" style="flex:1; margin:0;">
-                        <label style="font-size:11px; margin-bottom:2px;">備註 / 名稱</label>
-                        <input type="text" id="lm-note" class="input-base" placeholder="例如：大花、入口等" style="padding:6px 10px; font-size:13px;">
+                        <label style="font-size:11px; margin-bottom:2px;">子分類</label>
+                        <input type="text" id="lm-subtype" class="input-base" placeholder="例如：電車紙模型、票亭" style="padding:6px 10px; font-size:13px;" list="lm-subtype-list">
+                        <datalist id="lm-subtype-list">
+                            <option value="電車紙模型">
+                            <option value="票亭">
+                            <option value="入口">
+                            <option value="出口">
+                            <option value="大花">
+                            <option value="小花">
+                        </datalist>
                     </div>
+                </div>
+
+                <div class="input-group" style="margin:0;">
+                    <label style="font-size:11px; margin-bottom:2px;">備註 / 名稱</label>
+                    <input type="text" id="lm-note" class="input-base" placeholder="例如：大花、入口等" style="padding:6px 10px; font-size:13px;">
                 </div>
 
                 <div class="input-group" style="margin:0;">
@@ -2792,6 +2816,12 @@
                         <label style="font-size:11px; margin-bottom:2px;">種類</label>
                         <input type="text" id="edit-lm-type" class="input-base" placeholder="例如：動物園、公園" style="padding:6px 10px; font-size:13px;" list="lm-type-list">
                     </div>
+                    <div class="input-group" style="flex:1; margin:0;">
+                        <label style="font-size:11px; margin-bottom:2px;">子分類</label>
+                        <input type="text" id="edit-lm-subtype" class="input-base" placeholder="例如：電車紙模型、票亭" style="padding:6px 10px; font-size:13px;" list="lm-subtype-list">
+                    </div>
+                </div>
+                <div style="display:flex; gap:6px; margin-top:2px;">
                     <div class="input-group" style="flex:1; margin:0;">
                         <label style="font-size:11px; margin-bottom:2px;">備註 / 名稱</label>
                         <input type="text" id="edit-lm-note" class="input-base" placeholder="例如：大花、入口等" style="padding:6px 10px; font-size:13px;">
@@ -3007,9 +3037,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.08.13.1953";</script>
-    <script src="js/main.js?v=1786621998772"></script>
-    <script src="js/autofill.js?v=1786621998779"></script>
+    <script>const APP_VERSION = "2026.08.14.2035";</script>
+    <script src="js/main.js?v=202608142035"></script>
+    <script src="js/autofill.js?v=202608142035"></script>
 </body>
 </html>
 

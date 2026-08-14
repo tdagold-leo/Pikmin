@@ -1100,6 +1100,7 @@
                 landmarkList.push({
                     id: key,
                     type: typeVal,
+                    subtype: cloudData[key].subtype || '',
                     coords: cloudData[key].coords || '',
                     note: cloudData[key].note || '',
                     country: cloudData[key].country || '',
@@ -1158,7 +1159,7 @@
         } else if (searchVal) {
             const terms = searchVal.toLowerCase().split(/\s+/).filter(Boolean);
             filtered = filtered.filter(item => {
-                const textToSearch = [item.country, item.city, item.type, item.note].filter(Boolean).join(' ').toLowerCase();
+                const textToSearch = [item.country, item.city, item.type, item.subtype, item.note].filter(Boolean).join(' ').toLowerCase();
                 return terms.every(t => textToSearch.includes(t));
             });
         }
@@ -1185,6 +1186,7 @@
 
             const headerBadges = [
                 `<span class="lm-type-pill">${escapeHtml(item.type || '純點')}</span>`,
+                item.subtype ? `<span class="lm-subtype-pill">${escapeHtml(item.subtype)}</span>` : '',
                 item.confirmed ? `<span class="lm-confirmed-pill">✅ 已確認</span>` : '',
                 isDuplicate ? `<span class="lm-dup-pill">⚠️ 重複</span>` : '',
                 extraBadge || ''
@@ -2296,6 +2298,7 @@
             closeModal('add-modal');
         } else if (currentMode === 'landmark') {
             const lmType = document.getElementById('lm-type').value.trim();
+            const lmSubtype = document.getElementById('lm-subtype').value.trim();
             const lmCoords = document.getElementById('lm-coords').value.trim();
             const lmNote = document.getElementById('lm-note').value.trim();
             let lmCountry = toTW(document.getElementById('lm-country').value.trim());
@@ -2308,6 +2311,7 @@
 
             const lmData = {
                 type: lmType,
+                subtype: lmSubtype,
                 coords: normalizeCoords(lmCoords),
                 note: lmNote,
                 country: lmCountry,
@@ -2327,6 +2331,7 @@
             dbRef('landmarks').push(lmData);
 
             document.getElementById('lm-type').value = '';
+            document.getElementById('lm-subtype').value = '';
             document.getElementById('lm-coords').value = '';
             document.getElementById('lm-country').value = '';
             document.getElementById('lm-city').value = '';
@@ -2446,6 +2451,7 @@
             if (egLand) egLand.style.display = 'flex';
             document.getElementById('time-modal-title').innerText = '✏️ 修改純點資料';
             document.getElementById('edit-lm-type').value = item.type || '';
+            document.getElementById('edit-lm-subtype').value = item.subtype || '';
             document.getElementById('edit-lm-note').value = item.note || '';
             document.getElementById('edit-lm-coords').value = item.coords || '';
             document.getElementById('edit-lm-country').value = item.country || '';
@@ -2589,6 +2595,7 @@
             dbRef('mushrooms_v2/' + currentEditingTimeId).update(updates);
         } else if (currentEditingType === 'landmark') {
             const lmType = document.getElementById('edit-lm-type').value.trim();
+            const lmSubtype = document.getElementById('edit-lm-subtype').value.trim();
             const lmCoords = document.getElementById('edit-lm-coords').value.trim();
             const lmNote = document.getElementById('edit-lm-note').value.trim();
             let lmCountry = toTW(document.getElementById('edit-lm-country').value.trim());
@@ -2601,6 +2608,7 @@
 
             const updates = {
                 type: lmType,
+                subtype: lmSubtype,
                 coords: normalizeCoords(lmCoords),
                 note: lmNote,
                 country: lmCountry,
