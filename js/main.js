@@ -2835,13 +2835,7 @@
             const slotIcon = emptyCount === 0 ? '🈵額滿' : `空${emptyCount}位`;
 
             const sn = String(i.sn || '?').padStart(2, '0');
-            const name = (i.name || '未命名').substring(0, 14);
             const userName = isUnclaimed ? '待認領' : (i.user || '?').substring(0, 6);
-            const country = toTW(i.country || '未知');
-            const city = i.city ? ` ${i.city.substring(0, 8)}` : '';
-
-            const tzDiff = getOffsetByCountry(i.country) - 8;
-            const tzStr = tzDiff !== 0 ? ` (${tzDiff > 0 ? '+' + tzDiff : tzDiff}h)` : '';
 
             let timeStr;
             if (isUnclaimed) {
@@ -2854,7 +2848,7 @@
 
             const ke = kindEmoji(i.kind);
             const kl = kindLabel(i.kind);
-            return `${ke} #${sn}[${kl}] ${slotIcon}｜${country}${city}${tzStr}\n    👤 ${userName}｜${name}\n    ${timeStr}`;
+            return `${ke} #${sn}[${kl}] ${slotIcon}｜👤 ${userName}｜${timeStr}`;
         };
 
         // ── 組合輸出 ──────────────────────────────
