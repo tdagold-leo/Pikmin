@@ -1015,6 +1015,7 @@
                     country: toTW(cloudData[key].country || ""), city: cloudData[key].city || "",
                     coords: cloudData[key].coords || "",
                     tag: cloudData[key].tag || "", image: cloudData[key].image || "無圖片",
+                    auth: cloudData[key].auth || "",
                     targetTime: cloudData[key].targetTime, 
                     provider: cloudData[key].provider || cloudData[key].user || cloudData[key].userName || cloudData[key].author || cloudData[key].creator || cloudData[key].syncId || "",
                     discontinued: cloudData[key].discontinued === true,
@@ -2319,6 +2320,7 @@
                 type: toTW(document.getElementById('post-type').value), country: processedCountry, city: cityEl ? cityEl.value.trim() : "",
                 name: nameEl.value.trim(),
                 coords: normalizeCoords(coordsEl.value), tag: tagEl.value.trim() || "", image: imageEl.value.trim() || "無圖片",
+                auth: (document.getElementById('post-auth')?.value || '').trim(),
                 provider: currentSyncId || ""
             };
             if (pushData.type === '特殊金盆') {
@@ -2335,6 +2337,7 @@
             }
             dbRef('postcards').push(pushData);
             countryEl.value = ''; if(cityEl) cityEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = ''; imageEl.value = '';
+            const authEl = document.getElementById('post-auth'); if(authEl) authEl.value = '';
             document.getElementById('post-tz-hint').innerText = '';
             closeModal('add-modal');
         } else if (currentMode === 'landmark') {
@@ -2540,6 +2543,7 @@
             document.getElementById('edit-post-city').value = item.city || '';  
             document.getElementById('edit-post-name').value = item.name || ''; 
             document.getElementById('edit-post-tag').value = item.tag || '';
+            const editAuthEl = document.getElementById('edit-post-auth'); if(editAuthEl) editAuthEl.value = item.auth || '';
             document.getElementById('edit-post-coords').value = item.coords || ''; 
             const imgUrl = (item.image === "無圖片" ? "" : item.image) || '';
             document.getElementById('edit-post-image').value = imgUrl; 
@@ -2674,6 +2678,7 @@
                 type: pType, country: processedCountry,
                 city: document.getElementById('edit-post-city').value.trim(),
                 name: document.getElementById('edit-post-name').value.trim(), tag: document.getElementById('edit-post-tag').value.trim(),
+                auth: (document.getElementById('edit-post-auth')?.value || '').trim(),
                 coords: normalizeCoords(document.getElementById('edit-post-coords').value), image: document.getElementById('edit-post-image').value.trim() || "無圖片",
                 targetTime: targetTime,
                 discontinued: window._editDiscontinued === true
@@ -3348,7 +3353,9 @@
                 const favText = cloudPcFav.includes(item.id) ? '最愛 我的最愛' : '';
                 const providerStr = (item.provider || '').trim();
                 const providerText = providerStr ? `發表者:${providerStr} 提供者:${providerStr} 作者:${providerStr} 發表者 提供者 上傳者 作者 發表人 分享者 ${providerStr}` : '';
-                const text = `${item.type} ${item.country} ${item.city || ''} ${item.name} ${item.tag} ${providerText} ${item.coords} ${item.discontinued ? '絕版' : ''} ${favText} ${missingText} ${dupText}`.toLowerCase();
+                const authStr = (item.auth || '').trim();
+                const authText = authStr ? `授權:${authStr} 授權 ${authStr}` : '';
+                const text = `${item.type} ${item.country} ${item.city || ''} ${item.name} ${item.tag} ${providerText} ${authText} ${item.coords} ${item.discontinued ? '絕版' : ''} ${favText} ${missingText} ${dupText}`.toLowerCase();
                 if (searchLogic === 'and') {
                     if (!searchKw.every(kw => text.includes(kw))) return false;
                 } else {
@@ -3671,6 +3678,7 @@
                     ${timerBtnHtml}
                 </div>
                 <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}</span><div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">${providerHtml}${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}</div></div>
+                ${item.auth ? `<div style="font-size:10px; font-weight:600; color:#6d28d9; background:#f5f3ff; padding:3px 7px; border-radius:6px; border:1px solid #ddd6fe; margin-top:4px; display:inline-flex; align-items:center; gap:3px;">🔑 ${escapeHtml(item.auth)}</div>` : ''}
                 ${dupBadge}
                 ${distBadge}
                 ${sgDateBadge}
