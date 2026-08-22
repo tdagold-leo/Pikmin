@@ -3354,7 +3354,7 @@
                 const providerStr = (item.provider || '').trim();
                 const providerText = providerStr ? `發表者:${providerStr} 提供者:${providerStr} 作者:${providerStr} 發表者 提供者 上傳者 作者 發表人 分享者 ${providerStr}` : '';
                 const authStr = (item.auth || '').trim();
-                const authText = authStr ? `授權:${authStr} 授權 ${authStr}` : '';
+                const authText = authStr ? `授權:${authStr} 授權 ${authStr}` : '未授權 無授權';
                 const text = `${item.type} ${item.country} ${item.city || ''} ${item.name} ${item.tag} ${providerText} ${authText} ${item.coords} ${item.discontinued ? '絕版' : ''} ${favText} ${missingText} ${dupText}`.toLowerCase();
                 if (searchLogic === 'and') {
                     if (!searchKw.every(kw => text.includes(kw))) return false;
@@ -3677,8 +3677,7 @@
                     <button class="card-fav-btn ${isPcFav?'fav-on':'fav-off'}" onclick="togglePcFav('${item.id}')">${isPcFav?'❤️':'🤍'}</button>
                     ${timerBtnHtml}
                 </div>
-                <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}</span><div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">${providerHtml}${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}</div></div>
-                ${item.auth ? `<div style="font-size:10px; font-weight:600; color:#6d28d9; background:#f5f3ff; padding:3px 7px; border-radius:6px; border:1px solid #ddd6fe; margin-top:4px; display:inline-flex; align-items:center; gap:3px;">🔑 ${escapeHtml(item.auth)}</div>` : ''}
+                <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}</span><div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">${providerHtml}${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}${item.auth ? `<span title="${escapeHtml(item.auth)}" style="background:#f5f3ff; color:#6d28d9; border:1px solid #ddd6fe; padding:1px 5px; border-radius:5px; font-size:10px; font-weight:700; display:inline-flex; align-items:center; gap:2px; cursor:default;">🔑 ${escapeHtml(item.auth)}</span>` : ''}</div></div>
                 ${dupBadge}
                 ${distBadge}
                 ${sgDateBadge}
