@@ -3108,9 +3108,13 @@
             .slice(0, 4);
 
         const isMissingActive = currentSearch === '缺';
+        const isNoAuthActive = currentSearch === '未授權';
         let html = `
             <button type="button" onclick="setPostcardSearch('缺')" style="padding:4px 10px; border-radius:12px; border:1px solid ${isMissingActive ? '#dc2626' : '#fca5a5'}; background:${isMissingActive ? '#dc2626' : '#fef2f2'}; font-size:12px; cursor:pointer; color:${isMissingActive ? '#ffffff' : '#b91c1c'}; font-weight:bold; transition:all 0.15s; display:inline-flex; align-items:center; gap:3px;">
                 ⚠️ 缺
+            </button>
+            <button type="button" onclick="setPostcardSearch('未授權')" style="padding:4px 10px; border-radius:12px; border:1px solid ${isNoAuthActive ? '#6d28d9' : '#ddd6fe'}; background:${isNoAuthActive ? '#6d28d9' : '#f5f3ff'}; font-size:12px; cursor:pointer; color:${isNoAuthActive ? '#ffffff' : '#6d28d9'}; font-weight:bold; transition:all 0.15s; display:inline-flex; align-items:center; gap:3px;">
+                🔑 未授權
             </button>
         `;
 
@@ -3354,12 +3358,19 @@
                 const providerStr = (item.provider || '').trim();
                 const providerText = providerStr ? `發表者:${providerStr} 提供者:${providerStr} 作者:${providerStr} 發表者 提供者 上傳者 作者 發表人 分享者 ${providerStr}` : '';
                 const authStr = (item.auth || '').trim();
-                const authText = authStr ? `授權:${authStr} 授權 ${authStr}` : '未授權 無授權';
-                const text = `${item.type} ${item.country} ${item.city || ''} ${item.name} ${item.tag} ${providerText} ${authText} ${item.coords} ${item.discontinued ? '絕版' : ''} ${favText} ${missingText} ${dupText}`.toLowerCase();
+                const text = `${item.type} ${item.country} ${item.city || ''} ${item.name} ${item.tag} ${providerText} ${authStr} ${item.coords} ${item.discontinued ? '絕版' : ''} ${favText} ${missingText} ${dupText}`.toLowerCase();
+                
+                const checkKw = (kw) => {
+                    if (kw === '未授權' || kw === '無授權') return !authStr;
+                    if (kw === '授權' || kw === '已授權') return !!authStr;
+                    if (kw.startsWith('授權:')) return authStr.toLowerCase().includes(kw.replace('授權:', ''));
+                    return text.includes(kw);
+                };
+
                 if (searchLogic === 'and') {
-                    if (!searchKw.every(kw => text.includes(kw))) return false;
+                    if (!searchKw.every(checkKw)) return false;
                 } else {
-                    if (!searchKw.some(kw => text.includes(kw))) return false;
+                    if (!searchKw.some(checkKw)) return false;
                 }
             }
             return true;
