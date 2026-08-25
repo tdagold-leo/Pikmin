@@ -2696,9 +2696,9 @@
                     <label style="font-size:11px; margin-bottom:2px;">座標</label>
                     <div style="display:flex; gap:6px; align-items:center;">
                         <input type="text" id="lm-coords" class="input-base" placeholder="貼上或輸入座標" style="flex:1; padding:6px 10px; font-size:13px;"
-                            onblur="autoDetectCountry(this.value, 'lm-country', 'lm-tz-hint', 'lm-city')"
-                            oninput="clearTimeout(window._lmGeoTimer); window._lmGeoTimer = setTimeout(() => autoDetectCountry(this.value, 'lm-country', 'lm-tz-hint', 'lm-city'), 1200)">
-                        <button type="button" onclick="navigator.clipboard.readText().then(t => { document.getElementById('lm-coords').value = t.trim(); autoDetectCountry(t.trim(), 'lm-country', 'lm-tz-hint', 'lm-city'); }).catch(() => alert('無法讀取剪貼簿，請手動貼上'))"
+                            onblur="autoDetectCountry(this.value, 'lm-country', 'lm-tz-hint', 'lm-city', 'lm-district')"
+                            oninput="clearTimeout(window._lmGeoTimer); window._lmGeoTimer = setTimeout(() => autoDetectCountry(this.value, 'lm-country', 'lm-tz-hint', 'lm-city', 'lm-district'), 1200)">
+                        <button type="button" onclick="navigator.clipboard.readText().then(t => { document.getElementById('lm-coords').value = t.trim(); autoDetectCountry(t.trim(), 'lm-country', 'lm-tz-hint', 'lm-city', 'lm-district'); }).catch(() => alert('無法讀取剪貼簿，請手動貼上'))"
                             style="white-space:nowrap; padding:6px 12px; border-radius:8px; background:#f0fdf4; color:#15803d; border:1px solid #86efac; font-size:12px; font-weight:bold; cursor:pointer; height:34px; display:flex; align-items:center; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
                             📋 貼上
                         </button>
@@ -2855,9 +2855,9 @@
                     <label style="font-size:11px; margin-bottom:2px;">座標</label>
                     <div style="display:flex; gap:6px; align-items:center;">
                         <input type="text" id="edit-lm-coords" class="input-base" placeholder="貼上或輸入座標" style="flex:1; padding:6px 10px; font-size:13px;"
-                            onblur="autoDetectCountry(this.value, 'edit-lm-country', 'edit-lm-tz-hint', 'edit-lm-city')"
-                            oninput="clearTimeout(window._editLmGeoTimer); window._editLmGeoTimer = setTimeout(() => autoDetectCountry(this.value, 'edit-lm-country', 'edit-lm-tz-hint', 'edit-lm-city'), 1200)">
-                        <button type="button" onclick="navigator.clipboard.readText().then(t => { document.getElementById('edit-lm-coords').value = t.trim(); autoDetectCountry(t.trim(), 'edit-lm-country', 'edit-lm-tz-hint', 'edit-lm-city'); }).catch(() => alert('無法讀取剪貼簿，請手動貼上'))"
+                            onblur="autoDetectCountry(this.value, 'edit-lm-country', 'edit-lm-tz-hint', 'edit-lm-city', 'edit-lm-district')"
+                            oninput="clearTimeout(window._editLmGeoTimer); window._editLmGeoTimer = setTimeout(() => autoDetectCountry(this.value, 'edit-lm-country', 'edit-lm-tz-hint', 'edit-lm-city', 'edit-lm-district'), 1200)">
+                        <button type="button" onclick="navigator.clipboard.readText().then(t => { document.getElementById('edit-lm-coords').value = t.trim(); autoDetectCountry(t.trim(), 'edit-lm-country', 'edit-lm-tz-hint', 'edit-lm-city', 'edit-lm-district'); }).catch(() => alert('無法讀取剪貼簿，請手動貼上'))"
                             style="white-space:nowrap; padding:6px 12px; border-radius:8px; background:#f0fdf4; color:#15803d; border:1px solid #86efac; font-size:12px; font-weight:bold; cursor:pointer; height:34px; display:flex; align-items:center; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
                             📋 貼上
                         </button>
@@ -3068,9 +3068,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.08.26.0355";</script>
-    <script src="js/main.js?v=202608260355"></script>
-    <script src="js/autofill.js?v=202608260355"></script>
+    <script>const APP_VERSION = "2026.08.26.0400";</script>
+    <script src="js/main.js?v=202608260400"></script>
+    <script src="js/autofill.js?v=202608260400"></script>
 </body>
 </html>
 

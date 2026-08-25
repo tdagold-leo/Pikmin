@@ -597,7 +597,7 @@
         return 8; 
     }
 
-    async function autoDetectCountry(coordsStr, countryInputId, hintId, cityInputId = null) {
+    async function autoDetectCountry(coordsStr, countryInputId, hintId, cityInputId = null, districtInputId = null) {
         if(!coordsStr) return;
         
         // 注意：重複座標檢查已移至 addItem，此處不再彈確認框（避免貼上時誤觸）
@@ -623,6 +623,7 @@
                                 data = {
                                     countryName: osmData.address.country,
                                     city: osmData.address.city || osmData.address.town || osmData.address.village || osmData.address.county || '',
+                                    district: osmData.address.suburb || osmData.address.district || osmData.address.borough || '',
                                     principalSubdivision: osmData.address.state || osmData.address.province || ''
                                 };
                             }
@@ -651,18 +652,48 @@
                         }
                         if(cityInputId) {
                             const subdivision = data.principalSubdivision || '';
-                            const cityName = data.city || data.locality || '';
-                            let combined = subdivision || cityName || '';
+                            const cityName = data.city || '';
+                            const localityName = data.locality || '';
+                            
+                            // If city and locality are different, locality is likely the district
+                            let districtName = data.district || '';
+                            let mainCityName = cityName || localityName || subdivision || '';
+
+                            if (cityName && localityName && cityName !== localityName) {
+                                districtName = districtName || localityName;
+                            }
+
+                            let combined = subdivision || cityName || localityName || '';
                             if (!combined && data.localityInfo && data.localityInfo.administrative) {
                                 const admins = data.localityInfo.administrative.sort((a,b) => b.adminLevel - a.adminLevel);
                                 const localAdmin = admins.find(a => a.adminLevel > 3 && a.adminLevel < 10);
                                 if (localAdmin) combined = localAdmin.name;
+                            } else if (data.localityInfo && data.localityInfo.administrative && !districtName) {
+                                const admins = data.localityInfo.administrative.sort((a,b) => b.adminLevel - a.adminLevel);
+                                const distAdmin = admins.find(a => a.adminLevel >= 8 && a.adminLevel <= 10 && a.name !== mainCityName);
+                                if (distAdmin) districtName = distAdmin.name;
                             }
+                            
+                            // BigDataCloud often puts city in subdivision for TW (e.g. Taipei City) and district in city or locality
+                            // E.g. subdivision: "Taipei City", city: "Da'an District"
+                            if (subdivision && cityName && subdivision !== cityName) {
+                                mainCityName = subdivision;
+                                districtName = districtName || cityName;
+                                combined = mainCityName;
+                            }
+
                             combined = await translateToTW(combined);
                             if (typeof combined === 'string') {
                                 if (combined.includes("/")) combined = combined.split('/')[0].trim();
                                 if (combined.includes(";")) combined = combined.split(';')[0].trim();
                             }
+                            
+                            let distCombined = await translateToTW(districtName);
+                            if (typeof distCombined === 'string') {
+                                if (distCombined.includes("/")) distCombined = distCombined.split('/')[0].trim();
+                                if (distCombined.includes(";")) distCombined = distCombined.split(';')[0].trim();
+                            }
+
                             if (cityInputId === 'append') {
                                 if (combined && countryInput) {
                                     countryInput.value = countryName + " " + combined;
@@ -671,6 +702,12 @@
                                 const cityInput = document.getElementById(cityInputId);
                                 if(cityInput) {
                                     cityInput.value = combined;
+                                }
+                                if (districtInputId) {
+                                    const distInput = document.getElementById(districtInputId);
+                                    if (distInput && distCombined) {
+                                        distInput.value = distCombined;
+                                    }
                                 }
 
                                 // 收集所有候選地名，讓用戶自行選擇
@@ -2539,7 +2576,7 @@
             if (confEl) confEl.checked = !!item.confirmed;
             showTimeDiff(item.country || '', 'edit-lm-tz-hint');
             if (item.coords) {
-                autoDetectCountry(item.coords, 'edit-lm-country', 'edit-lm-tz-hint', 'edit-lm-city');
+                autoDetectCountry(item.coords, 'edit-lm-country', 'edit-lm-tz-hint', 'edit-lm-city', 'edit-lm-district');
             }
         } else {
             document.getElementById('edit-group-postcard').style.display = 'flex';
