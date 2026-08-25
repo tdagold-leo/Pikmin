@@ -1137,23 +1137,27 @@
         const searchVal = (document.getElementById('lm-search')?.value || '').trim();
         if (!container) return;
 
-        // 預先計算重複判斷：座標距離 100m 以內視為重複
-        const dupIdSet = new Set();
+        // 預先計算重複判斷：座標距離 100m 以內視為重複，並記錄重複對象供卡片顯示
+        const dupPartners = new Map(); // id → [{type, subtype, note, dist_m}]
         const parsedItems = landmarkList.map(item => {
             const m = (item.coords || '').match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
-            return m ? { id: item.id, lat: parseFloat(m[1]), lon: parseFloat(m[2]) } : { id: item.id, lat: null, lon: null };
+            return { id: item.id, type: item.type || '純點', subtype: item.subtype || '', note: item.note || '',
+                     lat: m ? parseFloat(m[1]) : null, lon: m ? parseFloat(m[2]) : null };
         });
         for (let i = 0; i < parsedItems.length; i++) {
             for (let j = i + 1; j < parsedItems.length; j++) {
                 const a = parsedItems[i], b = parsedItems[j];
                 if (a.lat === null || b.lat === null) continue;
-                if (getDistanceFromLatLonInKm(a.lat, a.lon, b.lat, b.lon) * 1000 <= 100) {
-                    dupIdSet.add(a.id);
-                    dupIdSet.add(b.id);
+                const distM = Math.round(getDistanceFromLatLonInKm(a.lat, a.lon, b.lat, b.lon) * 1000);
+                if (distM <= 100) {
+                    if (!dupPartners.has(a.id)) dupPartners.set(a.id, []);
+                    if (!dupPartners.has(b.id)) dupPartners.set(b.id, []);
+                    dupPartners.get(a.id).push({ type: b.type, subtype: b.subtype, note: b.note, distM });
+                    dupPartners.get(b.id).push({ type: a.type, subtype: a.subtype, note: a.note, distM });
                 }
             }
         }
-        const checkLmDuplicate = (item) => dupIdSet.has(item.id);
+        const checkLmDuplicate = (item) => dupPartners.has(item.id);
 
         // 更新篩選下拉選單
         const filterEl = document.getElementById('lm-filter');
@@ -1219,11 +1223,22 @@
                 ? `<span class="lm-confirmed-dot" title="已確認">✅</span>`
                 : '';
 
+            // 重複對象資訊
+            const partners = dupPartners.get(item.id) || [];
+            const partnerHtml = isDuplicate && partners.length > 0
+                ? partners.map(p => {
+                    const label = [p.type, p.subtype].filter(Boolean).join(' › ');
+                    const notePart = p.note ? `「${escapeHtml(p.note)}」` : '(無備註)';
+                    return `<div style="margin-top:4px; font-size:10px; color:#b45309; background:#fef3c7; padding:3px 7px; border-radius:5px; border:1px dashed #f59e0b;">⚠️ 與【${escapeHtml(label)}】${notePart} 重複 · ${p.distM}m</div>`;
+                }).join('')
+                : '';
+
             card.innerHTML = `
                 <div class="lm-nav-card-header">${headerBadges}</div>
                 <div class="lm-nav-body">
                     <div class="lm-nav-title">📍 ${location || '(未填地點)'} ${confirmedTag}</div>
                     ${item.note ? `<div class="lm-nav-note">${escapeHtml(item.note)}</div>` : ''}
+                    ${partnerHtml}
                 </div>
                 <div class="lm-nav-actions">
                     <button class="lm-copy-btn" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製座標</button>
