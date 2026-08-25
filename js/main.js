@@ -1112,6 +1112,7 @@
                     note: cloudData[key].note || '',
                     country: cloudData[key].country || '',
                     city: cloudData[key].city || '',
+                    district: cloudData[key].district || '',
                     confirmed: cloudData[key].confirmed || false,
                     timestamp: cloudData[key].timestamp || 0
                 });
@@ -1183,7 +1184,7 @@
             filtered = filtered.filter(item => {
                 const isDup = checkLmDuplicate(item);
                 const dupText = isDup ? '重複 重複座標 重複純點' : '';
-                const textToSearch = [item.country, item.city, item.type, item.subtype, item.note, dupText].filter(Boolean).join(' ').toLowerCase();
+                const textToSearch = [item.country, item.city, item.district, item.type, item.subtype, item.note, dupText].filter(Boolean).join(' ').toLowerCase();
                 return terms.every(t => textToSearch.includes(t));
             });
         }
@@ -1206,7 +1207,7 @@
         // 建立導航卡片的通用函數
         function makeLmCard(item, extraBadge) {
             const isDuplicate = checkLmDuplicate(item);
-            const location = [escapeHtml(item.country), escapeHtml(item.city)].filter(Boolean).join(' · ');
+            const location = [escapeHtml(item.country), escapeHtml(item.city), escapeHtml(item.district)].filter(Boolean).join(' · ');
             const card = document.createElement('div');
             card.className = 'lm-nav-card' + (isDuplicate ? ' lm-dup' : '');
 
@@ -2378,6 +2379,7 @@
             let lmCountry = toTW(document.getElementById('lm-country').value.trim());
             if (lmCountry.includes("中華民國")) lmCountry = "台灣";
             const lmCity = toTW(document.getElementById('lm-city').value.trim());
+            const lmDistrict = toTW(document.getElementById('lm-district').value.trim());
             const confEl = document.getElementById('lm-confirmed');
             const lmConfirmed = confEl ? confEl.checked : false;
 
@@ -2390,6 +2392,7 @@
                 note: lmNote,
                 country: lmCountry,
                 city: lmCity,
+                district: lmDistrict,
                 confirmed: lmConfirmed,
                 timestamp: Date.now()
             };
@@ -2409,6 +2412,7 @@
             document.getElementById('lm-coords').value = '';
             document.getElementById('lm-country').value = '';
             document.getElementById('lm-city').value = '';
+            document.getElementById('lm-district').value = '';
             document.getElementById('lm-note').value = '';
             if (confEl) confEl.checked = false;
             document.getElementById('lm-tz-hint').innerText = '';
@@ -2530,6 +2534,7 @@
             document.getElementById('edit-lm-coords').value = item.coords || '';
             document.getElementById('edit-lm-country').value = item.country || '';
             document.getElementById('edit-lm-city').value = item.city || '';
+            document.getElementById('edit-lm-district').value = item.district || '';
             const confEl = document.getElementById('edit-lm-confirmed');
             if (confEl) confEl.checked = !!item.confirmed;
             showTimeDiff(item.country || '', 'edit-lm-tz-hint');
@@ -2676,6 +2681,7 @@
             let lmCountry = toTW(document.getElementById('edit-lm-country').value.trim());
             if (lmCountry.includes("中華民國")) lmCountry = "台灣";
             const lmCity = toTW(document.getElementById('edit-lm-city').value.trim());
+            const lmDistrict = toTW(document.getElementById('edit-lm-district').value.trim());
             const confEl = document.getElementById('edit-lm-confirmed');
             const lmConfirmed = confEl ? confEl.checked : false;
 
@@ -2688,6 +2694,7 @@
                 note: lmNote,
                 country: lmCountry,
                 city: lmCity,
+                district: lmDistrict,
                 confirmed: lmConfirmed
             };
             dbRef('landmarks/' + currentEditingTimeId).update(updates);
