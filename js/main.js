@@ -1137,12 +1137,32 @@
         const searchVal = (document.getElementById('lm-search')?.value || '').trim();
         if (!container) return;
 
-        // 預先計算座標出現次數來判斷重複 (用 normalizeCoords 統一格式)
+        // 預先計算重複判斷 Maps（座標 + 種類+國家+城市 兩種維度）
         const coordCount = {};
+        const typeCityCount = {};
         landmarkList.forEach(item => {
             const c = normalizeCoords(item.coords || '').toLowerCase();
             if (c) coordCount[c] = (coordCount[c] || 0) + 1;
+            const ty = (item.type || '').trim().toLowerCase();
+            const co = (item.country || '').trim().toLowerCase();
+            const ci = (item.city || '').trim().toLowerCase();
+            if (ty && (co || ci)) {
+                const tcKey = ty + '||' + co + '||' + ci;
+                typeCityCount[tcKey] = (typeCityCount[tcKey] || 0) + 1;
+            }
         });
+        const checkLmDuplicate = (item) => {
+            const c = normalizeCoords(item.coords || '').toLowerCase();
+            if (c && coordCount[c] > 1) return true;
+            const ty = (item.type || '').trim().toLowerCase();
+            const co = (item.country || '').trim().toLowerCase();
+            const ci = (item.city || '').trim().toLowerCase();
+            if (ty && (co || ci)) {
+                const tcKey = ty + '||' + co + '||' + ci;
+                if (typeCityCount[tcKey] > 1) return true;
+            }
+            return false;
+        };
 
         // 更新篩選下拉選單
         const filterEl = document.getElementById('lm-filter');
@@ -1166,7 +1186,9 @@
         } else if (searchVal) {
             const terms = searchVal.toLowerCase().split(/\s+/).filter(Boolean);
             filtered = filtered.filter(item => {
-                const textToSearch = [item.country, item.city, item.type, item.subtype, item.note].filter(Boolean).join(' ').toLowerCase();
+                const isDup = checkLmDuplicate(item);
+                const dupText = isDup ? '重複 重複座標 重複純點' : '';
+                const textToSearch = [item.country, item.city, item.type, item.subtype, item.note, dupText].filter(Boolean).join(' ').toLowerCase();
                 return terms.every(t => textToSearch.includes(t));
             });
         }
@@ -1181,12 +1203,14 @@
 
         const summary = document.createElement('div');
         summary.style.width = '100%';
-        summary.innerHTML = `<div style="font-size:14px; font-weight:800; color:var(--text-main); margin-bottom:8px;">📊 純點總計：${filtered.length} 筆</div>`;
+        const dupCount = filtered.filter(checkLmDuplicate).length;
+        const dupInfo = dupCount > 0 ? ` <span style="color:#ef4444; font-size:12px; font-weight:700; background:#fee2e2; padding:2px 8px; border-radius:10px; border:1px solid #fca5a5; cursor:pointer;" onclick="document.getElementById('lm-search').value='重複'; renderLandmarks()">⚠️ 重複 ${dupCount} 筆</span>` : '';
+        summary.innerHTML = `<div style="font-size:14px; font-weight:800; color:var(--text-main); margin-bottom:8px; display:flex; align-items:center; gap:8px;">📊 純點總計：${filtered.length} 筆${dupInfo}</div>`;
         container.appendChild(summary);
 
         // 建立導航卡片的通用函數
         function makeLmCard(item, extraBadge) {
-            const isDuplicate = item.coords && coordCount[normalizeCoords(item.coords).toLowerCase()] > 1;
+            const isDuplicate = checkLmDuplicate(item);
             const location = [escapeHtml(item.country), escapeHtml(item.city)].filter(Boolean).join(' · ');
             const card = document.createElement('div');
             card.className = 'lm-nav-card' + (isDuplicate ? ' lm-dup' : '');
