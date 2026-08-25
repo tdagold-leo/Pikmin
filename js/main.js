@@ -1137,40 +1137,23 @@
         const searchVal = (document.getElementById('lm-search')?.value || '').trim();
         if (!container) return;
 
-        // 預先計算重複判斷 Maps（兩種維度：座標 / 種類+子分類+國家+城市+備註）
-        const coordCount = {};
-        const typeSubtypeCityNoteCount = {};
-        landmarkList.forEach(item => {
-            // 1. 座標
-            const c = normalizeCoords(item.coords || '').toLowerCase();
-            if (c) coordCount[c] = (coordCount[c] || 0) + 1;
-            // 2. 種類 + 子分類 + 國家 + 城市 + 備註（名稱不同不算重複）
-            const ty = (item.type || '').trim().toLowerCase();
-            const st = (item.subtype || '').trim().toLowerCase();
-            const co = (item.country || '').trim().toLowerCase();
-            const ci = (item.city || '').trim().toLowerCase();
-            const note = (item.note || '').trim().toLowerCase();
-            if (ty && note) {
-                const key = ty + '||' + st + '||' + co + '||' + ci + '||' + note;
-                typeSubtypeCityNoteCount[key] = (typeSubtypeCityNoteCount[key] || 0) + 1;
-            }
+        // 預先計算重複判斷：座標距離 100m 以內視為重複
+        const dupIdSet = new Set();
+        const parsedItems = landmarkList.map(item => {
+            const m = (item.coords || '').match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
+            return m ? { id: item.id, lat: parseFloat(m[1]), lon: parseFloat(m[2]) } : { id: item.id, lat: null, lon: null };
         });
-        const checkLmDuplicate = (item) => {
-            // 1. 相同座標
-            const c = normalizeCoords(item.coords || '').toLowerCase();
-            if (c && coordCount[c] > 1) return true;
-            // 2. 種類+子分類+國家+城市+備註 全部相同
-            const ty = (item.type || '').trim().toLowerCase();
-            const st = (item.subtype || '').trim().toLowerCase();
-            const co = (item.country || '').trim().toLowerCase();
-            const ci = (item.city || '').trim().toLowerCase();
-            const note = (item.note || '').trim().toLowerCase();
-            if (ty && note) {
-                const key = ty + '||' + st + '||' + co + '||' + ci + '||' + note;
-                if (typeSubtypeCityNoteCount[key] > 1) return true;
+        for (let i = 0; i < parsedItems.length; i++) {
+            for (let j = i + 1; j < parsedItems.length; j++) {
+                const a = parsedItems[i], b = parsedItems[j];
+                if (a.lat === null || b.lat === null) continue;
+                if (getDistanceFromLatLonInKm(a.lat, a.lon, b.lat, b.lon) * 1000 <= 100) {
+                    dupIdSet.add(a.id);
+                    dupIdSet.add(b.id);
+                }
             }
-            return false;
-        };
+        }
+        const checkLmDuplicate = (item) => dupIdSet.has(item.id);
 
         // 更新篩選下拉選單
         const filterEl = document.getElementById('lm-filter');
