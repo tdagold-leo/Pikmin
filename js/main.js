@@ -1149,7 +1149,7 @@
                 const a = parsedItems[i], b = parsedItems[j];
                 if (a.lat === null || b.lat === null) continue;
                 const distM = Math.round(getDistanceFromLatLonInKm(a.lat, a.lon, b.lat, b.lon) * 1000);
-                if (distM <= 100) {
+                if (distM <= 100 && a.type === b.type) {
                     if (!dupPartners.has(a.id)) dupPartners.set(a.id, []);
                     if (!dupPartners.has(b.id)) dupPartners.set(b.id, []);
                     dupPartners.get(a.id).push({ type: b.type, subtype: b.subtype, note: b.note, distM });
