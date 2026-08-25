@@ -1137,29 +1137,48 @@
         const searchVal = (document.getElementById('lm-search')?.value || '').trim();
         if (!container) return;
 
-        // 預先計算重複判斷 Maps（座標 + 種類+國家+城市 兩種維度）
+        // 預先計算重複判斷 Maps（三種維度：座標 / 種類+子分類+國家+城市 / 種類+備註）
         const coordCount = {};
-        const typeCityCount = {};
+        const typeSubtypeCityCount = {};
+        const typeNoteCount = {};
         landmarkList.forEach(item => {
+            // 1. 座標
             const c = normalizeCoords(item.coords || '').toLowerCase();
             if (c) coordCount[c] = (coordCount[c] || 0) + 1;
+            // 2. 種類 + 子分類 + 國家 + 城市（子分類也納入，更精準）
             const ty = (item.type || '').trim().toLowerCase();
+            const st = (item.subtype || '').trim().toLowerCase();
             const co = (item.country || '').trim().toLowerCase();
             const ci = (item.city || '').trim().toLowerCase();
             if (ty && (co || ci)) {
-                const tcKey = ty + '||' + co + '||' + ci;
-                typeCityCount[tcKey] = (typeCityCount[tcKey] || 0) + 1;
+                const tscKey = ty + '||' + st + '||' + co + '||' + ci;
+                typeSubtypeCityCount[tscKey] = (typeSubtypeCityCount[tscKey] || 0) + 1;
+            }
+            // 3. 種類 + 備註（note 長度 > 3 才納入，避免誤判短備註）
+            const note = (item.note || '').trim().toLowerCase();
+            if (ty && note.length > 3) {
+                const tnKey = ty + '||' + note;
+                typeNoteCount[tnKey] = (typeNoteCount[tnKey] || 0) + 1;
             }
         });
         const checkLmDuplicate = (item) => {
+            // 1. 相同座標
             const c = normalizeCoords(item.coords || '').toLowerCase();
             if (c && coordCount[c] > 1) return true;
             const ty = (item.type || '').trim().toLowerCase();
+            const st = (item.subtype || '').trim().toLowerCase();
             const co = (item.country || '').trim().toLowerCase();
             const ci = (item.city || '').trim().toLowerCase();
+            // 2. 相同種類+子分類+國家+城市
             if (ty && (co || ci)) {
-                const tcKey = ty + '||' + co + '||' + ci;
-                if (typeCityCount[tcKey] > 1) return true;
+                const tscKey = ty + '||' + st + '||' + co + '||' + ci;
+                if (typeSubtypeCityCount[tscKey] > 1) return true;
+            }
+            // 3. 相同種類+備註
+            const note = (item.note || '').trim().toLowerCase();
+            if (ty && note.length > 3) {
+                const tnKey = ty + '||' + note;
+                if (typeNoteCount[tnKey] > 1) return true;
             }
             return false;
         };
