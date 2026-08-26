@@ -466,7 +466,7 @@
             document.body.style.overflow = 'hidden'; // 防止地圖頁面滾動
             if (typeof checkAndLoadMap === 'function') {
                 checkAndLoadMap();
-            } else if (mapInstance && postcardList.length > 0) {
+            } else if (mapInstance && (postcardList.length > 0 || dataList.length > 0 || landmarkList.length > 0)) {
                 updateMapMarkers();
             }
         } else {
@@ -1280,7 +1280,7 @@
                 </div>
                 <div class="lm-nav-actions">
                     <button class="lm-copy-btn" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製座標</button>
-                    <a class="lm-icon-btn map" href="https://maps.google.com/?q=${escapeHtml(item.coords)}" target="_blank" title="開啟 Google 地圖">🗺️</a>
+                    <button class="lm-icon-btn map" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}')" title="開啟地圖">🗺️</button>
                     <button class="lm-icon-btn edit" onclick="editLandmark('${item.id}')" title="修改">✏️</button>
                 </div>
             `;
@@ -5224,7 +5224,7 @@
 
     async function checkAndLoadMap() {
         if (isMapScriptLoaded) {
-            if (mapInstance && postcardList.length > 0) updateMapMarkers();
+            if (mapInstance && (postcardList.length > 0 || dataList.length > 0 || landmarkList.length > 0)) updateMapMarkers();
             return;
         }
         
@@ -5281,7 +5281,7 @@
     }
 
     // 地圖圖層狀態
-    const mapLayerActive = { mushroom: true, postcard: true };
+    const mapLayerActive = { mushroom: true, postcard: true, landmark: true };
 
     function toggleMapLayer(layer) {
         mapLayerActive[layer] = !mapLayerActive[layer];
@@ -5307,6 +5307,7 @@
         const types = new Set();
         if (mapLayerActive.postcard) postcardList.forEach(pc => { if(pc.type) types.add(pc.type); });
         if (mapLayerActive.mushroom) dataList.forEach(m => { if(m.kind) types.add('🍄 ' + m.kind); });
+        if (mapLayerActive.landmark) landmarkList.forEach(lm => { if(lm.type) types.add('📍 ' + lm.type); });
         
         if (filterSelect) {
             const curr = filterSelect.value;
@@ -5395,6 +5396,42 @@
                         <div style="font-size:11px; font-weight:700; color:white; background:#16a34a; padding:2px 8px; border-radius:4px; display:inline-block; margin-bottom:10px;">${escapeHtml(mush.kind || '巨菇')}</div>
                         ${claimBtn}
                         <button onclick="copyCoords('${escapeHtml(mush.coords).replace(/'/g, "\\'")}', this)" style="width:100%; padding:6px 0; background:#f1f5f9; color:#1e293b; border:1.5px solid #e2e8f0; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">📍 複製座標</button>
+                    </div>`;
+                    mapInfoWindow.setContent(content);
+                    mapInfoWindow.open(mapInstance, marker);
+                });
+                mapMarkers.push(marker);
+            });
+        }
+
+        // ── 純點標記 ──
+        if (mapLayerActive.landmark) {
+            landmarkList.forEach(lm => {
+                if (!lm.coords) return;
+                const lmTypeKey = '📍 ' + (lm.type || '純點');
+                if (selectedType !== 'all' && lmTypeKey !== selectedType) return;
+
+                const match = lm.coords.match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
+                if (!match) return;
+                const lat = parseFloat(match[1]), lng = parseFloat(match[2]);
+
+                const tag = document.createElement('div');
+                tag.innerHTML = `<div style="position:relative; width:20px; height:24px; cursor:pointer;">
+                    <div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:14px; height:14px; background:#3b82f6; border:2px solid white; border-radius:50%; box-shadow:0 2px 5px rgba(0,0,0,0.4);"></div>
+                    <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); font-size:11px; line-height:1; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4));">📍</div>
+                </div>`;
+
+                const marker = new google.maps.marker.AdvancedMarkerElement({
+                    map: mapInstance, position: { lat, lng }, content: tag, title: lm.note || lm.type || '純點'
+                });
+
+                marker.addListener('click', () => {
+                    const location = [lm.country, lm.city, lm.district].filter(Boolean).join(' · ');
+                    const content = `<div style="min-width:160px; padding:8px 6px 6px; font-family:var(--font-family); text-align:center;">
+                        <div style="font-size:11px; font-weight:bold; color:white; background:#3b82f6; padding:2px 8px; border-radius:4px; display:inline-block; margin-bottom:6px;">${escapeHtml(lm.type || '純點')}${lm.subtype ? ' › ' + escapeHtml(lm.subtype) : ''}</div>
+                        ${lm.note ? `<div style="font-size:13px; font-weight:bold; color:#1e293b; margin-bottom:4px;">${escapeHtml(lm.note)}</div>` : ''}
+                        ${location ? `<div style="font-size:12px; color:#64748b; margin-bottom:8px;">🌍 ${escapeHtml(location)}</div>` : ''}
+                        <button onclick="copyCoords('${escapeHtml(lm.coords).replace(/'/g, "\\'")}', this)" style="width:100%; padding:6px 0; background:#f1f5f9; color:#1e293b; border:1.5px solid #e2e8f0; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">📍 複製座標</button>
                     </div>`;
                     mapInfoWindow.setContent(content);
                     mapInfoWindow.open(mapInstance, marker);
