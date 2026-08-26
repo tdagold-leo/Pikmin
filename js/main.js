@@ -3996,6 +3996,19 @@
                                     dateSubtitle = `<div style="font-size:11px; color:#5b21b6; background:#e0e7ff; padding:3px 8px; border-radius:12px; margin-top:4px; font-weight:bold; display:inline-block; border:1px solid #c7d2fe; letter-spacing:0.5px;">📅 ${sStr} ~ ${eStr}</div>`;
                                 }
 
+                                // 幾天可領取徽章
+                                let cooldownBadge = '';
+                                if (firstItem) {
+                                    let cdVal = firstItem.sgCooldown;
+                                    if (!cdVal && firstItem.tag && (firstItem.tag.includes('30天') || firstItem.tag.includes('30 天') || firstItem.tag.includes('一個月') || firstItem.tag.includes('30 days'))) cdVal = '30';
+                                    if (!cdVal && (firstItem.sgType === '期間' || firstItem.sgType === '常駐')) cdVal = '30';
+                                    if (cdVal) {
+                                        const cdNum = parseInt(cdVal, 10);
+                                        const cdLabel = cdNum === 1 ? '每天可領' : cdNum === 30 ? '每月可領' : `每 ${cdNum} 天可領`;
+                                        cooldownBadge = `<div style="font-size:11px; color:#b45309; background:#fef3c7; padding:2px 8px; border-radius:12px; margin-top:4px; font-weight:bold; display:inline-block; border:1px solid #fde68a; letter-spacing:0.5px;">⏱ ${cdLabel}</div>`;
+                                    }
+                                }
+
                                 let subReminders = '';
                                 if (hasMissing) subReminders += ' <span style="color:#ef4444; font-size:11px; font-weight:bold; margin-left:2px;">❗缺</span>';
                                 if (hasClaimable) subReminders += ' <span style="color:#d97706; font-size:11px; font-weight:bold; margin-left:2px;">⚠️可拿</span>';
@@ -4012,6 +4025,7 @@
                                     <div class="count">${actMap[act].length}</div>
                                     <div class="title">${isActCol ? '▶' : '▼'} ${escapeHtml(act)}${subReminders}</div>
                                     ${dateSubtitle}
+                                    ${cooldownBadge}
                                     ${groupClaimBtnHtml}
                                 `;
                                 ah.addEventListener('click', () => toggleGroup(actId));
