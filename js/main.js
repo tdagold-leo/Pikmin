@@ -610,30 +610,39 @@
                 let countryName = "";
                 let offsetHours = null;
 
-                let resCountry = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh-TW`);
+                // ① 主要：Nominatim
                 let data = null;
-                if(resCountry.ok) {
-                    data = await resCountry.json();
-                } else {
+                try {
+                    const resOsm = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=zh-TW`);
+                    if (resOsm.ok) {
+                        const osmData = await resOsm.json();
+                        if (osmData && osmData.address) {
+                            const addr = osmData.address;
+                            // TW hierarchy: city(市) > town(區) > suburb/village(里/鄰)
+                            // When city exists, town = 區 level (what we want as district)
+                            // suburb/hamlet = 里 level (too granular, skip)
+                            const cityLevel = addr.city || addr.county || '';
+                            const districtLevel = cityLevel
+                                ? (addr.town || addr.city_district || addr.district || '')
+                                : (addr.town || addr.suburb || addr.district || addr.borough || '');
+                            data = {
+                                countryName: addr.country,
+                                city: cityLevel,
+                                district: districtLevel,
+                                principalSubdivision: addr.state || addr.province || ''
+                            };
+                        }
+                    }
+                } catch(e) {}
+
+                // ② 備用：BigDataCloud（被封鎖時自動跳過，解封後自動生效）
+                if (!data) {
                     try {
-                        const resOsm = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=zh-TW`);
-                        if (resOsm.ok) {
-                            const osmData = await resOsm.json();
-                            if (osmData && osmData.address) {
-                                const addr = osmData.address;
-                                // TW hierarchy: city(市) > town(區) > suburb/village(里/鄰)
-                                // When city exists, town = 區 level (what we want as district)
-                                // suburb/hamlet = 里 level (too granular, skip)
-                                const cityLevel = addr.city || addr.county || '';
-                                const districtLevel = cityLevel
-                                    ? (addr.town || addr.city_district || addr.district || '')
-                                    : (addr.town || addr.suburb || addr.district || addr.borough || '');
-                                data = {
-                                    countryName: addr.country,
-                                    city: cityLevel,
-                                    district: districtLevel,
-                                    principalSubdivision: addr.state || addr.province || ''
-                                };
+                        const resBdc = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh-TW`);
+                        if (resBdc.ok) {
+                            const bdcData = await resBdc.json();
+                            if (bdcData && bdcData.countryName) {
+                                data = bdcData;
                             }
                         }
                     } catch(e) {}
