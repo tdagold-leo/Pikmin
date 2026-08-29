@@ -1271,18 +1271,18 @@
             const card = document.createElement('div');
             card.className = 'lm-nav-card' + (isDuplicate ? ' lm-dup' : '');
 
-            // Header：只放種類 + 子分類 + 重複/距離標記，保持一行
-            const headerBadges = [
-                `<span class="lm-type-pill">${escapeHtml(item.type || '純點')}</span>`,
-                item.subtype ? `<span class="lm-subtype-pill">${escapeHtml(item.subtype)}</span>` : '',
-                isDuplicate ? `<span class="lm-dup-pill">⚠️ 重複</span>` : '',
-                extraBadge || ''
-            ].filter(Boolean).join('');
-
-            // 已確認放在地點後方，更自然
+            // Header：只放種類 + 子分類 + 已確認 + 重複/距離標記，保持一行
             const confirmedTag = item.confirmed
                 ? `<span class="lm-confirmed-dot" title="已確認">✅</span>`
                 : '';
+
+            const headerBadges = [
+                `<span class="lm-type-pill">${escapeHtml(item.type || '純點')}</span>`,
+                item.subtype ? `<span class="lm-subtype-pill">${escapeHtml(item.subtype)}</span>` : '',
+                confirmedTag,
+                isDuplicate ? `<span class="lm-dup-pill">⚠️ 重複</span>` : '',
+                extraBadge || ''
+            ].filter(Boolean).join('');
 
             // 重複對象資訊
             const partners = dupPartners.get(item.id) || [];
@@ -1297,7 +1297,7 @@
             card.innerHTML = `
                 <div class="lm-nav-card-header">${headerBadges}</div>
                 <div class="lm-nav-body">
-                    <div class="lm-nav-title">📍 ${location || '(未填地點)'} ${confirmedTag}</div>
+                    <div class="lm-nav-title">📍 ${location || '(未填地點)'}</div>
                     ${item.note ? `<div class="lm-nav-note">${escapeHtml(item.note)}</div>` : ''}
                     ${partnerHtml}
                 </div>
