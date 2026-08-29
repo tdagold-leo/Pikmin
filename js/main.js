@@ -620,11 +620,19 @@
                         if (resOsm.ok) {
                             const osmData = await resOsm.json();
                             if (osmData && osmData.address) {
+                                const addr = osmData.address;
+                                // TW hierarchy: city(市) > town(區) > suburb/village(里/鄰)
+                                // When city exists, town = 區 level (what we want as district)
+                                // suburb/hamlet = 里 level (too granular, skip)
+                                const cityLevel = addr.city || addr.county || '';
+                                const districtLevel = cityLevel
+                                    ? (addr.town || addr.city_district || addr.district || '')
+                                    : (addr.town || addr.suburb || addr.district || addr.borough || '');
                                 data = {
-                                    countryName: osmData.address.country,
-                                    city: osmData.address.city || osmData.address.town || osmData.address.village || osmData.address.county || '',
-                                    district: osmData.address.suburb || osmData.address.district || osmData.address.borough || '',
-                                    principalSubdivision: osmData.address.state || osmData.address.province || ''
+                                    countryName: addr.country,
+                                    city: cityLevel,
+                                    district: districtLevel,
+                                    principalSubdivision: addr.state || addr.province || ''
                                 };
                             }
                         }
