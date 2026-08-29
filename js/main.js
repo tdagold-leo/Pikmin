@@ -837,7 +837,13 @@
             if (res.ok) {
                 const data = await res.json();
                 if (data && data[0] && data[0][0] && data[0][0][0]) {
-                    return data[0][0][0];
+                    let result = data[0][0][0];
+                    // 修正：地名中的「裡」應為行政里「里」
+                    // 例如「富林裡」→「富林里」（出現在詞尾或被其他地名詞包圍時）
+                    result = result.replace(/裡(?=[里區鄉鎮市縣村]|$)/g, '里')
+                                   .replace(/(?<=[村里區鄉鎮市縣])裡/g, '里')
+                                   .replace(/裡$/g, '里');
+                    return result;
                 }
             }
         } catch (e) {
