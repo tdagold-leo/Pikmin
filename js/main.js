@@ -799,57 +799,11 @@
         }
     }
 
-    function showTimeDiff(val, hintId) {
-        const hintEl = document.getElementById(hintId);
-        if (!hintEl) return;
-        if (!val || typeof val !== 'string' || !val.trim()) { hintEl.innerText = ''; return; }
-        let matchedOffset = null;
-        const keys = Object.keys(globalTzMap).sort((a, b) => b.length - a.length);
-        for (let key of keys) {
-            if (val.includes(key)) { matchedOffset = globalTzMap[key]; break; }
-        }
-        if (matchedOffset !== null) {
-            const diff = matchedOffset - 8; 
-            if (diff === 0) hintEl.innerText = '(無時差)';
-            else if (diff > 0) hintEl.innerText = `(快台灣 ${diff} 小時)`;
-            else hintEl.innerText = `(慢台灣 ${Math.abs(diff)} 小時)`;
-        } else { hintEl.innerText = ''; }
-    }
-
-    function getTimeDiffString(val) {
-        if (!val || typeof val !== 'string') return '';
-        const keys = Object.keys(globalTzMap).sort((a, b) => b.length - a.length);
-        for (let key of keys) {
-            if (val.includes(key)) {
-                const diff = globalTzMap[key] - 8;
-                if (diff === 0) return ''; 
-                if (diff > 0) return `+${diff}h`;
-                return `${diff}h`;
-            }
-        }
-        return '';
-    }
-
-
-
-    function searchCoordsOnMap(inputId) {
-        const val = document.getElementById(inputId).value.trim();
-        const coordMatch = val.match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
-        if (coordMatch) {
-            const lat = coordMatch[1];
-            const lon = coordMatch[2];
-            window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lon}`, '_blank');
-        } else if (val) {
-            window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(val)}`, '_blank');
-        } else {
-            alert('請先在座標欄位輸入座標或地名！');
-        }
-    }
-
     async function translateToTW(text) {
         if (!text) return text;
         try {
-            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-CN&tl=zh-TW&dt=t&q=${encodeURIComponent(text)}`;
+            // sl=auto：自動偵測來源語言，正確處理日文漢字（広→廣、県→縣）
+            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-TW&dt=t&q=${encodeURIComponent(text)}`;
             const res = await fetch(url);
             if (res.ok) {
                 const data = await res.json();
@@ -871,7 +825,13 @@
 
     function toTW(str) {
         if (!str) return str;
-        return str.replace(/冲/g, '沖').replace(/绳/g, '繩').replace(/国/g, '國').replace(/兰/g, '蘭').replace(/亚/g, '亞')
+        return str
+            // 日文漢字補丁（Unicode 不同但語義等同的字）
+            .replace(/広/g, '廣').replace(/県/g, '縣').replace(/処/g, '處').replace(/浜/g, '濱')
+            .replace(/転/g, '轉').replace(/団/g, '團').replace(/応/g, '應').replace(/両/g, '兩')
+            .replace(/徳/g, '德').replace(/険/g, '險').replace(/収/g, '收').replace(/帯/g, '帶')
+            // 簡體中文
+            .replace(/冲/g, '沖').replace(/绳/g, '繩').replace(/国/g, '國').replace(/兰/g, '蘭').replace(/亚/g, '亞')
             .replace(/韩/g, '韓').replace(/马/g, '馬').replace(/来/g, '來')
             .replace(/岛/g, '島').replace(/东/g, '東').replace(/罗/g, '羅')
             .replace(/爱/g, '愛').replace(/尔/g, '爾').replace(/纽/g, '紐')
