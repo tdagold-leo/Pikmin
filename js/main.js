@@ -4536,7 +4536,8 @@
         function updateItemCount(item, delta) {
             let newCount = (item.count || 0) + delta;
             if (newCount < 0) newCount = 0;
-            
+            item.count = newCount; // 同步更新記憶體內的物件，讓 badge/log 立即正確
+
             if (item.isLocal) {
                 const data = getLocalInvites();
                 if (data[item.id]) {
