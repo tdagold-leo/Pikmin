@@ -4888,6 +4888,21 @@
                     alert('請在右側輸入邀請連結！');
                     return;
                 }
+
+                // ① 格式檢查：必須是合法的 Pikmin Bloom 邀請連結
+                const isValidLink = /pikminbloom\.onelink\.me/i.test(link) || /pikminbloom\.com\/invite/i.test(link);
+                if (!isValidLink) {
+                    alert('❌ 邀請連結格式不正確！\n\n請確認連結包含：\npikminbloom.onelink.me\n\n範例：https://pikminbloom.onelink.me/pWSt/xxxxxx');
+                    return;
+                }
+
+                // ② 重複檢查：相同連結不可新增兩次（跨公開與私有名單）
+                const allExisting = getAllInviteEntries();
+                const duplicate = allExisting.find(i => i.link === link);
+                if (duplicate) {
+                    alert(`⚠️ 此邀請連結已存在！\n\n已在名單中：「${duplicate.name}」\n\n無法重複新增。`);
+                    return;
+                }
                 
                 const isPublic = isPublicCheckbox && isPublicCheckbox.checked;
                 const newObj = {
