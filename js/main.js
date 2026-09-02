@@ -4168,29 +4168,29 @@
 
             if (state === 'ready') {
                 if (dynamicBtnIcon) dynamicBtnIcon.textContent = '🚀';
-                if (dynamicBtnText) dynamicBtnText.textContent = '第 1 步：產生免洗帳號並出發';
-                if (dynamicBtnSub) dynamicBtnSub.textContent = '自動複製信箱 ➜ 開啟 Pikmin 遊戲';
+                if (dynamicBtnText) dynamicBtnText.textContent = '點我開始！產生免洗帳號';
+                if (dynamicBtnSub) dynamicBtnSub.textContent = '自動複製信箱 → 開啟遊戲';
                 dynamicActionBtn.disabled = false;
             } else if (state === 'generating') {
                 if (dynamicBtnIcon) dynamicBtnIcon.textContent = '⏳';
                 if (dynamicBtnText) dynamicBtnText.textContent = '正在建立免洗信箱...';
-                if (dynamicBtnSub) dynamicBtnSub.textContent = '請稍候，即將自動複製並跳轉至遊戲';
+                if (dynamicBtnSub) dynamicBtnSub.textContent = '請稍候，即將跳轉至遊戲';
                 dynamicActionBtn.disabled = true;
             } else if (state === 'waiting') {
                 if (dynamicBtnIcon) dynamicBtnIcon.textContent = '🍄';
-                if (dynamicBtnText) dynamicBtnText.textContent = '信箱已複製！點此開啟 Pikmin 遊戲';
-                if (dynamicBtnSub) dynamicBtnSub.textContent = '請在遊戲貼上信箱並發送驗證碼 (後台自動接收中)';
+                if (dynamicBtnText) dynamicBtnText.textContent = '信箱已複製！點此開啟遊戲';
+                if (dynamicBtnSub) dynamicBtnSub.textContent = '貼上信箱發送驗證碼（後台自動接收中）';
                 dynamicActionBtn.disabled = false;
             } else if (state === 'code_ready') {
                 const code = data.code || latestReceivedCode || '----';
                 if (dynamicBtnIcon) dynamicBtnIcon.textContent = '🎉';
-                if (dynamicBtnText) dynamicBtnText.textContent = `驗證碼：${code} (點擊複製並開啟遊戲)`;
-                if (dynamicBtnSub) dynamicBtnSub.textContent = '🔔 驗證碼已自動複製！點此直接跳回 Pikmin 填寫';
+                if (dynamicBtnText) dynamicBtnText.textContent = `驗證碼：${code}（點我複製）`;
+                if (dynamicBtnSub) dynamicBtnSub.textContent = '驗證碼已自動複製！點此跳回遊戲填寫';
                 dynamicActionBtn.disabled = false;
             } else if (state === 'completed') {
                 if (dynamicBtnIcon) dynamicBtnIcon.textContent = '✨';
-                if (dynamicBtnText) dynamicBtnText.textContent = '完成！點此產生下一隻 (已就緒下一位)';
-                if (dynamicBtnSub) dynamicBtnSub.textContent = '當前次數 +1，已自動切換至下一位朋友';
+                if (dynamicBtnText) dynamicBtnText.textContent = '完成！點此開始下一隻';
+                if (dynamicBtnSub) dynamicBtnSub.textContent = '次數 +1，已自動切換下一位朋友';
                 dynamicActionBtn.disabled = false;
             }
         }
