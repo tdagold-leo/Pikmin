@@ -1689,12 +1689,20 @@
             animation: actionWaitingPulse 2s infinite !important;
             box-shadow: 0 4px 20px rgba(217, 119, 6, 0.45) !important;
         }
+        .dynamic-action-btn.state-pwd_ready {
+            background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.45) !important;
+        }
+        .dynamic-action-btn.state-pwd_ready:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(99, 102, 241, 0.6) !important;
+        }
         @keyframes actionWaitingPulse {
             0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
             70% { box-shadow: 0 0 0 14px rgba(245, 158, 11, 0); }
             100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
         }
-        .dynamic-action-btn.state-code-ready {
+        .dynamic-action-btn.state-code_ready {
             background: linear-gradient(135deg, #10b981, #059669) !important;
             animation: actionCodeReadyPulse 1.2s infinite !important;
             box-shadow: 0 4px 25px rgba(16, 185, 129, 0.7) !important;
@@ -3069,9 +3077,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.09.03.1910";</script>
-    <script src="js/main.js?v=202609031910"></script>
-    <script src="js/autofill.js?v=202609031910"></script>
+    <script>const APP_VERSION = "2026.09.03.1916";</script>
+    <script src="js/main.js?v=202609031916"></script>
+    <script src="js/autofill.js?v=202609031916"></script>
 </body>
 </html>
 
