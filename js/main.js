@@ -4211,8 +4211,8 @@
                         activeInviterCount.style.color = '#38bdf8';
                     }
                 } else {
-                    activeInviterName.textContent = '請在下方勾選名單';
-                    activeInviterCount.textContent = '0/4 次';
+                    activeInviterName.textContent = '請在下方選取目標';
+                    activeInviterCount.textContent = '-/- 次';
                 }
             }
         }
@@ -4768,21 +4768,8 @@
                 publicEntries.forEach(item => savedPublicLinksList.appendChild(createListElement(item)));
             }
 
-            // If no active invite selected yet, select the first pending enabled one
-            const all = getAllInviteEntries();
-            const checkedPending = all.find(i => i.enabled === true && (i.count || 0) < (i.target || 4));
-            if (checkedPending) {
-                selectInvite(checkedPending, false);
-            } else if (!currentActiveInvite || (inviteLinkInput && !inviteLinkInput.value.trim())) {
-                const anyChecked = all.find(i => i.enabled === true);
-                if (anyChecked) {
-                    selectInvite(anyChecked, false);
-                } else if (all.length > 0) {
-                    selectInvite(all[0], false);
-                }
-            } else {
-                updateInviterBadge();
-            }
+            // 不再自動選取預設目標，改由使用者手動點擊「設為目標」
+            updateInviterBadge();
         }
 
         // 點擊 badge 直接滾動並展開清單
@@ -5074,6 +5061,16 @@
 
         // ===== 執行自動化核心函式 =====
         async function runAutomation() {
+            if (!currentActiveInvite) {
+                alert('請先在下方「邀請人清單」中選取一位目標邀請人！');
+                const details = document.getElementById('cloud-inviteListDetails');
+                if (details) {
+                    details.open = true;
+                    details.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return;
+            }
+
             getAudioContext(); // 預先解鎖音效
             // 注意：不在此處呼叫 requestNotificationPermission()，
             // 因為通知權限對話框會暫停頁面，導致後續 fetch 失敗。
