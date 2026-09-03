@@ -2255,6 +2255,14 @@
                             <span id="cloud-activeInviterCount" style="font-weight: bold; background: rgba(56, 189, 248, 0.25); padding: 1px 6px; border-radius: 6px; font-size: 11px; flex-shrink: 0;">-/- 次</span>
                         </div>
 
+                        <!-- 流程說明 -->
+                        <div style="font-size: 12.5px; color: #cbd5e1; text-align: left; line-height: 1.6; margin-bottom: 14px; background: rgba(0,0,0,0.25); padding: 10px 14px; border-radius: 10px; border: 1px dashed rgba(255,255,255,0.15);">
+                            <div style="font-weight: 800; color: #f8fafc; margin-bottom: 4px; font-size: 13.5px;">💡 全自動流程說明 (請依序點擊下方按鈕)：</div>
+                            <div>1️⃣ 點擊產生信箱 <span style="color:#94a3b8; font-size:11.5px;">(自動跳轉遊戲，請貼上信箱)</span></div>
+                            <div>2️⃣ 點擊複製密碼 <span style="color:#94a3b8; font-size:11.5px;">(自動跳轉遊戲，請貼上密碼)</span></div>
+                            <div>3️⃣ 點擊複製驗證碼 <span style="color:#94a3b8; font-size:11.5px;">(收信後會自動跳轉遊戲)</span></div>
+                        </div>
+
                         <!-- 動態引導主按鈕 -->
                         <button id="cloud-dynamicActionBtn" class="dynamic-action-btn state-ready" style="width: 100%; padding: 14px 12px; border-radius: 12px; font-size: 15px; font-weight: 800; border: 1px solid rgba(255,255,255,0.25); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; box-shadow: 0 4px 18px rgba(37, 99, 235, 0.4); color: white;">
                             <div class="btn-main-label" style="display: flex; align-items: center; gap: 6px;">
@@ -2266,6 +2274,12 @@
                             </div>
                         </button>
 
+                        <!-- 密碼設定區 -->
+                        <div style="margin-top: 12px; display: inline-flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                            <span style="font-size: 12px; color: #94a3b8; margin-right: 6px;">🔑 自訂密碼：</span>
+                            <input type="text" id="cloud-password" value="Pikmin123!@" style="background: transparent; border: none; color: #f8fafc; font-family: monospace; font-size: 14px; font-weight: 800; width: 100px; outline: none; padding: 0; text-align: left;">
+                        </div>
+
                         <!-- 底部快捷觸控列 (隱藏，但保留 DOM 供 JS 使用) -->
                         <div style="display: none;">
                             <a id="cloud-openPikminBtn" href="https://pikminbloom.onelink.me/pWSt/73s4bj4n" target="_blank">
@@ -2275,60 +2289,6 @@
                                 🔔 開啟手機通知
                             </button>
                         </div>
-                    </div>
-
-                    <!-- 步驟 1：信箱 -->
-                    <div id="cloud-emailBox" class="info-box" style="margin-bottom: 10px; padding: 14px; border-radius: 14px; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.08);">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                            <span style="font-size: 22px; line-height: 1;">📧</span>
-                            <div>
-                                <div style="font-size: 16px; font-weight: 800; color: #f8fafc;">步驟 ①　貼上這個信箱</div>
-                                <div style="font-size: 12px; color: #94a3b8; margin-top: 1px;">在任天堂註冊頁面的「電子郵件」欄位貼上</div>
-                            </div>
-                        </div>
-                        <div id="cloud-emailDisplay" style="font-size: 13px; word-break: break-all; margin: 6px 0 10px; color: #38bdf8; font-family: monospace; background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(56,189,248,0.2);">--</div>
-                        <button id="cloud-copyEmailBtn" class="copy-btn btn-copy-email" style="margin: 0; padding: 12px; font-size: 15px; border-radius: 10px; font-weight: 800;">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                            <span>📋 點我複製信箱，再去遊戲貼上</span>
-                        </button>
-                    </div>
-
-                    <!-- 步驟 2：密碼 -->
-                    <div style="margin-bottom: 10px; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 14px;">
-                        <input type="hidden" id="cloud-password" value="Pikmin123!@">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                            <span style="font-size: 22px; line-height: 1;">🔑</span>
-                            <div>
-                                <div style="font-size: 16px; font-weight: 800; color: #f8fafc;">步驟 ②　輸入這個密碼</div>
-                                <div style="font-size: 12px; color: #94a3b8; margin-top: 1px;">在任天堂註冊頁面的「密碼」欄位貼上</div>
-                            </div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <div style="flex: 1; font-size: 20px; font-weight: 800; color: #f8fafc; font-family: monospace; background: rgba(0,0,0,0.3); padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(165,180,252,0.25); letter-spacing: 2px;">Pikmin123!@</div>
-                            <button id="cloud-copyPwdBtn" class="copy-btn btn-copy-pwd" style="margin: 0; padding: 10px 14px; font-size: 13px; border-radius: 10px; flex-shrink: 0; width: auto; font-weight: 800;">
-                                <span>🔑 複製密碼</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 步驟 3：驗證碼 -->
-                    <div id="cloud-codeBox" class="info-box" style="margin-bottom: 14px; padding: 14px; border-radius: 14px; background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.08);">
-                        <div id="cloud-loadingBar" class="pulsing"></div>
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                            <span style="font-size: 22px; line-height: 1;">🎯</span>
-                            <div>
-                                <div class="info-title" style="font-size: 16px; font-weight: 800; color: #f8fafc; text-transform: none; letter-spacing: 0;">步驟 ③　任天堂驗證碼</div>
-                                <div style="font-size: 12px; color: #94a3b8; margin-top: 1px;">遊戲發送後自動送達，請勿關閉此頁</div>
-                            </div>
-                        </div>
-                        <div id="cloud-codeReminder" class="ready-toast" style="display: none; font-size: 14px; padding: 10px; margin: 6px 0; font-weight: 800;">
-                            🎉 驗證碼已到了！點下方按鈕複製！
-                        </div>
-                        <div id="cloud-codeDisplay" style="color: #34d399; font-size: 52px; font-weight: 900; margin: 6px 0 12px; letter-spacing: 10px; text-align: center; font-family: monospace;">--</div>
-                        <button id="cloud-copyCodeBtn" class="copy-btn btn-copy-code" disabled style="margin: 0; padding: 14px; font-size: 16px; border-radius: 10px; font-weight: 900; letter-spacing: 0.5px; color: white;">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                            <span>✨ 點我複製驗證碼，去遊戲貼上</span>
-                        </button>
                     </div>
                     <!-- 邀請人清單管理模組 (預設收起) -->
                     <style>
@@ -3077,9 +3037,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.09.03.1916";</script>
-    <script src="js/main.js?v=202609031916"></script>
-    <script src="js/autofill.js?v=202609031916"></script>
+    <script>const APP_VERSION = "2026.09.03.1937";</script>
+    <script src="js/main.js?v=202609031937"></script>
+    <script src="js/autofill.js?v=202609031937"></script>
 </body>
 </html>
 
