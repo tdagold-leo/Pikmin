@@ -4174,18 +4174,23 @@
             } else if (state === 'generating') {
                 if (dynamicBtnIcon) dynamicBtnIcon.textContent = '⏳';
                 if (dynamicBtnText) dynamicBtnText.textContent = '正在建立免洗信箱...';
-                if (dynamicBtnSub) dynamicBtnSub.textContent = '請稍候，即將跳轉至遊戲';
+                if (dynamicBtnSub) dynamicBtnSub.textContent = '請稍候...';
                 dynamicActionBtn.disabled = true;
+            } else if (state === 'pwd_ready') {
+                if (dynamicBtnIcon) dynamicBtnIcon.textContent = '🔑';
+                if (dynamicBtnText) dynamicBtnText.textContent = '信箱已複製！點此複製密碼';
+                if (dynamicBtnSub) dynamicBtnSub.textContent = '複製預設密碼並自動開啟遊戲';
+                dynamicActionBtn.disabled = false;
             } else if (state === 'waiting') {
                 if (dynamicBtnIcon) dynamicBtnIcon.textContent = '🍄';
-                if (dynamicBtnText) dynamicBtnText.textContent = '信箱已複製！點此開啟遊戲';
-                if (dynamicBtnSub) dynamicBtnSub.textContent = '貼上信箱發送驗證碼（後台自動接收中）';
+                if (dynamicBtnText) dynamicBtnText.textContent = '密碼已複製！等待驗證信中...';
+                if (dynamicBtnSub) dynamicBtnSub.textContent = '請在遊戲內貼上並發送驗證碼';
                 dynamicActionBtn.disabled = false;
             } else if (state === 'code_ready') {
                 const code = data.code || latestReceivedCode || '----';
                 if (dynamicBtnIcon) dynamicBtnIcon.textContent = '🎉';
                 if (dynamicBtnText) dynamicBtnText.textContent = `驗證碼：${code}（點我複製）`;
-                if (dynamicBtnSub) dynamicBtnSub.textContent = '驗證碼已自動複製！點此跳回遊戲填寫';
+                if (dynamicBtnSub) dynamicBtnSub.textContent = '複製後將自動切換回遊戲';
                 dynamicActionBtn.disabled = false;
             } else if (state === 'completed') {
                 if (dynamicBtnIcon) dynamicBtnIcon.textContent = '✨';
@@ -5034,9 +5039,11 @@
             // 3. 系統通知推播
             pushCodeNotification(verificationCode);
 
-            // 4. 自動輪替邀請人
+            // 4. 更新計數與自動輪替
             if (autoRotateCheckbox && autoRotateCheckbox.checked && typeof window.rotateToNextInvite === 'function') {
                 window.rotateToNextInvite();
+            } else if (currentActiveInvite) {
+                updateItemCount(currentActiveInvite, 1);
             }
 
             // 5. 更新動態按鈕
@@ -5138,8 +5145,8 @@
                     };
                 }
 
-                // 切換動態按鈕至「等待信件中」狀態
-                setActionState('waiting');
+                // 切換動態按鈕至「準備複製密碼」狀態
+                setActionState('pwd_ready');
                 
                 log('📬 後台開始監聽任天堂驗證信 (每 2.5 秒檢查一次)...');
                 if (codeBox) codeBox.classList.add('active');
@@ -5153,22 +5160,6 @@
                     copyCodeBtn.disabled = true;
                     copyCodeBtn.classList.remove('code-ready');
                     copyCodeBtn.onclick = null;
-                }
-
-                // 喚醒 Pikmin 遊戲（透過隱藏點擊觸發，避免頁面卸載）
-                if (openPikminBtn && openPikminBtn.href) {
-                    log('🍄 開啟 Pikmin Bloom 遊戲...', 'log-info');
-                    try {
-                        const dummyA = document.createElement('a');
-                        dummyA.href = openPikminBtn.href;
-                        dummyA.target = '_blank';
-                        dummyA.rel = 'noopener noreferrer';
-                        document.body.appendChild(dummyA);
-                        dummyA.click();
-                        setTimeout(() => dummyA.remove(), 500);
-                    } catch(e) {
-                        window.location.href = openPikminBtn.href;
-                    }
                 }
                 
                 let verificationCode = null;
@@ -5222,15 +5213,17 @@
             dynamicActionBtn.addEventListener('click', () => {
                 if (currentState === 'ready' || currentState === 'completed') {
                     runAutomation();
+                } else if (currentState === 'pwd_ready') {
+                    // 複製密碼並跳轉至遊戲
+                    const password = (pwdInput && pwdInput.value) ? pwdInput.value.trim() : 'Pikmin123!@';
+                    navigator.clipboard.writeText(password);
+                    log('📋 已將預設密碼複製到剪貼簿！', 'log-success');
+                    if (openPikminBtn) window.location.href = openPikminBtn.href;
+                    setActionState('waiting');
                 } else if (currentState === 'waiting') {
-                    // 如果在等待中點擊：立即手動檢查一次信件，並複製信箱
+                    // 如果在等待中點擊：手動強制檢查一次信件
                     log('🔄 手動立即檢查收件匣...', 'log-info');
-                    checkInboxNow().then(code => {
-                        if (!code && currentGeneratedEmail) {
-                            navigator.clipboard.writeText(currentGeneratedEmail);
-                            log('📋 已再次複製信箱到剪貼簿！');
-                        }
-                    });
+                    checkInboxNow();
                 } else if (currentState === 'code_ready') {
                     // 複製驗證碼並開啟遊戲，切換到 completed
                     if (latestReceivedCode) {
