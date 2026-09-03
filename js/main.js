@@ -5148,6 +5148,22 @@
                 // 切換動態按鈕至「準備複製密碼」狀態
                 setActionState('pwd_ready');
                 
+                // 自動跳轉至遊戲 (第一步：複製信箱後跳轉)
+                if (openPikminBtn && openPikminBtn.href) {
+                    log('🍄 已複製信箱，自動跳轉至遊戲...', 'log-info');
+                    try {
+                        const dummyA = document.createElement('a');
+                        dummyA.href = openPikminBtn.href;
+                        dummyA.target = '_blank';
+                        dummyA.rel = 'noopener noreferrer';
+                        document.body.appendChild(dummyA);
+                        dummyA.click();
+                        setTimeout(() => dummyA.remove(), 500);
+                    } catch(e) {
+                        window.location.href = openPikminBtn.href;
+                    }
+                }
+                
                 log('📬 後台開始監聽任天堂驗證信 (每 2.5 秒檢查一次)...');
                 if (codeBox) codeBox.classList.add('active');
                 if (loadingBar) loadingBar.style.display = 'block';
