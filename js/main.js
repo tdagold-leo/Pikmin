@@ -4776,44 +4776,15 @@
             }
         }
 
-        // 全選 / 全部取消勾選
-        if (selectAllBtn) {
-            selectAllBtn.addEventListener('click', () => {
-                const localData = getLocalInvites();
-                Object.keys(localData).forEach(k => localData[k].enabled = true);
-                setLocalInvites(localData);
-
-                if (typeof database !== 'undefined') {
-                    database.ref('shared_invites').once('value', snap => {
-                        const fbData = snap.val() || {};
-                        const updates = {};
-                        Object.keys(fbData).forEach(k => {
-                            updates['shared_invites/' + k + '/enabled'] = true;
-                        });
-                        database.ref().update(updates);
-                    });
+        // 點擊 badge 直接滾動並展開清單
+        const currentInviterBadge = document.getElementById('cloud-currentInviterBadge');
+        if (currentInviterBadge) {
+            currentInviterBadge.addEventListener('click', () => {
+                const details = document.getElementById('cloud-inviteListDetails');
+                if (details) {
+                    details.open = true;
+                    details.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
-                renderAllInvites();
-            });
-        }
-
-        if (deselectAllBtn) {
-            deselectAllBtn.addEventListener('click', () => {
-                const localData = getLocalInvites();
-                Object.keys(localData).forEach(k => localData[k].enabled = false);
-                setLocalInvites(localData);
-
-                if (typeof database !== 'undefined') {
-                    database.ref('shared_invites').once('value', snap => {
-                        const fbData = snap.val() || {};
-                        const updates = {};
-                        Object.keys(fbData).forEach(k => {
-                            updates['shared_invites/' + k + '/enabled'] = false;
-                        });
-                        database.ref().update(updates);
-                    });
-                }
-                renderAllInvites();
             });
         }
 
