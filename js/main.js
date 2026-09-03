@@ -4706,6 +4706,15 @@
                 }
             };
 
+            const selectTargetBtn = document.createElement('button');
+            selectTargetBtn.type = 'button';
+            selectTargetBtn.className = 'card-action-btn invite-select-target-btn';
+            selectTargetBtn.innerHTML = '🎯 設為目標';
+            selectTargetBtn.title = '設為當前目標邀請人';
+            selectTargetBtn.style.cssText = 'background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.4); color: #38bdf8; font-weight: bold; margin-right: 4px;';
+            selectTargetBtn.onclick = (e) => { e.stopPropagation(); selectInvite(item, true); };
+
+            actionsGroup.appendChild(selectTargetBtn);
             actionsGroup.appendChild(resetBtn);
             actionsGroup.appendChild(editBtn);
             actionsGroup.appendChild(delBtn);
@@ -4784,6 +4793,22 @@
                 if (details) {
                     details.open = true;
                     details.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        }
+
+        // 監聽自動輪替開關
+        if (autoRotateCheckbox) {
+            autoRotateCheckbox.addEventListener('change', (e) => {
+                const details = document.getElementById('cloud-inviteListDetails');
+                if (details) {
+                    if (e.target.checked) {
+                        details.classList.remove('auto-rotate-off');
+                        details.classList.add('auto-rotate-on');
+                    } else {
+                        details.classList.remove('auto-rotate-on');
+                        details.classList.add('auto-rotate-off');
+                    }
                 }
             });
         }
