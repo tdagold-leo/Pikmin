@@ -3510,8 +3510,15 @@
         }
 
         let hasReadyGoldBasin = false;
+        const nowMsForNav = Date.now();
         for (let item of postcardList) {
-            if (item.type === '特殊金盆' && item.sgType !== '常駐' && item.sgCooldown && !item.discontinued) {
+            let isDisc = item.discontinued === true;
+            if (item.sgType === '期間' && item.sgEnd) {
+                const endDate = new Date(item.sgEnd);
+                endDate.setHours(23, 59, 59, 999);
+                if (nowMsForNav > endDate.getTime()) isDisc = true;
+            }
+            if (item.type === '特殊金盆' && item.sgType !== '常駐' && item.sgCooldown && !isDisc) {
                 let hasStarted = true;
                 if (item.sgStart) {
                     const startDate = new Date(item.sgStart + 'T00:00:00');
@@ -3728,9 +3735,17 @@
                 : '';
 
             let sgDateBadge = '';
+            let localIsDisc = item.discontinued === true;
             if (item.type === '特殊金盆') {
                 const s = item.sgStart || '';
                 const e = item.sgEnd || '';
+                
+                if (item.sgType === '期間' && e) {
+                    const endDate = new Date(e);
+                    endDate.setHours(23, 59, 59, 999);
+                    if (Date.now() > endDate.getTime()) localIsDisc = true;
+                }
+
                 if (item.sgType === '期間' && (s || e)) {
                     sgDateBadge += `<div style="color: #6d28d9; font-size: 10px; font-weight: bold; margin-top: 4px; background: #f5f3ff; padding: 4px 6px; border-radius: 4px; border: 1px dashed #8b5cf6; text-align: center;">📅 期間：${s || '未定'} ~ ${e || '未定'}</div>`;
                 }
@@ -3743,7 +3758,7 @@
                     cdVal = '30'; // 特殊金盆預設以30天CD為基準計算
                 }
 
-                if (cdVal && !item.discontinued) {
+                if (cdVal && !localIsDisc) {
                     let hasStarted = true;
                     if (item.sgType === '期間' && item.sgStart) {
                         const startDate = new Date(item.sgStart + 'T00:00:00');
@@ -3883,6 +3898,8 @@
                             }
                         }
                         
+                        item._isDisc = isDisc; // inject for later logic
+
                         if (isDisc) {
                             topGroups['絕版'].push(item);
                         } else if (sType === '期間') {
@@ -3909,6 +3926,13 @@
                             if ((item.tag || '').includes('缺') || (item.name || '').includes('缺') || (item.note || '').includes('缺') || (item.user || '').includes('缺')) {
                                 hasMissingTop = true;
                             }
+                            let localIsDisc = item.discontinued === true;
+                            if (item.sgType === '期間' && item.sgEnd) {
+                                const endDate = new Date(item.sgEnd);
+                                endDate.setHours(23, 59, 59, 999);
+                                if (Date.now() > endDate.getTime()) localIsDisc = true;
+                            }
+
                             let cdVal = item.sgCooldown;
                             if (!cdVal && item.tag && (item.tag.includes('30天') || item.tag.includes('30 天') || item.tag.includes('一個月') || item.tag.includes('30 days'))) {
                                 cdVal = '30';
@@ -3916,7 +3940,7 @@
                             if (!cdVal && (item.sgType === '期間' || item.sgType === '常駐')) {
                                 cdVal = '30';
                             }
-                            if (cdVal && !item.discontinued) {
+                            if (cdVal && !localIsDisc) {
                                 let hasStarted = true;
                                 if (item.sgType === '期間' && item.sgStart) {
                                     const startDate = new Date(item.sgStart + 'T00:00:00');
@@ -3980,6 +4004,14 @@
                                     if ((item.tag || '').includes('缺') || (item.name || '').includes('缺') || (item.note || '').includes('缺') || (item.user || '').includes('缺')) {
                                         hasMissing = true;
                                     }
+                                    let localIsDisc = item.discontinued === true;
+                                    if (item.sgType === '期間' && item.sgEnd) {
+                                        const endDate = new Date(item.sgEnd);
+                                        endDate.setHours(23, 59, 59, 999);
+                                        if (Date.now() > endDate.getTime()) localIsDisc = true;
+                                    }
+                                    item._localIsDisc = localIsDisc; // 保存以供後續使用
+
                                     let cdVal = item.sgCooldown;
                                     if (!cdVal && item.tag && (item.tag.includes('30天') || item.tag.includes('30 天') || item.tag.includes('一個月') || item.tag.includes('30 days'))) {
                                         cdVal = '30';
@@ -3987,7 +4019,7 @@
                                     if (!cdVal && (item.sgType === '期間' || item.sgType === '常駐')) {
                                         cdVal = '30';
                                     }
-                                    if (cdVal && !item.discontinued) {
+                                    if (cdVal && !localIsDisc) {
                                         let hasStarted = true;
                                         if (item.sgType === '期間' && item.sgStart) {
                                             const startDate = new Date(item.sgStart + 'T00:00:00');
@@ -4028,7 +4060,7 @@
                                     let cdVal = firstItem.sgCooldown;
                                     if (!cdVal && firstItem.tag && (firstItem.tag.includes('30天') || firstItem.tag.includes('30 天') || firstItem.tag.includes('一個月') || firstItem.tag.includes('30 days'))) cdVal = '30';
                                     if (!cdVal && (firstItem.sgType === '期間' || firstItem.sgType === '常駐')) cdVal = '30';
-                                    if (cdVal && !firstItem.discontinued) {
+                                    if (cdVal && !firstItem._localIsDisc) {
                                         const cdNum = parseInt(cdVal, 10);
                                         const cdLabel = cdNum === 1 ? '每天可領' : cdNum === 30 ? '每月可領' : `每 ${cdNum} 天可領`;
                                         cooldownBadge = `<div style="font-size:11px; color:#b45309; background:#fef3c7; padding:2px 8px; border-radius:12px; margin-top:4px; font-weight:bold; display:inline-block; border:1px solid #fde68a; letter-spacing:0.5px;">⏱ ${cdLabel}</div>`;
@@ -4039,7 +4071,7 @@
                                 if (hasMissing) subReminders += ' <span style="color:#ef4444; font-size:11px; font-weight:bold; margin-left:2px;">❗缺</span>';
                                 if (hasClaimable) subReminders += ' <span style="color:#d97706; font-size:11px; font-weight:bold; margin-left:2px;">⚠️可拿</span>';
 
-                                const allDiscontinued = actMap[act].length > 0 && actMap[act].every(item => item.discontinued);
+                                const allDiscontinued = actMap[act].length > 0 && actMap[act].every(item => item._localIsDisc);
                                 const groupClaimBtnHtml = allDiscontinued ? '' : `
                                     <button type="button" class="group-claim-btn ${isAllClaimedToday ? 'claimed' : ''}" 
                                             onclick="markGroupClaimedToday('${escapeHtml(act).replace(/'/g, "\\'")}', event)" 
