@@ -3998,7 +3998,6 @@
                                 let hasMissing = false;
                                 const now = new Date();
                                 const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-                                const isAllClaimedToday = actMap[act].length > 0 && actMap[act].every(item => item.sgLast === todayStr);
 
                                 actMap[act].forEach(item => {
                                     if ((item.tag || '').includes('缺') || (item.name || '').includes('缺') || (item.note || '').includes('缺') || (item.user || '').includes('缺')) {
@@ -4073,10 +4072,10 @@
 
                                 const allDiscontinued = actMap[act].length > 0 && actMap[act].every(item => item._localIsDisc);
                                 const groupClaimBtnHtml = allDiscontinued ? '' : `
-                                    <button type="button" class="group-claim-btn ${isAllClaimedToday ? 'claimed' : ''}" 
+                                    <button type="button" class="group-claim-btn ${!hasClaimable ? 'claimed' : ''}" 
                                             onclick="markGroupClaimedToday('${escapeHtml(act).replace(/'/g, "\\'")}', event)" 
                                             title="一鍵將群組內所有卡片設為今日已領">
-                                        ${isAllClaimedToday ? '✓ 今日已領' : '🎁 今日領取'}
+                                        ${!hasClaimable ? '✓ 今日已領' : '🎁 今日領取'}
                                     </button>
                                 `;
                                 
