@@ -3743,7 +3743,7 @@
                     cdVal = '30'; // 特殊金盆預設以30天CD為基準計算
                 }
 
-                if (cdVal) {
+                if (cdVal && !item.discontinued) {
                     let hasStarted = true;
                     if (item.sgType === '期間' && item.sgStart) {
                         const startDate = new Date(item.sgStart + 'T00:00:00');
@@ -4028,7 +4028,7 @@
                                     let cdVal = firstItem.sgCooldown;
                                     if (!cdVal && firstItem.tag && (firstItem.tag.includes('30天') || firstItem.tag.includes('30 天') || firstItem.tag.includes('一個月') || firstItem.tag.includes('30 days'))) cdVal = '30';
                                     if (!cdVal && (firstItem.sgType === '期間' || firstItem.sgType === '常駐')) cdVal = '30';
-                                    if (cdVal) {
+                                    if (cdVal && !firstItem.discontinued) {
                                         const cdNum = parseInt(cdVal, 10);
                                         const cdLabel = cdNum === 1 ? '每天可領' : cdNum === 30 ? '每月可領' : `每 ${cdNum} 天可領`;
                                         cooldownBadge = `<div style="font-size:11px; color:#b45309; background:#fef3c7; padding:2px 8px; border-radius:12px; margin-top:4px; font-weight:bold; display:inline-block; border:1px solid #fde68a; letter-spacing:0.5px;">⏱ ${cdLabel}</div>`;
@@ -4039,7 +4039,8 @@
                                 if (hasMissing) subReminders += ' <span style="color:#ef4444; font-size:11px; font-weight:bold; margin-left:2px;">❗缺</span>';
                                 if (hasClaimable) subReminders += ' <span style="color:#d97706; font-size:11px; font-weight:bold; margin-left:2px;">⚠️可拿</span>';
 
-                                const groupClaimBtnHtml = `
+                                const allDiscontinued = actMap[act].length > 0 && actMap[act].every(item => item.discontinued);
+                                const groupClaimBtnHtml = allDiscontinued ? '' : `
                                     <button type="button" class="group-claim-btn ${isAllClaimedToday ? 'claimed' : ''}" 
                                             onclick="markGroupClaimedToday('${escapeHtml(act).replace(/'/g, "\\'")}', event)" 
                                             title="一鍵將群組內所有卡片設為今日已領">
