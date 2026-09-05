@@ -623,7 +623,7 @@
                             // suburb/hamlet = 里 level (too granular, skip)
                             const cityLevel = addr.city || addr.county || '';
                             const districtLevel = cityLevel
-                                ? (addr.town || addr.city_district || addr.district || '')
+                                ? (addr.town || addr.city_district || addr.district || addr.suburb || '')
                                 : (addr.town || addr.suburb || addr.district || addr.borough || '');
                             const translatedCity = cityLevel ? await translateToTW(cityLevel) : '';
                             const translatedDistrict = districtLevel ? await translateToTW(districtLevel) : '';
@@ -749,6 +749,7 @@
 
                                     // 依優先級收集各層地名
                                     addCandidate(data.city);
+                                    addCandidate(data.district);
                                     addCandidate(data.locality);
                                     addCandidate(data.principalSubdivision);
                                     if (data.localityInfo && data.localityInfo.administrative) {
@@ -3644,11 +3645,11 @@
                         <button class="card-fav-btn ${isPcFav?'fav-on':'fav-off'}" onclick="togglePcFav('${item.id}')">${isPcFav?'❤️':'🤍'}</button>
                         <button class="card-timer-btn ${hasClearBtn2 ? 'has-timer' : ''}" onclick="toggleCardTimeSetter('${item.id}', event)" title="設定剩餘時間">⏱️</button>
                     </div>
-                    <div class="card-body"><div class="card-title">${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC||'未提供'}${item.city?` · ${escapeHtml(item.city)}`:''}</span><div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">${providerHtml2}${safeT?`<span class="tag-badge">${safeT}</span>`:''}</div></div>
+                    <div class="card-body"><div class="card-title">${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC||'未提供'}${item.city?` · ${escapeHtml(item.city)}`:''}${item.district?` ${escapeHtml(item.district)}`:''}</span><div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">${providerHtml2}${safeT?`<span class="tag-badge">${safeT}</span>`:''}</div></div>
                     ${dupBadge}${distBadge}
                     ${item.missingFields&&item.missingFields.length>0?`<div style="color:#ef4444;font-size:10px;font-weight:bold;margin-top:4px;background:#fee2e2;padding:4px 6px;border-radius:4px;border:1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>`:''}
                     ${timeSetRow2}
-                    <div class="card-actions" style="display:flex;gap:4px;margin-top:auto;padding-top:4px;"><button class="btn-sm btn-default" onclick="duplicatePostcard('${item.id}')" style="flex:0;background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe;">📋</button><button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g,"\\'")}', this)"> 📍 複製</button>${item.coords?`<button class="btn-sm btn-default" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g,"\\'")}')"> 🗺️ 地圖</button>`:''}<button class="btn-sm btn-edit" style="flex:0;" onclick="openTimeModalById('${item.id}','postcard')">✏️</button><button class="btn-sm btn-danger" style="flex:0;" onclick="deleteItem('${item.id}','postcard')">🗑️</button></div></div>
+                    <div class="card-actions" style="display:flex;gap:4px;margin-top:auto;padding-top:4px;"><button class="btn-sm btn-default" onclick="duplicatePostcard('${item.id}')" style="flex:0;background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe;">📋</button><button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g,"\\'")}', this)"> 📍 複製</button>${item.coords?`<button class="btn-sm btn-default" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g,"\\'")}')"> 🗺️ 地圖</button>`:''}<button class="btn-sm btn-edit" style="flex:0;" onclick="openTimeModalById('${item.id}','postcard')">✏️</button></div></div>
                 `;
                 pcEl.appendChild(cdCard);
             });
@@ -3812,7 +3813,7 @@
                     <button class="card-fav-btn ${isPcFav?'fav-on':'fav-off'}" onclick="togglePcFav('${item.id}')">${isPcFav?'❤️':'🤍'}</button>
                     ${timerBtnHtml}
                 </div>
-                <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}</span><div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">${providerHtml}${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}${item.auth ? `<span title="${escapeHtml(item.auth)}" style="background:#f5f3ff; color:#6d28d9; border:1px solid #ddd6fe; padding:1px 5px; border-radius:5px; font-size:10px; font-weight:700; display:inline-flex; align-items:center; gap:2px; cursor:default;">🔑 ${escapeHtml(item.auth)}</span>` : ''}</div></div>
+                <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}${item.district ? ` ${escapeHtml(item.district)}` : ''}</span><div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">${providerHtml}${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}${item.auth ? `<span title="${escapeHtml(item.auth)}" style="background:#f5f3ff; color:#6d28d9; border:1px solid #ddd6fe; padding:1px 5px; border-radius:5px; font-size:10px; font-weight:700; display:inline-flex; align-items:center; gap:2px; cursor:default;">🔑 ${escapeHtml(item.auth)}</span>` : ''}</div></div>
                 ${dupBadge}
                 ${distBadge}
                 ${sgDateBadge}
