@@ -1902,12 +1902,14 @@
             document.getElementById(prefix + '-name').value = match.name;
             document.getElementById(prefix + '-city').value = match.city || '';
             document.getElementById(prefix + '-country').value = match.country || '';
+            const distEl = document.getElementById(prefix + '-district');
+            if (distEl) distEl.value = match.district || '';
             
             const tagEl = document.getElementById(prefix + '-tag');
             if (tagEl) tagEl.value = match.tag || '';
             
             // 直接呼叫 autoDetectCountry 以確保國家與城市正確帶入（dispatchEvent('blur') 不觸發 inline onblur）
-            autoDetectCountry(match.coords, prefix + '-country', prefix + '-tz-hint', prefix + '-city');
+            autoDetectCountry(match.coords, prefix + '-country', prefix + '-tz-hint', prefix + '-city', prefix + '-district');
             
             // 顯示提示
             const resDiv = document.getElementById(prefix + '-ocr-result');
@@ -2041,7 +2043,7 @@
                     // 自動填入座標欄，直接呼叫 autoDetectCountry 確保國家/城市正確帶入
                     const coordsField = document.getElementById(prefix + '-coords');
                     if (coordsField) coordsField.value = coords;
-                    autoDetectCountry(coords, prefix + '-country', prefix + '-tz-hint', prefix + '-city');
+                    autoDetectCountry(coords, prefix + '-country', prefix + '-tz-hint', prefix + '-city', prefix + '-district');
 
                     // 若名稱欄位為空，自動填入地標名稱
                     const nameField = document.getElementById(prefix + '-name');
@@ -2057,7 +2059,7 @@
                         return `<div style="display:flex; gap:4px; margin-top:4px;">
                             <button type="button" onclick="
                                 document.getElementById('${prefix}-coords').value='${c}';
-                                autoDetectCountry('${c}', '${prefix}-country', '${prefix}-tz-hint', '${prefix}-city');
+                                autoDetectCountry('${c}', '${prefix}-country', '${prefix}-tz-hint', '${prefix}-city', '${prefix}-district');
                             " style="flex:1; font-size:11px; padding:4px 8px; border-radius:6px; border:1px solid #10b981; background:${i===0?'#d1fae5':'#f0fdf4'}; color:#065f46; cursor:pointer; text-align:left; line-height:1.4;">
                                 ${i===0?'✅':'📍'} ${escapeHtml(lm.description)} <span style="color:#6b7280;">(${c}) — ${(lm.score*100).toFixed(0)}%</span>
                             </button>
@@ -2653,7 +2655,7 @@
             document.getElementById('edit-post-image').value = imgUrl; 
             
             if (item.coords) {
-                autoDetectCountry(item.coords, 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city');
+                autoDetectCountry(item.coords, 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city', 'edit-post-district');
             } 
             
             // 初始化絕版按鈕狀態
