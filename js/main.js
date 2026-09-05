@@ -625,10 +625,12 @@
                             const districtLevel = cityLevel
                                 ? (addr.town || addr.city_district || addr.district || '')
                                 : (addr.town || addr.suburb || addr.district || addr.borough || '');
+                            const translatedCity = cityLevel ? await translateToTW(cityLevel) : '';
+                            const translatedDistrict = districtLevel ? await translateToTW(districtLevel) : '';
                             data = {
                                 countryName: addr.country,
-                                city: cityLevel,
-                                district: districtLevel,
+                                city: translatedCity || cityLevel,
+                                district: translatedDistrict || districtLevel,
                                 principalSubdivision: addr.state || addr.province || ''
                             };
                         }
@@ -1076,6 +1078,7 @@
                 postcardList.push({
                     id: key, type: toTW(String(typeVal || "菇")), name: cloudData[key].name || "未命名", 
                     country: toTW(cloudData[key].country || ""), city: cloudData[key].city || "",
+                    district: cloudData[key].district || "",
                     coords: cloudData[key].coords || "",
                     tag: cloudData[key].tag || "", image: cloudData[key].image || "無圖片",
                     auth: cloudData[key].auth || "",
@@ -2412,6 +2415,7 @@
 
             let pushData = {
                 type: toTW(document.getElementById('post-type').value), country: processedCountry, city: cityEl ? cityEl.value.trim() : "",
+                district: (document.getElementById('post-district')?.value || '').trim(),
                 name: nameEl.value.trim(),
                 coords: normalizeCoords(coordsEl.value), tag: tagEl.value.trim() || "", image: imageEl.value.trim() || "無圖片",
                 auth: (document.getElementById('post-auth')?.value || '').trim(),
@@ -2639,6 +2643,8 @@
             }
             document.getElementById('edit-post-country').value = item.country || '';  
             document.getElementById('edit-post-city').value = item.city || '';  
+            const editPostDistEl = document.getElementById('edit-post-district');
+            if (editPostDistEl) editPostDistEl.value = item.district || '';
             document.getElementById('edit-post-name').value = item.name || ''; 
             document.getElementById('edit-post-tag').value = item.tag || '';
             const editAuthEl = document.getElementById('edit-post-auth'); if(editAuthEl) editAuthEl.value = item.auth || '';
@@ -2777,6 +2783,7 @@
             let updates = {
                 type: pType, country: processedCountry,
                 city: document.getElementById('edit-post-city').value.trim(),
+                district: (document.getElementById('edit-post-district')?.value || '').trim(),
                 name: document.getElementById('edit-post-name').value.trim(), tag: document.getElementById('edit-post-tag').value.trim(),
                 auth: (document.getElementById('edit-post-auth')?.value || '').trim(),
                 coords: normalizeCoords(document.getElementById('edit-post-coords').value), image: document.getElementById('edit-post-image').value.trim() || "無圖片",

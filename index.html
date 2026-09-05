@@ -2571,9 +2571,9 @@
                     <label style="font-size:11px; margin-bottom:2px;">座標</label>
                     <div style="display:flex; gap:6px; align-items:center;">
                         <input type="text" id="post-coords" class="input-base" placeholder="貼上或輸入座標" style="flex:1; padding:6px 10px; font-size:13px;"
-                            onblur="autoDetectCountry(this.value, 'post-country', 'post-tz-hint', 'post-city')"
-                            oninput="clearTimeout(window._geoTimer); window._geoTimer = setTimeout(() => autoDetectCountry(this.value, 'post-country', 'post-tz-hint', 'post-city'), 1200)">
-                        <button type="button" onclick="navigator.clipboard.readText().then(t => { document.getElementById('post-coords').value = t.trim(); autoDetectCountry(t.trim(), 'post-country', 'post-tz-hint', 'post-city'); }).catch(() => alert('無法讀取剪貼簿，請手動貼上'))"
+                            onblur="autoDetectCountry(this.value, 'post-country', 'post-tz-hint', 'post-city', 'post-district')"
+                            oninput="clearTimeout(window._geoTimer); window._geoTimer = setTimeout(() => autoDetectCountry(this.value, 'post-country', 'post-tz-hint', 'post-city', 'post-district'), 1200)">
+                        <button type="button" onclick="navigator.clipboard.readText().then(t => { document.getElementById('post-coords').value = t.trim(); autoDetectCountry(t.trim(), 'post-country', 'post-tz-hint', 'post-city', 'post-district'); }).catch(() => alert('無法讀取剪貼簿，請手動貼上'))"
                             style="white-space:nowrap; padding:6px 12px; border-radius:8px; background:#f0fdf4; color:#15803d; border:1px solid #86efac; font-size:12px; font-weight:bold; cursor:pointer; height:34px; display:flex; align-items:center; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
                             📋 貼上
                         </button>
@@ -2589,6 +2589,10 @@
                         <label style="font-size:11px; margin-bottom:2px;">城市</label>
                         <input type="text" id="post-city" class="input-base" placeholder="例如：東京" style="padding:6px 10px; font-size:13px;">
                     </div>
+                </div>
+                <div class="input-group" style="margin:0;">
+                    <label style="font-size:11px; margin-bottom:2px;">區 / 鄉鎮 <span style="color:#9ca3af; font-size:10px;">(選填)</span></label>
+                    <input type="text" id="post-district" class="input-base" placeholder="例如：大安區、中壢區" style="padding:6px 10px; font-size:13px;">
                 </div>
                 <div id="post-city-candidates" style="display:none; margin-top:4px; display:flex; flex-wrap:wrap; gap:4px;"></div>
                 <div class="input-group" style="margin:0;">
@@ -2933,9 +2937,9 @@
                     <label style="font-size:11px; margin-bottom:2px;">座標</label>
                     <div style="display:flex; gap:6px; align-items:center;">
                         <input type="text" id="edit-post-coords" class="input-base" style="flex:1; padding:6px 10px; font-size:13px;" placeholder="貼上或輸入座標"
-                            onblur="autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city')"
-                            oninput="clearTimeout(window._editGeoTimer); window._editGeoTimer = setTimeout(() => autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city'), 1200)">
-                        <button type="button" onclick="navigator.clipboard.readText().then(t => { document.getElementById('edit-post-coords').value = t.trim(); autoDetectCountry(t.trim(), 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city'); }).catch(() => alert('無法讀取剪貼簿，請手動貼上'))"
+                            onblur="autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city', 'edit-post-district')"
+                            oninput="clearTimeout(window._editGeoTimer); window._editGeoTimer = setTimeout(() => autoDetectCountry(this.value, 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city', 'edit-post-district'), 1200)">
+                        <button type="button" onclick="navigator.clipboard.readText().then(t => { document.getElementById('edit-post-coords').value = t.trim(); autoDetectCountry(t.trim(), 'edit-post-country', 'edit-post-tz-hint', 'edit-post-city', 'edit-post-district'); }).catch(() => alert('無法讀取剪貼簿，請手動貼上'))"
                             style="white-space:nowrap; padding:6px 12px; border-radius:8px; background:#f0fdf4; color:#15803d; border:1px solid #86efac; font-size:12px; font-weight:bold; cursor:pointer; height:34px; display:flex; align-items:center; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
                             📋 貼上
                         </button>
@@ -2951,6 +2955,10 @@
                         <label style="font-size:11px; margin-bottom:2px;">城市</label>
                         <input type="text" id="edit-post-city" class="input-base" style="padding:6px 10px; font-size:13px;" placeholder="例如：東京">
                     </div>
+                </div>
+                <div class="input-group" style="margin:0;">
+                    <label style="font-size:11px; margin-bottom:2px;">區 / 鄉鎮 <span style="color:#9ca3af; font-size:10px;">(選填)</span></label>
+                    <input type="text" id="edit-post-district" class="input-base" style="padding:6px 10px; font-size:13px;" placeholder="例如：大安區、中壢區">
                 </div>
                 <div id="edit-post-city-candidates" style="display:none; margin-top:4px; display:flex; flex-wrap:wrap; gap:4px;"></div>
                 <div class="input-group" style="margin:0;">
@@ -3037,9 +3045,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.09.04.1903";</script>
-    <script src="js/main.js?v=202609041903"></script>
-    <script src="js/autofill.js?v=202609041903"></script>
+    <script>const APP_VERSION = "2026.09.06.0027";</script>
+    <script src="js/main.js?v=202609060027"></script>
+    <script src="js/autofill.js?v=202609060027"></script>
 </body>
 </html>
 
