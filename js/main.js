@@ -2196,39 +2196,9 @@
         reader.readAsDataURL(file);
     }
 
-    // 巨菇專用：上傳截圖同時自動從剪貼簿讀取座標
-    async function handleMushOcrAndPasteCoords(event) {
-        // 先執行 OCR
+    // 巨菇截圖辨識（保留名稱供 HTML 呼叫）
+    function handleMushOcrAndPasteCoords(event) {
         handleVisionOcrUpload(event, 'mush-ocr-result');
-
-        const coordsEl = document.getElementById('coords');
-        if (!coordsEl || coordsEl.value.trim()) return; // 已有座標就不處理
-
-        // 嘗試讀取剪貼簿（桌機/Android 通常可以）
-        let pasted = false;
-        try {
-            const text = (await navigator.clipboard.readText() || '').trim();
-            if (text && /^-?\d+(?:\.\d+)?[\s,，]+-?\d+(?:\.\d+)?$/.test(text)) {
-                coordsEl.value = text;
-                autoDetectCountry(text, 'country', 'tz-hint', 'city');
-                pasted = true;
-            }
-        } catch(e) { /* iOS 可能拒絕，進行 fallback */ }
-
-        // 剪貼簿讀不到（iOS）→ 自動 focus 座標欄讓使用者長按貼上
-        if (!pasted) {
-            coordsEl.focus();
-            coordsEl.select();
-            // 短暫高亮提示
-            coordsEl.style.outline = '2px solid #f59e0b';
-            coordsEl.style.background = '#fffbeb';
-            coordsEl.placeholder = '👆 長按此處貼上座標';
-            setTimeout(() => {
-                coordsEl.style.outline = '';
-                coordsEl.style.background = '';
-                coordsEl.placeholder = '貼上或輸入經緯度座標';
-            }, 5000);
-        }
     }
 
     function updateVersionTag() {
