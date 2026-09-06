@@ -618,13 +618,38 @@
                         const osmData = await resOsm.json();
                         if (osmData && osmData.address) {
                             const addr = osmData.address;
-                            // TW hierarchy: city(市) > town(區) > suburb/village(里/鄰)
-                            // When city exists, town = 區 level (what we want as district)
-                            // suburb/hamlet = 里 level (too granular, skip)
-                            const cityLevel = addr.city || addr.county || '';
-                            const districtLevel = cityLevel
-                                ? (addr.town || addr.city_district || addr.district || addr.suburb || '')
-                                : (addr.town || addr.suburb || addr.district || addr.borough || '');
+                            // 地址層級對應說明：
+                            // TW: city(直轄市) > town(區) > suburb(里) — city填城市、town填區
+                            // JP: province(道/都/府/縣) > city(市/町/村) > suburb(丁目/大字) — province填城市、city填區
+                            // KR: province(道/廣域市) > city(市/郡/區) — province填城市、city填區
+                            // 通用原則：
+                            //   cityLevel = 城市/地區欄位(較大範圍)
+                            //   districtLevel = 區/鄉鎮欄位(較小範圍)，太細的 suburb/neighbourhood 不用
+                            
+                            const countryCode = (addr['ISO3166-2-lvl4'] || addr.country_code || '').toUpperCase();
+                            const isTW = countryCode.startsWith('TW');
+                            
+                            let cityLevel = '';
+                            let districtLevel = '';
+                            
+                            if (isTW) {
+                                // 台灣: city/county > town/city_district
+                                cityLevel = addr.city || addr.county || '';
+                                districtLevel = cityLevel
+                                    ? (addr.town || addr.city_district || addr.district || addr.suburb || '')
+                                    : (addr.town || addr.district || '');
+                            } else if (addr.province || addr.state) {
+                                // 日/韓/其他有 province/state: province(道/縣/州) > city(市/郡)
+                                cityLevel = addr.province || addr.state || '';
+                                districtLevel = addr.city || addr.county || addr.town || '';
+                            } else {
+                                // 其他: city/county > town/district
+                                cityLevel = addr.city || addr.county || '';
+                                districtLevel = cityLevel
+                                    ? (addr.town || addr.city_district || addr.district || '')
+                                    : (addr.town || addr.district || '');
+                            }
+                            
                             const translatedCity = cityLevel ? await translateToTW(cityLevel) : '';
                             const translatedDistrict = districtLevel ? await translateToTW(districtLevel) : '';
                             data = {
