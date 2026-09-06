@@ -556,6 +556,27 @@
         
         const addModal = document.getElementById('add-modal');
         if (addModal) addModal.style.display = 'flex';
+
+        // 巨菇模式：自動嘗試從剪貼簿讀取座標
+        if (currentMode === 'mushroom') {
+            const coordsEl = document.getElementById('coords');
+            if (coordsEl && !coordsEl.value.trim()) {
+                navigator.clipboard.readText().then(t => {
+                    const text = (t || '').trim();
+                    // 只有剪貼簿內容像座標才自動填入（格式：數字,數字）
+                    if (text && /^-?\d+(?:\.\d+)?[\s,，]+-?\d+(?:\.\d+)?$/.test(text)) {
+                        coordsEl.value = text;
+                        autoDetectCountry(text, 'country', 'tz-hint', 'city');
+                        // 讓使用者知道有自動填入
+                        const hint = document.getElementById('tz-hint');
+                        if (hint && !hint.innerText) {
+                            hint.innerText = '(已自動貼上)';
+                            setTimeout(() => { if (hint.innerText === '(已自動貼上)') hint.innerText = ''; }, 2000);
+                        }
+                    }
+                }).catch(() => {}); // 使用者未授權剪貼簿時靜默略過
+            }
+        }
     }
     
     function closeModal(id) {
@@ -2194,11 +2215,6 @@
             await processVisionOcr(resultDivId, { content: base64data });
         };
         reader.readAsDataURL(file);
-    }
-
-    // 巨菇截圖辨識（保留名稱供 HTML 呼叫）
-    function handleMushOcrAndPasteCoords(event) {
-        handleVisionOcrUpload(event, 'mush-ocr-result');
     }
 
     function updateVersionTag() {
@@ -5600,7 +5616,6 @@ window.fillAllSlots = fillAllSlots;
 window.goToMapCoords = goToMapCoords;
 window.handleProfileAvatarUpload = handleProfileAvatarUpload;
 window.handleVisionOcrUpload = handleVisionOcrUpload;
-window.handleMushOcrAndPasteCoords = handleMushOcrAndPasteCoords;
 window.openAddModal = openAddModal;
 window.openClaimModalById = openClaimModalById;
 window.openGoogleLensSearch = openGoogleLensSearch;
