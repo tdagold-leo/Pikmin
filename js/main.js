@@ -2196,6 +2196,26 @@
         reader.readAsDataURL(file);
     }
 
+    // 巨菇專用：上傳截圖同時自動從剪貼簿讀取座標
+    async function handleMushOcrAndPasteCoords(event) {
+        // 先執行 OCR（非同步，不影響後續）
+        handleVisionOcrUpload(event, 'mush-ocr-result');
+
+        // 同時嘗試讀取剪貼簿，填入座標（選完圖後觸發，iOS 此時允許讀剪貼簿）
+        const coordsEl = document.getElementById('coords');
+        if (coordsEl && !coordsEl.value.trim()) {
+            try {
+                const text = (await navigator.clipboard.readText() || '').trim();
+                if (text && /^-?\d+(?:\.\d+)?[\s,，]+-?\d+(?:\.\d+)?$/.test(text)) {
+                    coordsEl.value = text;
+                    autoDetectCountry(text, 'country', 'tz-hint', 'city');
+                }
+            } catch(e) {
+                // 未授權時靜默略過（使用者仍可手動點座標欄貼上）
+            }
+        }
+    }
+
     function updateVersionTag() {
         document.getElementById('header-version-tag').textContent = "v" + CURRENT_APP_VERSION;
     }
@@ -5595,6 +5615,7 @@ window.fillAllSlots = fillAllSlots;
 window.goToMapCoords = goToMapCoords;
 window.handleProfileAvatarUpload = handleProfileAvatarUpload;
 window.handleVisionOcrUpload = handleVisionOcrUpload;
+window.handleMushOcrAndPasteCoords = handleMushOcrAndPasteCoords;
 window.openAddModal = openAddModal;
 window.openClaimModalById = openClaimModalById;
 window.openGoogleLensSearch = openGoogleLensSearch;
