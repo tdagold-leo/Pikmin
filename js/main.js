@@ -2365,7 +2365,15 @@
             if (dataList.length > 0) nextSn = Math.max(...dataList.map(i => i.sn || 0)) + 1;
 
             const kindEl = document.getElementById('mushroom-kind');
-            const mushKind = kindEl ? kindEl.value : '巨菇';
+            let mushKind = kindEl ? kindEl.value : '巨菇';
+            
+            // 自動升級種類：如果名稱或標籤含有元素關鍵字，強制將分類改為元素菇
+            const nLower = nameEl.value.trim().toLowerCase();
+            const tLower = tagEl ? tagEl.value.trim().toLowerCase() : '';
+            const chk = nLower + " " + tLower;
+            if (chk.includes('水晶') || chk.includes('毒') || (chk.includes('水') && !chk.includes('水果')) || chk.includes('火') || chk.includes('紅') || chk.includes('電')) {
+                mushKind = '元素菇';
+            }
 
             const mCoordsStr = normalizeCoords(coordsEl.value).toLowerCase();
             if (mCoordsStr) {
@@ -2754,13 +2762,24 @@
                 processedCountry = "台灣";
             }
 
-            const editedKind = document.getElementById('edit-mushroom-kind') ? document.getElementById('edit-mushroom-kind').value : '巨菇';
+            let editedKind = document.getElementById('edit-mushroom-kind') ? document.getElementById('edit-mushroom-kind').value : '巨菇';
+            const editNameVal = document.getElementById('edit-name').value.trim();
+            const editTagVal = document.getElementById('edit-tag').value.trim();
+            
+            // 自動升級種類：如果名稱或標籤含有元素關鍵字，強制將分類改為元素菇
+            const nLower = editNameVal.toLowerCase();
+            const tLower = editTagVal.toLowerCase();
+            const chk = nLower + " " + tLower;
+            if (chk.includes('水晶') || chk.includes('毒') || (chk.includes('水') && !chk.includes('水果')) || chk.includes('火') || chk.includes('紅') || chk.includes('電')) {
+                editedKind = '元素菇';
+            }
+
             const editCityEl = document.getElementById('edit-mushroom-city');
             const processedCity = editCityEl ? toTW(editCityEl.value.trim()) : "";
             let updates = { 
                 user: newUser, country: processedCountry, city: processedCity,
-                name: document.getElementById('edit-name').value.trim(), coords: normalizeCoords(document.getElementById('edit-coords').value),
-                tag: document.getElementById('edit-tag').value.trim(), targetTime: targetTime, kind: editedKind
+                name: editNameVal, coords: normalizeCoords(document.getElementById('edit-coords').value),
+                tag: editTagVal, targetTime: targetTime, kind: editedKind
             };
             const item = dataList.find(i => i.id === currentEditingTimeId);
             if (item) {
@@ -3169,8 +3188,9 @@
         // 元素圖示
         const elemEmoji = elemClass === 'elem-水' ? '💧' : elemClass === 'elem-火' ? '🔥' : elemClass === 'elem-電' ? '⚡' : elemClass === 'elem-毒' ? '☠️' : elemClass === 'elem-水晶' ? '💎' : '';
         const kindLabel = isElem ? `元素${elemEmoji}` : '巨';
-        const kindBg = isElem ? elemHeaderBg : '#fef3c7';
-        const kindColor = isElem ? elemHeaderColor : '#92400e';
+        // 恢復元素菇原本固定的綠色/黃色分類標籤，不隨元素變色
+        const kindBg = isElem ? '#d1fae5' : '#fef3c7';
+        const kindColor = isElem ? '#065f46' : '#92400e';
 
         card.innerHTML = `
             <div style="background: ${elemHeaderBg}; padding: 6px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 6px;">
