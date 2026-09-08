@@ -2903,7 +2903,7 @@
             if (buttonElement) {
                 const originalHTML = buttonElement.innerHTML;
                 if (isInline) {
-                    buttonElement.innerHTML = '✅ 已複製';
+                    buttonElement.innerHTML = '✅';
                     buttonElement.style.background = '#dcfce7';
                     buttonElement.style.color = '#166534';
                     buttonElement.style.borderColor = '#bbf7d0';
@@ -3177,8 +3177,9 @@
 
         // 簡化參戰空位為五個小圓點
         let slotsHtml = `<div class="slots-wrapper" style="background:transparent; border:none; padding:4px 0 0 0; margin-top:4px;">`;
-        slotsHtml += `<div style="margin-bottom: 4px;">`;
+        slotsHtml += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">`;
         slotsHtml += `<span style="font-size: 11px; font-weight: bold; color: #4b5563;">⚔️ 參戰空位 (${filledCount}/5)</span>`;
+        slotsHtml += !isFull ? `<button onclick="fillAllSlots('${item.id}')" style="font-size:10px; font-weight:bold; background:#ef4444; color:white; border:none; border-radius:8px; padding:2px 8px; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.1);">滿</button>` : '';
         slotsHtml += `</div><div style="display: flex; gap: 6px; align-items:center;">`;
         for (let i = 0; i < 5; i++) {
             if (currentSlots[i]) {
@@ -3187,7 +3188,6 @@
                 slotsHtml += `<button class="slot-btn" style="flex:0 0 24px; width:24px; height:24px; padding:0; border-radius:50%; background:#f1f5f9; border:1px solid #cbd5e1; color:#94a3b8; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-sizing:border-box;" onclick="toggleSlot('${item.id}', ${i})">+</button>`;
             }
         }
-        slotsHtml += !isFull ? `<button onclick="fillAllSlots('${item.id}')" style="font-size:11px; font-weight:bold; background:#ef4444; color:white; border:none; border-radius:12px; padding:4px 10px; cursor:pointer; margin-left:2px; box-shadow:0 1px 2px rgba(0,0,0,0.1);">滿</button>` : '';
         slotsHtml += `</div></div>`;
 
         // 元素圖示
