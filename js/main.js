@@ -3200,10 +3200,11 @@
         // 將地點/標籤區塊恢復普通文字排列
         const locHtml = `<div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px; margin-top:4px;">${cHtml} ${badgeHtml}</div>`;
 
-        let actionHtml = item.user === "" ? `<button class="btn-sm btn-claim" style="flex:1;" onclick="openClaimModalById('${item.id}')">🙋 認領</button>` : '';
-        actionHtml += item.coords ? `<button class="btn-sm btn-default" style="background:transparent; color:#64748b; border:none; font-size:16px; padding:4px; min-width:auto; flex-shrink:0;" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}')" title="地圖">🗺️</button>` : '';
-        actionHtml += `<button class="btn-sm btn-edit" style="background:transparent; color:#64748b; border:none; font-size:16px; padding:4px; min-width:auto; flex-shrink:0;" onclick="openTimeModalById('${item.id}', 'mushroom')" title="修改">✏️</button>`;
-        actionHtml += item.coords ? `<button class="btn-sm btn-default" style="background:transparent; color:#64748b; border:none; font-size:16px; padding:4px; min-width:auto; flex-shrink:0;" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this, true)" title="複製座標">📋</button>` : '';
+        const actionBtnStyle = "flex:1; background:#f8fafc; border:1px solid #e2e8f0; color:#475569; font-size:20px; padding:6px 0; border-radius:12px; cursor:pointer; display:flex; justify-content:center; align-items:center; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition:all 0.2s;";
+        let actionHtml = item.user === "" ? `<button class="btn-sm btn-claim" style="flex:1.5; padding:6px 0; border-radius:12px; font-size:14px; display:flex; justify-content:center; align-items:center; margin:0;" onclick="openClaimModalById('${item.id}')">🙋 認領</button>` : '';
+        actionHtml += item.coords ? `<button class="btn-sm btn-default" style="${actionBtnStyle}" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}')" title="地圖">🗺️</button>` : '';
+        actionHtml += `<button class="btn-sm btn-edit" style="${actionBtnStyle}" onclick="openTimeModalById('${item.id}', 'mushroom')" title="修改">✏️</button>`;
+        actionHtml += item.coords ? `<button class="btn-sm btn-default" style="${actionBtnStyle}" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this, true)" title="複製座標">📋</button>` : '';
 
         card.innerHTML = `
             <div style="background: ${elemHeaderBg}; padding: 6px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 6px;">
@@ -3227,8 +3228,9 @@
                 </div>
                 ${slotsHtml}
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; border-top:1px solid #f1f5f9; padding-top:8px;">
-                    <div style="display:flex; gap:4px; flex:1; justify-content:space-between;">${actionHtml}</div>
-                </div></div>
+                    <div style="display:flex; gap:8px; flex:1; justify-content:space-between;">${actionHtml}</div>
+                </div>
+            </div>
             ${isFull ? `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; border-radius:12px; overflow:hidden;">
                 <span style="font-size:72px; opacity:0.1; transform:rotate(-15deg); line-height:1; user-select:none;">🈵</span>
             </div>` : ''}
