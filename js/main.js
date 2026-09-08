@@ -3048,12 +3048,17 @@
         const isCol = collapsedGroups.has(groupId);
         const arrow = isCol ? '▶' : '▼';
         const gHead = document.createElement('div');
-        gHead.className = 'group-header mushroom-header';
+        gHead.className = 'group-header';
+        gHead.style.background = 'transparent';
+        gHead.style.boxShadow = 'none';
         gHead.style.justifyContent = 'flex-start';
-        gHead.style.gap = '12px';
+        gHead.style.padding = '4px 0';
+        gHead.style.marginTop = '16px';
         gHead.innerHTML = `
-            <span style="font-size:18px; font-weight:900; background:rgba(255,255,255,0.25); padding:4px 12px; border-radius:16px;">${cards.length} 筆</span>
-            <span>${arrow} 📂 ${title}</span>
+            <div style="background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; padding:6px 14px; border-radius:16px; display:inline-flex; align-items:center; gap:10px; font-size:16px; font-weight:bold; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                <span>${arrow} 📂 ${escapeHtml(title)}</span>
+                <span style="background:rgba(255,255,255,0.8); padding:2px 8px; border-radius:12px; font-size:13px; font-weight:900;">${cards.length} 筆</span>
+            </div>
         `;
         gHead.addEventListener('click', () => toggleGroup(groupId));
         container.appendChild(gHead);
@@ -3607,21 +3612,30 @@
                 const cnt3d = pcOnly.filter(i => (now - getCreatedAt(i.id)) <= ms3d).length;
                 const cntAll = pcOnly.length;
 
-                const makeStatCard = (cls, label, value, sub, onclick) =>
-                    `<div class="pc-stat-card ${cls}" onclick="${onclick}" title="${label}">
-                        <div class="stat-label">${label}</div>
-                        <div class="stat-value">${value}</div>
-                        <div class="stat-sub">${sub}</div>
-                    </div>`;
+                                statsEl.style.display = 'flex';
+                statsEl.style.justifyContent = 'space-around';
+                statsEl.style.background = '#f8fafc';
+                statsEl.style.border = '1px solid #e2e8f0';
+                statsEl.style.borderRadius = '12px';
+                statsEl.style.padding = '8px 12px';
+                statsEl.style.marginBottom = '8px';
 
-                statsEl.style.display = 'flex';
-                statsEl.innerHTML =
-                    makeStatCard('stat-1d', '最近 1 天新增', cnt1d, '筆明信片',
-                        `document.getElementById('postcard-recent-filter').value='1'; updateView();`) +
-                    makeStatCard('stat-3d', '最近 3 天新增', cnt3d, '筆明信片',
-                        `document.getElementById('postcard-recent-filter').value='3'; updateView();`) +
-                    makeStatCard('stat-total', '全部明信片', cntAll, '筆（不含金盆）',
-                        `document.getElementById('postcard-recent-filter').value='all'; updateView();`);
+                statsEl.innerHTML = `
+                    <div onclick="document.getElementById('postcard-recent-filter').value='1'; updateView();" style="cursor:pointer; display:flex; align-items:center; gap:6px;" title="過濾：最近 1 天新增">
+                        <span style="color:#64748b; font-size:12px; font-weight:bold;">最新 1 天</span>
+                        <span style="font-weight:900; color:#3b82f6; font-size:16px;">${cnt1d}</span>
+                    </div>
+                    <div style="width:1px; background:#cbd5e1; margin:0 4px;"></div>
+                    <div onclick="document.getElementById('postcard-recent-filter').value='3'; updateView();" style="cursor:pointer; display:flex; align-items:center; gap:6px;" title="過濾：最近 3 天新增">
+                        <span style="color:#64748b; font-size:12px; font-weight:bold;">最近 3 天</span>
+                        <span style="font-weight:900; color:#0ea5e9; font-size:16px;">${cnt3d}</span>
+                    </div>
+                    <div style="width:1px; background:#cbd5e1; margin:0 4px;"></div>
+                    <div onclick="document.getElementById('postcard-recent-filter').value='all'; updateView();" style="cursor:pointer; display:flex; align-items:center; gap:6px;" title="取消時間過濾 (不含金盆)">
+                        <span style="color:#64748b; font-size:12px; font-weight:bold;">總數</span>
+                        <span style="font-weight:900; color:#10b981; font-size:16px;">${cntAll}</span>
+                    </div>
+                `;
             }
         } else {
             const statsEl = document.getElementById('postcard-stats');
@@ -3943,11 +3957,20 @@
                 if (!knownPostcardGroups.has(groupId)) { collapsedGroups.add(groupId); knownPostcardGroups.add(groupId); }
                 isCol = collapsedGroups.has(groupId);
                 const arrow = isCol ? '▶' : '▼';
-                const gHead = document.createElement('div');
-                gHead.className = 'group-header postcard-header';
-                if (typeof getColorForType === 'function') {
-                    gHead.style.background = getColorForType(type);
-                }
+                                const gHead = document.createElement('div');
+                gHead.className = 'group-header';
+                gHead.style.background = 'transparent';
+                gHead.style.boxShadow = 'none';
+                gHead.style.justifyContent = 'flex-start';
+                gHead.style.padding = '4px 0';
+                gHead.style.marginTop = '16px';
+
+                let hash = 0;
+                for (let i = 0; i < type.length; i++) hash = type.charCodeAt(i) + ((hash << 5) - hash);
+                const hue = Math.abs(hash) % 360;
+                const pastelBg = `hsl(${hue}, 85%, 94%)`;
+                const darkText = `hsl(${hue}, 85%, 30%)`;
+                const borderColor = `hsl(${hue}, 85%, 85%)`;
                 
                 let hasMissingGroup = false;
                 let hasClaimableGroup = false;
@@ -3982,12 +4005,14 @@
                 });
 
                 let groupReminders = '';
-                if (hasMissingGroup) groupReminders += ' <span style="color:#fee2e2; font-size:12px; font-weight:bold; background:rgba(239,68,68,0.3); padding:1px 6px; border-radius:10px; margin-left:4px;">❗缺</span>';
-                if (hasClaimableGroup) groupReminders += ' <span style="color:#fef3c7; font-size:12px; font-weight:bold; background:rgba(217,119,6,0.3); padding:1px 6px; border-radius:10px; margin-left:4px;">⚠️可拿</span>';
+                if (hasMissingGroup) groupReminders += ' <span style="color:#dc2626; font-size:12px; font-weight:bold; background:#fef2f2; border:1px solid #fca5a5; padding:2px 8px; border-radius:12px; margin-left:8px;">⚠️ 缺</span>';
+                if (hasClaimableGroup) groupReminders += ' <span style="color:#d97706; font-size:12px; font-weight:bold; background:#fffbeb; border:1px solid #fcd34d; padding:2px 8px; border-radius:12px; margin-left:8px;">🎁 可拿</span>';
 
                 gHead.innerHTML = `
-                    <span style="font-size:18px; font-weight:900; background:rgba(255,255,255,0.25); padding:4px 12px; border-radius:16px;">${pcGroups[type].length} 筆</span> 
-                    <span>${arrow} 📂 ${escapeHtml(type)}${groupReminders}</span>
+                    <div style="background:${pastelBg}; border:1px solid ${borderColor}; color:${darkText}; padding:6px 14px; border-radius:16px; display:inline-flex; align-items:center; gap:10px; font-size:16px; font-weight:bold; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition:all 0.2s;">
+                        <span>${arrow} 📂 ${escapeHtml(type)}</span>
+                        <span style="background:rgba(255,255,255,0.7); padding:2px 8px; border-radius:12px; font-size:13px; font-weight:900;">${pcGroups[type].length} 筆</span>
+                    </div>${groupReminders}
                 `;
 
                 gHead.addEventListener('click', () => toggleGroup(groupId));

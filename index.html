@@ -1977,9 +1977,9 @@
             <!-- 最近新增統計 -->
             <div id="postcard-stats" style="display:none; gap:8px; margin-bottom:12px; flex-wrap:wrap;"></div>
 
-            <div style="background:var(--card-bg); padding:10px 15px; border-radius:12px; margin-bottom:15px; box-shadow:0 1px 3px rgba(0,0,0,0.05); display:flex; flex-direction:column; gap:10px;">
+            <div style="background:var(--card-bg); padding:8px 12px; border-radius:12px; margin-bottom:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05); display:flex; flex-direction:column; gap:8px;">
                 <!-- 第一排：過濾選單 (三個) -->
-                <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
                     <label style="font-size:13px; font-weight:bold; color:var(--text-main); white-space:nowrap; margin-right:-2px;">過濾：</label>
                     <select id="postcard-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:13px; flex:1; min-width:90px;">
                         <option value="all">全部明信片</option>
@@ -2001,7 +2001,7 @@
                 </div>
                 
                 <!-- 第三排：搜尋列和按鈕 -->
-                <div style="display:flex; flex-wrap:nowrap; gap:8px; align-items:center;">
+                <div style="display:flex; flex-wrap:nowrap; gap:6px; align-items:center;">
                     <input type="text" id="postcard-search" class="input-base search-input" style="flex:1; min-width:0; padding:5px 8px; font-size:13px;" oninput="updateView()" onchange="updateView()" onkeyup="updateView()" placeholder="🔍 搜尋名稱、發表者、座標、標籤...">
                     <button type="button" onclick="collapseAllPostcardGroups()" title="全部折疊以節省流量" style="flex-shrink:0; background:transparent; border:1px solid #e5e7eb; border-radius:8px; padding:5px 8px; cursor:pointer; font-size:12px; color:var(--text-muted); white-space:nowrap;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">全部折疊</button>
                 </div>
@@ -3076,9 +3076,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.09.09.0201";</script>
-    <script src="js/main.js?v=202609090201"></script>
-    <script src="js/autofill.js?v=202609090201"></script>
+    <script>const APP_VERSION = "2026.09.09.0216";</script>
+    <script src="js/main.js?v=202609090216"></script>
+    <script src="js/autofill.js?v=202609090216"></script>
 </body>
 </html>
 
