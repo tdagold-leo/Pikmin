@@ -3183,9 +3183,9 @@
         slotsHtml += `</div><div style="display: flex; gap: 6px; align-items:center;">`;
         for (let i = 0; i < 5; i++) {
             if (currentSlots[i]) {
-                slotsHtml += `<button class="slot-btn" style="width:20px; height:20px; border-radius:50%; background:#10b981; border:none; color:white; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.1);" onclick="toggleSlot('${item.id}', ${i})">✓</button>`;
+                slotsHtml += `<button class="slot-btn" style="flex:0 0 24px; width:24px; height:24px; padding:0; border-radius:50%; background:#10b981; border:none; color:white; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.1);" onclick="toggleSlot('${item.id}', ${i})">✓</button>`;
             } else {
-                slotsHtml += `<button class="slot-btn" style="width:20px; height:20px; border-radius:50%; background:#e2e8f0; border:1px solid #cbd5e1; color:#94a3b8; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-sizing:border-box;" onclick="toggleSlot('${item.id}', ${i})">+</button>`;
+                slotsHtml += `<button class="slot-btn" style="flex:0 0 24px; width:24px; height:24px; padding:0; border-radius:50%; background:#f1f5f9; border:1px solid #cbd5e1; color:#94a3b8; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-sizing:border-box;" onclick="toggleSlot('${item.id}', ${i})">+</button>`;
             }
         }
         slotsHtml += `</div></div>`;
@@ -3197,10 +3197,8 @@
         const kindBg = isElem ? elemHeaderBg : '#fef3c7';
         const kindColor = isElem ? elemHeaderColor : '#92400e';
 
-        // 將地點/標籤區塊整合為可點擊複製的按鈕
-        const locHtml = `<button onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this, true)" style="display:inline-flex; align-items:center; gap:4px; flex-wrap:wrap; background:#f1f5f9; border:1px solid #e2e8f0; padding:4px 8px; border-radius:8px; cursor:pointer; transition:all 0.2s; text-align:left; line-height:1.4;" class="copy-loc-btn">
-            ${cHtml} ${badgeHtml} <span style="font-size:12px; color:#64748b; margin-left:2px;">📋</span>
-        </button>`;
+        // 將地點/標籤區塊恢復普通文字排列
+        const locHtml = `<div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px; margin-top:4px;">${cHtml} ${badgeHtml}</div>`;
 
         let actionHtml = item.user === "" ? `<button class="btn-sm btn-claim" style="flex:1;" onclick="openClaimModalById('${item.id}')">🙋 認領</button>` : '';
         actionHtml += item.coords ? `<button class="btn-sm btn-default" style="background:transparent; color:#64748b; border:none; font-size:16px; padding:4px; min-width:auto; flex-shrink:0;" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}')" title="地圖">🗺️</button>` : '';
@@ -3216,14 +3214,15 @@
             </div>
             <div class="card-body" style="gap: 8px; padding: 12px;">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
-                    <div style="display:flex; flex-direction:column; gap:6px; flex:1; min-width:0;">
-                        <span class="card-title" style="font-size:16px; margin:0; line-height:1.3; font-weight:bold; cursor:pointer;" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this, true)" title="點擊複製座標">${safeName}</span>
-                        <div style="margin-top:2px;">${locHtml}</div>
+                    <div style="display:flex; flex-direction:column; gap:2px; flex:1; min-width:0;">
+                        <span class="card-title" style="font-size:16px; margin:0; line-height:1.3; font-weight:bold;">${safeName}</span>
+                        ${locHtml}
                     </div>
-                    <div style="flex:0 0 52px;">
-                        <div style="background:${uTheme.bg}; color:${uTheme.color}; font-weight:${uTheme.fw}; font-family:${uTheme.ff}; border-radius:50%; width:46px; height:46px; display:flex; align-items:center; justify-content:center; line-height:1; text-align:center; overflow:hidden; border: 2px solid ${uTheme.border}; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin:0 auto; ${uTheme.bgImg ? `background-image:${uTheme.bgImg}; background-size:${uTheme.bgSize}; background-position:${uTheme.bgPos}; background-repeat:no-repeat;` : ''}">
+                    <div style="flex:0 0 56px; display:flex; flex-direction:column; align-items:center; gap:6px;">
+                        <div style="background:${uTheme.bg}; color:${uTheme.color}; font-weight:${uTheme.fw}; font-family:${uTheme.ff}; border-radius:50%; width:44px; height:44px; display:flex; align-items:center; justify-content:center; line-height:1; text-align:center; overflow:hidden; border: 2px solid ${uTheme.border}; box-shadow: 0 2px 4px rgba(0,0,0,0.05); ${uTheme.bgImg ? `background-image:${uTheme.bgImg}; background-size:${uTheme.bgSize}; background-position:${uTheme.bgPos}; background-repeat:no-repeat;` : ''}">
                             ${item.user ? `<span style="font-size:12px; word-break:break-all; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; padding:0 2px;">${escapeHtml(item.user)}</span>` : `<span style="color:#64748b; font-size:10px; font-style:italic;">待認領</span>`}
                         </div>
+                        <button onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this, true)" style="background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; font-size:11px; font-weight:bold; border-radius:6px; padding:3px 0; width:100%; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition:all 0.2s;">📋 複製</button>
                     </div>
                 </div>
                 ${slotsHtml}
