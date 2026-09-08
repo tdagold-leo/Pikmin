@@ -238,20 +238,45 @@
             gap: 12px;
         }
         
-        /* 統一卡片基礎樣式 */
-        /* 元素菇邊框顏色 */
-        .grid-card.elem-水  { border: 2px solid #3b82f6; box-shadow: 0 0 0 1px #bfdbfe; }
-        .grid-card.elem-火  { border: 2px solid #ef4444; box-shadow: 0 0 0 1px #fecaca; }
-        .grid-card.elem-電  { border: 2px solid #f59e0b; box-shadow: 0 0 0 1px #fde68a; }
-        @keyframes poison-border-anim {
-            0%   { border-color: #3b82f6; box-shadow: 0 0 0 1px #3b82f6, 0 2px 8px rgba(59,130,246,0.5); }
-            25%  { border-color: #ffffff; box-shadow: 0 0 0 1px #ffffff, 0 2px 8px rgba(255,255,255,0.8); }
-            50%  { border-color: #9ca3af; box-shadow: 0 0 0 1px #9ca3af, 0 2px 8px rgba(156,163,175,0.5); }
-            75%  { border-color: #ffffff; box-shadow: 0 0 0 1px #ffffff, 0 2px 8px rgba(255,255,255,0.8); }
-            100% { border-color: #3b82f6; box-shadow: 0 0 0 1px #3b82f6, 0 2px 8px rgba(59,130,246,0.5); }
+                /* 統一卡片基礎樣式 */
+        /* 元素菇邊框 + 背景主題色 */
+        .grid-card.elem-水 {
+            border: 2px solid #3b82f6;
+            box-shadow: 0 0 0 1px #bfdbfe, 0 4px 12px rgba(59,130,246,0.12);
+            background: linear-gradient(160deg, #eff6ff 0%, var(--card-bg) 55%);
         }
-        .grid-card.elem-毒  { border: 2px solid #3b82f6; animation: poison-border-anim 8s linear infinite; }
-        .grid-card.elem-水晶 { border: 2px solid #d1d5db; box-shadow: 0 0 0 1px #9ca3af, 0 0 6px 1px rgba(156,163,175,0.4); background: linear-gradient(135deg, rgba(243,244,246,0.6), rgba(229,231,235,0.2)); }
+        .grid-card.elem-火 {
+            border: 2px solid #ef4444;
+            box-shadow: 0 0 0 1px #fecaca, 0 4px 12px rgba(239,68,68,0.12);
+            background: linear-gradient(160deg, #fff1f2 0%, var(--card-bg) 55%);
+        }
+        .grid-card.elem-電 {
+            border: 2px solid #f59e0b;
+            box-shadow: 0 0 0 1px #fde68a, 0 4px 12px rgba(245,158,11,0.12);
+            background: linear-gradient(160deg, #fffbeb 0%, var(--card-bg) 55%);
+        }
+        .grid-card.elem-水晶 {
+            border: 2px solid #a5b4fc;
+            box-shadow: 0 0 0 1px #c7d2fe, 0 0 14px 2px rgba(165,180,252,0.2);
+            background: linear-gradient(160deg, #f5f3ff 0%, var(--card-bg) 55%);
+        }
+        @keyframes poison-border-anim {
+            0%   { border-color: #818cf8; box-shadow: 0 0 0 1px #818cf8, 0 2px 10px rgba(129,140,248,0.5); }
+            33%  { border-color: #a78bfa; box-shadow: 0 0 0 1px #a78bfa, 0 2px 10px rgba(167,139,250,0.6); }
+            66%  { border-color: #34d399; box-shadow: 0 0 0 1px #34d399, 0 2px 10px rgba(52,211,153,0.5); }
+            100% { border-color: #818cf8; box-shadow: 0 0 0 1px #818cf8, 0 2px 10px rgba(129,140,248,0.5); }
+        }
+        @keyframes poison-bg-anim {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .grid-card.elem-毒 {
+            border: 2px solid #818cf8;
+            background: linear-gradient(270deg, #f0f9ff, #f5f3ff, #ecfdf5, #fdf4ff);
+            background-size: 300% 300%;
+            animation: poison-border-anim 4s ease infinite, poison-bg-anim 8s ease infinite;
+        }
 
         .grid-card {
             background: var(--card-bg);
@@ -3046,9 +3071,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.09.07.0239";</script>
-    <script src="js/main.js?v=202609070239"></script>
-    <script src="js/autofill.js?v=202609070239"></script>
+    <script>const APP_VERSION = "2026.09.08.1958";</script>
+    <script src="js/main.js?v=202609081958"></script>
+    <script src="js/autofill.js?v=202609081958"></script>
 </body>
 </html>
 

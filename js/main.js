@@ -3093,15 +3093,40 @@
         const badgeHtml = [tHtml, dupBadge].filter(Boolean).join(' ');
 
         const card = document.createElement('div');
-        // 元素菇邊框：從名稱開頭偵測元素
+        // 元素菇主題：從標籤偵測元素（優先順序：水晶 > 毒 > 水 > 火 > 電）
+        const tag = (item.tag || '').toLowerCase();
         let elemClass = '';
-        const n = item.name || '';
-        if (n.startsWith('水晶') || n.startsWith('大水晶')) elemClass = 'elem-水晶';
-        else if (n.startsWith('水') || n.startsWith('大水')) elemClass = 'elem-水';
-        else if (n.startsWith('火') || n.startsWith('大火') || n.startsWith('大紅')) elemClass = 'elem-火';
-        else if (n.startsWith('電') || n.startsWith('大電')) elemClass = 'elem-電';
-        else if (n.startsWith('毒') || n.startsWith('大毒')) elemClass = 'elem-毒';
-        
+        let elemHeaderBg = isExpired ? '#f3f4f6' : '#ecfdf5';
+        let elemHeaderColor = isExpired ? '#6b7280' : '#065f46';
+
+        if (item.kind === '元素菇' || item.type === '元素菇') {
+            if (tag.includes('水晶')) {
+                elemClass = 'elem-水晶';
+                elemHeaderBg = isExpired ? '#f3f4f6' : '#f5f3ff';
+                elemHeaderColor = '#4c1d95';
+            } else if (tag.includes('毒')) {
+                elemClass = 'elem-毒';
+                elemHeaderBg = isExpired ? '#f3f4f6' : '#f0f9ff';
+                elemHeaderColor = '#3730a3';
+            } else if (tag.includes('水')) {
+                elemClass = 'elem-水';
+                elemHeaderBg = isExpired ? '#f3f4f6' : '#eff6ff';
+                elemHeaderColor = '#1e40af';
+            } else if (tag.includes('火') || tag.includes('紅')) {
+                elemClass = 'elem-火';
+                elemHeaderBg = isExpired ? '#f3f4f6' : '#fff1f2';
+                elemHeaderColor = '#991b1b';
+            } else if (tag.includes('電')) {
+                elemClass = 'elem-電';
+                elemHeaderBg = isExpired ? '#f3f4f6' : '#fffbeb';
+                elemHeaderColor = '#92400e';
+            } else {
+                // 元素菇但標籤沒指定元素
+                elemHeaderBg = isExpired ? '#f3f4f6' : '#d1fae5';
+                elemHeaderColor = '#065f46';
+            }
+        }
+
         const dupClass = isDup ? 'duplicate-card' : '';
         card.className = `grid-card ${isExpired ? 'row-expired' : ''} ${elemClass} ${dupClass}`;
         card.style.position = 'relative';
@@ -3130,11 +3155,17 @@
         }
         slotsHtml += `</div></div>`;
 
+        // 元素圖示
+        const elemEmoji = elemClass === 'elem-水' ? '💧' : elemClass === 'elem-火' ? '🔥' : elemClass === 'elem-電' ? '⚡' : elemClass === 'elem-毒' ? '☠️' : elemClass === 'elem-水晶' ? '💎' : '';
+        const kindLabel = (item.kind||'巨菇') === '元素菇' ? `元素${elemEmoji}` : '巨';
+        const kindBg = (item.kind||'巨菇') === '元素菇' ? elemHeaderBg : '#fef3c7';
+        const kindColor = (item.kind||'巨菇') === '元素菇' ? elemHeaderColor : '#92400e';
+
         card.innerHTML = `
-            <div style="background: ${isExpired ? '#f3f4f6' : '#ecfdf5'}; padding: 6px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+            <div style="background: ${elemHeaderBg}; padding: 6px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 6px;">
                 <div style="display:flex; align-items:center; gap:6px;">
                     <span style="font-size: 11px; font-weight: bold; color: var(--text-muted); white-space:nowrap; line-height:1;">#${String(item.sn).padStart(2,'0')}</span>
-                    <span style="font-size:11px; font-weight:900; padding:2px 6px; border-radius:4px; white-space:nowrap; background:${(item.kind||'巨菇')==='元素菇' ? '#d1fae5' : '#fef3c7'}; color:${(item.kind||'巨菇')==='元素菇' ? '#065f46' : '#92400e'}; line-height:1;">${(item.kind||'巨菇')==='元素菇' ? '元素' : '巨'}</span>
+                    <span style="font-size:11px; font-weight:900; padding:2px 8px; border-radius:6px; white-space:nowrap; background:${kindBg}; color:${kindColor}; line-height:1; border:1px solid ${kindColor}22;">${kindLabel}</span>
                 </div>
                 <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin: 0; font-size: 10px; line-height:1;">${timeText}</span>
             </div>
