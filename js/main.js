@@ -2891,7 +2891,7 @@
         return s;
     }
 
-    function copyCoords(text, buttonElement) {
+    function copyCoords(text, buttonElement, isInline = false) {
         const os = detectOS();
         const normalized = normalizeCoords(String(text));
         // iOS / macOS / Windows：用空格替代逗號（地圖 App 直接貼上更順暢）
@@ -2902,13 +2902,21 @@
         navigator.clipboard.writeText(copyText).then(() => {
             if (buttonElement) {
                 const originalHTML = buttonElement.innerHTML;
-                buttonElement.innerHTML = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;"><span style="font-size:13px; line-height:1;">✅</span><span style="font-size:10px; line-height:1;">成功</span></div>';
-                buttonElement.style.background = '#e5e7eb';
-                buttonElement.style.color = '#374151';
+                if (isInline) {
+                    buttonElement.innerHTML = '✅ 已複製';
+                    buttonElement.style.background = '#dcfce7';
+                    buttonElement.style.color = '#166534';
+                    buttonElement.style.borderColor = '#bbf7d0';
+                } else {
+                    buttonElement.innerHTML = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;"><span style="font-size:13px; line-height:1;">✅</span><span style="font-size:10px; line-height:1;">成功</span></div>';
+                    buttonElement.style.background = '#e5e7eb';
+                    buttonElement.style.color = '#374151';
+                }
                 setTimeout(() => { 
                     buttonElement.innerHTML = originalHTML; 
                     buttonElement.style.background = ''; 
                     buttonElement.style.color = '';
+                    if (isInline) buttonElement.style.borderColor = '';
                 }, 1200);
             }
         }).catch(err => alert('複製失敗，請手動複製。'));
@@ -3163,24 +3171,17 @@
         
         const uTheme = getUserColorTheme(item.user);
 
-        let actionHtml = item.user === "" ? `<button class="btn-sm btn-claim" onclick="openClaimModalById('${item.id}')">認領</button>` : '';
-        actionHtml += item.coords ? `<button class="btn-sm btn-default" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}')">🗺️ 地圖</button>` : '';
-        actionHtml += `<button class="btn-sm btn-edit" onclick="openTimeModalById('${item.id}', 'mushroom')">修改</button><button class="btn-sm btn-danger" onclick="deleteItem('${item.id}', 'mushroom')">刪除</button>`;
-
-        const currentSlots = item.slots || ['', '', '', '', ''];
-        const filledCount = currentSlots.filter(s => s !== '').length;
-        const isFull = filledCount === 5;
-        
-        let slotsHtml = `<div class="slots-wrapper">`;
+        // 簡化參戰空位為五個小圓點
+        let slotsHtml = `<div class="slots-wrapper" style="background:transparent; border:none; padding:4px 0 0 0; margin-top:4px;">`;
         slotsHtml += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">`;
-        slotsHtml += `<span style="font-size: 10px; font-weight: bold; color: #4b5563;">⚔️ 參戰空位 (${filledCount}/5)</span>`;
-        slotsHtml += !isFull ? `<button onclick="fillAllSlots('${item.id}')" style="font-size:9px; font-weight:bold; background:#ef4444; color:white; border:none; border-radius:5px; padding:2px 7px; cursor:pointer; margin-left:auto;">額滿</button>` : '';
-        slotsHtml += `</div><div style="display: flex; gap: 4px;">`;
+        slotsHtml += `<span style="font-size: 11px; font-weight: bold; color: #4b5563;">⚔️ 參戰空位 (${filledCount}/5)</span>`;
+        slotsHtml += !isFull ? `<button onclick="fillAllSlots('${item.id}')" style="font-size:10px; font-weight:bold; background:#ef4444; color:white; border:none; border-radius:5px; padding:2px 8px; cursor:pointer; margin-left:auto;">滿</button>` : '';
+        slotsHtml += `</div><div style="display: flex; gap: 6px; align-items:center;">`;
         for (let i = 0; i < 5; i++) {
             if (currentSlots[i]) {
-                slotsHtml += `<button class="slot-btn filled" onclick="toggleSlot('${item.id}', ${i})">✔️</button>`;
+                slotsHtml += `<button class="slot-btn" style="width:20px; height:20px; border-radius:50%; background:#10b981; border:none; color:white; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.1);" onclick="toggleSlot('${item.id}', ${i})">✓</button>`;
             } else {
-                slotsHtml += `<button class="slot-btn empty" onclick="toggleSlot('${item.id}', ${i})">+</button>`;
+                slotsHtml += `<button class="slot-btn" style="width:20px; height:20px; border-radius:50%; background:#e2e8f0; border:1px solid #cbd5e1; color:#94a3b8; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-sizing:border-box;" onclick="toggleSlot('${item.id}', ${i})">+</button>`;
             }
         }
         slotsHtml += `</div></div>`;
@@ -3192,6 +3193,15 @@
         const kindBg = isElem ? elemHeaderBg : '#fef3c7';
         const kindColor = isElem ? elemHeaderColor : '#92400e';
 
+        // 將地點/標籤區塊整合為可點擊複製的按鈕
+        const locHtml = `<button onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this, true)" style="display:inline-flex; align-items:center; gap:4px; flex-wrap:wrap; background:#f1f5f9; border:1px solid #e2e8f0; padding:4px 8px; border-radius:8px; cursor:pointer; transition:all 0.2s; text-align:left; line-height:1.4;" class="copy-loc-btn">
+            ${cHtml} ${badgeHtml} <span style="font-size:12px; color:#64748b; margin-left:2px;">📋</span>
+        </button>`;
+
+        let actionHtml = item.user === "" ? `<button class="btn-sm btn-claim" style="flex:1;" onclick="openClaimModalById('${item.id}')">🙋 認領</button>` : '';
+        actionHtml += item.coords ? `<button class="btn-sm btn-default" style="background:transparent; color:#64748b; border:none; font-size:16px; padding:4px; min-width:auto; flex-shrink:0;" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}')" title="地圖">🗺️</button>` : '';
+        actionHtml += `<button class="btn-sm btn-edit" style="background:transparent; color:#64748b; border:none; font-size:16px; padding:4px; min-width:auto; flex-shrink:0;" onclick="openTimeModalById('${item.id}', 'mushroom')" title="修改">✏️</button><button class="btn-sm btn-danger" style="background:transparent; color:#f87171; border:none; font-size:16px; padding:4px; min-width:auto; flex-shrink:0;" onclick="deleteItem('${item.id}', 'mushroom')" title="刪除">🗑️</button>`;
+
         card.innerHTML = `
             <div style="background: ${elemHeaderBg}; padding: 6px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 6px;">
                 <div style="display:flex; align-items:center; gap:6px;">
@@ -3200,26 +3210,25 @@
                 </div>
                 <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin: 0; font-size: 10px; line-height:1;">${timeText}</span>
             </div>
-            <div class="card-body" style="gap: 6px;">
-                <div style="display:flex; justify-content:space-between; align-items:stretch; gap:8px;">
+            <div class="card-body" style="gap: 8px; padding: 12px;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
                     <div style="display:flex; flex-direction:column; gap:6px; flex:1; min-width:0;">
-                        <div style="display:flex; align-items:flex-start; gap:6px;">
-                            <span class="card-title" style="font-size:15px; margin:0; line-height:1.4; font-weight:bold;">${safeName}</span>
-                        </div>
-                        <div class="lc-info" style="margin:0; margin-top:auto; display:flex; flex-wrap:wrap; gap:5px; align-items:center;">${cHtml} ${badgeHtml}</div>
+                        <span class="card-title" style="font-size:16px; margin:0; line-height:1.3; font-weight:bold; cursor:pointer;" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this, true)" title="點擊複製座標">${safeName}</span>
+                        <div style="margin-top:2px;">${locHtml}</div>
                     </div>
-                    <div style="display:flex; flex-direction:column; gap:6px; flex:0 0 56px; align-items:stretch;">
-                        <div style="background:${uTheme.bg}; color:${uTheme.color}; font-weight:${uTheme.fw}; font-family:${uTheme.ff}; border-radius:8px; padding:2px; min-height:44px; display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1; text-align:center; overflow:hidden; border: 2px solid ${uTheme.border}; box-shadow: 0 2px 4px rgba(0,0,0,0.05); ${uTheme.bgImg ? `background-image:${uTheme.bgImg}; background-size:${uTheme.bgSize}; background-position:${uTheme.bgPos}; background-repeat:no-repeat;` : ''}">
-                            ${item.user ? `<span style="font-size:${uTheme.fs}; word-break:break-all; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; padding:0 2px;">${escapeHtml(item.user)}</span>` : `<span style="color:#64748b; font-size:11px; font-style:italic;">待認領</span>`}
+                    <div style="flex:0 0 52px;">
+                        <div style="background:${uTheme.bg}; color:${uTheme.color}; font-weight:${uTheme.fw}; font-family:${uTheme.ff}; border-radius:50%; width:46px; height:46px; display:flex; align-items:center; justify-content:center; line-height:1; text-align:center; overflow:hidden; border: 2px solid ${uTheme.border}; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin:0 auto; ${uTheme.bgImg ? `background-image:${uTheme.bgImg}; background-size:${uTheme.bgSize}; background-position:${uTheme.bgPos}; background-repeat:no-repeat;` : ''}">
+                            ${item.user ? `<span style="font-size:12px; word-break:break-all; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; padding:0 2px;">${escapeHtml(item.user)}</span>` : `<span style="color:#64748b; font-size:10px; font-style:italic;">待認領</span>`}
                         </div>
-                        <button class="copy-coords-btn" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)" style="height:44px; padding:0; width:100%; border-radius:8px; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;"><span style="font-size:13px; line-height:1;">📍</span><span style="font-size:10px; line-height:1;">複製</span></button>
                     </div>
                 </div>
                 ${slotsHtml}
-                <div class="lc-actions">${actionHtml}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; border-top:1px solid #f1f5f9; padding-top:8px;">
+                    <div style="display:flex; gap:4px; flex:1;">${actionHtml}</div>
+                </div>
             </div>
             ${isFull ? `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; border-radius:12px; overflow:hidden;">
-                <span style="font-size:72px; opacity:0.15; transform:rotate(-15deg); line-height:1; user-select:none;">🈵</span>
+                <span style="font-size:72px; opacity:0.1; transform:rotate(-15deg); line-height:1; user-select:none;">🈵</span>
             </div>` : ''}
         `;
         return card;
@@ -3449,9 +3458,9 @@
         document.getElementById('active-empty').style.display = actCount === 0 ? 'block' : 'none';
         document.getElementById('unclaimed-empty').style.display = uncCount === 0 ? 'block' : 'none';
 
-        const summaryEl = document.getElementById('mushroom-summary');
+        const summaryEl = document.getElementById('mushroom-summary-badge');
         if (sortedM.length > 0) {
-            summaryEl.innerHTML = `<b>📊 巨菇總計：${sortedM.length} 筆</b> <span style="color:var(--text-muted);">(追蹤中: ${actCount} / 待認領: ${uncCount})</span>`;
+            summaryEl.innerHTML = `共 ${sortedM.length} 筆`;
             summaryEl.style.display = 'block';
         } else { summaryEl.style.display = 'none'; }
 
