@@ -3233,9 +3233,11 @@
                         `}
                     </div>
                 </div>
-                ${slotsHtml}
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto; border-top:1px solid #f1f5f9; padding-top:8px;">
-                    <div style="display:flex; gap:8px; flex:1; justify-content:space-between;">${actionHtml}</div>
+                <div style="display:flex; flex-direction:column; margin-top:auto;">
+                    ${slotsHtml}
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; border-top:1px solid #f1f5f9; padding-top:8px;">
+                        <div style="display:flex; gap:8px; flex:1; justify-content:space-between;">${actionHtml}</div>
+                    </div>
                 </div>
             </div>
             ${isFull ? `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; border-radius:12px; overflow:hidden;">
