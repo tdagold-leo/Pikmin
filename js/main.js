@@ -3186,11 +3186,11 @@
         slotsHtml += `<span style="font-size: 11px; font-weight: bold; color: #4b5563;">⚔️ 參戰空位 (${filledCount}/5)</span>`;
         slotsHtml += !isFull ? `<button onclick="fillAllSlots('${item.id}')" style="font-size:10px; font-weight:bold; background:#ef4444; color:white; border:none; border-radius:8px; padding:2px 8px; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.1);">滿</button>` : '';
         slotsHtml += `</div><div style="display: flex; justify-content: space-between; align-items:center; gap: 8px;">`;
-        for (let i = 0; i < 5; i++) {
+                for (let i = 0; i < 5; i++) {
             if (currentSlots[i]) {
-                slotsHtml += `<button class="slot-btn" style="flex:1; max-width:44px; height:44px; padding:0; border-radius:50%; background:#10b981; border:none; color:white; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.1);" onclick="toggleSlot('${item.id}', ${i})">✓</button>`;
+                slotsHtml += `<button class="slot-btn" style="flex:1; max-width:44px; aspect-ratio:1/1; height:auto; padding:0; border-radius:50%; background:#10b981; border:none; color:white; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.1);" onclick="toggleSlot('${item.id}', ${i})">✓</button>`;
             } else {
-                slotsHtml += `<button class="slot-btn" style="flex:1; max-width:44px; height:44px; padding:0; border-radius:50%; background:#f1f5f9; border:1px solid #cbd5e1; color:#94a3b8; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-sizing:border-box;" onclick="toggleSlot('${item.id}', ${i})">+</button>`;
+                slotsHtml += `<button class="slot-btn" style="flex:1; max-width:44px; aspect-ratio:1/1; height:auto; padding:0; border-radius:50%; background:#f1f5f9; border:1px solid #cbd5e1; color:#94a3b8; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-sizing:border-box;" onclick="toggleSlot('${item.id}', ${i})">+</button>`;
             }
         }
         slotsHtml += `</div></div>`;
