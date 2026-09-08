@@ -3095,28 +3095,39 @@
         const card = document.createElement('div');
         // 元素菇主題：從標籤偵測元素（優先順序：水晶 > 毒 > 水 > 火 > 電）
         const tag = (item.tag || '').toLowerCase();
+        const n = (item.name || '').toLowerCase();
+        const checkStr = tag + " " + n; // 容錯：標籤沒有的話，名稱有也算
+        
         let elemClass = '';
         let elemHeaderBg = isExpired ? '#f3f4f6' : '#ecfdf5';
         let elemHeaderColor = isExpired ? '#6b7280' : '#065f46';
+        let isElem = (item.kind === '元素菇' || item.type === '元素菇');
 
-        if (item.kind === '元素菇' || item.type === '元素菇') {
-            if (tag.includes('水晶')) {
+        // 如果名稱或標籤含有元素關鍵字，就算沒有設為元素菇也強制升級成元素菇
+        if (checkStr.includes('水晶')) isElem = true;
+        else if (checkStr.includes('毒')) isElem = true;
+        else if (checkStr.includes('水') && !checkStr.includes('水果')) isElem = true;
+        else if (checkStr.includes('火') || checkStr.includes('紅')) isElem = true;
+        else if (checkStr.includes('電')) isElem = true;
+
+        if (isElem) {
+            if (checkStr.includes('水晶')) {
                 elemClass = 'elem-水晶';
                 elemHeaderBg = isExpired ? '#f3f4f6' : '#f5f3ff';
                 elemHeaderColor = '#4c1d95';
-            } else if (tag.includes('毒')) {
+            } else if (checkStr.includes('毒')) {
                 elemClass = 'elem-毒';
                 elemHeaderBg = isExpired ? '#f3f4f6' : '#f0f9ff';
                 elemHeaderColor = '#3730a3';
-            } else if (tag.includes('水')) {
+            } else if (checkStr.includes('水') && !checkStr.includes('水果')) {
                 elemClass = 'elem-水';
                 elemHeaderBg = isExpired ? '#f3f4f6' : '#eff6ff';
                 elemHeaderColor = '#1e40af';
-            } else if (tag.includes('火') || tag.includes('紅')) {
+            } else if (checkStr.includes('火') || checkStr.includes('紅')) {
                 elemClass = 'elem-火';
                 elemHeaderBg = isExpired ? '#f3f4f6' : '#fff1f2';
                 elemHeaderColor = '#991b1b';
-            } else if (tag.includes('電')) {
+            } else if (checkStr.includes('電')) {
                 elemClass = 'elem-電';
                 elemHeaderBg = isExpired ? '#f3f4f6' : '#fffbeb';
                 elemHeaderColor = '#92400e';
@@ -3157,9 +3168,9 @@
 
         // 元素圖示
         const elemEmoji = elemClass === 'elem-水' ? '💧' : elemClass === 'elem-火' ? '🔥' : elemClass === 'elem-電' ? '⚡' : elemClass === 'elem-毒' ? '☠️' : elemClass === 'elem-水晶' ? '💎' : '';
-        const kindLabel = (item.kind||'巨菇') === '元素菇' ? `元素${elemEmoji}` : '巨';
-        const kindBg = (item.kind||'巨菇') === '元素菇' ? elemHeaderBg : '#fef3c7';
-        const kindColor = (item.kind||'巨菇') === '元素菇' ? elemHeaderColor : '#92400e';
+        const kindLabel = isElem ? `元素${elemEmoji}` : '巨';
+        const kindBg = isElem ? elemHeaderBg : '#fef3c7';
+        const kindColor = isElem ? elemHeaderColor : '#92400e';
 
         card.innerHTML = `
             <div style="background: ${elemHeaderBg}; padding: 6px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 6px;">
