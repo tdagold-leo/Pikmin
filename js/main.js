@@ -3188,9 +3188,9 @@
         // 元素圖示
         const elemEmoji = elemClass === 'elem-水' ? '💧' : elemClass === 'elem-火' ? '🔥' : elemClass === 'elem-電' ? '⚡' : elemClass === 'elem-毒' ? '☠️' : elemClass === 'elem-水晶' ? '💎' : '';
         const kindLabel = isElem ? `元素${elemEmoji}` : '巨';
-        // 恢復元素菇原本固定的綠色/黃色分類標籤，不隨元素變色
-        const kindBg = isElem ? '#d1fae5' : '#fef3c7';
-        const kindColor = isElem ? '#065f46' : '#92400e';
+        // 恢復依照元素屬性變色
+        const kindBg = isElem ? elemHeaderBg : '#fef3c7';
+        const kindColor = isElem ? elemHeaderColor : '#92400e';
 
         card.innerHTML = `
             <div style="background: ${elemHeaderBg}; padding: 6px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 6px;">
