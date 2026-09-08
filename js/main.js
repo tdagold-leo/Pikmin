@@ -3177,9 +3177,8 @@
 
         // 簡化參戰空位為五個小圓點
         let slotsHtml = `<div class="slots-wrapper" style="background:transparent; border:none; padding:4px 0 0 0; margin-top:4px;">`;
-        slotsHtml += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">`;
+        slotsHtml += `<div style="margin-bottom: 4px;">`;
         slotsHtml += `<span style="font-size: 11px; font-weight: bold; color: #4b5563;">⚔️ 參戰空位 (${filledCount}/5)</span>`;
-        slotsHtml += !isFull ? `<button onclick="fillAllSlots('${item.id}')" style="font-size:10px; font-weight:bold; background:#ef4444; color:white; border:none; border-radius:5px; padding:2px 8px; cursor:pointer; margin-left:auto;">滿</button>` : '';
         slotsHtml += `</div><div style="display: flex; gap: 6px; align-items:center;">`;
         for (let i = 0; i < 5; i++) {
             if (currentSlots[i]) {
@@ -3188,6 +3187,7 @@
                 slotsHtml += `<button class="slot-btn" style="flex:0 0 24px; width:24px; height:24px; padding:0; border-radius:50%; background:#f1f5f9; border:1px solid #cbd5e1; color:#94a3b8; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-sizing:border-box;" onclick="toggleSlot('${item.id}', ${i})">+</button>`;
             }
         }
+        slotsHtml += !isFull ? `<button onclick="fillAllSlots('${item.id}')" style="font-size:11px; font-weight:bold; background:#ef4444; color:white; border:none; border-radius:12px; padding:4px 10px; cursor:pointer; margin-left:2px; box-shadow:0 1px 2px rgba(0,0,0,0.1);">滿</button>` : '';
         slotsHtml += `</div></div>`;
 
         // 元素圖示
@@ -3222,7 +3222,7 @@
                         <div style="background:${uTheme.bg}; color:${uTheme.color}; font-weight:${uTheme.fw}; font-family:${uTheme.ff}; border-radius:50%; width:48px; height:48px; display:flex; align-items:center; justify-content:center; line-height:1; text-align:center; overflow:hidden; border: 2px solid ${uTheme.border}; box-shadow: 0 2px 4px rgba(0,0,0,0.05); flex-shrink:0; ${uTheme.bgImg ? `background-image:${uTheme.bgImg}; background-size:${uTheme.bgSize}; background-position:${uTheme.bgPos}; background-repeat:no-repeat;` : ''}">
                             ${item.user ? `<span style="font-size:13px; word-break:break-all; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; padding:0 2px;">${escapeHtml(item.user)}</span>` : `<span style="color:#64748b; font-size:11px; font-style:italic;">待認領</span>`}
                         </div>
-                        <button onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this, true)" style="background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; font-size:12px; font-weight:bold; border-radius:8px; padding:6px 0; width:100%; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.1); transition:all 0.2s; margin-top:auto;">📋 複製</button>
+                        <button onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this, true)" style="background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; font-size:14px; font-weight:bold; border-radius:20px; padding:8px 0; width:100%; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.08); transition:all 0.2s; margin-top:auto;">📋 複製</button>
                     </div>
                 </div>
                 ${slotsHtml}
