@@ -3171,6 +3171,10 @@
         
         const uTheme = getUserColorTheme(item.user);
 
+        const currentSlots = item.slots || ['', '', '', '', ''];
+        const filledCount = currentSlots.filter(s => s !== '').length;
+        const isFull = filledCount === 5;
+
         // 簡化參戰空位為五個小圓點
         let slotsHtml = `<div class="slots-wrapper" style="background:transparent; border:none; padding:4px 0 0 0; margin-top:4px;">`;
         slotsHtml += `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">`;
@@ -3344,7 +3348,7 @@
         container.innerHTML = html;
     }
 
-    function updateView() {
+    function updateView() { 
         const activeEl = document.getElementById('active-list'), unclaimEl = document.getElementById('unclaimed-list');
         const prefix = currentMode === 'goldbasin' ? 'goldbasin' : 'postcard';
         const pcEl = document.getElementById(prefix + '-container');
