@@ -3175,17 +3175,17 @@
         const filledCount = currentSlots.filter(s => s !== '').length;
         const isFull = filledCount === 5;
 
-        // 簡化參戰空位為五個小圓點
+        // 簡化參戰空位為五個小圓點，放大並使用 space-between 平均分散
         let slotsHtml = `<div class="slots-wrapper" style="background:transparent; border:none; padding:4px 0 0 0; margin-top:4px;">`;
-        slotsHtml += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">`;
+        slotsHtml += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">`;
         slotsHtml += `<span style="font-size: 11px; font-weight: bold; color: #4b5563;">⚔️ 參戰空位 (${filledCount}/5)</span>`;
         slotsHtml += !isFull ? `<button onclick="fillAllSlots('${item.id}')" style="font-size:10px; font-weight:bold; background:#ef4444; color:white; border:none; border-radius:8px; padding:2px 8px; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.1);">滿</button>` : '';
-        slotsHtml += `</div><div style="display: flex; gap: 6px; align-items:center;">`;
+        slotsHtml += `</div><div style="display: flex; justify-content: space-between; align-items:center; gap: 8px;">`;
         for (let i = 0; i < 5; i++) {
             if (currentSlots[i]) {
-                slotsHtml += `<button class="slot-btn" style="flex:0 0 24px; width:24px; height:24px; padding:0; border-radius:50%; background:#10b981; border:none; color:white; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.1);" onclick="toggleSlot('${item.id}', ${i})">✓</button>`;
+                slotsHtml += `<button class="slot-btn" style="flex:1; max-width:44px; height:44px; padding:0; border-radius:50%; background:#10b981; border:none; color:white; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.1);" onclick="toggleSlot('${item.id}', ${i})">✓</button>`;
             } else {
-                slotsHtml += `<button class="slot-btn" style="flex:0 0 24px; width:24px; height:24px; padding:0; border-radius:50%; background:#f1f5f9; border:1px solid #cbd5e1; color:#94a3b8; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-sizing:border-box;" onclick="toggleSlot('${item.id}', ${i})">+</button>`;
+                slotsHtml += `<button class="slot-btn" style="flex:1; max-width:44px; height:44px; padding:0; border-radius:50%; background:#f1f5f9; border:1px solid #cbd5e1; color:#94a3b8; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-sizing:border-box;" onclick="toggleSlot('${item.id}', ${i})">+</button>`;
             }
         }
         slotsHtml += `</div></div>`;
@@ -3202,7 +3202,8 @@
 
         let actionHtml = item.user === "" ? `<button class="btn-sm btn-claim" style="flex:1;" onclick="openClaimModalById('${item.id}')">🙋 認領</button>` : '';
         actionHtml += item.coords ? `<button class="btn-sm btn-default" style="background:transparent; color:#64748b; border:none; font-size:16px; padding:4px; min-width:auto; flex-shrink:0;" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}')" title="地圖">🗺️</button>` : '';
-        actionHtml += `<button class="btn-sm btn-edit" style="background:transparent; color:#64748b; border:none; font-size:16px; padding:4px; min-width:auto; flex-shrink:0;" onclick="openTimeModalById('${item.id}', 'mushroom')" title="修改">✏️</button><button class="btn-sm btn-danger" style="background:transparent; color:#f87171; border:none; font-size:16px; padding:4px; min-width:auto; flex-shrink:0;" onclick="deleteItem('${item.id}', 'mushroom')" title="刪除">🗑️</button>`;
+        actionHtml += `<button class="btn-sm btn-edit" style="background:transparent; color:#64748b; border:none; font-size:16px; padding:4px; min-width:auto; flex-shrink:0;" onclick="openTimeModalById('${item.id}', 'mushroom')" title="修改">✏️</button>`;
+        actionHtml += item.coords ? `<button class="btn-sm btn-default" style="background:transparent; color:#64748b; border:none; font-size:16px; padding:4px; min-width:auto; flex-shrink:0;" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this, true)" title="複製座標">📋</button>` : '';
 
         card.innerHTML = `
             <div style="background: ${elemHeaderBg}; padding: 6px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 6px;">
@@ -3213,23 +3214,21 @@
                 <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin: 0; font-size: 10px; line-height:1;">${timeText}</span>
             </div>
             <div class="card-body" style="gap: 8px; padding: 12px;">
-                <div style="display:flex; justify-content:space-between; align-items:stretch; gap:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
                     <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:0;">
                         <span class="card-title" style="font-size:16px; margin:0; line-height:1.3; font-weight:bold;">${safeName}</span>
                         ${locHtml}
                     </div>
-                    <div style="flex:0 0 64px; display:flex; flex-direction:column; align-items:center; gap:8px;">
-                        <div style="background:${uTheme.bg}; color:${uTheme.color}; font-weight:${uTheme.fw}; font-family:${uTheme.ff}; border-radius:50%; width:48px; height:48px; display:flex; align-items:center; justify-content:center; line-height:1; text-align:center; overflow:hidden; border: 2px solid ${uTheme.border}; box-shadow: 0 2px 4px rgba(0,0,0,0.05); flex-shrink:0; ${uTheme.bgImg ? `background-image:${uTheme.bgImg}; background-size:${uTheme.bgSize}; background-position:${uTheme.bgPos}; background-repeat:no-repeat;` : ''}">
-                            ${item.user ? `<span style="font-size:13px; word-break:break-all; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; padding:0 2px;">${escapeHtml(item.user)}</span>` : `<span style="color:#64748b; font-size:11px; font-style:italic;">待認領</span>`}
+                    <div style="flex:0 0 52px; display:flex; flex-direction:column; align-items:flex-end;">
+                        <div style="background:${uTheme.bg}; color:${uTheme.color}; font-weight:${uTheme.fw}; font-family:${uTheme.ff}; border-radius:50%; width:52px; height:52px; display:flex; align-items:center; justify-content:center; line-height:1; text-align:center; overflow:hidden; border: 2px solid ${uTheme.border}; box-shadow: 0 2px 4px rgba(0,0,0,0.05); flex-shrink:0; ${uTheme.bgImg ? `background-image:${uTheme.bgImg}; background-size:${uTheme.bgSize}; background-position:${uTheme.bgPos}; background-repeat:no-repeat;` : ''}">
+                            ${item.user ? `<span style="font-size:14px; word-break:break-all; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; padding:0 2px;">${escapeHtml(item.user)}</span>` : `<span style="color:#64748b; font-size:11px; font-style:italic;">待認領</span>`}
                         </div>
-                        <button onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this, true)" style="background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; font-size:14px; font-weight:bold; border-radius:20px; padding:8px 0; width:100%; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.08); transition:all 0.2s; margin-top:auto;">📋 複製</button>
                     </div>
                 </div>
                 ${slotsHtml}
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; border-top:1px solid #f1f5f9; padding-top:8px;">
-                    <div style="display:flex; gap:4px; flex:1;">${actionHtml}</div>
-                </div>
-            </div>
+                    <div style="display:flex; gap:4px; flex:1; justify-content:space-around;">${actionHtml}</div>
+                </div>/div>
             ${isFull ? `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; border-radius:12px; overflow:hidden;">
                 <span style="font-size:72px; opacity:0.1; transform:rotate(-15deg); line-height:1; user-select:none;">🈵</span>
             </div>` : ''}
