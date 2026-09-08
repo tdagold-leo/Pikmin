@@ -3227,8 +3227,8 @@
                 </div>
                 ${slotsHtml}
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; border-top:1px solid #f1f5f9; padding-top:8px;">
-                    <div style="display:flex; gap:4px; flex:1; justify-content:space-around;">${actionHtml}</div>
-                </div>/div>
+                    <div style="display:flex; gap:4px; flex:1; justify-content:space-between;">${actionHtml}</div>
+                </div></div>
             ${isFull ? `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; border-radius:12px; overflow:hidden;">
                 <span style="font-size:72px; opacity:0.1; transform:rotate(-15deg); line-height:1; user-select:none;">🈵</span>
             </div>` : ''}
