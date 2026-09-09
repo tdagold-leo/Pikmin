@@ -2956,9 +2956,13 @@
 
     async function shareToLineWindow() {
         if (dataList.length === 0) { alert('目前沒有任何資訊可以分享喔！'); return; }
-        const btn = document.querySelector('.line-share-btn');
-        const originalText = btn.innerText;
-        btn.innerText = '⏳ 正在產生分享內容...'; btn.disabled = true;
+        const btn = document.getElementById('line-share-btn');
+        let originalHtml = '';
+        if (btn) {
+            originalHtml = btn.innerHTML;
+            btn.innerHTML = '<span>⏳</span> 處理中...'; 
+            btn.disabled = true;
+        }
 
         const now = Date.now();
         const finalShareUrl = "https://tdagold-leo.github.io/Pikmin/";
@@ -3033,8 +3037,10 @@
         out = out.trim();
         
         navigator.clipboard.writeText(out).catch(e => console.log(e));
-        btn.innerText = '✅ 已複製並喚醒 LINE...';
-        setTimeout(() => { btn.innerText = originalText; btn.disabled = false; }, 2500);
+        if (btn) {
+            btn.innerHTML = '<span>✅</span> 開啟 LINE...';
+            setTimeout(() => { btn.innerHTML = originalHtml; btn.disabled = false; }, 2500);
+        }
         window.location.href = "https://line.me/R/msg/text/?" + encodeURIComponent(out);
     }
 
