@@ -2999,27 +2999,29 @@
         const kindEmoji = (kind) => kind === '元素菇' ? '🌿' : '🍄';
         const kindLabel = (kind) => kind === '元素菇' ? '元素' : '巨';
 
-        const formatLineText = (i, isUnclaimed) => {
+                const formatLineText = (i, isUnclaimed) => {
             const currentSlots = i.slots || ['', '', '', '', ''];
             const filledCount = currentSlots.filter(s => s !== '').length;
             const emptyCount = 5 - filledCount;
-            const slotIcon = emptyCount === 0 ? '🈵額滿' : `空${emptyCount}位`;
+            const slotIcon = emptyCount === 0 ? '🈵額滿' : `🈳空${emptyCount}位`;
 
             const sn = String(i.sn || '?').padStart(2, '0');
             const userName = isUnclaimed ? '待認領' : (i.user || '?').substring(0, 6);
+            
+            const tagStr = i.tag ? ` 🏷️${i.tag.trim()}` : '';
 
             let timeStr;
             if (isUnclaimed) {
-                timeStr = now >= i.midnightUTC ? '⚠️ 已換日過期' : `🌙 換日倒數 ${getShortRemainingText(i.midnightUTC, now)}`;
+                timeStr = now >= i.midnightUTC ? '⚠️ 已換日' : `🌙 ${getShortRemainingText(i.midnightUTC, now)}`;
             } else {
                 const rem = getShortRemainingText(i.targetTime, now);
                 const isExp = i.targetTime != null && i.targetTime - now <= 0;
-                timeStr = isExp ? '🔥 可開打！' : (i.targetTime == null ? '⏳ 尚未設定時間' : `⏱ ${rem}`);
+                timeStr = isExp ? '🔥可開打！' : (i.targetTime == null ? '⏳未設定' : `⏱ ${rem}`);
             }
 
             const ke = kindEmoji(i.kind);
             const kl = kindLabel(i.kind);
-            return `${ke} #${sn}[${kl}] ${slotIcon}｜👤 ${userName}｜${timeStr}`;
+            return `${ke} #${sn}[${kl}]${tagStr}｜${slotIcon}｜👤${userName}｜${timeStr}`;
         };
 
         // ── 組合輸出 ──────────────────────────────
