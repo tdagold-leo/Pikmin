@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -1103,6 +1103,37 @@
         }
         .mush-search-clear:hover { color: #ef4444; background: #fef2f2; }
 
+        /* ===== 重點標記樣式 ===== */
+        .mush-pinned-card {
+            border-left: 4px solid #f59e0b !important;
+            background: #fffbeb !important;
+        }
+        .mush-pinned-card .grid-card-header {
+            background: #fef3c7 !important;
+        }
+        .pin-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            padding: 0 2px;
+            color: #d1d5db;
+            transition: color 0.15s, transform 0.15s;
+            flex-shrink: 0;
+        }
+        .pin-btn:hover { color: #f59e0b; transform: scale(1.2); }
+        .pin-btn.pinned { color: #f59e0b; }
+        .pin-badge {
+            font-size: 10px;
+            font-weight: bold;
+            background: #f59e0b;
+            color: white;
+            padding: 1px 6px;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+
         .empty-message {
             color: #9ca3af;
             text-align: center;
@@ -1961,6 +1992,14 @@
             </div>
 
             <div id="mushroom-summary" class="summary-widget" style="display:none;"></div>
+
+            <div id="pinned-list" style="display:none; margin-bottom:8px;">
+                <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+                    <span style="font-size:13px; font-weight:bold; color:#b45309;">⭐ 重點標記</span>
+                    <span id="pinned-count-badge" style="font-size:11px; background:#fef3c7; color:#92400e; padding:2px 8px; border-radius:8px; font-weight:bold; border:1px solid #fde68a;"></span>
+                </div>
+                <div id="pinned-grid" class="grid"></div>
+            </div>
 
             <div id="active-list" class="grid"></div>
             <div id="active-empty" class="empty-message" style="display: none;">目前沒有正在追蹤的項目</div>
@@ -3077,11 +3116,12 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.09.09.2015";</script>
-    <script src="js/main.js?v=202609092015"></script>
-    <script src="js/autofill.js?v=202609092015"></script>
+    <script>const APP_VERSION = "2026.09.15.0115";</script>
+    <script src="js/main.js?v=1789406113063"></script>
+    <script src="js/autofill.js?v=1789406113069"></script>
 </body>
 </html>
+
 
 
 
