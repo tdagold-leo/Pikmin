@@ -3249,9 +3249,8 @@
                 <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
                     <span style="font-size: 15px; font-weight: 900; color: var(--text-main); white-space:nowrap; line-height:1;">#${String(item.sn).padStart(2,'0')}</span>
                     <span style="font-size:11px; font-weight:900; padding:2px 8px; border-radius:6px; white-space:nowrap; background:${kindBg}; color:${kindColor}; line-height:1; border:1px solid ${kindColor}22;">${kindLabel}</span>
-                    ${isPinned ? `<span class="pin-badge">🔖 重點</span>` : ''}
                 </div>
-                <div style="display:flex; align-items:center; gap:4px; min-width:0; overflow:hidden;">
+                <div style="display:flex; align-items:center; gap:4px; min-width:0;">
                     <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin:0; font-size:10px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;">${timeText}</span>
                     <button class="pin-btn ${isPinned ? 'pinned' : ''}" onclick="toggleMushPin('${item.id}')" title="${isPinned ? '取消重點標記' : '加入重點標記'}" style="flex-shrink:0;">${isPinned ? '★' : '☆'}</button>
                 </div>
