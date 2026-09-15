@@ -3468,6 +3468,7 @@
                 }
                 unclaimedQueue.push({ item, midnightUTC, timeText, isExp });
             } else {
+                if (pinnedMushroomsSet.has(item.id)) return; // 已在重點區塊，不重複出現
                 if (item.targetTime != null) {
                     if (item.targetTime - now <= 0) { timeText = '已過期/可開打！'; isExp = true; }
                     else { timeText = `<span class="live-timer" data-type="mushroom-claimed" data-target="${item.targetTime}">${getRemainingText(item.targetTime, now)}</span>`; }
