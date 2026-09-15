@@ -3235,7 +3235,7 @@
         const kindColor = isElem ? elemHeaderColor : '#92400e';
 
         // 將地點/標籤區塊恢復普通文字排列
-        const locHtml = `<div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px; margin-top:4px;">${cHtml} ${badgeHtml}</div>`;
+        const locHtml = `<div style="display:flex; align-items:center; flex-wrap:wrap; gap:3px; margin-top:3px; font-size:11px;">${cHtml} ${badgeHtml}</div>`;
 
         const actionBtnStyle = "flex:1; background:#f8fafc; border:1px solid #e2e8f0; color:#475569; font-size:20px; padding:6px 0; border-radius:12px; cursor:pointer; display:flex; justify-content:center; align-items:center; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition:all 0.2s;";
         const copyBtnStyle  = "flex:1; background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; font-size:24px; padding:6px 0; border-radius:12px; cursor:pointer; display:flex; justify-content:center; align-items:center; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition:all 0.2s;";
@@ -3245,20 +3245,20 @@
         actionHtml += item.coords ? `<button class="btn-sm btn-default" style="${copyBtnStyle}" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this, true)" title="複製座標">📋</button>` : '';
 
         card.innerHTML = `
-            <div style="background: ${elemHeaderBg}; padding: 6px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 6px;">
-                <div style="display:flex; align-items:center; gap:6px;">
-                    <span style="font-size: 18px; font-weight: 900; color: var(--text-main); white-space:nowrap; line-height:1;">#${String(item.sn).padStart(2,'0')}</span>
+            <div style="background: ${elemHeaderBg}; padding: 6px 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 4px; min-width:0;">
+                <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
+                    <span style="font-size: 15px; font-weight: 900; color: var(--text-main); white-space:nowrap; line-height:1;">#${String(item.sn).padStart(2,'0')}</span>
                     <span style="font-size:11px; font-weight:900; padding:2px 8px; border-radius:6px; white-space:nowrap; background:${kindBg}; color:${kindColor}; line-height:1; border:1px solid ${kindColor}22;">${kindLabel}</span>
                     ${isPinned ? `<span class="pin-badge">🔖 重點</span>` : ''}
                 </div>
-                <div style="display:flex; align-items:center; gap:6px;">
-                    <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin: 0; font-size: 10px; line-height:1;">${timeText}</span>
-                    <button class="pin-btn ${isPinned ? 'pinned' : ''}" onclick="toggleMushPin('${item.id}')" title="${isPinned ? '取消重點標記' : '加入重點標記'}">${isPinned ? '★' : '☆'}</button>
+                <div style="display:flex; align-items:center; gap:4px; min-width:0; overflow:hidden;">
+                    <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin:0; font-size:10px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;">${timeText}</span>
+                    <button class="pin-btn ${isPinned ? 'pinned' : ''}" onclick="toggleMushPin('${item.id}')" title="${isPinned ? '取消重點標記' : '加入重點標記'}" style="flex-shrink:0;">${isPinned ? '★' : '☆'}</button>
                 </div>
             </div>
             <div class="card-body" style="gap: 8px; padding: 12px; display:flex; flex-direction:column; flex:1;">
                 <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                    <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:0;">
+                    <div style="display:flex; flex-direction:column; gap:3px; flex:1; min-width:0;">
                         <span class="card-title" style="font-size:16px; margin:0; line-height:1.3; font-weight:bold;">${safeName}</span>
                         ${locHtml}
                     </div>
