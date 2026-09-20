@@ -118,13 +118,17 @@
     <h2>🖼️ 圖片座標擷取工具</h2>
     <p>點擊或拖曳皮克敏截圖至下方，<br>將自動擷取圖片底部的經緯度座標。</p>
 
-        <div class="mush-ocr-row" style="flex-direction:column; gap:6px; width:100%; margin-bottom:16px;">
-        <input type="file" id="file-input" accept="image/*" multiple style="display:none;" onchange="handleFileInputChange(event)">
+        <div class="mush-ocr-row" style="display:flex; gap:8px; width:100%; margin-bottom:16px;">
+        <input type="file" id="file-input" accept="image/*" multiple style="display:none;" onchange="updateSelectedCount()">
         <button type="button" onclick="document.getElementById('file-input').click()"
-            style="width:100%; padding:24px 12px; border-radius:12px; background:linear-gradient(135deg,#10b981,#059669); color:white; border:none; font-size:16px; font-weight:bold; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 14px rgba(16,185,129,0.35); letter-spacing:0.5px;">
-            <div style="font-size: 28px;">📸</div>
-            <div>點擊選擇圖片</div>
-            <div style="font-size: 12px; color: #d1fae5; font-weight:normal; margin-top:4px;">(支援連續上傳多張圖，座標會自動換行加上去)</div>
+            style="flex:1; padding:16px 8px; border-radius:12px; background:#f1f5f9; color:#334155; border:2px dashed #cbd5e1; font-size:14px; font-weight:bold; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; transition:all 0.2s;">
+            <div style="font-size: 20px;">1️⃣</div>
+            <div>選擇圖片</div>
+        </button>
+        <button type="button" onclick="startRecognition()"
+            style="flex:1; padding:16px 8px; border-radius:12px; background:linear-gradient(135deg,#10b981,#059669); color:white; border:none; font-size:14px; font-weight:bold; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; box-shadow:0 4px 14px rgba(16,185,129,0.35);">
+            <div style="font-size: 20px;">2️⃣</div>
+            <div>開始辨識</div>
         </button>
     </div>
         <div id="drop-text">
@@ -156,10 +160,23 @@
     const statusEl = document.getElementById('status');
     const loader = document.getElementById('loader');
 
-    window.handleFileInputChange = function(event) {
-        if (event.target.files && event.target.files.length > 0) {
-            handleFiles(event.target.files);
+    window.updateSelectedCount = function() {
+        const fileInput = document.getElementById('file-input');
+        const statusEl = document.getElementById('status');
+        if (fileInput.files && fileInput.files.length > 0) {
+            statusEl.innerText = `✅ 已選擇 ${fileInput.files.length} 張圖片，請點擊右方「開始辨識」`;
+        } else {
+            statusEl.innerText = `尚未選擇圖片`;
         }
+    };
+
+    window.startRecognition = function() {
+        const fileInput = document.getElementById('file-input');
+        if (!fileInput.files || fileInput.files.length === 0) {
+            alert("請先選擇圖片！");
+            return;
+        }
+        handleFiles(fileInput.files);
     };
 
     async function handleFiles(files) {
