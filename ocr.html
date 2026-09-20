@@ -50,8 +50,6 @@
             line-height: 1.5;
         }
         
-
-        
         .result-area {
             display: flex;
             flex-direction: column;
@@ -75,7 +73,7 @@
             display: flex;
             gap: 8px;
         }
-        button {
+        button.action-btn {
             flex: 1;
             padding: 12px;
             border: none;
@@ -89,7 +87,7 @@
             justify-content: center;
             gap: 6px;
         }
-        button:active { transform: scale(0.98); }
+        button.action-btn:active { transform: scale(0.98); }
         .btn-copy { background: var(--primary); color: white; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3); }
         .btn-clear { background: #f1f5f9; color: var(--text-muted); }
         
@@ -108,6 +106,7 @@
             height: 20px;
             animation: spin 1s linear infinite;
             display: none;
+            margin: 0 auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -116,9 +115,10 @@
 
 <div class="container">
     <h2>🖼️ 圖片座標擷取工具</h2>
-    <p>點擊或拖曳皮克敏截圖至下方，<br>將自動擷取圖片底部的經緯度座標。</p>
+    <p>請依序點擊下方按鈕，<br>將自動擷取圖片底部的經緯度座標。</p>
 
-        <div class="mush-ocr-row" style="display:flex; gap:8px; width:100%; margin-bottom:16px;">
+    <!-- 兩段式操作區塊 -->
+    <div style="display:flex; gap:8px; width:100%; margin-top:8px;">
         <input type="file" id="file-input" accept="image/*" multiple style="display:none;" onchange="updateSelectedCount()">
         <button type="button" onclick="document.getElementById('file-input').click()"
             style="flex:1; padding:16px 8px; border-radius:12px; background:#f1f5f9; color:#334155; border:2px dashed #cbd5e1; font-size:14px; font-weight:bold; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; transition:all 0.2s;">
@@ -131,16 +131,12 @@
             <div>開始辨識</div>
         </button>
     </div>
-        <div id="drop-text">
-            <div style="font-size: 24px; margin-bottom: 4px;">📥</div>
-            <div>點擊選擇圖片，或將圖片拖曳至此</div>
-            <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">(支援連續上傳多張圖，座標會自動換行加上去)</div>
-        </div>
-        <input type="file" id="file-input" accept="image/*" multiple style="display:none;">
-    </div>
 
-    <div class="loader" id="loader" style="margin: 10px auto;"></div>
-    <div id="status"></div>
+    <!-- 狀態顯示與 Loading -->
+    <div style="min-height: 24px; text-align: center; margin-top: 4px;">
+        <div class="loader" id="loader"></div>
+        <div id="status" style="margin-top:4px;">尚未選擇圖片</div>
+    </div>
 
     <div class="result-area">
         <label style="font-size: 13px; font-weight: bold; color: var(--text-main);">📝 擷取結果：</label>
@@ -148,32 +144,34 @@
     </div>
 
     <div class="btn-group">
-        <button class="btn-clear" onclick="clearText()">🗑️ 清空</button>
-        <button class="btn-copy" onclick="copyText()">📋 一鍵複製</button>
+        <button class="action-btn btn-clear" onclick="clearText()">🗑️ 清空</button>
+        <button class="action-btn btn-copy" onclick="copyText()">📋 一鍵複製</button>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
-    const fileInput = document.getElementById('file-input');
     const resultText = document.getElementById('result-text');
     const statusEl = document.getElementById('status');
     const loader = document.getElementById('loader');
 
+    // 當使用者在第一步選擇檔案後觸發
     window.updateSelectedCount = function() {
         const fileInput = document.getElementById('file-input');
-        const statusEl = document.getElementById('status');
         if (fileInput.files && fileInput.files.length > 0) {
-            statusEl.innerText = `✅ 已選擇 ${fileInput.files.length} 張圖片，請點擊右方「開始辨識」`;
+            statusEl.innerText = \`✅ 已選擇 \${fileInput.files.length} 張圖片，請點擊上方「2️⃣ 開始辨識」\`;
+            statusEl.style.color = '#059669'; // 變綠色提示
         } else {
-            statusEl.innerText = `尚未選擇圖片`;
+            statusEl.innerText = \`尚未選擇圖片\`;
+            statusEl.style.color = '#64748b';
         }
     };
 
+    // 當使用者點擊第二步開始辨識時觸發
     window.startRecognition = function() {
         const fileInput = document.getElementById('file-input');
         if (!fileInput.files || fileInput.files.length === 0) {
-            alert("請先選擇圖片！");
+            alert("請先完成第 1 步：選擇圖片！");
             return;
         }
         handleFiles(fileInput.files);
@@ -182,6 +180,7 @@
     async function handleFiles(files) {
         setLoading(true);
         statusEl.innerText = \`準備處理 \${files.length} 張圖片...\`;
+        statusEl.style.color = '#059669';
         
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
@@ -196,7 +195,8 @@
         
         statusEl.innerText = \`✅ 全部處理完成！\`;
         setLoading(false);
-        fileInput.value = '';
+        // 清空選擇的檔案，讓使用者可以重新選擇同一張
+        document.getElementById('file-input').value = '';
     }
 
     function processImage(file) {
@@ -224,7 +224,7 @@
                         const text = result.data.text;
                         
                         // Regex matching numbers: (37.2921367, 140.3838253)
-                        const regex = /(-?\\d{1,3}\\.\\d+)[:,\\s]+(-?\\d{1,3}\\.\\d+)/g;
+                        const regex = /(-?\d{1,3}\.\d+)[:, \s]+(-?\d{1,3}\.\d+)/g;
                         const match = regex.exec(text);
                         
                         if (match) {
@@ -255,7 +255,7 @@
     function appendResult(text) {
         const val = resultText.value.trim();
         if (val) {
-            resultText.value = val + '\\n' + text;
+            resultText.value = val + '\n' + text;
         } else {
             resultText.value = text;
         }
@@ -276,16 +276,14 @@
     function clearText() {
         resultText.value = '';
         statusEl.innerText = '🗑️ 已清空';
-        setTimeout(() => { statusEl.innerText = ''; }, 2000);
+        setTimeout(() => { statusEl.innerText = '尚未選擇圖片'; statusEl.style.color = '#64748b'; }, 2000);
     }
 
     function setLoading(isLoading) {
         if (isLoading) {
             loader.style.display = 'block';
-            
         } else {
             loader.style.display = 'none';
-            
         }
     }
 </script>
