@@ -1789,6 +1789,12 @@
                                 let d = timeMatch[1] ? parseInt(timeMatch[1]) : 0;
                                 let h = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
                                 let m = timeMatch[3] ? parseInt(timeMatch[3]) : 0;
+                                // OCR 修正：若小時數 >= 24 且天數為 0，代表 Vision API 可能把「Xd Yh」中的漢字「日」辨識失敗
+                                // 例如「2日0小時」被讀成「20小時」→ 自動反推成正確天數
+                                if (d === 0 && h >= 24) {
+                                    d = Math.floor(h / 24);
+                                    h = h % 24;
+                                }
                                 if (daysField) daysField.value = d;
                                 if (hoursField) hoursField.value = h;
                                 if (minutesField) minutesField.value = m;
