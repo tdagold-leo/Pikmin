@@ -159,10 +159,10 @@
     window.updateSelectedCount = function() {
         const fileInput = document.getElementById('file-input');
         if (fileInput.files && fileInput.files.length > 0) {
-            statusEl.innerText = \`✅ 已選擇 \${fileInput.files.length} 張圖片，請點擊上方「2️⃣ 開始辨識」\`;
+            statusEl.innerText = `✅ 已選擇 ${fileInput.files.length} 張圖片，請點擊上方「2️⃣ 開始辨識」`;
             statusEl.style.color = '#059669'; // 變綠色提示
         } else {
-            statusEl.innerText = \`尚未選擇圖片\`;
+            statusEl.innerText = `尚未選擇圖片`;
             statusEl.style.color = '#64748b';
         }
     };
@@ -179,21 +179,21 @@
 
     async function handleFiles(files) {
         setLoading(true);
-        statusEl.innerText = \`準備處理 \${files.length} 張圖片...\`;
+        statusEl.innerText = `準備處理 ${files.length} 張圖片...`;
         statusEl.style.color = '#059669';
         
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            statusEl.innerText = \`處理中 (\${i + 1}/\${files.length})...\`;
+            statusEl.innerText = `處理中 (${i + 1}/${files.length})...`;
             try {
                 await processImage(file);
             } catch (err) {
                 console.error(err);
-                statusEl.innerText = \`第 \${i+1} 張處理失敗！\`;
+                statusEl.innerText = `第 ${i+1} 張處理失敗！`;
             }
         }
         
-        statusEl.innerText = \`✅ 全部處理完成！\`;
+        statusEl.innerText = `✅ 全部處理完成！`;
         setLoading(false);
         // 清空選擇的檔案，讓使用者可以重新選擇同一張
         document.getElementById('file-input').value = '';
@@ -231,13 +231,13 @@
                             const lat = parseFloat(match[1]);
                             const lng = parseFloat(match[2]);
                             if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-                                appendResult(\`\${lat}, \${lng}\`);
+                                appendResult(`${lat}, ${lng}`);
                             } else {
-                                appendResult(\`[格式異常] \${match[1]}, \${match[2]}\`);
+                                appendResult(`[格式異常] ${match[1]}, ${match[2]}`);
                             }
                         } else {
                             console.log("原文:", text);
-                            appendResult(\`[未找到座標] \${file.name}\`);
+                            appendResult(`[未找到座標] ${file.name}`);
                         }
                         resolve();
                     } catch (err) {
