@@ -157,7 +157,7 @@
             <div>點擊選擇圖片，或將圖片拖曳至此</div>
             <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">(支援連續上傳多張圖，座標會自動換行加上去)</div>
         </div>
-        <input type="file" id="file-input" accept="image/*" multiple style="display:none;" onchange="if(this.files.length > 0) handleFiles(this.files)">
+        <input type="file" id="file-input" accept="image/*" multiple style="display:none;">
     </div>
 
     <div id="status"></div>
@@ -196,6 +196,13 @@
     });
     
 
+
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+            handleFiles(e.target.files);
+        }
+    });
 
     async function handleFiles(files) {
         setLoading(true);
