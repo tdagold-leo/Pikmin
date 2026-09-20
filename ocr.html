@@ -93,7 +93,7 @@
         
         #status {
             font-size: 13px;
-            color: var(--primary-dark);
+            color: #64748b;
             text-align: center;
             font-weight: bold;
             min-height: 20px;
@@ -220,11 +220,13 @@
                     const croppedDataUrl = canvas.toDataURL('image/png');
                     
                     try {
-                        const result = await Tesseract.recognize(croppedDataUrl, 'eng');
+                        const result = await Tesseract.recognize(croppedDataUrl, 'eng', {
+                            tessedit_char_whitelist: '0123456789.,()-+ '
+                        });
                         const text = result.data.text;
                         
-                        // Regex matching numbers: (37.2921367, 140.3838253)
-                        const regex = /(-?\d{1,3}\.\d+)[:, \s]+(-?\d{1,3}\.\d+)/g;
+                        // Regex matching: (37.2921367, 140.3838253) or 37.2921367, 140.3838253
+                        const regex = /(-?\d{1,3}\.\d{4,})\s*[,，]\s*(-?\d{1,3}\.\d{4,})/;
                         const match = regex.exec(text);
                         
                         if (match) {
@@ -264,13 +266,34 @@
 
     function copyText() {
         if (!resultText.value) return;
-        navigator.clipboard.writeText(resultText.value).then(() => {
-            const orig = statusEl.innerText;
-            statusEl.innerText = '✅ 複製成功！';
-            setTimeout(() => { statusEl.innerText = orig; }, 2000);
-        }).catch(() => {
-            statusEl.innerText = '❌ 複製失敗，請手動複製';
-        });
+        // 優先用現代 Clipboard API，失敗時使用舊版 execCommand (iOS 相容)
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(resultText.value).then(() => {
+                showCopySuccess();
+            }).catch(() => {
+                fallbackCopy();
+            });
+        } else {
+            fallbackCopy();
+        }
+    }
+
+    function fallbackCopy() {
+        resultText.select();
+        resultText.setSelectionRange(0, 99999); // 行動裝置需要
+        try {
+            document.execCommand('copy');
+            showCopySuccess();
+        } catch (e) {
+            statusEl.innerText = '❌ 複製失敗，請手動全選複製';
+        }
+    }
+
+    function showCopySuccess() {
+        const orig = statusEl.innerText;
+        statusEl.innerText = '✅ 複製成功！';
+        statusEl.style.color = '#059669';
+        setTimeout(() => { statusEl.innerText = orig; }, 2000);
     }
 
     function clearText() {
