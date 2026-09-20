@@ -134,7 +134,7 @@
     <h2>🖼️ 圖片座標擷取工具</h2>
     <p>點擊或拖曳皮克敏截圖至下方，<br>將自動擷取圖片底部的經緯度座標。</p>
 
-    <div id="drop-zone">
+    <label id="drop-zone" for="file-input">
         <div class="loader" id="loader"></div>
         <div id="drop-text">
             <div style="font-size: 24px; margin-bottom: 4px;">📥</div>
@@ -142,7 +142,7 @@
             <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">(支援連續上傳多張圖，座標會自動換行加上去)</div>
         </div>
         <input type="file" id="file-input" accept="image/*" multiple>
-    </div>
+    </label>
 
     <div id="status"></div>
 
@@ -178,7 +178,7 @@
             handleFiles(e.dataTransfer.files);
         }
     });
-    dropZone.addEventListener('click', () => fileInput.click());
+    // Native label handles click
     fileInput.addEventListener('change', () => {
         if (fileInput.files.length > 0) handleFiles(fileInput.files);
     });
