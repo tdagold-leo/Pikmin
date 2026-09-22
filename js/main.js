@@ -3218,17 +3218,17 @@
         const filledCount = currentSlots.filter(s => s !== '').length;
         const isFull = filledCount === 5;
 
-        // 簡化參戰空位為五個小圓點，放大並使用 space-between 平均分散
+        // 參戰空位：縮小圓圈 max-width 34px
         let slotsHtml = `<div class="slots-wrapper" style="background:transparent; border:none; padding:4px 0 0 0; margin-top:4px;">`;
-        slotsHtml += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">`;
-        slotsHtml += `<span style="font-size: 11px; font-weight: bold; color: #4b5563;">⚔️ 參戰空位 (${filledCount}/5)</span>`;
+        slotsHtml += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">`;
+        slotsHtml += `<span style="font-size:11px; font-weight:bold; color:#4b5563;">⚔️ 參戰空位 (${filledCount}/5)</span>`;
         slotsHtml += !isFull ? `<button onclick="fillAllSlots('${item.id}')" style="font-size:10px; font-weight:bold; background:#ef4444; color:white; border:none; border-radius:8px; padding:2px 8px; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.1);">滿</button>` : '';
-        slotsHtml += `</div><div style="display: flex; justify-content: space-between; align-items:center; gap: 8px;">`;
-                for (let i = 0; i < 5; i++) {
+        slotsHtml += `</div><div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">`;
+        for (let i = 0; i < 5; i++) {
             if (currentSlots[i]) {
-                slotsHtml += `<button class="slot-btn" style="flex:1; max-width:44px; aspect-ratio:1/1; height:auto; padding:0; border-radius:50%; background:#10b981; border:none; color:white; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.1);" onclick="toggleSlot('${item.id}', ${i})">✓</button>`;
+                slotsHtml += `<button class="slot-btn" style="flex:1; max-width:34px; aspect-ratio:1/1; height:auto; padding:0; border-radius:50%; background:#10b981; border:none; color:white; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.1);" onclick="toggleSlot('${item.id}', ${i})">✓</button>`;
             } else {
-                slotsHtml += `<button class="slot-btn" style="flex:1; max-width:44px; aspect-ratio:1/1; height:auto; padding:0; border-radius:50%; background:#f1f5f9; border:1px solid #cbd5e1; color:#94a3b8; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-sizing:border-box;" onclick="toggleSlot('${item.id}', ${i})">+</button>`;
+                slotsHtml += `<button class="slot-btn" style="flex:1; max-width:34px; aspect-ratio:1/1; height:auto; padding:0; border-radius:50%; background:#f1f5f9; border:1px solid #cbd5e1; color:#94a3b8; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-sizing:border-box;" onclick="toggleSlot('${item.id}', ${i})">+</button>`;
             }
         }
         slotsHtml += `</div></div>`;
@@ -3236,17 +3236,16 @@
         // 元素圖示
         const elemEmoji = elemClass === 'elem-水' ? '💧' : elemClass === 'elem-火' ? '🔥' : elemClass === 'elem-電' ? '⚡' : elemClass === 'elem-毒' ? '☠️' : elemClass === 'elem-水晶' ? '💎' : '';
         const kindLabel = isElem ? `元素${elemEmoji}` : '巨';
-        // 恢復依照元素屬性變色
         const kindBg = isElem ? elemHeaderBg : '#fef3c7';
         const kindColor = isElem ? elemHeaderColor : '#92400e';
 
-        // 將地點/標籤區塊恢復普通文字排列
         const locHtml = `<div style="display:flex; align-items:center; flex-wrap:wrap; gap:3px; margin-top:3px; font-size:11px;">${cHtml} ${badgeHtml}</div>`;
 
-        const actionBtnStyle = "flex:1; background:#f8fafc; border:1px solid #e2e8f0; color:#475569; font-size:20px; padding:6px 0; border-radius:12px; cursor:pointer; display:flex; justify-content:center; align-items:center; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition:all 0.2s;";
-        const copyBtnStyle  = "flex:1; background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; font-size:24px; padding:6px 0; border-radius:12px; cursor:pointer; display:flex; justify-content:center; align-items:center; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition:all 0.2s;";
+        // 地圖/修改：縮小；複製：保持明顯（flex:1.5 讓它更寬）
+        const actionBtnStyle = "flex:1; background:#f8fafc; border:1px solid #e2e8f0; color:#475569; font-size:16px; padding:4px 0; border-radius:10px; cursor:pointer; display:flex; justify-content:center; align-items:center; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition:all 0.2s;";
+        const copyBtnStyle  = "flex:1.5; background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; font-size:22px; padding:6px 0; border-radius:10px; cursor:pointer; display:flex; justify-content:center; align-items:center; box-shadow:0 1px 3px rgba(59,130,246,0.2); transition:all 0.2s;";
         let actionHtml = '';
-        actionHtml += item.coords ? `<button class="btn-sm btn-default" style="${actionBtnStyle}" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}')" title="地圖">🗺️</button>` : '';
+        actionHtml += item.coords ? `<button class="btn-sm btn-default" style="${actionBtnStyle}" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}');" title="地圖">🗺️</button>` : '';
         actionHtml += `<button class="btn-sm btn-edit" style="${actionBtnStyle}" onclick="openTimeModalById('${item.id}', 'mushroom')" title="修改">✏️</button>`;
         actionHtml += item.coords ? `<button class="btn-sm btn-default" style="${copyBtnStyle}" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this, true)" title="複製座標">📋</button>` : '';
 
@@ -3264,7 +3263,7 @@
             <div class="card-body" style="gap: 8px; padding: 12px; display:flex; flex-direction:column; flex:1;">
                 <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
                     <div style="display:flex; flex-direction:column; gap:3px; flex:1; min-width:0;">
-                        <span class="card-title" style="font-size:16px; margin:0; line-height:1.3; font-weight:bold;">${safeName}</span>
+                        <span class="card-title" style="font-size:16px; margin:0; line-height:1.3; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">${safeName}</span>
                         ${locHtml}
                     </div>
                     <div style="flex:0 0 52px; display:flex; flex-direction:column; align-items:flex-end;">
