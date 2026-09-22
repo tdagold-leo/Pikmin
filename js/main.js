@@ -3404,7 +3404,13 @@
         container.innerHTML = html;
     }
 
-    function updateView() { 
+    let _updateViewTimer = null;
+    function updateView() {
+        // Debounce：多個 Firebase 監聽器同時觸發時，合併成一次渲染，避免重複插入卡片
+        if (_updateViewTimer) clearTimeout(_updateViewTimer);
+        _updateViewTimer = setTimeout(_doUpdateView, 50);
+    }
+    function _doUpdateView() { 
         const activeEl = document.getElementById('active-list'), unclaimEl = document.getElementById('unclaimed-list');
         const prefix = currentMode === 'goldbasin' ? 'goldbasin' : 'postcard';
         const pcEl = document.getElementById(prefix + '-container');
