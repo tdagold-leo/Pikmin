@@ -3261,10 +3261,10 @@
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center; flex:1; margin-left:12px; min-width:0;">
                     <div style="display:flex; flex-direction:column; align-items:flex-start; gap:4px; min-width:0;">
+                        <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin:0; font-size:13px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; padding-left:2px;">${timeText}</span>
                         <div style="display:flex; align-items:center; gap:4px;">${cHtml}</div>
-                        <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin:0; font-size:12px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;">${timeText}</span>
                     </div>
-                    <button class="pin-btn ${isPinned ? 'pinned' : ''}" onclick="toggleMushPin('${item.id}')" title="${isPinned ? '取消重點標記' : '加入重點標記'}" style="flex-shrink:0; font-size:18px; line-height:1; padding:4px;">${isPinned ? '★' : '☆'}</button>
+                    <button class="pin-btn ${isPinned ? 'pinned' : ''}" onclick="toggleMushPin('${item.id}')" title="${isPinned ? '取消重點標記' : '加入重點標記'}" style="flex-shrink:0; font-size:26px; line-height:1; padding:4px 8px;">${isPinned ? '★' : '☆'}</button>
                 </div>
             </div>
             <div class="card-body" style="gap: 8px; padding: 12px; display:flex; flex-direction:column; flex:1;">
