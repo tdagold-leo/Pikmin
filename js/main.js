@@ -3156,7 +3156,7 @@
         const safeC = toTW(escapeHtml(item.country||'')), safeName = escapeHtml(item.name), safeTag = escapeHtml(item.tag);
         const diffStr = getTimeDiffString(safeC);
         // 將國家與時差字串，供 Header 右上角使用
-        const cHtml = safeC ? `<span style="font-size:12px; color:#6b7280; font-weight:bold; white-space:nowrap;">${safeC}</span> ${diffStr ? `<span class="tz-badge">${diffStr}</span>` : ''}` : '';
+        const cHtml = safeC ? `<span style="font-size:12px; color:#6b7280; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${safeC}</span> ${diffStr ? `<span class="tz-badge" style="flex-shrink:0;">${diffStr}</span>` : ''}` : '';
         const tHtml = safeTag ? `<span class="tag-badge">${safeTag}</span>` : '';
         const dupBadge = isDup ? `<span style="font-size:11px; color:#b45309; font-weight:bold; background:#fef3c7; padding:2px 6px; border-radius:6px; border:1px dashed #f59e0b;">⚠️ 重複收藏</span>` : '';
         const badgeHtml = [tHtml, dupBadge].filter(Boolean).join(' ');
@@ -3259,12 +3259,12 @@
                     <span style="font-size: 22px; font-weight: 900; color: var(--text-main); white-space:nowrap; line-height:1;">#${String(item.sn).padStart(2,'0')}</span>
                     <span style="font-size:13px; font-weight:900; padding:3px 10px; border-radius:6px; white-space:nowrap; background:${kindBg}; color:${kindColor}; line-height:1; border:1px solid ${kindColor}22;">${kindLabel}</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; flex:1; margin-left:12px; min-width:0;">
-                    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:4px; min-width:0;">
-                        <div style="display:flex; align-items:center; gap:4px;">${cHtml}</div>
-                        <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin:0; font-size:13px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; padding-left:2px;">${timeText}</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; flex:1; margin-left:8px; min-width:0;">
+                    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:4px; flex:1; min-width:0;">
+                        <div style="display:flex; align-items:center; gap:4px; max-width:100%; min-width:0;">${cHtml}</div>
+                        <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin:0; font-size:13px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; min-width:0; padding-left:2px;">${timeText}</span>
                     </div>
-                    <button class="pin-btn ${isPinned ? 'pinned' : ''}" onclick="toggleMushPin('${item.id}')" title="${isPinned ? '取消重點標記' : '加入重點標記'}" style="flex-shrink:0; font-size:26px; line-height:1; padding:4px 8px;">${isPinned ? '★' : '☆'}</button>
+                    <button class="pin-btn ${isPinned ? 'pinned' : ''}" onclick="toggleMushPin('${item.id}')" title="${isPinned ? '取消重點標記' : '加入重點標記'}" style="flex-shrink:0; font-size:24px; line-height:1; padding:4px; margin-left:4px;">${isPinned ? '★' : '☆'}</button>
                 </div>
             </div>
             <div class="card-body" style="gap: 8px; padding: 12px; display:flex; flex-direction:column; flex:1;">
