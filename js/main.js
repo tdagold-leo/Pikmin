@@ -3220,7 +3220,7 @@
         const isFull = filledCount === 5;
 
         // 參戰空位：縮小圓圈 max-width 34px
-        // 參戰空位：只保留 5 個圈圈
+        // 參戰空位：5 個圈圈 + 右側 1 個「滿」圈圈
         let slotsHtml = `<div class="slots-wrapper" style="background:transparent; border:none; padding:4px 0 0 0; margin-top:4px;">`;
         slotsHtml += `<div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">`;
         for (let i = 0; i < 5; i++) {
@@ -3229,6 +3229,11 @@
             } else {
                 slotsHtml += `<button class="slot-btn" style="flex:1; max-width:34px; aspect-ratio:1/1; height:auto; padding:0; border-radius:50%; background:#f1f5f9; border:1px solid #cbd5e1; color:#94a3b8; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-sizing:border-box;" onclick="toggleSlot('${item.id}', ${i})">+</button>`;
             }
+        }
+        if (!isFull) {
+            slotsHtml += `<button onclick="fillAllSlots('${item.id}')" style="flex:1; max-width:34px; aspect-ratio:1/1; height:auto; padding:0; border-radius:50%; background:#ef4444; border:none; color:white; font-size:14px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.1);" title="填滿空位">滿</button>`;
+        } else {
+            slotsHtml += `<div style="flex:1; max-width:34px; visibility:hidden;"></div>`;
         }
         slotsHtml += `</div></div>`;
 
@@ -3254,12 +3259,12 @@
                     <span style="font-size: 22px; font-weight: 900; color: var(--text-main); white-space:nowrap; line-height:1;">#${String(item.sn).padStart(2,'0')}</span>
                     <span style="font-size:13px; font-weight:900; padding:3px 10px; border-radius:6px; white-space:nowrap; background:${kindBg}; color:${kindColor}; line-height:1; border:1px solid ${kindColor}22;">${kindLabel}</span>
                 </div>
-                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:3px; min-width:0;">
-                    <div style="display:flex; align-items:center; gap:4px;">
-                        ${cHtml}
-                        <button class="pin-btn ${isPinned ? 'pinned' : ''}" onclick="toggleMushPin('${item.id}')" title="${isPinned ? '取消重點標記' : '加入重點標記'}" style="flex-shrink:0; margin-left:4px;">${isPinned ? '★' : '☆'}</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; flex:1; margin-left:12px; min-width:0;">
+                    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:4px; min-width:0;">
+                        <div style="display:flex; align-items:center; gap:4px;">${cHtml}</div>
+                        <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin:0; font-size:12px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;">${timeText}</span>
                     </div>
-                    <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin:0; font-size:12px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;">${timeText}</span>
+                    <button class="pin-btn ${isPinned ? 'pinned' : ''}" onclick="toggleMushPin('${item.id}')" title="${isPinned ? '取消重點標記' : '加入重點標記'}" style="flex-shrink:0; font-size:18px; line-height:1; padding:4px;">${isPinned ? '★' : '☆'}</button>
                 </div>
             </div>
             <div class="card-body" style="gap: 8px; padding: 12px; display:flex; flex-direction:column; flex:1;">
@@ -3275,7 +3280,6 @@
                             <span style="font-size:11px; font-weight:bold; line-height:1;">認領</span>
                         </button>
                         `}
-                        ${!isFull ? `<button onclick="fillAllSlots('${item.id}')" style="font-size:11px; font-weight:bold; background:#ef4444; color:white; border:none; border-radius:8px; padding:4px 0; width:100%; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.1);">滿</button>` : `<div style="min-height:22px;"></div>`}
                     </div>
                     <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:0; padding-top:2px;">
                         <span class="card-title" style="font-size:16px; margin:0; line-height:1.4; font-weight:bold; word-break:break-all;">${safeName}</span>
