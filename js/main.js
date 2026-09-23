@@ -3259,11 +3259,11 @@
                     <span style="font-size: 22px; font-weight: 900; color: var(--text-main); white-space:nowrap; line-height:1;">#${String(item.sn).padStart(2,'0')}</span>
                     <span style="font-size:13px; font-weight:900; padding:3px 10px; border-radius:6px; white-space:nowrap; background:${kindBg}; color:${kindColor}; line-height:1; border:1px solid ${kindColor}22;">${kindLabel}</span>
                 </div>
+                <button class="pin-btn pin-btn-header ${isPinned ? 'pinned' : ''}" onclick="toggleMushPin('${item.id}')" title="${isPinned ? '取消重點標記' : '加入重點標記'}">${isPinned ? '★' : '☆'}</button>
                 <div class="mush-header-info">
                     <div style="display:flex; align-items:center; gap:4px; max-width:100%; min-width:0;">${cHtml}</div>
                     <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin:0; font-size:13px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; min-width:0; padding-left:2px;">${timeText}</span>
                 </div>
-                <button class="pin-btn pin-btn-header ${isPinned ? 'pinned' : ''}" onclick="toggleMushPin('${item.id}')" title="${isPinned ? '取消重點標記' : '加入重點標記'}">${isPinned ? '★' : '☆'}</button>
             </div>
             <div class="card-body" style="gap: 8px; padding: 12px; display:flex; flex-direction:column; flex:1;">
                 <div style="display:flex; align-items:flex-start; gap:10px;">
