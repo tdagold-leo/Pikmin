@@ -3254,18 +3254,16 @@
         actionHtml += item.coords ? `<button class="btn-sm btn-default" style="${copyBtnStyle}" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this, true)" title="複製座標">📋</button>` : '';
 
         card.innerHTML = `
-            <div style="background: ${elemHeaderBg}; padding: 8px 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 4px; min-width:0;">
+            <div class="mush-card-header" style="background: ${elemHeaderBg};">
                 <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
                     <span style="font-size: 22px; font-weight: 900; color: var(--text-main); white-space:nowrap; line-height:1;">#${String(item.sn).padStart(2,'0')}</span>
                     <span style="font-size:13px; font-weight:900; padding:3px 10px; border-radius:6px; white-space:nowrap; background:${kindBg}; color:${kindColor}; line-height:1; border:1px solid ${kindColor}22;">${kindLabel}</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; flex:1; margin-left:8px; min-width:0;">
-                    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:4px; flex:1; min-width:0;">
-                        <div style="display:flex; align-items:center; gap:4px; max-width:100%; min-width:0;">${cHtml}</div>
-                        <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin:0; font-size:13px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; min-width:0; padding-left:2px;">${timeText}</span>
-                    </div>
-                    <button class="pin-btn ${isPinned ? 'pinned' : ''}" onclick="toggleMushPin('${item.id}')" title="${isPinned ? '取消重點標記' : '加入重點標記'}" style="flex-shrink:0; font-size:24px; line-height:1; padding:4px; margin-left:4px;">${isPinned ? '★' : '☆'}</button>
+                <div class="mush-header-info">
+                    <div style="display:flex; align-items:center; gap:4px; max-width:100%; min-width:0;">${cHtml}</div>
+                    <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin:0; font-size:13px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; min-width:0; padding-left:2px;">${timeText}</span>
                 </div>
+                <button class="pin-btn pin-btn-header ${isPinned ? 'pinned' : ''}" onclick="toggleMushPin('${item.id}')" title="${isPinned ? '取消重點標記' : '加入重點標記'}">${isPinned ? '★' : '☆'}</button>
             </div>
             <div class="card-body" style="gap: 8px; padding: 12px; display:flex; flex-direction:column; flex:1;">
                 <div style="display:flex; align-items:flex-start; gap:10px;">

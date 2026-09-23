@@ -1946,6 +1946,44 @@
             transform: scale(0.96);
             opacity: 0.8;
         }
+
+        /* 巨菇卡片 Responsive Header */
+        .mush-card-header {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            min-width: 0;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        .mush-header-info {
+            display: flex;
+            gap: 4px;
+            min-width: 0;
+        }
+        .pin-btn-header {
+            flex-shrink: 0;
+            font-size: 24px;
+            line-height: 1;
+            padding: 4px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #d1d5db;
+        }
+        .pin-btn-header.pinned {
+            color: #f59e0b;
+        }
+        @media (min-width: 501px) {
+            .mush-card-header { flex-wrap: nowrap; justify-content: space-between; }
+            .mush-header-info { flex-direction: column; align-items: flex-start; flex: 1; margin-left: 8px; }
+            .pin-btn-header { margin-left: 4px; }
+        }
+        @media (max-width: 500px) {
+            .mush-card-header { flex-wrap: wrap; }
+            .mush-header-info { flex-basis: 100%; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 6px; }
+            .pin-btn-header { margin-left: auto; }
+        }
 </style>
     <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
 </head>
@@ -2309,7 +2347,7 @@
                     </div>
                 </div>
                 <div class="settings-card-body">
-                    <a href="ocr.html?v=202609232114" target="_blank" class="btn-sm btn-primary btn-block" style="padding:10px; font-size:14px; border-radius:10px; width:100%; display:block; text-align:center; text-decoration:none; box-sizing:border-box;">🔗 開啟擷取工具</a>
+                    <a href="ocr.html?v=202609232122" target="_blank" class="btn-sm btn-primary btn-block" style="padding:10px; font-size:14px; border-radius:10px; width:100%; display:block; text-align:center; text-decoration:none; box-sizing:border-box;">🔗 開啟擷取工具</a>
                 </div>
             </div>
 
@@ -3130,9 +3168,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.09.23.2114";</script>
-    <script src="js/main.js?v=202609232114"></script>
-    <script src="js/autofill.js?v=202609232114"></script>
+    <script>const APP_VERSION = "2026.09.23.2122";</script>
+    <script src="js/main.js?v=202609232122"></script>
+    <script src="js/autofill.js?v=202609232122"></script>
 </body>
 </html>
 
