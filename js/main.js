@@ -3155,8 +3155,8 @@
     function createMushroomCard(item, now, isExpired, timeText, isDup = false) {
         const safeC = toTW(escapeHtml(item.country||'')), safeName = escapeHtml(item.name), safeTag = escapeHtml(item.tag);
         const diffStr = getTimeDiffString(safeC);
-        // 將國家與時差字體縮小並設定為獨立行內元素，供 Header 使用
-        const cHtml = safeC ? `<span style="font-size:11px; color:#6b7280; font-weight:bold; white-space:nowrap; margin-left:4px;">${safeC}</span> ${diffStr ? `<span class="tz-badge">${diffStr}</span>` : ''}` : '';
+        // 將國家與時差字串，供 Header 右上角使用
+        const cHtml = safeC ? `<span style="font-size:12px; color:#6b7280; font-weight:bold; white-space:nowrap;">${safeC}</span> ${diffStr ? `<span class="tz-badge">${diffStr}</span>` : ''}` : '';
         const tHtml = safeTag ? `<span class="tag-badge">${safeTag}</span>` : '';
         const dupBadge = isDup ? `<span style="font-size:11px; color:#b45309; font-weight:bold; background:#fef3c7; padding:2px 6px; border-radius:6px; border:1px dashed #f59e0b;">⚠️ 重複收藏</span>` : '';
         const badgeHtml = [tHtml, dupBadge].filter(Boolean).join(' ');
@@ -3220,15 +3220,8 @@
         const isFull = filledCount === 5;
 
         // 參戰空位：縮小圓圈 max-width 34px
-        // 參戰空位：移除文字，將「滿」按鈕置右，保留 5 個圈圈
+        // 參戰空位：只保留 5 個圈圈
         let slotsHtml = `<div class="slots-wrapper" style="background:transparent; border:none; padding:4px 0 0 0; margin-top:4px;">`;
-        if (!isFull) {
-            slotsHtml += `<div style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:6px; min-height:16px;">`;
-            slotsHtml += `<button onclick="fillAllSlots('${item.id}')" style="font-size:10px; font-weight:bold; background:#ef4444; color:white; border:none; border-radius:8px; padding:2px 8px; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.1);">滿</button>`;
-            slotsHtml += `</div>`;
-        } else {
-            slotsHtml += `<div style="margin-bottom:6px; min-height:16px;"></div>`;
-        }
         slotsHtml += `<div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">`;
         for (let i = 0; i < 5; i++) {
             if (currentSlots[i]) {
@@ -3256,20 +3249,22 @@
         actionHtml += item.coords ? `<button class="btn-sm btn-default" style="${copyBtnStyle}" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this, true)" title="複製座標">📋</button>` : '';
 
         card.innerHTML = `
-            <div style="background: ${elemHeaderBg}; padding: 6px 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 4px; min-width:0;">
-                <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
-                    <span style="font-size: 18px; font-weight: 900; color: var(--text-main); white-space:nowrap; line-height:1;">#${String(item.sn).padStart(2,'0')}</span>
-                    <span style="font-size:11px; font-weight:900; padding:2px 8px; border-radius:6px; white-space:nowrap; background:${kindBg}; color:${kindColor}; line-height:1; border:1px solid ${kindColor}22;">${kindLabel}</span>
-                    ${cHtml}
+            <div style="background: ${elemHeaderBg}; padding: 8px 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 4px; min-width:0;">
+                <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                    <span style="font-size: 22px; font-weight: 900; color: var(--text-main); white-space:nowrap; line-height:1;">#${String(item.sn).padStart(2,'0')}</span>
+                    <span style="font-size:13px; font-weight:900; padding:3px 10px; border-radius:6px; white-space:nowrap; background:${kindBg}; color:${kindColor}; line-height:1; border:1px solid ${kindColor}22;">${kindLabel}</span>
                 </div>
-                <div style="display:flex; align-items:center; gap:4px; min-width:0;">
-                    <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin:0; font-size:10px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;">${timeText}</span>
-                    <button class="pin-btn ${isPinned ? 'pinned' : ''}" onclick="toggleMushPin('${item.id}')" title="${isPinned ? '取消重點標記' : '加入重點標記'}" style="flex-shrink:0;">${isPinned ? '★' : '☆'}</button>
+                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:3px; min-width:0;">
+                    <div style="display:flex; align-items:center; gap:4px;">
+                        ${cHtml}
+                        <button class="pin-btn ${isPinned ? 'pinned' : ''}" onclick="toggleMushPin('${item.id}')" title="${isPinned ? '取消重點標記' : '加入重點標記'}" style="flex-shrink:0; margin-left:4px;">${isPinned ? '★' : '☆'}</button>
+                    </div>
+                    <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin:0; font-size:12px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;">${timeText}</span>
                 </div>
             </div>
             <div class="card-body" style="gap: 8px; padding: 12px; display:flex; flex-direction:column; flex:1;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="flex:0 0 52px; display:flex; flex-direction:column; align-items:flex-start;">
+                <div style="display:flex; align-items:flex-start; gap:10px;">
+                    <div style="flex:0 0 52px; display:flex; flex-direction:column; align-items:center; gap:6px;">
                         ${item.user ? `
                         <div style="background:${uTheme.bg}; color:${uTheme.color}; font-weight:${uTheme.fw}; font-family:${uTheme.ff}; border-radius:50%; width:52px; height:52px; display:flex; align-items:center; justify-content:center; line-height:1; text-align:center; overflow:hidden; border: 2px solid ${uTheme.border}; box-shadow: 0 2px 4px rgba(0,0,0,0.05); flex-shrink:0; ${uTheme.bgImg ? `background-image:${uTheme.bgImg}; background-size:${uTheme.bgSize}; background-position:${uTheme.bgPos}; background-repeat:no-repeat;` : ''}">
                             <span style="font-size:14px; word-break:break-all; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; padding:0 2px;">${escapeHtml(item.user)}</span>
@@ -3280,9 +3275,10 @@
                             <span style="font-size:11px; font-weight:bold; line-height:1;">認領</span>
                         </button>
                         `}
+                        ${!isFull ? `<button onclick="fillAllSlots('${item.id}')" style="font-size:11px; font-weight:bold; background:#ef4444; color:white; border:none; border-radius:8px; padding:4px 0; width:100%; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.1);">滿</button>` : `<div style="min-height:22px;"></div>`}
                     </div>
-                    <div style="display:flex; flex-direction:column; gap:3px; flex:1; min-width:0;">
-                        <span class="card-title" style="font-size:16px; margin:0; line-height:1.3; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">${safeName}</span>
+                    <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:0; padding-top:2px;">
+                        <span class="card-title" style="font-size:16px; margin:0; line-height:1.4; font-weight:bold; word-break:break-all;">${safeName}</span>
                         ${locHtml}
                     </div>
                 </div>
