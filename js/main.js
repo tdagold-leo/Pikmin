@@ -4398,6 +4398,64 @@
             localStorage.setItem('pikmin_mail_api_base', window.mailApiBase);
             return window.mailApiBase;
         }
+
+        // ===== 伺服器狀態列 UI =====
+        function updateServerBar(status) {
+            // status: 'ok' | 'error' | 'checking'
+            const dot = document.getElementById('cloud-server-dot');
+            const nameEl = document.getElementById('cloud-server-name');
+            const statusEl = document.getElementById('cloud-server-status');
+            if (!dot || !nameEl) return;
+            const shortName = window.mailApiBase.replace('https://api.', '');
+            nameEl.textContent = shortName;
+            if (status === 'ok') {
+                dot.style.background = '#22c55e';
+                statusEl.textContent = '✓ 正常';
+                statusEl.style.color = '#86efac';
+            } else if (status === 'error') {
+                dot.style.background = '#ef4444';
+                statusEl.textContent = '✗ 異常';
+                statusEl.style.color = '#fca5a5';
+            } else {
+                dot.style.background = '#f59e0b';
+                statusEl.textContent = '偵測中...';
+                statusEl.style.color = '#fcd34d';
+            }
+        }
+
+        async function probeAndUpdateServerBar() {
+            updateServerBar('checking');
+            try {
+                const res = await fetch(window.mailApiBase + '/domains', { method: 'GET', signal: AbortSignal.timeout(5000) });
+                if (res.ok) {
+                    updateServerBar('ok');
+                } else {
+                    updateServerBar('error');
+                }
+            } catch(e) {
+                updateServerBar('error');
+            }
+        }
+
+        function manualSwitchMailApi() {
+            const newApi = switchMailApi();
+            const shortName = newApi.replace('https://api.', '');
+            const logContainer = document.getElementById('cloud-logContainer');
+            if (logContainer) {
+                const entry = document.createElement('div');
+                entry.className = 'log-entry';
+                const time = new Date().toLocaleTimeString('zh-TW', { hour12: false });
+                entry.textContent = `[${time}] 🔀 已手動切換至 ${shortName}，正在偵測狀態...`;
+                logContainer.appendChild(entry);
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
+            probeAndUpdateServerBar();
+        }
+
+        // 頁面載入後立即探測並顯示狀態
+        setTimeout(probeAndUpdateServerBar, 800);
+        window.manualSwitchMailApi = manualSwitchMailApi;
+
         const logContainer = document.getElementById('cloud-logContainer');
         const dynamicActionBtn = document.getElementById('cloud-dynamicActionBtn');
         const dynamicBtnIcon = document.getElementById('cloud-dynamicBtnIcon');
