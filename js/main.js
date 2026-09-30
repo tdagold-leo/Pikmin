@@ -4386,10 +4386,10 @@
 
     // ===== 雲端自動註冊小幫手邏輯 =====
     (function() {
-        window.mailApiBase = localStorage.getItem('pikmin_mail_api_base') || 'https://api.mail.gw';
+        window.mailApiBase = localStorage.getItem('pikmin_mail_api_base') || 'https://api.mail.tm';
         
         function switchMailApi() {
-            window.mailApiBase = (window.mailApiBase === 'https://api.mail.gw') ? 'https://api.mail.tm' : 'https://api.mail.gw';
+            window.mailApiBase = (window.mailApiBase === 'https://api.mail.tm') ? 'https://api.mail.gw' : 'https://api.mail.tm';
             localStorage.setItem('pikmin_mail_api_base', window.mailApiBase);
             return window.mailApiBase;
         }
@@ -5378,34 +5378,60 @@
             if (emailBox) emailBox.classList.add('active');
 
             try {
-                log('🚀 正在向 mail.tm 註冊信箱...');
-                try {
-                    const domainsRes = await fetchWithRetry(window.mailApiBase + '/domains', { method: 'GET' }, 2, 1000);
-                    if (domainsRes && domainsRes['hydra:member'] && domainsRes['hydra:member'][0]) {
-                        domain = domainsRes['hydra:member'][0].domain;
-                        cachedMailDomain = domain;
-                        localStorage.setItem('pikmin_mail_domain', domain);
-                        address = `nintendo${randomString}@${domain}`;
-                        currentGeneratedEmail = address;
-                        copyToClipboard(address);
-                        if (emailDisplay) emailDisplay.textContent = address;
+                log('🚀 正在向郵件伺服器註冊信箱...');
+                // 自動備援：嘗試當前 API，失敗自動切換另一台重試
+                const apis = [window.mailApiBase, window.mailApiBase === 'https://api.mail.tm' ? 'https://api.mail.gw' : 'https://api.mail.tm'];
+                let lastError = null;
+                let registered = false;
+                let token = null;
+
+                for (let apiIdx = 0; apiIdx < apis.length; apiIdx++) {
+                    const currentApi = apis[apiIdx];
+                    if (apiIdx > 0) {
+                        log(`⚠️ 切換備援伺服器 (${currentApi})，重新嘗試...`);
+                        window.mailApiBase = currentApi;
+                        localStorage.setItem('pikmin_mail_api_base', currentApi);
                     }
-                } catch(e) {
-                    console.warn('Domain fetch fallback:', e);
+                    try {
+                        // 1. 取得可用 domain
+                        try {
+                            const domainsRes = await fetchWithRetry(currentApi + '/domains', { method: 'GET' }, 2, 1000);
+                            if (domainsRes && domainsRes['hydra:member'] && domainsRes['hydra:member'][0]) {
+                                domain = domainsRes['hydra:member'][0].domain;
+                                cachedMailDomain = domain;
+                                localStorage.setItem('pikmin_mail_domain', domain);
+                                address = `nintendo${randomString}@${domain}`;
+                                currentGeneratedEmail = address;
+                                copyToClipboard(address);
+                                if (emailDisplay) emailDisplay.textContent = address;
+                            }
+                        } catch(e) {
+                            console.warn('Domain fetch fallback:', e);
+                        }
+
+                        // 2. 建立帳號
+                        await fetchWithRetry(currentApi + '/accounts', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ address, password })
+                        });
+
+                        // 3. 取得 token
+                        const tokenRes = await fetchWithRetry(currentApi + '/token', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ address, password })
+                        });
+                        token = tokenRes.token;
+                        registered = true;
+                        break; // 成功，跳出迴圈
+                    } catch(e) {
+                        lastError = e;
+                        console.warn(`API ${currentApi} 失敗:`, e.message);
+                    }
                 }
-                
-                await fetchWithRetry(window.mailApiBase + '/accounts', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ address, password })
-                });
-                
-                const tokenRes = await fetchWithRetry(window.mailApiBase + '/token', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ address, password })
-                });
-                const token = tokenRes.token;
+
+                if (!registered) throw lastError || new Error('所有備援伺服器均無法連線');
                 
                 saveMailSession(address, token); // 持久化儲存
                 log(`✅ 成功建立並確認信箱：${address}`, 'log-success');
