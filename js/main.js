@@ -4386,31 +4386,21 @@
 
     // ===== 雲端自動註冊小幫手邏輯 =====
     (function() {
-        // 強制重置：mail.gw 目前已知故障 (502)，若 localStorage 存的是舊值則清除
-        const _savedApi = localStorage.getItem('pikmin_mail_api_base');
-        if (_savedApi === 'https://api.mail.gw') {
-            localStorage.removeItem('pikmin_mail_api_base');
-        }
-        window.mailApiBase = localStorage.getItem('pikmin_mail_api_base') || 'https://api.mail.tm';
-        
-        function switchMailApi() {
-            window.mailApiBase = (window.mailApiBase === 'https://api.mail.tm') ? 'https://api.mail.gw' : 'https://api.mail.tm';
-            localStorage.setItem('pikmin_mail_api_base', window.mailApiBase);
-            return window.mailApiBase;
-        }
-
         // ===== 伺服器狀態列 UI =====
         function updateServerBar(status) {
             // status: 'ok' | 'error' | 'checking'
             const dot = document.getElementById('cloud-server-dot');
             const nameEl = document.getElementById('cloud-server-name');
             const statusEl = document.getElementById('cloud-server-status');
+            const switchBtn = document.getElementById('cloud-switch-server-btn');
             if (!dot || !nameEl) return;
-            const shortName = window.mailApiBase.replace('https://api.', '');
-            nameEl.textContent = shortName;
+            
+            nameEl.textContent = 'guerrillamail';
+            if (switchBtn) switchBtn.style.display = 'none'; // 隱藏切換按鈕，因為只有GM能用
+
             if (status === 'ok') {
                 dot.style.background = '#22c55e';
-                statusEl.textContent = '✓ 正常';
+                statusEl.textContent = '✓ 正常 (無 CORS 限制)';
                 statusEl.style.color = '#86efac';
             } else if (status === 'error') {
                 dot.style.background = '#ef4444';
@@ -4426,49 +4416,22 @@
         async function probeAndUpdateServerBar() {
             updateServerBar('checking');
             try {
-                // 使用 no-cors mode 避免 CORS 封鎖：opaque response 表示伺服器有回應（正常）
-                const res = await fetch(window.mailApiBase + '/domains', {
+                const res = await fetch('https://api.guerrillamail.com/ajax.php?f=get_email_address', {
                     method: 'GET',
-                    mode: 'no-cors',
                     signal: AbortSignal.timeout(5000)
                 });
-                // no-cors 下 type 會是 'opaque'，代表伺服器有回應（不論 CORS）
-                updateServerBar('ok');
-                // 同步更新 domain cache（用 cors 模式試試）
-                try {
-                    const domRes = await fetch(window.mailApiBase + '/domains', { signal: AbortSignal.timeout(5000) });
-                    if (domRes.ok) {
-                        const domData = await domRes.json();
-                        const freshDomain = domData?.['hydra:member']?.[0]?.domain;
-                        if (freshDomain) {
-                            cachedMailDomain = freshDomain;
-                            localStorage.setItem('pikmin_mail_domain', freshDomain);
-                        }
-                    }
-                } catch(e) { /* CORS 擋住也沒關係，已確認伺服器正常 */ }
+                if (res.ok) {
+                    updateServerBar('ok');
+                } else {
+                    updateServerBar('error');
+                }
             } catch(e) {
                 updateServerBar('error');
             }
         }
 
-        function manualSwitchMailApi() {
-            const newApi = switchMailApi();
-            const shortName = newApi.replace('https://api.', '');
-            const logContainer = document.getElementById('cloud-logContainer');
-            if (logContainer) {
-                const entry = document.createElement('div');
-                entry.className = 'log-entry';
-                const time = new Date().toLocaleTimeString('zh-TW', { hour12: false });
-                entry.textContent = `[${time}] 🔀 已手動切換至 ${shortName}，正在偵測狀態...`;
-                logContainer.appendChild(entry);
-                logContainer.scrollTop = logContainer.scrollHeight;
-            }
-            probeAndUpdateServerBar();
-        }
-
         // 頁面載入後立即探測並顯示狀態
         setTimeout(probeAndUpdateServerBar, 800);
-        window.manualSwitchMailApi = manualSwitchMailApi;
 
         const logContainer = document.getElementById('cloud-logContainer');
         const dynamicActionBtn = document.getElementById('cloud-dynamicActionBtn');
@@ -5324,23 +5287,22 @@
             }
 
             try {
-                const msgsRes = await fetchWithRetry(window.mailApiBase + '/messages', {
-                    method: 'GET',
-                    headers: { 'Authorization': `Bearer ${session.token}` }
-                }, 2, 1000);
+                // GuerrillaMail 的 token 存在 session.token
+                const sidToken = session.token;
+                const msgsRes = await fetchWithRetry(`https://api.guerrillamail.com/ajax.php?f=get_email_list&offset=0&sid_token=${sidToken}`, { method: 'GET' }, 2, 1000);
 
-                const messages = msgsRes['hydra:member'];
-                if (messages && messages.length > 0) {
-                    const mailId = messages[0].id;
-                    const mailSubject = messages[0].subject || '新信件';
+                const messages = msgsRes.list;
+                // 過濾掉 GuerrillaMail 的歡迎信 (mail_id = 1)
+                const realMessages = messages ? messages.filter(m => m.mail_from.indexOf('no-reply@guerrillamail.com') === -1) : [];
+                
+                if (realMessages && realMessages.length > 0) {
+                    const mailId = realMessages[0].mail_id;
+                    const mailSubject = realMessages[0].mail_subject || '新信件';
                     log(`📧 收到信件 [${mailSubject}]，正在解析驗證碼...`);
 
-                    const mailRes = await fetchWithRetry(`${window.mailApiBase}/messages/${mailId}`, {
-                        method: 'GET',
-                        headers: { 'Authorization': `Bearer ${session.token}` }
-                    }, 2, 1000);
+                    const mailRes = await fetchWithRetry(`https://api.guerrillamail.com/ajax.php?f=fetch_email&email_id=${mailId}&sid_token=${sidToken}`, { method: 'GET' }, 2, 1000);
 
-                    const htmlContent = mailRes.html ? (mailRes.html[0] || mailRes.html) : (mailRes.text || '');
+                    const htmlContent = mailRes.mail_body || '';
                     const match = htmlContent.match(/\b(\d{4})\b/);
                     if (match) {
                         const verificationCode = match[1];
@@ -5405,18 +5367,9 @@
             } catch(e) {}
         }
 
-        // 清除舊的 domain 快取（domain 會定期更換，不應長期快取）
+        // 清除舊的 domain 快取
         localStorage.removeItem('pikmin_mail_domain');
-        let cachedMailDomain = 'uberip.com'; // 當前已知有效的 domain，作為fallback
         
-        // 背景自動更新網域快取（用 no-cors 確保不被 CORS 封鎖）
-        fetch(window.mailApiBase + '/domains').then(r => r.json()).then(data => {
-            if (data && data['hydra:member'] && data['hydra:member'][0]) {
-                cachedMailDomain = data['hydra:member'][0].domain;
-                localStorage.setItem('pikmin_mail_domain', cachedMailDomain);
-            }
-        }).catch(() => {});
-
         // ===== 執行自動化核心函式 =====
         async function runAutomation() {
             if (!currentActiveInvite) {
@@ -5438,82 +5391,46 @@
             if (emailBox) emailBox.classList.remove('active');
             if (codeBox) codeBox.classList.remove('active');
             latestReceivedCode = null;
-            if (logContainer) logContainer.innerHTML = '<div class="log-entry">準備就緒。正在建立信箱並準備跳轉...</div>';
+            if (logContainer) logContainer.innerHTML = '<div class="log-entry">準備就緒。正在建立信箱...</div>';
             
-            // 1. 同步生成信箱並立即寫入剪貼簿 (在使用者點擊手勢當下立即複製，100% 避免被 iOS 攔截)
             const randomString = Date.now().toString();
-            let domain = cachedMailDomain;
-            let address = `nintendo${randomString}@${domain}`;
-            const password = (pwdInput && pwdInput.value) ? pwdInput.value.trim() : 'Pikmin123!@';
             
-            currentGeneratedEmail = address;
-            copyToClipboard(address); // 同步寫入剪貼簿
-            log(`📋 已將預備信箱複製到剪貼簿：${address}`, 'log-success');
             if ('Notification' in window && Notification.permission !== 'granted') {
                 log('💡 提示：建議先點「🔔 啟用推播通知」按鈕，再開始流程，以確保收到驗證碼提醒。');
             }
 
-            if (emailDisplay) emailDisplay.textContent = address;
-            if (emailBox) emailBox.classList.add('active');
-
             try {
                 log('🚀 正在向郵件伺服器註冊信箱...');
-                // 自動備援：嘗試當前 API，失敗自動切換另一台重試
-                const apis = [window.mailApiBase, window.mailApiBase === 'https://api.mail.tm' ? 'https://api.mail.gw' : 'https://api.mail.tm'];
-                let lastError = null;
-                let registered = false;
-                let token = null;
-
-                for (let apiIdx = 0; apiIdx < apis.length; apiIdx++) {
-                    const currentApi = apis[apiIdx];
-                    if (apiIdx > 0) {
-                        log(`⚠️ 切換備援伺服器 (${currentApi})，重新嘗試...`);
-                        window.mailApiBase = currentApi;
-                        localStorage.setItem('pikmin_mail_api_base', currentApi);
-                    }
-                    try {
-                        // 1. 取得可用 domain
-                        try {
-                            const domainsRes = await fetchWithRetry(currentApi + '/domains', { method: 'GET' }, 2, 1000);
-                            if (domainsRes && domainsRes['hydra:member'] && domainsRes['hydra:member'][0]) {
-                                domain = domainsRes['hydra:member'][0].domain;
-                                cachedMailDomain = domain;
-                                localStorage.setItem('pikmin_mail_domain', domain);
-                                address = `nintendo${randomString}@${domain}`;
-                                currentGeneratedEmail = address;
-                                copyToClipboard(address);
-                                if (emailDisplay) emailDisplay.textContent = address;
-                            }
-                        } catch(e) {
-                            console.warn('Domain fetch fallback:', e);
-                        }
-
-                        // 2. 建立帳號
-                        await fetchWithRetry(currentApi + '/accounts', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ address, password })
-                        });
-
-                        // 3. 取得 token
-                        const tokenRes = await fetchWithRetry(currentApi + '/token', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ address, password })
-                        });
-                        token = tokenRes.token;
-                        registered = true;
-                        break; // 成功，跳出迴圈
-                    } catch(e) {
-                        lastError = e;
-                        console.warn(`API ${currentApi} 失敗:`, e.message);
-                    }
+                
+                // 使用 GuerrillaMail 替代 mail.tm (因 mail.tm 不支援瀏覽器 POST CORS)
+                // 1. 取得 token
+                const initRes = await fetchWithRetry('https://api.guerrillamail.com/ajax.php?f=get_email_address', { method: 'GET' }, 2, 1000);
+                if (!initRes || !initRes.sid_token) throw new Error('無法取得信箱 token');
+                
+                const sidToken = initRes.sid_token;
+                const username = `nintendo${randomString}`;
+                
+                // 2. 設定自訂帳號名稱
+                const setRes = await fetchWithRetry(`https://api.guerrillamail.com/ajax.php?f=set_email_user&email_user=${username}&lang=en&sid_token=${sidToken}`, { method: 'GET' }, 2, 1000);
+                
+                let address = '';
+                if (setRes && setRes.email_addr) {
+                    address = setRes.email_addr;
+                    currentGeneratedEmail = address;
+                    // 同步複製
+                    copyToClipboard(address);
+                    log(`📋 已將信箱複製到剪貼簿：${address}`, 'log-success');
+                    if (emailDisplay) emailDisplay.textContent = address;
+                    if (emailBox) emailBox.classList.add('active');
+                } else {
+                    throw new Error('設定信箱名稱失敗');
                 }
 
-                if (!registered) throw lastError || new Error('所有備援伺服器均無法連線');
+                const token = sidToken; // GuerrillaMail 的 token 就是 sid_token
                 
                 saveMailSession(address, token); // 持久化儲存
                 log(`✅ 成功建立並確認信箱：${address}`, 'log-success');
+
 
                 if (copyEmailBtn) {
                     copyEmailBtn.onclick = () => {
