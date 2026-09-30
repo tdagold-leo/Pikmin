@@ -4386,6 +4386,11 @@
 
     // ===== 雲端自動註冊小幫手邏輯 =====
     (function() {
+        // 強制重置：mail.gw 目前已知故障 (502)，若 localStorage 存的是舊值則清除
+        const _savedApi = localStorage.getItem('pikmin_mail_api_base');
+        if (_savedApi === 'https://api.mail.gw') {
+            localStorage.removeItem('pikmin_mail_api_base');
+        }
         window.mailApiBase = localStorage.getItem('pikmin_mail_api_base') || 'https://api.mail.tm';
         
         function switchMailApi() {
