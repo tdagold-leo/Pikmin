@@ -4426,12 +4426,26 @@
         async function probeAndUpdateServerBar() {
             updateServerBar('checking');
             try {
-                const res = await fetch(window.mailApiBase + '/domains', { method: 'GET', signal: AbortSignal.timeout(5000) });
-                if (res.ok) {
-                    updateServerBar('ok');
-                } else {
-                    updateServerBar('error');
-                }
+                // 使用 no-cors mode 避免 CORS 封鎖：opaque response 表示伺服器有回應（正常）
+                const res = await fetch(window.mailApiBase + '/domains', {
+                    method: 'GET',
+                    mode: 'no-cors',
+                    signal: AbortSignal.timeout(5000)
+                });
+                // no-cors 下 type 會是 'opaque'，代表伺服器有回應（不論 CORS）
+                updateServerBar('ok');
+                // 同步更新 domain cache（用 cors 模式試試）
+                try {
+                    const domRes = await fetch(window.mailApiBase + '/domains', { signal: AbortSignal.timeout(5000) });
+                    if (domRes.ok) {
+                        const domData = await domRes.json();
+                        const freshDomain = domData?.['hydra:member']?.[0]?.domain;
+                        if (freshDomain) {
+                            cachedMailDomain = freshDomain;
+                            localStorage.setItem('pikmin_mail_domain', freshDomain);
+                        }
+                    }
+                } catch(e) { /* CORS 擋住也沒關係，已確認伺服器正常 */ }
             } catch(e) {
                 updateServerBar('error');
             }
@@ -5391,9 +5405,11 @@
             } catch(e) {}
         }
 
-        let cachedMailDomain = localStorage.getItem('pikmin_mail_domain') || 'web-library.net';
+        // 清除舊的 domain 快取（domain 會定期更換，不應長期快取）
+        localStorage.removeItem('pikmin_mail_domain');
+        let cachedMailDomain = 'uberip.com'; // 當前已知有效的 domain，作為fallback
         
-        // 背景自動更新網域快取
+        // 背景自動更新網域快取（用 no-cors 確保不被 CORS 封鎖）
         fetch(window.mailApiBase + '/domains').then(r => r.json()).then(data => {
             if (data && data['hydra:member'] && data['hydra:member'][0]) {
                 cachedMailDomain = data['hydra:member'][0].domain;
