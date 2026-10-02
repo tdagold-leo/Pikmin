@@ -2478,7 +2478,9 @@
                 if (pushData.sgType === '期間') {
                     pushData.sgStart = document.getElementById('post-sg-start').value || '';
                     pushData.sgEnd = document.getElementById('post-sg-end').value || '';
-                    pushData.sgCooldown = document.getElementById('post-sg-cooldown').value || '';
+                    const cdEl = document.getElementById('post-sg-cooldown');
+                    const cdCustomEl = document.getElementById('post-sg-cooldown-custom');
+                    pushData.sgCooldown = (cdEl && cdEl.value === 'custom') ? (cdCustomEl && cdCustomEl.value ? String(parseInt(cdCustomEl.value, 10)) : '') : (cdEl ? cdEl.value : '');
                     // sgLast 不寫入共享資料庫，由個人記錄管理
                 }
             }
@@ -2670,7 +2672,22 @@
                     document.getElementById('edit-post-sg-dates').style.display = 'flex';
                     document.getElementById('edit-post-sg-start').value = item.sgStart || '';
                     document.getElementById('edit-post-sg-end').value = item.sgEnd || '';
-                    document.getElementById('edit-post-sg-cooldown').value = item.sgCooldown || '';
+                    // 若 sgCooldown 不在預設選項中，選「自訂」並填入數字
+                    (function() {
+                        const cdVal = item.sgCooldown || '';
+                        const cdSel = document.getElementById('edit-post-sg-cooldown');
+                        const cdCustom = document.getElementById('edit-post-sg-cooldown-custom');
+                        const presets = ['', '1', '7', '14', '30'];
+                        if (cdVal && !presets.includes(cdVal)) {
+                            cdSel.value = 'custom';
+                            cdCustom.value = cdVal;
+                            cdCustom.style.display = 'block';
+                        } else {
+                            cdSel.value = cdVal;
+                            cdCustom.style.display = 'none';
+                            cdCustom.value = '';
+                        }
+                    })();
                     document.getElementById('edit-post-sg-last').value = item.sgLast || '';
                 } else {
                     document.getElementById('edit-post-sg-dates').style.display = 'none';
@@ -2856,7 +2873,9 @@
                 if (updates.sgType === '期間') {
                     updates.sgStart = document.getElementById('edit-post-sg-start').value || '';
                     updates.sgEnd = document.getElementById('edit-post-sg-end').value || '';
-                    updates.sgCooldown = document.getElementById('edit-post-sg-cooldown').value || '';
+                    const ecdEl = document.getElementById('edit-post-sg-cooldown');
+                    const ecdCustomEl = document.getElementById('edit-post-sg-cooldown-custom');
+                    updates.sgCooldown = (ecdEl && ecdEl.value === 'custom') ? (ecdCustomEl && ecdCustomEl.value ? String(parseInt(ecdCustomEl.value, 10)) : '') : (ecdEl ? ecdEl.value : '');
                     // sgLast 不寫入共享資料庫，由個人記錄管理
                 } else {
                     updates.sgStart = null;
@@ -3149,6 +3168,59 @@
             ref.remove();
         } else {
             ref.set(true);
+        }
+    };
+
+    // 批次新增特殊金盆
+    window.submitSgBatch = function() {
+        const textarea = document.getElementById('sg-batch-textarea');
+        if (!textarea) return;
+        const lines = textarea.value.split('\n').map(l => l.trim()).filter(Boolean);
+        if (lines.length === 0) { alert('請輸入至少一筆資料'); return; }
+
+        // 讀取共用欄位
+        const sgTypeEl = document.getElementById('post-sg-type');
+        const sgActivityEl = document.getElementById('post-sg-activity');
+        const sgStartEl = document.getElementById('post-sg-start');
+        const sgEndEl = document.getElementById('post-sg-end');
+        const cdEl = document.getElementById('post-sg-cooldown');
+        const cdCustomEl = document.getElementById('post-sg-cooldown-custom');
+        const countryEl = document.getElementById('post-country');
+
+        const sgType = sgTypeEl ? sgTypeEl.value : '常駐';
+        const sgActivity = sgActivityEl ? sgActivityEl.value.trim() : '';
+        const sgStart = sgStartEl ? sgStartEl.value : '';
+        const sgEnd = sgEndEl ? sgEndEl.value : '';
+        const sgCooldown = (cdEl && cdEl.value === 'custom') ? (cdCustomEl && cdCustomEl.value ? String(parseInt(cdCustomEl.value, 10)) : '') : (cdEl ? cdEl.value : '');
+        const country = toTW((countryEl ? countryEl.value : '').trim());
+
+        // 解析每行：「緯度, 經度 名稱」或「緯度，經度 名稱」
+        const coordNameRe = /^\s*(-?\d+(?:\.\d+)?)\s*[,，]\s*(-?\d+(?:\.\d+)?)\s+(.+?)\s*$/;
+        let success = 0, fail = 0;
+        lines.forEach(line => {
+            const m = line.match(coordNameRe);
+            if (!m) { fail++; return; }
+            const lat = m[1], lng = m[2], name = m[3].trim();
+            const coords = normalizeCoords(`${lat}, ${lng}`);
+            const pushData = {
+                type: '特殊金盆', name, coords, country,
+                city: '', district: '', tag: sgActivity, image: '無圖片', auth: '',
+                provider: currentSyncId || '',
+                sgType, sgActivity
+            };
+            if (sgType === '期間') {
+                pushData.sgStart = sgStart;
+                pushData.sgEnd = sgEnd;
+                pushData.sgCooldown = sgCooldown;
+            }
+            dbRef('postcards').push(pushData);
+            success++;
+        });
+        const msg = `✅ 已新增 ${success} 筆` + (fail > 0 ? `，${fail} 筆格式不符已跳過` : '');
+        alert(msg);
+        if (success > 0) {
+            textarea.value = '';
+            closeModal('add-modal');
         }
     };
 
@@ -3476,6 +3548,7 @@
             let timeText = '<span class="not-set">尚未設定</span>', isExp = false;
 
             if (item.user === "") {
+                if (pinnedMushroomsSet.has(item.id)) return; // 待認領菇若已 pin，也不重複出現
                 const midnightUTC = getUnclaimedMidnightUTC(item);
                 if (now >= midnightUTC) {
                     timeText = '已換日過期'; isExp = true;
@@ -3532,7 +3605,12 @@
             if (!pinnedNow.has(item.id)) return;
             if (!mushMatchesSearch(item)) return;
             let timeText2 = '<span class="not-set">尚未設定</span>', isExp2 = false;
-            if (item.targetTime != null) {
+            if (item.user === "") {
+                // 待認領菇：顯示換日倒數
+                const midnightUTC2 = getUnclaimedMidnightUTC(item);
+                if (now >= midnightUTC2) { timeText2 = '已換日過期'; isExp2 = true; }
+                else { timeText2 = `<span class="live-timer" data-type="mushroom-unclaimed" data-target="${midnightUTC2}">換日 ${getRemainingText(midnightUTC2, now)}</span>`; }
+            } else if (item.targetTime != null) {
                 if (item.targetTime - now <= 0) { timeText2 = '已過期/可開打！'; isExp2 = true; }
                 else { timeText2 = `<span class="live-timer" data-type="mushroom-claimed" data-target="${item.targetTime}">${getRemainingText(item.targetTime, now)}</span>`; }
             }
