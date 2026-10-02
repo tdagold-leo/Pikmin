@@ -2347,7 +2347,7 @@
                     </div>
                 </div>
                 <div class="settings-card-body">
-                    <a href="ocr.html?v=202610030352" target="_blank" class="btn-sm btn-primary btn-block" style="padding:10px; font-size:14px; border-radius:10px; width:100%; display:block; text-align:center; text-decoration:none; box-sizing:border-box;">🔗 開啟擷取工具</a>
+                    <a href="ocr.html?v=202610030357" target="_blank" class="btn-sm btn-primary btn-block" style="padding:10px; font-size:14px; border-radius:10px; width:100%; display:block; text-align:center; text-decoration:none; box-sizing:border-box;">🔗 開啟擷取工具</a>
                 </div>
             </div>
 
@@ -2647,15 +2647,9 @@
                 </div>
                 <div id="post-sg-fields" style="display:none; flex-direction:column; gap:6px; background:#fffdf0; border:1.5px solid #facc15; padding:8px 10px; border-radius:10px;">
                     <div style="display:flex; justify-content:flex-end; margin-bottom:2px;">
-                        <button type="button" id="sg-batch-toggle-btn" onclick="(function(btn){var s=document.getElementById('sg-batch-section');var f=document.getElementById('sg-single-fields');var isShow=s.style.display==='flex';s.style.display=isShow?'none':'flex';f.style.display=isShow?'flex':'none';btn.textContent=isShow?'📋 批次輸入':'✏️ 單筆輸入';})(this)" style="background:#fef08a; border:1px solid #facc15; color:#854d0e; border-radius:6px; font-size:11px; padding:3px 12px; cursor:pointer; font-weight:bold;">📋 批次輸入</button>
+                        <button type="button" id="sg-batch-toggle-btn" onclick="(function(btn){var s=document.getElementById('sg-batch-section');var isShow=s.style.display==='flex';s.style.display=isShow?'none':'flex';btn.textContent=isShow?'📋 批次輸入':'❌ 關閉批次';})(this)" style="background:#fef08a; border:1px solid #facc15; color:#854d0e; border-radius:6px; font-size:11px; padding:3px 12px; cursor:pointer; font-weight:bold;">📋 批次輸入</button>
                     </div>
-                    <!-- 批次輸入區塊 -->
-                    <div id="sg-batch-section" style="display:none; flex-direction:column; gap:6px;">
-                        <div style="font-size:11px; color:#92400e; margin-bottom:2px;">每行一筆，格式：<code style="background:#fef9c3; padding:1px 4px; border-radius:4px;">緯度, 經度 名稱</code><br>活動名稱/開始日期/結束日期/幾天可領取 請在下方設定後批次套用</div>
-                        <textarea id="sg-batch-textarea" class="input-base" rows="7" placeholder="36.1590240, -86.7765040 禮物貼紙&#10;36.1601300, -86.7757420 管弦樂器&#10;36.1609840, -86.7753650 巧克力" style="border:1px solid #facc15; background:#fff; font-size:12px; font-family:monospace; resize:vertical;"></textarea>
-                        <button type="button" onclick="submitSgBatch()" style="background:#facc15; color:#78350f; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:bold; cursor:pointer;">✅ 批次新增</button>
-                    </div>
-                    <!-- 單筆輸入區塊 -->
+                    <!-- 共用欄位 + 批次/單筆切換 -->
                     <div id="sg-single-fields" style="display:flex; flex-direction:column; gap:6px;">
                     <div style="display:flex; gap:6px;">
                         <div class="input-group" style="flex:2; margin:0;">
@@ -2705,6 +2699,13 @@
                             </div>
                         </div>
                         </div><!-- end sg-single-fields -->
+                    <!-- 批次輸入區塊 (活動名稱/型態/日期設定在上方共用欄位) -->
+                    <div id="sg-batch-section" style="display:none; flex-direction:column; gap:6px; border-top:1px dashed #facc15; padding-top:8px; margin-top:2px;">
+                        <div style="font-size:11px; color:#92400e; font-weight:700; margin-bottom:2px;">📋 批次輸入座標</div>
+                        <div style="font-size:11px; color:#92400e; margin-bottom:4px;">每行一筆，格式：<code style="background:#fef9c3; padding:1px 4px; border-radius:4px;">緯度, 經度 名稱</code><br>活動名稱/型態/日期 已套用上方設定</div>
+                        <textarea id="sg-batch-textarea" class="input-base" rows="7" placeholder="36.1590240, -86.7765040 禮物貼紙&#10;36.1601300, -86.7757420 管弦樂器&#10;36.1609840, -86.7753650 巧克力" style="border:1px solid #facc15; background:#fff; font-size:12px; font-family:monospace; resize:vertical;"></textarea>
+                        <button type="button" onclick="submitSgBatch()" style="background:#facc15; color:#78350f; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:bold; cursor:pointer;">✅ 批次新增</button>
+                    </div>
                 </div><!-- end post-sg-dates -->
                 </div><!-- end post-sg-fields -->
                 <div style="display:flex; gap:6px;">
@@ -3204,9 +3205,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.10.03.0352";</script>
-    <script src="js/main.js?v=202610030352"></script>
-    <script src="js/autofill.js?v=202610030352"></script>
+    <script>const APP_VERSION = "2026.10.03.0357";</script>
+    <script src="js/main.js?v=202610030357"></script>
+    <script src="js/autofill.js?v=202610030357"></script>
 </body>
 </html>
 
