@@ -431,6 +431,7 @@
     let cloudPcFav = []; // 我的最愛（獨立於已收藏）
     let favoritesListenerRef = null;
     let favPcListenerRef = null;
+    let sgLastListenerRef = null;
     
     let collapsedGroups = new Set();
     let knownPostcardGroups = new Set(); 
@@ -944,6 +945,7 @@
         currentSyncId = inputId;
         if (favoritesListenerRef) { favoritesListenerRef.off(); favoritesListenerRef = null; }
         if (favPcListenerRef) { favPcListenerRef.off(); favPcListenerRef = null; }
+        if (sgLastListenerRef) { sgLastListenerRef.off(); sgLastListenerRef = null; }
         if (inputId) {
             statusEl.innerText = '已連線🟢'; statusEl.classList.add('active');
             if(indicator) indicator.innerText = '🟢 已連線';
@@ -959,18 +961,34 @@
                 cloudPcFav = Array.isArray(data) ? data : (data ? Object.values(data) : []);
                 updateView();
             });
-            // 從雲端同步個人特殊金盆領取記錄到 localStorage
-            dbRef('user_sg_last/' + inputId).once('value', (snapshot) => {
+            // 即時監聽雲端個人特殊金盆領取記錄，合併到 localStorage 與目前列表（跨裝置同步）
+            sgLastListenerRef = dbRef('user_sg_last/' + inputId);
+            sgLastListenerRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data && typeof data === 'object') {
                     try {
                         let local = JSON.parse(localStorage.getItem('pikmin_sgLast_map') || '{}');
+                        let pushBack = {};
                         // 合併：取每個 key 的較新日期
                         Object.keys(data).forEach(k => {
                             if (!local[k] || data[k] > local[k]) local[k] = data[k];
                         });
+                        // 本機較新的記錄補回雲端
+                        Object.keys(local).forEach(k => {
+                            if (!data[k] || local[k] > data[k]) pushBack[k] = local[k];
+                        });
                         localStorage.setItem('pikmin_sgLast_map', JSON.stringify(local));
+                        postcardList.forEach(item => {
+                            if (local[item.id] && (!item.sgLast || local[item.id] > item.sgLast)) item.sgLast = local[item.id];
+                        });
+                        if (Object.keys(pushBack).length > 0) dbRef('user_sg_last/' + inputId).update(pushBack);
                         updateView();
+                    } catch(e) {}
+                } else {
+                    // 雲端尚無資料：把本機既有記錄上傳
+                    try {
+                        const local = JSON.parse(localStorage.getItem('pikmin_sgLast_map') || '{}');
+                        if (Object.keys(local).length > 0) dbRef('user_sg_last/' + inputId).update(local);
                     } catch(e) {}
                 }
             });
@@ -1010,7 +1028,7 @@
             personal[id] = todayStr;
             localStorage.setItem('pikmin_sgLast_map', JSON.stringify(personal));
             if (typeof currentSyncId !== 'undefined' && currentSyncId) {
-                dbRef('user_sg_last/' + currentSyncId).set(personal);
+                dbRef('user_sg_last/' + currentSyncId).update({ [id]: todayStr });
             }
         } catch(err){}
         
@@ -1034,11 +1052,13 @@
         } catch(err){}
 
         let count = 0;
+        const changed = {};
         postcardList.forEach(item => {
             const itemAct = (item.sgActivity || item.tag || '未分類').trim();
             if (itemAct === actName && item.type === '特殊金盆') {
                 item.sgLast = todayStr;
                 personal[item.id] = todayStr;
+                changed[item.id] = todayStr;
                 count++;
             }
         });
@@ -1046,7 +1066,7 @@
         try {
             localStorage.setItem('pikmin_sgLast_map', JSON.stringify(personal));
             if (typeof currentSyncId !== 'undefined' && currentSyncId) {
-                dbRef('user_sg_last/' + currentSyncId).set(personal);
+                if (Object.keys(changed).length > 0) dbRef('user_sg_last/' + currentSyncId).update(changed);
             }
         } catch(err){}
 
@@ -2923,6 +2943,29 @@
         return s;
     }
 
+    // 一鍵複製群組內所有座標（每行一筆，格式同 copyCoords）
+    function copyGroupCoords(actName, e) {
+        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+        const btn = e && (e.currentTarget || e.target);
+        const os = detectOS();
+        const lines = [];
+        postcardList.forEach(item => {
+            const itemAct = (item.sgActivity || item.tag || '未分類').trim();
+            if (itemAct === actName && item.type === '特殊金盆' && item.coords) {
+                const normalized = normalizeCoords(String(item.coords));
+                lines.push((os === 'ios' || os === 'macos' || os === 'windows') ? normalized.replace(/,/g, ' ') : normalized);
+            }
+        });
+        if (lines.length === 0) { alert('此群組沒有座標可複製'); return; }
+        navigator.clipboard.writeText(lines.join('\n')).then(() => {
+            if (btn) {
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '✅ 已複製 ' + lines.length + ' 筆';
+                setTimeout(() => { btn.innerHTML = originalHTML; }, 1500);
+            }
+        }).catch(err => alert('複製失敗，請手動複製。'));
+    }
+
     function copyCoords(text, buttonElement, isInline = false) {
         const os = detectOS();
         const normalized = normalizeCoords(String(text));
@@ -4397,12 +4440,20 @@
                                     </button>
                                 `;
                                 
+                                const groupCopyBtnHtml = `
+                                    <button type="button" class="group-claim-btn claimed"
+                                            onclick="copyGroupCoords('${escapeHtml(act).replace(/'/g, "\\'")}', event)"
+                                            title="一鍵複製群組內所有座標">
+                                        📋 複製座標
+                                    </button>
+                                `;
+
                                 ah.innerHTML = `
                                     <div class="count">${actMap[act].length}</div>
                                     <div class="title">${isActCol ? '▶' : '▼'} ${escapeHtml(act)}${subReminders}</div>
                                     ${dateSubtitle}
                                     ${cooldownBadge}
-                                    ${groupClaimBtnHtml}
+                                    <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">${groupClaimBtnHtml}${groupCopyBtnHtml}</div>
                                 `;
                                 ah.addEventListener('click', () => toggleGroup(actId));
                                 pcEl.appendChild(ah);
@@ -5923,6 +5974,7 @@ window.toggleCollectPostcard = toggleCollectPostcard;
 window.togglePcFav = togglePcFav;
 window.markPostcardClaimedToday = markPostcardClaimedToday;
 window.markGroupClaimedToday = markGroupClaimedToday;
+window.copyGroupCoords = copyGroupCoords;
 window.setTodayDate = setTodayDate;
 window.toggleCardTimeSetter = toggleCardTimeSetter;
 window.togglePostcardTimeEdit = togglePostcardTimeEdit;
