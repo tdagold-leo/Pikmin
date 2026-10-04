@@ -5400,6 +5400,70 @@
             return null;
         }
 
+        // ===== 郵箱產生記錄 (Firebase 跨裝置同步，最多 50 筆) =====
+        const MAIL_HISTORY_MAX = 50;
+        let mailHistoryCache = [];
+        function getMailHistory() { return mailHistoryCache; }
+        function addMailHistory(address) {
+            if (typeof database === 'undefined') return;
+            database.ref('mail_history').push({ address, time: Date.now(), code: null }).then(() => {
+                // 超過上限時刪除最舊的
+                database.ref('mail_history').once('value', snap => {
+                    const all = [];
+                    snap.forEach(c => { all.push({ key: c.key, time: (c.val() || {}).time || 0 }); });
+                    all.sort((a, b) => b.time - a.time);
+                    all.slice(MAIL_HISTORY_MAX).forEach(o => database.ref('mail_history/' + o.key).remove());
+                });
+            });
+        }
+        function updateMailHistoryCode(address, code) {
+            if (typeof database === 'undefined') return;
+            const item = mailHistoryCache.find(i => i.address === address);
+            if (item && item.key) database.ref('mail_history/' + item.key).update({ code });
+        }
+        function renderMailHistory() {
+            const box = document.getElementById('cloud-mailHistoryList');
+            const countEl = document.getElementById('cloud-mailHistoryCount');
+            if (!box) return;
+            const list = getMailHistory();
+            if (countEl) countEl.textContent = list.length;
+            if (list.length === 0) {
+                box.innerHTML = '<div style="font-size:11px;color:#94a3b8;">尚無記錄</div>';
+                return;
+            }
+            const todayStr = new Date().toLocaleDateString('zh-TW');
+            box.innerHTML = list.map((i, idx) => {
+                const d = new Date(i.time);
+                const t = (d.toLocaleDateString('zh-TW') === todayStr ? '今天 ' : d.toLocaleDateString('zh-TW') + ' ') + d.toLocaleTimeString('zh-TW', { hour12: false });
+                return `<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;background:rgba(0,0,0,0.3);border-radius:8px;padding:6px 8px;font-size:11px;">
+                    <div style="min-width:0;"><div style="font-family:monospace;color:#e2e8f0;word-break:break-all;">${i.address}</div>
+                    <div style="color:#94a3b8;">${t}${i.code ? ' ・ 驗證碼 <b style="color:#86efac;">' + i.code + '</b>' : ''}</div></div>
+                    <button type="button" data-idx="${idx}" class="cloud-mailHistoryCopy" style="flex-shrink:0;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);color:#38bdf8;font-size:10px;padding:3px 8px;border-radius:6px;cursor:pointer;">複製</button>
+                </div>`;
+            }).join('');
+            box.querySelectorAll('.cloud-mailHistoryCopy').forEach(btn => {
+                btn.onclick = () => { const it = list[btn.dataset.idx]; if (it) copyToClipboard(it.address, btn); };
+            });
+        }
+        const clearMailHistoryBtn = document.getElementById('cloud-clearMailHistoryBtn');
+        if (clearMailHistoryBtn) {
+            clearMailHistoryBtn.onclick = () => {
+                if (confirm('確定要清除所有郵箱記錄？（所有裝置都會清除）') && typeof database !== 'undefined') {
+                    database.ref('mail_history').remove();
+                }
+            };
+        }
+        if (typeof database !== 'undefined') {
+            database.ref('mail_history').orderByChild('time').limitToLast(MAIL_HISTORY_MAX).on('value', snap => {
+                const arr = [];
+                snap.forEach(c => { arr.push(Object.assign({ key: c.key }, c.val())); });
+                arr.sort((a, b) => (b.time || 0) - (a.time || 0));
+                mailHistoryCache = arr;
+                renderMailHistory();
+            });
+        }
+        renderMailHistory();
+
         function clearMailSession() {
             activePollingSession = null;
             try {
@@ -5451,6 +5515,7 @@
             latestReceivedCode = verificationCode;
             
             log(`✅ 成功取得任天堂驗證碼：${verificationCode}`, 'log-success');
+            if (currentGeneratedEmail) updateMailHistoryCode(currentGeneratedEmail, verificationCode);
             if (loadingBar) loadingBar.style.display = 'none';
             if (codeBox) codeBox.classList.add('active');
             
@@ -5549,6 +5614,7 @@
                     // 同步複製
                     copyToClipboard(address);
                     log(`📋 已將信箱複製到剪貼簿：${address}`, 'log-success');
+                    addMailHistory(address);
                     if (emailDisplay) emailDisplay.textContent = address;
                     if (emailBox) emailBox.classList.add('active');
                 } else {
