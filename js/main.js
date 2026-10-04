@@ -4529,7 +4529,7 @@
 
             if (status === 'ok') {
                 dot.style.background = '#22c55e';
-                statusEl.textContent = '✓ 正常 (無 CORS 限制)';
+                statusEl.textContent = '✓ 正常';
                 statusEl.style.color = '#86efac';
             } else if (status === 'error') {
                 dot.style.background = '#ef4444';
