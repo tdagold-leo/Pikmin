@@ -4660,6 +4660,13 @@
                     activeInviterName.textContent = '請在下方選取目標';
                     activeInviterCount.textContent = '-/- 次';
                 }
+                const badgeEl = document.getElementById('cloud-currentInviterBadge');
+                if (badgeEl) {
+                    // 未選目標時以琥珀色提示，已選目標恢復預設藍色
+                    badgeEl.style.borderColor = currentActiveInvite ? 'rgba(56, 189, 248, 0.3)' : 'rgba(245, 158, 11, 0.6)';
+                    badgeEl.style.color = currentActiveInvite ? '#38bdf8' : '#fbbf24';
+                    badgeEl.style.background = currentActiveInvite ? 'rgba(56, 189, 248, 0.12)' : 'rgba(245, 158, 11, 0.12)';
+                }
             }
         }
 
