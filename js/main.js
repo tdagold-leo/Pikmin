@@ -3290,9 +3290,11 @@
         // 如果名稱或標籤含有元素關鍵字，就算沒有設為元素菇也強制升級成元素菇
         if (checkStr.includes('水晶')) isElem = true;
         else if (checkStr.includes('毒')) isElem = true;
+        else if (checkStr.includes('大冰藍') || checkStr.includes('冰')) isElem = true;
         else if (checkStr.includes('水') && !checkStr.includes('水果')) isElem = true;
         else if (checkStr.includes('火') || checkStr.includes('紅')) isElem = true;
         else if (checkStr.includes('電')) isElem = true;
+        else if (checkStr.includes('大藍')) isElem = true;
 
         if (isElem) {
             if (checkStr.includes('水晶')) {
@@ -3303,7 +3305,15 @@
                 elemClass = 'elem-毒';
                 elemHeaderBg = isExpired ? '#f3f4f6' : '#f0f9ff';
                 elemHeaderColor = '#3730a3';
+            } else if (checkStr.includes('大冰藍') || checkStr.includes('冰')) {
+                elemClass = 'elem-冰';
+                elemHeaderBg = isExpired ? '#f3f4f6' : '#f0f9ff';
+                elemHeaderColor = '#0369a1';
             } else if (checkStr.includes('水') && !checkStr.includes('水果')) {
+                elemClass = 'elem-水';
+                elemHeaderBg = isExpired ? '#f3f4f6' : '#eff6ff';
+                elemHeaderColor = '#1e40af';
+            } else if (checkStr.includes('大藍')) {
                 elemClass = 'elem-水';
                 elemHeaderBg = isExpired ? '#f3f4f6' : '#eff6ff';
                 elemHeaderColor = '#1e40af';
