@@ -3284,7 +3284,7 @@
         let elemHeaderColor = isExpired ? '#6b7280' : '#065f46';
         let isElem = (item.kind === '元素菇' || item.type === '元素菇');
 
-        // 如果名稱或標籤含有元素關鍵字，就算沒有設為元素菇也強制升級成元素菇
+                // 如果名稱或標籤含有元素關鍵字，就算沒有設為元素菇也強制升級成元素菇
         if (checkStr.includes('水晶')) isElem = true;
         else if (checkStr.includes('毒')) isElem = true;
         else if (checkStr.includes('大冰藍') || checkStr.includes('冰')) isElem = true;
@@ -3292,6 +3292,8 @@
         else if (checkStr.includes('火') || checkStr.includes('紅')) isElem = true;
         else if (checkStr.includes('電')) isElem = true;
         else if (checkStr.includes('大藍')) isElem = true;
+        else if (checkStr.includes('大白')) isElem = true;
+        else if (checkStr.includes('大紫')) isElem = true;
 
         if (isElem) {
             if (checkStr.includes('水晶')) {
@@ -3318,10 +3320,18 @@
                 elemClass = 'elem-火';
                 elemHeaderBg = isExpired ? '#f3f4f6' : '#fff1f2';
                 elemHeaderColor = '#991b1b';
-            } else if (checkStr.includes('電')) {
+                        } else if (checkStr.includes('電')) {
                 elemClass = 'elem-電';
                 elemHeaderBg = isExpired ? '#f3f4f6' : '#fffbeb';
                 elemHeaderColor = '#92400e';
+            } else if (checkStr.includes('大白')) {
+                elemClass = 'elem-白';
+                elemHeaderBg = isExpired ? '#f3f4f6' : '#f8fafc';
+                elemHeaderColor = '#334155';
+            } else if (checkStr.includes('大紫')) {
+                elemClass = 'elem-紫';
+                elemHeaderBg = isExpired ? '#f3f4f6' : '#faf5ff';
+                elemHeaderColor = '#6b21a8';
             } else {
                 // 元素菇但標籤沒指定元素
                 elemHeaderBg = isExpired ? '#f3f4f6' : '#d1fae5';
