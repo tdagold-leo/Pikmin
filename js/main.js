@@ -1730,7 +1730,7 @@
                             autoFilled.push('名稱');
                         }
                         
-                        if (lines.length > 1) {
+                                                if (lines.length > 1) {
                             const secondLine = lines[1];
                             const coordRegex = /[-+]?\d{1,3}\.\d+,\s*[-+]?\d{1,3}\.\d+/;
                             if (coordRegex.test(secondLine)) {
@@ -1747,7 +1747,31 @@
                             }
                         }
                     }
+                } else if (isMushroom) {
+                    let autoFilled = [];
+                    const tagField = document.getElementById('tag');
+                    
+                    const regexType = /(小|普通|大|巨大)\s*([\u4e00-\u9fa5]{1,4}?)\s*色?\s*蘑菇/;
+                    let foundType = '';
+                    for (const line of lines) {
+                        const match = regexType.exec(line);
+                        if (match) {
+                            foundType = `${match[1]}${match[2]}`;
+                            break;
+                        }
+                    }
+                    
+                    if (foundType && tagField && (!tagField.value || tagField.value.trim() === '')) {
+                        tagField.value = foundType;
+                        autoFilled.push('標籤');
+                    }
+                    
+                    if (autoFilled.length > 0) {
+                        displayHtml += `<div style="color:#059669; font-size:11px; margin-top:4px;">✨ 已自動帶入：${autoFilled.join('、')}</div>`;
+                    }
+                }
 
+                if (isPostcard) {
                     // 2. 利用 Google Vision Web Detection 比對網路資料庫中的明信片與 Ingress 資訊
                     const webAnn = data.responses[0].webDetection;
                     let webCoords = null;
