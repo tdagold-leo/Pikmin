@@ -598,9 +598,38 @@
         return 8; 
     }
 
-    async function autoDetectCountry(coordsStr, countryInputId, hintId, cityInputId = null, districtInputId = null) {
+        async function autoDetectCountry(coordsStr, countryInputId, hintId, cityInputId = null, districtInputId = null) {
         if(!coordsStr) return;
         
+        // 尋找附帶的標籤/名稱字串 (例如 "37.123, 140.456 大藍")
+        const tagMatch = coordsStr.match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)\s+(.+)/);
+        if (tagMatch && tagMatch[3]) {
+            const extractedTag = tagMatch[3].trim();
+            // 自動帶入標籤欄位
+            let targetTagId = null;
+            if (countryInputId === 'country') targetTagId = 'tag';
+            else if (countryInputId === 'edit-mushroom-country') targetTagId = 'edit-tag';
+            
+            if (targetTagId) {
+                const tagEl = document.getElementById(targetTagId);
+                if (tagEl && !tagEl.value) { // 只有當標籤是空的時候才覆蓋
+                    tagEl.value = extractedTag;
+                }
+            }
+            
+            // 將座標欄位的值清理乾淨
+            let coordsId = null;
+            if (countryInputId === 'country') coordsId = 'coords';
+            else if (countryInputId === 'edit-mushroom-country') coordsId = 'edit-coords';
+            
+            if (coordsId) {
+                const coordsEl = document.getElementById(coordsId);
+                if (coordsEl && coordsEl.value === coordsStr) {
+                    coordsEl.value = `${tagMatch[1]}, ${tagMatch[2]}`;
+                }
+            }
+        }
+
         // 注意：重複座標檢查已移至 addItem，此處不再彈確認框（避免貼上時誤觸）
 
         const match = coordsStr.match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
