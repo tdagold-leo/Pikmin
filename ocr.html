@@ -179,7 +179,7 @@
 
     async function handleFiles(files) {
         setLoading(true);
-        statusEl.innerText = `準備處理 ${files.length} 張圖片... (首次執行需下載中文包，請稍候)`;
+        statusEl.innerText = `準備處理 ${files.length} 張圖片...`;
         statusEl.style.color = '#059669';
         
         for (let i = 0; i < files.length; i++) {
@@ -208,51 +208,38 @@
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     
-                                        // 調整圖片大小並全圖辨識，以包含中間的蘑菇名稱與底部的座標
-                    let targetWidth = img.width;
-                    let targetHeight = img.height;
-                    const MAX_DIM = 1200;
-                    if (targetHeight > MAX_DIM) {
-                        targetWidth = Math.floor(targetWidth * (MAX_DIM / targetHeight));
-                        targetHeight = MAX_DIM;
-                    }
+                    // 裁切底部 25%，提高 Tesseract 辨識速度與準確度
+                    const cropRatio = 0.25; 
+                    const cropHeight = Math.floor(img.height * cropRatio);
+                    const startY = img.height - cropHeight;
                     
-                    canvas.width = targetWidth;
-                    canvas.height = targetHeight;
-                    ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+                    canvas.width = img.width;
+                    canvas.height = cropHeight;
+                    ctx.drawImage(img, 0, startY, img.width, cropHeight, 0, 0, canvas.width, canvas.height);
                     
                     const croppedDataUrl = canvas.toDataURL('image/png');
                     
                     try {
-                        // 加入 chi_tra 以支援中文辨識 (首次需下載約 15MB 語言包)
-                        const result = await Tesseract.recognize(croppedDataUrl, 'eng+chi_tra');
+                        const result = await Tesseract.recognize(croppedDataUrl, 'eng', {
+                            tessedit_char_whitelist: '0123456789.,()-+ '
+                        });
                         const text = result.data.text;
                         
-                        // Regex matching: 座標
-                        const regexCoord = /(-?\d{1,3}\.\d{4,})\s*[,，]\s*(-?\d{1,3}\.\d{4,})/;
-                        const matchCoord = regexCoord.exec(text);
+                        // Regex matching: (37.2921367, 140.3838253) or 37.2921367, 140.3838253
+                        const regex = /(-?\d{1,3}\.\d{4,})\s*[,，]\s*(-?\d{1,3}\.\d{4,})/;
+                        const match = regex.exec(text);
                         
-                        // Regex matching: 菇的種類 (例如 "大 藍 色 蘑菇" -> "大藍")
-                        const regexType = /(小|普通|大|巨大)\s*([\u4e00-\u9fa5]{1,4}?)\s*色?\s*蘑菇/;
-                        const matchType = regexType.exec(text);
-                        const typeStr = matchType ? ` ${matchType[1]}${matchType[2]}` : '';
-                        
-                        if (matchCoord) {
-                            const lat = parseFloat(matchCoord[1]);
-                            const lng = parseFloat(matchCoord[2]);
+                        if (match) {
+                            const lat = parseFloat(match[1]);
+                            const lng = parseFloat(match[2]);
                             if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-                                appendResult(`${lat}, ${lng}${typeStr}`);
+                                appendResult(`${lat}, ${lng}`);
                             } else {
-                                appendResult(`[格式異常] ${matchCoord[1]}, ${matchCoord[2]}${typeStr}`);
+                                appendResult(`[格式異常] ${match[1]}, ${match[2]}`);
                             }
                         } else {
                             console.log("原文:", text);
-                            let prefix = `[未找到座標] ${file.name}`;
-                            // 如果連座標都沒有，但有找到種類，可以直接輸出種類方便手動複製
-                            if (typeStr) {
-                                prefix = `[僅找到菇種] ${file.name}`;
-                            }
-                            appendResult(`${prefix}${typeStr}`);
+                            appendResult(`[未找到座標] ${file.name}`);
                         }
                         resolve();
                     } catch (err) {
