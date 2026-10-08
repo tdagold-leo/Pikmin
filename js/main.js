@@ -3046,16 +3046,8 @@
         let unclaimedItems = [];
         
         dataList.forEach(item => {
-            if (item.user === "") {
-                const createdUTC = getCreatedAt(item.id);
-                const offset = getOffsetByCountry(item.country);
-                const createdLocal = new Date(createdUTC + offset * 3600000);
-                
-                const midnightLocal = new Date(createdLocal);
-                midnightLocal.setUTCDate(midnightLocal.getUTCDate() + 1);
-                midnightLocal.setUTCHours(0, 0, 0, 0);
-                item.midnightUTC = midnightLocal.getTime() - offset * 3600000;
-                
+                        if (item.user === "") {
+                item.midnightUTC = getUnclaimedMidnightUTC(item);
                 unclaimedItems.push(item);
             } else {
                 activeItems.push(item);
@@ -3149,13 +3141,18 @@
     }
 
     // 計算待認領菇換日 UTC 時間（提取到外層供 updateView 與 setInterval 共用）
-    function getUnclaimedMidnightUTC(item) {
+        function getUnclaimedMidnightUTC(item) {
         const createdUTC = getCreatedAt(item.id);
         const offset = getOffsetByCountry(item.country);
         const createdLocal = new Date(createdUTC + offset * 3600000);
         const midnightLocal = new Date(createdLocal);
-        midnightLocal.setUTCDate(midnightLocal.getUTCDate() + 1);
-        midnightLocal.setUTCHours(0, 0, 0, 0);
+        // 當地時間 03:00 換日
+        if (midnightLocal.getUTCHours() < 3) {
+            midnightLocal.setUTCHours(3, 0, 0, 0);
+        } else {
+            midnightLocal.setUTCDate(midnightLocal.getUTCDate() + 1);
+            midnightLocal.setUTCHours(3, 0, 0, 0);
+        }
         return midnightLocal.getTime() - offset * 3600000;
     }
 
