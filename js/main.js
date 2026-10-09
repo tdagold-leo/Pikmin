@@ -723,7 +723,7 @@
                 <div style="display:flex; gap:2px;">
                     <button class="btn-sm" onclick="loadCloudRoute('${r.key}')" style="padding:2px 4px; font-size:12px; background:#ecfdf5; border:1px solid #a7f3d0; color:#059669; border-radius:4px;" title="顯示在地圖">👁️</button>
                     <button class="btn-sm" onclick="downloadCloudRoute('${r.key}')" style="padding:2px 4px; font-size:12px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; border-radius:4px;" title="下載">💾</button>
-                    ${r.uploaderId === window.currentUserUid ? `<button class="btn-sm" onclick="deleteCloudRoute('${r.key}')" style="padding:2px 4px; font-size:12px; color:#ef4444; border:1px solid #fca5a5; background:#fef2f2; border-radius:4px;" title="刪除">🗑️</button>` : ''}
+                    ${r.uploaderId === window.currentUserUid ? `<button class="btn-sm" onclick="renameCloudRoute('${r.key}', '${escapeHtml(r.name || '').replace(/'/g, "\\'")}')" style="padding:2px 4px; font-size:12px; color:#d97706; border:1px solid #fcd34d; background:#fffbeb; border-radius:4px;" title="重新命名">✏️</button><button class="btn-sm" onclick="deleteCloudRoute('${r.key}')" style="padding:2px 4px; font-size:12px; color:#ef4444; border:1px solid #fca5a5; background:#fef2f2; border-radius:4px;" title="刪除">🗑️</button>` : ''}
                 </div>
             </div>`;
         });
@@ -858,6 +858,13 @@
         
         const format = document.getElementById('route-export-format') ? document.getElementById('route-export-format').value : 'gpx';
         exportRouteData(coords, format, route.name || 'route');
+    };
+
+    window.renameCloudRoute = function(key, currentName) {
+        const newName = prompt('請輸入新的路線名稱：', currentName);
+        if (newName !== null && newName.trim() !== '' && newName.trim() !== currentName) {
+            dbRef('routes/' + key).update({ name: newName.trim() });
+        }
     };
 
     window.deleteCloudRoute = function(key) {
@@ -6540,6 +6547,7 @@ window.saveRouteToCloud = saveRouteToCloud;
 window.loadCloudRoute = loadCloudRoute;
 window.downloadCloudRoute = downloadCloudRoute;
 window.deleteCloudRoute = deleteCloudRoute;
+window.renameCloudRoute = renameCloudRoute;
 window.goToMapCoords = goToMapCoords;
 window.handleProfileAvatarUpload = handleProfileAvatarUpload;
 window.handleVisionOcrUpload = handleVisionOcrUpload;
