@@ -550,21 +550,26 @@
         // UI updates
         const st = document.getElementById('current-route-status');
         if (st) {
-            st.innerText = routeCoordinates.length === 0 ? (window.isRouteDrawMode ? '請點擊地圖連線' : '無節點') : `${routeCoordinates.length} 個節點`;
+            st.innerText = routeCoordinates.length === 0 ? (window.isRouteDrawMode ? '請點擊地圖連線' : '0 節點') : `${routeCoordinates.length} 節點`;
         }
         const titleEl = document.getElementById('current-route-title');
         if (titleEl) {
             if (window.currentCloudRoute) {
-                titleEl.innerText = '目前路線：' + (window.currentCloudRoute.name || '未命名');
+                titleEl.innerText = window.currentCloudRoute.name || '未命名';
             } else {
-                titleEl.innerText = routeCoordinates.length > 0 ? '目前路線：本機/自訂' : '目前路線：未命名';
+                titleEl.innerText = routeCoordinates.length > 0 ? '本機/未儲存' : '無';
             }
         }
         
         const btnRename = document.getElementById('btn-cloud-rename');
         const btnDelete = document.getElementById('btn-cloud-delete');
         const btnSave = document.getElementById('btn-cloud-save');
-        if (btnRename && btnDelete && btnSave) {
+        const btnDownload = document.getElementById('btn-route-download');
+        
+        if (btnRename && btnDelete && btnSave && btnDownload) {
+            const hasRoute = routeCoordinates.length > 0;
+            btnDownload.disabled = !hasRoute;
+            
             let canEdit = false;
             if (window.currentCloudRoute) {
                 const myName = localStorage.getItem('pikmin_custom_name') || 'unknown';
@@ -572,16 +577,43 @@
                 canEdit = (!r.uploaderId || r.uploaderId === 'unknown' || r.uploaderId === myName);
             }
             
-            if (window.currentCloudRoute && canEdit) {
-                btnRename.style.display = '';
-                btnDelete.style.display = '';
-                btnSave.innerText = '☁️ 儲存覆蓋';
-                btnSave.onclick = updateRouteToCloud;
+            if (window.currentCloudRoute) {
+                if (canEdit) {
+                    btnRename.disabled = false;
+                    btnDelete.disabled = false;
+                    btnSave.disabled = false;
+                    btnSave.innerText = '☁️ 更新至雲端';
+                    btnSave.onclick = updateRouteToCloud;
+                } else {
+                    btnRename.disabled = true;
+                    btnDelete.disabled = true;
+                    btnSave.disabled = false;
+                    btnSave.innerText = '☁️ 另存新分享';
+                    btnSave.onclick = saveRouteToCloud;
+                }
             } else {
-                btnRename.style.display = 'none';
-                btnDelete.style.display = 'none';
-                btnSave.innerText = '☁️ 分享至雲端';
-                btnSave.onclick = saveRouteToCloud;
+                btnRename.disabled = true;
+                btnDelete.disabled = true;
+                if (hasRoute) {
+                    btnSave.disabled = false;
+                    btnSave.innerText = '☁️ 分享至雲端';
+                    btnSave.onclick = saveRouteToCloud;
+                } else {
+                    btnSave.disabled = true;
+                    btnSave.innerText = '☁️ 分享至雲端';
+                }
+            }
+        }
+        
+        // draw mode button text
+        const drawBtn = document.getElementById('route-draw-btn');
+        if (drawBtn) {
+            if (window.isRouteDrawMode) {
+                drawBtn.innerText = '🖍️ 結束編輯 (停止連線)';
+                drawBtn.style.background = '#e0f2fe';
+            } else {
+                drawBtn.innerText = '🖍️ 編輯 (點擊地圖連線)';
+                drawBtn.style.background = '#f8fafc';
             }
         }
         
@@ -639,7 +671,13 @@
     window.downloadCurrentRoute = function() {
         if (routeCoordinates.length === 0) return alert('沒有可下載的路徑點！請先上傳或在地圖上點擊建立。');
         const format = document.getElementById('route-export-format') ? document.getElementById('route-export-format').value : 'gpx';
-        exportRouteData(routeCoordinates, format, 'export_route');
+        let filename = 'route';
+        if (window.currentCloudRoute && window.currentCloudRoute.name) {
+            filename = window.currentCloudRoute.name;
+        } else if (routeCoordinates.length > 0 && routeCoordinates[0].name && routeCoordinates[0].name !== '節點') {
+            filename = routeCoordinates[0].name;
+        }
+        exportRouteData(routeCoordinates, format, filename);
     };
 
     window.handleRouteUpload = function(event) {
@@ -850,7 +888,9 @@
         const a = document.createElement('a');
         a.href = url;
         a.download = filename + '.' + format;
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
         URL.revokeObjectURL(url);
     };
 
@@ -934,7 +974,12 @@
         });
         
         if (coords.length > 0) {
-            window.clearCurrentRoute();
+            // Do not call clearCurrentRoute here because it nullifies currentCloudRoute!
+            if (routePolyline) routePolyline.setMap(null);
+            if (typeof routeMarkers !== 'undefined') {
+                routeMarkers.forEach(m => m.map = null);
+                routeMarkers = [];
+            }
             routeCoordinates = coords;
             updateRouteStatus();
             
@@ -5306,7 +5351,7 @@
 
         // 註冊 Service Worker (支援 Android Chrome 手機推播)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=202610100030').catch(err => {
+            navigator.serviceWorker.register('sw.js?v=202610100035').catch(err => {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }
