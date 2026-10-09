@@ -643,92 +643,107 @@
     };
 
     window.handleRouteUpload = function(event) {
-        window.currentCloudRoute = null;
+        clearCurrentRoute();
         const file = event.target.files[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = function(e) {
-            const text = e.target.result;
-            let coords = [];
+            const content = e.target.result;
+            const ext = file.name.split('.').pop().toLowerCase();
+            let parsedCoords = [];
             
-            if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
-                try {
-                    let j = JSON.parse(text);
-                    if (!Array.isArray(j)) j = [j];
-                    j.forEach(item => {
-                        if (item.lat && item.lng) coords.push({lat: Number(item.lat), lng: Number(item.lng), name: item.name || '節點'});
-                    });
-                } catch(e) {}
-            } else {
+            if (ext === 'gpx' || ext === 'kml') {
                 const parser = new DOMParser();
-                const doc = parser.parseFromString(text, 'text/xml');
-                const trkpts = doc.querySelectorAll('trkpt, rtept, wpt');
-                if (trkpts.length > 0) {
-                    trkpts.forEach(pt => {
+                const doc = parser.parseFromString(content, 'text/xml');
+                const pts = ext === 'gpx' ? doc.querySelectorAll('trkpt') : doc.querySelectorAll('Point');
+                pts.forEach(pt => {
+                    if (ext === 'gpx') {
                         const lat = parseFloat(pt.getAttribute('lat'));
-                        const lng = parseFloat(pt.getAttribute('lon'));
-                        if (!isNaN(lat) && !isNaN(lng)) {
-                            let name = '節點';
-                            const nameNode = pt.querySelector('name');
-                            if (nameNode) name = nameNode.textContent;
-                            coords.push({lat, lng, name});
+                        const lon = parseFloat(pt.getAttribute('lon'));
+                        if (!isNaN(lat) && !isNaN(lon)) parsedCoords.push({ lat, lng: lon });
+                    } else {
+                        const coordsStr = pt.querySelector('coordinates');
+                        if (coordsStr) {
+                            const [lon, lat] = coordsStr.textContent.trim().split(',');
+                            if (lon && lat) parsedCoords.push({ lat: parseFloat(lat), lng: parseFloat(lon) });
                         }
-                    });
-                } else {
-                    const coordsTags = doc.querySelectorAll('coordinates');
-                    coordsTags.forEach(tag => {
-                        const parts = tag.textContent.trim().split(/\s+/);
-                        parts.forEach(p => {
-                            const [lng, lat] = p.split(',').map(Number);
-                            if (!isNaN(lat) && !isNaN(lng)) {
-                                coords.push({lat, lng, name: '節點'});
-                            }
+                    }
+                });
+            } else if (ext === 'json') {
+                try {
+                    const arr = JSON.parse(content);
+                    if (Array.isArray(arr)) {
+                        arr.forEach(item => {
+                            if (item.lat && item.lng) parsedCoords.push({ lat: parseFloat(item.lat), lng: parseFloat(item.lng) });
                         });
-                    });
-                }
-            }
-            
-            // Fallback: txt / csv line-by-line parsing
-            if (coords.length === 0) {
-                const lines = text.split('\n');
-                const coordRegex = /(-?\d{1,3}\.\d+)[,\s\t]+(-?\d{1,3}\.\d+)/;
+                    }
+                } catch(e) {}
+            } else if (ext === 'csv' || ext === 'txt') {
+                const lines = content.split('\n');
                 lines.forEach(line => {
-                    const match = line.match(coordRegex);
+                    const match = line.match(/(-?\d+\.\d+)[\s,]+(-?\d+\.\d+)/);
                     if (match) {
-                        let lat = parseFloat(match[1]);
-                        let lng = parseFloat(match[2]);
-                        
-                        // Auto-swap if it looks like lon,lat (lat must be between -90 and 90)
-                        if (Math.abs(lat) > 90 && Math.abs(lng) <= 90) {
-                            let temp = lat; lat = lng; lng = temp;
-                        }
-                        
-                        if (!isNaN(lat) && !isNaN(lng)) {
-                            coords.push({ lat, lng, name: '節點' });
+                        let v1 = parseFloat(match[1]);
+                        let v2 = parseFloat(match[2]);
+                        if (v1 > -90 && v1 < 90 && v2 > -180 && v2 < 180) {
+                            parsedCoords.push({ lat: v1, lng: v2 });
+                        } else if (v2 > -90 && v2 < 90 && v1 > -180 && v1 < 180) {
+                            parsedCoords.push({ lat: v2, lng: v1 });
                         }
                     }
                 });
             }
+            
+            if (parsedCoords.length > 0) {
+                routeCoordinates = parsedCoords;
+                
+                // Prompt for name and immediately upload!
+                const defaultName = file.name.replace(/\.[^/.]+$/, "");
+                const name = prompt('請為這條路線命名，以便立即上傳雲端：', defaultName);
+                if (name !== null && name.trim() !== '') {
+                    // Upload to Firebase
+                    const gpxDataStr = window.generateGpxData ? window.generateGpxData() : ''; 
+                    // Wait, we can manually generate minimal GPX if generateGpxData is not extracted:
+                    let gpx = '<?xml version="1.0" encoding="UTF-8"?>\n';
+                    gpx += '<gpx version="1.1" creator="Pikmin Tracker">\n';
+                    gpx += `  <trk>\n    <name>${escapeHtml(name.trim())}</name>\n    <trkseg>\n`;
+                    for (const pt of routeCoordinates) {
+                        gpx += `      <trkpt lat="${pt.lat}" lon="${pt.lng}"></trkpt>\n`;
+                    }
+                    gpx += '    </trkseg>\n  </trk>\n</gpx>';
 
-            if (coords.length === 0) {
-                return alert('無法在檔案中找到路徑點 (支援 GPX/KML/JSON/TXT/CSV 格式)');
-            }
-            
-            window.clearCurrentRoute();
-            routeCoordinates = coords;
-            
-            updateRouteStatus();
-            if (mapInstance && typeof google !== 'undefined') {
-                const bounds = new google.maps.LatLngBounds();
-                coords.forEach(c => bounds.extend(c));
-                mapInstance.fitBounds(bounds);
+                    if (routesRef && typeof routesRef.push === 'function') {
+                        const newRef = routesRef.push({
+                            name: name.trim(),
+                            gpxData: gpx,
+                            nodeCount: routeCoordinates.length,
+                            timestamp: Date.now(),
+                            uploaderId: localStorage.getItem('pikmin_custom_name') || 'unknown'
+                        });
+                        window.currentCloudRoute = {
+                            key: newRef.key,
+                            name: name.trim(),
+                            uploaderId: localStorage.getItem('pikmin_custom_name') || 'unknown'
+                        };
+                        alert('檔案已成功上傳至雲端！');
+                    }
+                } else {
+                    alert('未命名，檔案僅在本機顯示，尚未上傳至雲端。');
+                }
+                
+                updateRouteStatus();
+                // move map
+                if (mapInstance && routeCoordinates[0]) {
+                    mapInstance.setCenter(routeCoordinates[0]);
+                }
+            } else {
+                alert('無法從檔案中讀取有效的座標資料');
             }
         };
         reader.readAsText(file);
-        event.target.value = ''; 
+        event.target.value = '';
     };
-
-    let cloudRoutes = [];
+ cloudRoutes = [];
     
     // Subscribe to cloud routes
     const routesRef = dbRef('routes');
@@ -746,19 +761,18 @@
     }
 
     function renderCloudRoutes() {
-        const container = document.getElementById('cloud-route-list');
-        if (!container) return;
+        const select = document.getElementById('cloud-route-select');
+        if (!select) return;
         
         if (cloudRoutes.length === 0) {
-            container.innerHTML = '<div style="font-size:11px; color:#94a3b8; text-align:center;">目前雲端還沒有任何分享路線</div>';
+            select.innerHTML = '<option value="">-- 目前無雲端路線 --</option>';
             return;
         }
         
         cloudRoutes.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
         
-        let html = '';
+        let html = '<option value="">-- 選擇雲端路線 --</option>';
         cloudRoutes.forEach(r => {
-            const dateStr = r.timestamp ? new Date(r.timestamp).toLocaleDateString() : '';
             let count = r.nodeCount;
             if (!count && r.gpxData) {
                 const match = r.gpxData.match(/<trkpt/g);
@@ -766,20 +780,32 @@
             }
             const countStr = count ? ` (${count} 節點)` : '';
             const titleFull = (r.name || '未命名') + countStr;
-            
-            html += `
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:6px 8px; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="loadCloudRoute('${r.key}')" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
-                <div style="display:flex; flex-direction:column; overflow:hidden; flex:1;">
-                    <span style="font-size:12px; font-weight:bold; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(titleFull)}">${escapeHtml(r.name || '未命名')}<span style="color:#64748b; font-weight:normal; font-size:11px; margin-left:4px;">${countStr}</span></span>
-                    <span style="font-size:10px; color:#94a3b8;">${dateStr}</span>
-                </div>
-                <div style="margin-left:8px;">
-                    <button class="btn-sm" style="padding:4px 8px; font-size:12px; background:#ecfdf5; border:1px solid #a7f3d0; color:#059669; border-radius:6px; pointer-events:none;">載入 ⬇️</button>
-                </div>
-            </div>`;
+            html += `<option value="${r.key}">${escapeHtml(titleFull)}</option>`;
         });
-        container.innerHTML = html;
+        select.innerHTML = html;
     }
+    
+    window.loadSelectedCloudRoute = function() {
+        const select = document.getElementById('cloud-route-select');
+        if (!select) return;
+        const key = select.value;
+        if (!key) {
+            alert('請先在左側下拉選單選擇路線！');
+            return;
+        }
+        loadCloudRoute(key);
+    };
+    
+    window.startNewRoute = function() {
+        clearCurrentRoute();
+        window.isRouteDrawMode = true;
+        const drawBtn = document.getElementById('route-draw-btn');
+        if (drawBtn) {
+            drawBtn.innerText = '🖍️ 結束編輯 (停止連線)';
+            drawBtn.style.background = '#e0f2fe';
+        }
+        updateRouteStatus();
+    };
 
     window.exportRouteData = function(coords, format, filename) {
         if (!coords || coords.length === 0) return alert('沒有可下載的路徑點！');
@@ -889,6 +915,7 @@
     window.loadCloudRoute = function(key) {
         const route = cloudRoutes.find(r => r.key === key);
         if (!route || !route.gpxData) return;
+        clearCurrentRoute(); 
         window.currentCloudRoute = route;
         
         const parser = new DOMParser();
@@ -5279,7 +5306,7 @@
 
         // 註冊 Service Worker (支援 Android Chrome 手機推播)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=202610100015').catch(err => {
+            navigator.serviceWorker.register('sw.js?v=202610100030').catch(err => {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }

@@ -2364,7 +2364,7 @@
                     </div>
                 </div>
                 <div class="settings-card-body">
-                    <a href="ocr.html?v=202610100015" target="_blank" class="btn-sm btn-primary btn-block" style="padding:10px; font-size:14px; border-radius:10px; width:100%; display:block; text-align:center; text-decoration:none; box-sizing:border-box;">🔗 開啟擷取工具</a>
+                    <a href="ocr.html?v=202610100030" target="_blank" class="btn-sm btn-primary btn-block" style="padding:10px; font-size:14px; border-radius:10px; width:100%; display:block; text-align:center; text-decoration:none; box-sizing:border-box;">🔗 開啟擷取工具</a>
                 </div>
             </div>
 
@@ -2520,45 +2520,60 @@
             <!-- 路線管理按鈕 -->
             <div style="background:rgba(255,255,255,0.96); padding:5px 8px; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.18); display:flex; gap:5px; align-items:center; position:relative;">
                 <button id="map-route-btn" onclick="toggleRoutePanel()" class="map-layer-btn" title="路線工具" style="background:#f1f5f9;">🗺️</button>
-<div id="route-panel" style="display:none; position:absolute; top:42px; left:0; z-index:20; background:rgba(255,255,255,0.98); padding:12px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.25); width:280px; max-width:90vw; border:1px solid #e2e8f0; transition:left 0.2s, right 0.2s;">
+<div id="route-panel" style="display:none; position:absolute; top:42px; left:0px; z-index:20; background:rgba(255,255,255,0.98); padding:12px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.25); width:280px; max-width:90vw; border:1px solid #e2e8f0; transition:left 0.2s, right 0.2s;">
     <div style="font-size:13px; font-weight:bold; margin-bottom:10px; color:#334155;">🗺️ 路徑管理</div>
     
-    <div style="display:flex; gap:6px; margin-bottom:6px;">
+    <!-- Top Row: Upload & Create -->
+    <div style="display:flex; gap:6px; margin-bottom:8px;">
         <input type="file" id="route-upload-file" accept=".gpx,.kml,.json,.txt,.csv" style="display:none;" onchange="handleRouteUpload(event)">
-        <button class="btn-sm btn-default" onclick="document.getElementById('route-upload-file').click()" style="flex:1; padding:6px; font-size:12px; border-radius:6px; font-weight:600;" title="上傳本機路徑">📂 上傳</button>
-        <select id="route-export-format" style="border:1px solid #cbd5e1; border-radius:6px; font-size:12px; padding:0 2px; outline:none; cursor:pointer;" title="格式">
-            <option value="gpx">GPX</option>
-            <option value="kml">KML</option>
-            <option value="json">JSON</option>
-            <option value="csv">CSV</option>
-            <option value="txt">TXT</option>
+        <button class="btn-sm btn-default" onclick="document.getElementById('route-upload-file').click()" style="flex:1; padding:6px; font-size:12px; border-radius:6px; font-weight:bold; color:#0f172a; border:1px solid #cbd5e1; background:#f8fafc;">📂 上傳檔案</button>
+        <button id="btn-draw-new" class="btn-sm btn-default" onclick="startNewRoute()" style="flex:1; padding:6px; font-size:12px; border-radius:6px; font-weight:bold; color:#0f172a; border:1px solid #cbd5e1; background:#f8fafc;">🖍️ 畫新路線</button>
+    </div>
+
+    <!-- Cloud List Select -->
+    <div style="display:flex; gap:6px; margin-bottom:8px; align-items:center;">
+        <select id="cloud-route-select" style="flex:1; border:1px solid #cbd5e1; border-radius:6px; font-size:12px; padding:6px; outline:none; cursor:pointer; background:#fff; min-width:0;">
+            <option value="">-- 選擇雲端路線 --</option>
         </select>
-        <button class="btn-sm btn-primary" onclick="downloadCurrentRoute()" style="flex:1; padding:6px; font-size:12px; border-radius:6px; background:#0ea5e9; border-color:#0284c7; color:#fff; font-weight:600;" title="下載目前畫面路徑">💾 下載</button>
+        <button class="btn-sm btn-primary" onclick="loadSelectedCloudRoute()" style="padding:6px 12px; font-size:12px; border-radius:6px; font-weight:bold; background:#0ea5e9; border-color:#0284c7; color:#fff; white-space:nowrap;">載入</button>
     </div>
 
-    <div style="display:flex; gap:6px; margin-bottom:6px;">
-        <button id="route-draw-btn" class="btn-sm btn-default" onclick="toggleRouteDrawMode()" style="flex:1; padding:6px; font-size:12px; border-radius:6px; border:1px solid #94a3b8; background:#f8fafc; color:#334155; font-weight:bold; transition:all 0.2s;">🖍️ 開始建立路線</button>
-        <button class="btn-sm btn-default" onclick="clearCurrentRoute()" style="padding:6px; font-size:11px; border-radius:6px; color:#ef4444; border-color:#fca5a5; background:#fef2f2;" title="清除畫面上路徑">🗑️ 清除</button>
-    </div>
+    <div style="border-top:1px solid #cbd5e1; margin:10px 0;"></div>
 
-    <div style="border-top:1px solid #cbd5e1; margin:8px 0;"></div>
-
-    <div style="background:#f8fafc; padding:8px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:8px;">
-        <div style="font-size:12px; font-weight:bold; color:#0f172a; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
-            <span id="current-route-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">目前路線：未命名</span>
-            <span id="current-route-status" style="font-size:10px; color:#64748b; font-weight:normal; white-space:nowrap; margin-left:4px;">無節點</span>
+    <!-- Active Route Info -->
+    <div style="margin-bottom:8px;">
+        <div style="font-size:12px; font-weight:bold; color:#0f172a; display:flex; justify-content:space-between; align-items:center;">
+            <span style="white-space:nowrap;">目前路線：</span>
+            <span id="current-route-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; margin-left:4px; color:#0369a1;">無</span>
+            <span id="current-route-status" style="font-size:10px; color:#64748b; font-weight:normal; margin-left:8px; white-space:nowrap;">0 節點</span>
         </div>
+    </div>
+
+    <!-- Edit Area -->
+    <div id="route-edit-area" style="background:#f8fafc; padding:8px; border-radius:8px; border:1px solid #e2e8f0;">
+        <div style="font-size:11px; color:#64748b; font-weight:bold; margin-bottom:6px;">🛠️ 編輯區</div>
         
-        <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:6px;">
-            <button id="btn-cloud-save" class="btn-sm btn-primary" onclick="saveRouteToCloud()" style="flex:1; padding:4px 6px; font-size:11px; border-radius:4px; background:#f59e0b; border-color:#d97706; color:#fff; font-weight:bold; min-width:80px;">☁️ 分享至雲端</button>
-            <button id="btn-cloud-rename" class="btn-sm" onclick="renameCurrentCloudRoute()" style="display:none; padding:4px 6px; font-size:11px; color:#d97706; border:1px solid #fcd34d; background:#fffbeb; border-radius:4px;">✏️ 改名</button>
-            <button id="btn-cloud-delete" class="btn-sm" onclick="deleteCurrentCloudRoute()" style="display:none; padding:4px 6px; font-size:11px; color:#ef4444; border:1px solid #fca5a5; background:#fef2f2; border-radius:4px;">🗑️ 刪除</button>
+        <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:6px;">
+            <button id="route-draw-btn" class="btn-sm btn-default" onclick="toggleRouteDrawMode()" style="flex:1; padding:4px 6px; font-size:11px; border-radius:4px; font-weight:bold; border:1px solid #94a3b8; color:#334155;">🖍️ 編輯 (點擊地圖連線)</button>
+            <button class="btn-sm btn-default" onclick="clearCurrentRoute()" style="padding:4px 6px; font-size:11px; border-radius:4px; color:#ef4444; border-color:#fca5a5; background:#fef2f2;">❌ 清除</button>
         </div>
-    </div>
-    
-    <div style="font-weight:bold; font-size:12px; color:#334155; margin-bottom:6px;">☁️ 雲端分享列表</div>
-    <div id="cloud-route-list" style="display:flex; flex-direction:column; gap:4px; max-height:220px; overflow-y:auto; padding-right:2px;">
-        <div style="font-size:11px; color:#94a3b8; text-align:center;">載入中...</div>
+
+        <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:6px;">
+            <button id="btn-cloud-rename" class="btn-sm btn-default" onclick="renameCurrentCloudRoute()" style="flex:1; padding:4px 6px; font-size:11px; border-radius:4px; color:#d97706; border-color:#fcd34d; background:#fffbeb;" disabled>✏️ 改名</button>
+            <button id="btn-cloud-delete" class="btn-sm btn-default" onclick="deleteCurrentCloudRoute()" style="flex:1; padding:4px 6px; font-size:11px; border-radius:4px; color:#ef4444; border-color:#fca5a5; background:#fef2f2;" disabled>🗑️ 刪除</button>
+            <button id="btn-cloud-save" class="btn-sm btn-primary" onclick="updateRouteToCloud()" style="flex:1.5; padding:4px 6px; font-size:11px; border-radius:4px; background:#f59e0b; border-color:#d97706; color:#fff; font-weight:bold;" disabled>💾 儲存</button>
+        </div>
+
+        <div style="display:flex; gap:4px;">
+            <select id="route-export-format" style="flex:1; border:1px solid #cbd5e1; border-radius:4px; font-size:11px; padding:0 2px; outline:none; cursor:pointer; min-width:0;">
+                <option value="gpx">GPX</option>
+                <option value="kml">KML</option>
+                <option value="json">JSON</option>
+                <option value="csv">CSV</option>
+                <option value="txt">TXT</option>
+            </select>
+            <button id="btn-route-download" class="btn-sm btn-default" onclick="downloadCurrentRoute()" style="flex:2; padding:4px 6px; font-size:11px; border-radius:4px; font-weight:bold; border:1px solid #94a3b8;" disabled>⬇️ 下載格式</button>
+        </div>
     </div>
 </div>
                 
@@ -3284,9 +3299,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.10.10.0015";</script>
-    <script src="js/main.js?v=202610100015"></script>
-    <script src="js/autofill.js?v=202610100015"></script>
+    <script>const APP_VERSION = "2026.10.10.0030";</script>
+    <script src="js/main.js?v=202610100030"></script>
+    <script src="js/autofill.js?v=202610100030"></script>
 </body>
 </html>
 
