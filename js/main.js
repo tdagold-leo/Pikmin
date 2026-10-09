@@ -114,6 +114,7 @@
     var mapInstance = null;
     var routePolyline = null;
     var routeCoordinates = [];
+    window.currentCloudRoute = null;
     var routeMarkers = [];
     window.isRouteDrawMode = false;
     var mapMarkers = [];
@@ -484,9 +485,22 @@
     }
 
 
-    window.toggleRoutePanel = function() {
-        const p = document.getElementById('route-panel');
-        if (p) p.style.display = p.style.display === 'none' ? 'block' : 'none';
+        window.toggleRoutePanel = function() {
+        const panel = document.getElementById('route-panel');
+        if (panel.style.display === 'none' || panel.style.display === '') {
+            panel.style.display = 'block';
+            
+            // Adjust bounds on mobile
+            panel.style.left = '0';
+            panel.style.right = 'auto';
+            const rect = panel.getBoundingClientRect();
+            if (rect.right > window.innerWidth) {
+                panel.style.left = 'auto';
+                panel.style.right = '0';
+            }
+        } else {
+            panel.style.display = 'none';
+        }
     };
 
     window.toggleRouteDrawMode = function() {
@@ -507,6 +521,7 @@
     };
 
     window.clearCurrentRoute = function() {
+        window.currentCloudRoute = null;
         if (routePolyline) {
             routePolyline.setMap(null);
             routePolyline = null;
@@ -525,12 +540,37 @@
     };
 
     function updateRouteStatus() {
-        const st = document.getElementById('route-status');
+        // UI updates
+        const st = document.getElementById('current-route-status');
         if (st) {
-            if (routeCoordinates.length === 0) {
-                st.innerText = window.isRouteDrawMode ? '請點擊地圖或現有標記連線' : '目前無路線';
+            st.innerText = routeCoordinates.length === 0 ? (window.isRouteDrawMode ? '請點擊地圖連線' : '無節點') : `${routeCoordinates.length} 個節點`;
+        }
+        const titleEl = document.getElementById('current-route-title');
+        if (titleEl) {
+            if (window.currentCloudRoute) {
+                titleEl.innerText = '目前路線：' + (window.currentCloudRoute.name || '未命名');
             } else {
-                st.innerText = `已連接 ${routeCoordinates.length} 個節點`;
+                titleEl.innerText = routeCoordinates.length > 0 ? '目前路線：本機/自訂' : '目前路線：未命名';
+            }
+        }
+        
+        const btnRename = document.getElementById('btn-cloud-rename');
+        const btnDelete = document.getElementById('btn-cloud-delete');
+        if (btnRename && btnDelete) {
+            if (window.currentCloudRoute) {
+                const myName = localStorage.getItem('pikmin_custom_name') || 'unknown';
+                const r = window.currentCloudRoute;
+                const canEdit = !r.uploaderId || r.uploaderId === 'unknown' || r.uploaderId === myName;
+                if (canEdit) {
+                    btnRename.style.display = 'inline-block';
+                    btnDelete.style.display = 'inline-block';
+                } else {
+                    btnRename.style.display = 'none';
+                    btnDelete.style.display = 'none';
+                }
+            } else {
+                btnRename.style.display = 'none';
+                btnDelete.style.display = 'none';
             }
         }
         
@@ -592,6 +632,7 @@
     };
 
     window.handleRouteUpload = function(event) {
+        window.currentCloudRoute = null;
         const file = event.target.files[0];
         if (!file) return;
         const reader = new FileReader();
@@ -714,21 +755,15 @@
             }
             const countStr = count ? ` (${count} 節點)` : '';
             const titleFull = (r.name || '未命名') + countStr;
-            const myName = localStorage.getItem('pikmin_custom_name') || 'unknown';
-            const canEdit = !r.uploaderId || r.uploaderId === 'unknown' || r.uploaderId === myName;
+            
             html += `
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px; margin-bottom:6px; display:flex; flex-direction:column; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-                <div style="font-size:13px; font-weight:bold; color:#0f172a; line-height:1.4; word-break:break-word;">
-                    ${escapeHtml(r.name || '未命名')}
-                    <span style="color:#64748b; font-weight:normal; font-size:11px; margin-left:4px;">${countStr}</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:6px 8px; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="loadCloudRoute('${r.key}')" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                <div style="display:flex; flex-direction:column; overflow:hidden; flex:1;">
+                    <span style="font-size:12px; font-weight:bold; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(titleFull)}">${escapeHtml(r.name || '未命名')}<span style="color:#64748b; font-weight:normal; font-size:11px; margin-left:4px;">${countStr}</span></span>
                     <span style="font-size:10px; color:#94a3b8;">${dateStr}</span>
-                    <div style="display:flex; gap:4px;">
-                        <button class="btn-sm" onclick="loadCloudRoute('${r.key}')" style="padding:4px 6px; font-size:12px; background:#ecfdf5; border:1px solid #a7f3d0; color:#059669; border-radius:6px; transition:all 0.2s;" title="顯示在地圖">👁️</button>
-                        <button class="btn-sm" onclick="downloadCloudRoute('${r.key}')" style="padding:4px 6px; font-size:12px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; border-radius:6px; transition:all 0.2s;" title="下載">💾</button>
-                        ${canEdit ? `<button class="btn-sm" onclick="renameCloudRoute('${r.key}', '${escapeHtml(r.name || '').replace(/'/g, "\\'")}')" style="padding:4px 6px; font-size:12px; color:#d97706; border:1px solid #fcd34d; background:#fffbeb; border-radius:6px; transition:all 0.2s;" title="重新命名">✏️</button><button class="btn-sm" onclick="deleteCloudRoute('${r.key}')" style="padding:4px 6px; font-size:12px; color:#ef4444; border:1px solid #fca5a5; background:#fef2f2; border-radius:6px; transition:all 0.2s;" title="刪除">🗑️</button>` : ''}
-                    </div>
+                </div>
+                <div style="margin-left:8px;">
+                    <button class="btn-sm" style="padding:4px 8px; font-size:12px; background:#ecfdf5; border:1px solid #a7f3d0; color:#059669; border-radius:6px; pointer-events:none;">載入 ⬇️</button>
                 </div>
             </div>`;
         });
@@ -813,6 +848,7 @@
     window.loadCloudRoute = function(key) {
         const route = cloudRoutes.find(r => r.key === key);
         if (!route || !route.gpxData) return;
+        window.currentCloudRoute = route;
         
         const parser = new DOMParser();
         const doc = parser.parseFromString(route.gpxData, 'text/xml');
@@ -869,6 +905,28 @@
         const newName = prompt('請輸入新的路線名稱：', currentName);
         if (newName !== null && newName.trim() !== '' && newName.trim() !== currentName) {
             dbRef('routes/' + key).update({ name: newName.trim() });
+        }
+    };
+
+    
+    window.renameCurrentCloudRoute = function() {
+        if (!window.currentCloudRoute) return;
+        const key = window.currentCloudRoute.key;
+        const currentName = window.currentCloudRoute.name;
+        const newName = prompt('請輸入新的路線名稱：', currentName);
+        if (newName !== null && newName.trim() !== '' && newName.trim() !== currentName) {
+            dbRef('routes/' + key).update({ name: newName.trim() });
+            window.currentCloudRoute.name = newName.trim();
+            updateRouteStatus();
+        }
+    };
+
+    window.deleteCurrentCloudRoute = function() {
+        if (!window.currentCloudRoute) return;
+        const key = window.currentCloudRoute.key;
+        if (confirm('確定要刪除這條分享的路線嗎？')) {
+            dbRef('routes/' + key).remove();
+            clearCurrentRoute();
         }
     };
 
@@ -5180,7 +5238,7 @@
 
         // 註冊 Service Worker (支援 Android Chrome 手機推播)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=202610092325').catch(err => {
+            navigator.serviceWorker.register('sw.js?v=202610092359').catch(err => {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }
