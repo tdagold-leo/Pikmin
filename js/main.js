@@ -714,6 +714,8 @@
             }
             const countStr = count ? ` (${count} 節點)` : '';
             const titleFull = (r.name || '未命名') + countStr;
+            const myName = localStorage.getItem('pikmin_custom_name') || 'unknown';
+            const canEdit = !r.uploaderId || r.uploaderId === 'unknown' || r.uploaderId === myName;
             html += `
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:4px 6px; display:flex; align-items:center; gap:4px; margin-bottom:4px;">
                 <div style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
@@ -723,7 +725,7 @@
                 <div style="display:flex; gap:2px;">
                     <button class="btn-sm" onclick="loadCloudRoute('${r.key}')" style="padding:2px 4px; font-size:12px; background:#ecfdf5; border:1px solid #a7f3d0; color:#059669; border-radius:4px;" title="顯示在地圖">👁️</button>
                     <button class="btn-sm" onclick="downloadCloudRoute('${r.key}')" style="padding:2px 4px; font-size:12px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; border-radius:4px;" title="下載">💾</button>
-                    ${r.uploaderId === window.currentUserUid ? `<button class="btn-sm" onclick="renameCloudRoute('${r.key}', '${escapeHtml(r.name || '').replace(/'/g, "\\'")}')" style="padding:2px 4px; font-size:12px; color:#d97706; border:1px solid #fcd34d; background:#fffbeb; border-radius:4px;" title="重新命名">✏️</button><button class="btn-sm" onclick="deleteCloudRoute('${r.key}')" style="padding:2px 4px; font-size:12px; color:#ef4444; border:1px solid #fca5a5; background:#fef2f2; border-radius:4px;" title="刪除">🗑️</button>` : ''}
+                    ${canEdit ? `<button class="btn-sm" onclick="renameCloudRoute('${r.key}', '${escapeHtml(r.name || '').replace(/'/g, "\\'")}')" style="padding:2px 4px; font-size:12px; color:#d97706; border:1px solid #fcd34d; background:#fffbeb; border-radius:4px;" title="重新命名">✏️</button><button class="btn-sm" onclick="deleteCloudRoute('${r.key}')" style="padding:2px 4px; font-size:12px; color:#ef4444; border:1px solid #fca5a5; background:#fef2f2; border-radius:4px;" title="刪除">🗑️</button>` : ''}
                 </div>
             </div>`;
         });
@@ -799,7 +801,7 @@
                 gpxData: gpx,
                 nodeCount: routeCoordinates.length,
                 timestamp: Date.now(),
-                uploaderId: window.currentUserUid || 'unknown'
+                uploaderId: localStorage.getItem('pikmin_custom_name') || 'unknown'
             });
             alert('路線已成功分享至雲端！');
         }
