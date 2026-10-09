@@ -512,19 +512,7 @@
 
     window.toggleRouteDrawMode = function() {
         window.isRouteDrawMode = !window.isRouteDrawMode;
-        const btn = document.getElementById('route-draw-btn');
-        if (window.isRouteDrawMode) {
-            btn.style.background = '#ecfdf5';
-            btn.style.borderColor = '#10b981';
-            btn.style.color = '#047857';
-            btn.innerHTML = '✅ 點選地圖或標記加入節點...';
-            updateRouteStatus();
-        } else {
-            btn.style.background = '#f8fafc';
-            btn.style.borderColor = '#94a3b8';
-            btn.style.color = '#334155';
-            btn.innerHTML = '🖍️ 開始在地圖上點擊連線';
-        }
+        updateRouteStatus();
     };
 
     window.clearCurrentRoute = function() {
@@ -612,7 +600,7 @@
                 drawBtn.innerHTML = '🖍️ 結束編輯<br><span style="font-size:10px;font-weight:normal;color:#64748b;">(停止連線)</span>';
                 drawBtn.style.background = '#e0f2fe';
             } else {
-                drawBtn.innerHTML = '🖍️ 編輯<br><span style="font-size:10px;font-weight:normal;color:#64748b;">(點擊地圖連線)</span>';
+                drawBtn.innerHTML = '🖍️ 開始在地圖上<br><span style="font-size:10px;font-weight:normal;color:#64748b;">點擊連線</span>';
                 drawBtn.style.background = '#f8fafc';
             }
         }
@@ -5350,7 +5338,7 @@
 
         // 註冊 Service Worker (支援 Android Chrome 手機推播)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=202610100045').catch(err => {
+            navigator.serviceWorker.register('sw.js?v=202610100050').catch(err => {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }
