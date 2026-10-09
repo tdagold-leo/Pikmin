@@ -609,10 +609,10 @@
         const drawBtn = document.getElementById('route-draw-btn');
         if (drawBtn) {
             if (window.isRouteDrawMode) {
-                drawBtn.innerText = '🖍️ 結束編輯 (停止連線)';
+                drawBtn.innerHTML = '🖍️ 結束編輯<br><span style="font-size:10px;font-weight:normal;color:#64748b;">(停止連線)</span>';
                 drawBtn.style.background = '#e0f2fe';
             } else {
-                drawBtn.innerText = '🖍️ 編輯 (點擊地圖連線)';
+                drawBtn.innerHTML = '🖍️ 編輯<br><span style="font-size:10px;font-weight:normal;color:#64748b;">(點擊地圖連線)</span>';
                 drawBtn.style.background = '#f8fafc';
             }
         }
@@ -839,7 +839,6 @@
         window.isRouteDrawMode = true;
         const drawBtn = document.getElementById('route-draw-btn');
         if (drawBtn) {
-            drawBtn.innerText = '🖍️ 結束編輯 (停止連線)';
             drawBtn.style.background = '#e0f2fe';
         }
         updateRouteStatus();
@@ -5351,7 +5350,7 @@
 
         // 註冊 Service Worker (支援 Android Chrome 手機推播)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=202610100040').catch(err => {
+            navigator.serviceWorker.register('sw.js?v=202610100045').catch(err => {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }
