@@ -713,6 +713,12 @@
                 data += `${pt.lat},${pt.lng},${pt.name || ''}\n`;
             }
             mime = 'text/csv';
+        } else if (format === 'txt') {
+            data = '';
+            for (const pt of coords) {
+                data += `${pt.lat}, ${pt.lng}\n`;
+            }
+            mime = 'text/plain';
         }
         
         const blob = new Blob([data], {type: mime});
