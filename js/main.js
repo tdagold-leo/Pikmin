@@ -611,8 +611,30 @@
                 }
             }
             
+            // Fallback: txt / csv line-by-line parsing
             if (coords.length === 0) {
-                return alert('無法在檔案中找到路徑點 (支援 GPX/KML/JSON 格式)');
+                const lines = text.split('\n');
+                const coordRegex = /(-?\d{1,3}\.\d+)[,\s\t]+(-?\d{1,3}\.\d+)/;
+                lines.forEach(line => {
+                    const match = line.match(coordRegex);
+                    if (match) {
+                        let lat = parseFloat(match[1]);
+                        let lng = parseFloat(match[2]);
+                        
+                        // Auto-swap if it looks like lon,lat (lat must be between -90 and 90)
+                        if (Math.abs(lat) > 90 && Math.abs(lng) <= 90) {
+                            let temp = lat; lat = lng; lng = temp;
+                        }
+                        
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            coords.push({ lat, lng, name: '節點' });
+                        }
+                    }
+                });
+            }
+
+            if (coords.length === 0) {
+                return alert('無法在檔案中找到路徑點 (支援 GPX/KML/JSON/TXT/CSV 格式)');
             }
             
             window.clearCurrentRoute();
