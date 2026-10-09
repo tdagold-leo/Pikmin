@@ -114,6 +114,7 @@
     var mapInstance = null;
     var routePolyline = null;
     var routeCoordinates = [];
+    var routeMarkers = [];
     window.isRouteDrawMode = false;
     var mapMarkers = [];
     var mapClusterer = null;
@@ -510,6 +511,10 @@
             routePolyline.setMap(null);
             routePolyline = null;
         }
+        if (typeof routeMarkers !== 'undefined') {
+            routeMarkers.forEach(m => m.map = null);
+            routeMarkers = [];
+        }
         routeCoordinates = [];
         updateRouteStatus();
     };
@@ -533,6 +538,11 @@
             routePolyline.setMap(null);
         }
         
+        if (typeof routeMarkers !== 'undefined') {
+            routeMarkers.forEach(m => m.map = null);
+            routeMarkers = [];
+        }
+        
         if (routeCoordinates.length > 1 && mapInstance) {
             routePolyline = new google.maps.Polyline({
                 path: routeCoordinates,
@@ -541,6 +551,36 @@
                 strokeOpacity: 0.8,
                 strokeWeight: 4,
                 map: mapInstance
+            });
+        }
+        
+        if (routeCoordinates.length > 0 && mapInstance && google && google.maps && google.maps.marker) {
+            routeCoordinates.forEach((pt, index) => {
+                const num = index + 1;
+                const div = document.createElement('div');
+                div.style.background = '#ec4899';
+                div.style.color = '#fff';
+                div.style.borderRadius = '50%';
+                div.style.width = '20px';
+                div.style.height = '20px';
+                div.style.display = 'flex';
+                div.style.alignItems = 'center';
+                div.style.justifyContent = 'center';
+                div.style.fontSize = '11px';
+                div.style.fontWeight = 'bold';
+                div.style.border = '2px solid white';
+                div.style.boxShadow = '0 1px 3px rgba(0,0,0,0.4)';
+                div.style.cursor = 'default';
+                div.innerText = num;
+                
+                const marker = new google.maps.marker.AdvancedMarkerElement({
+                    map: mapInstance,
+                    position: { lat: pt.lat, lng: pt.lng },
+                    content: div,
+                    title: pt.name || '節點 ' + num
+                });
+                
+                routeMarkers.push(marker);
             });
         }
     }
