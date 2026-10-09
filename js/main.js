@@ -490,14 +490,21 @@
         if (panel.style.display === 'none' || panel.style.display === '') {
             panel.style.display = 'block';
             
-            // Adjust bounds on mobile
-            panel.style.left = '0';
-            panel.style.right = 'auto';
-            const rect = panel.getBoundingClientRect();
-            if (rect.right > window.innerWidth) {
-                panel.style.left = 'auto';
-                panel.style.right = '0';
-            }
+            panel.style.left = '0px';
+            
+            setTimeout(() => {
+                const rect = panel.getBoundingClientRect();
+                if (rect.right > window.innerWidth) {
+                    const overflowRight = rect.right - window.innerWidth + 10;
+                    panel.style.left = '-' + overflowRight + 'px';
+                }
+                
+                const newRect = panel.getBoundingClientRect();
+                if (newRect.left < 0) {
+                    const overflowLeft = -newRect.left + 10;
+                    panel.style.left = (parseFloat(panel.style.left) + overflowLeft) + 'px';
+                }
+            }, 0);
         } else {
             panel.style.display = 'none';
         }
@@ -556,21 +563,25 @@
         
         const btnRename = document.getElementById('btn-cloud-rename');
         const btnDelete = document.getElementById('btn-cloud-delete');
-        if (btnRename && btnDelete) {
+        const btnSave = document.getElementById('btn-cloud-save');
+        if (btnRename && btnDelete && btnSave) {
+            let canEdit = false;
             if (window.currentCloudRoute) {
                 const myName = localStorage.getItem('pikmin_custom_name') || 'unknown';
                 const r = window.currentCloudRoute;
-                const canEdit = !r.uploaderId || r.uploaderId === 'unknown' || r.uploaderId === myName;
-                if (canEdit) {
-                    btnRename.style.display = 'inline-block';
-                    btnDelete.style.display = 'inline-block';
-                } else {
-                    btnRename.style.display = 'none';
-                    btnDelete.style.display = 'none';
-                }
+                canEdit = (!r.uploaderId || r.uploaderId === 'unknown' || r.uploaderId === myName);
+            }
+            
+            if (window.currentCloudRoute && canEdit) {
+                btnRename.style.display = '';
+                btnDelete.style.display = '';
+                btnSave.innerText = '☁️ 儲存覆蓋';
+                btnSave.onclick = updateRouteToCloud;
             } else {
                 btnRename.style.display = 'none';
                 btnDelete.style.display = 'none';
+                btnSave.innerText = '☁️ 分享至雲端';
+                btnSave.onclick = saveRouteToCloud;
             }
         }
         
@@ -817,6 +828,30 @@
         URL.revokeObjectURL(url);
     };
 
+    
+    window.updateRouteToCloud = function() {
+        if (routeCoordinates.length === 0) return alert('目前畫面沒有路線！');
+        if (!window.currentCloudRoute) return;
+        const key = window.currentCloudRoute.key;
+        
+        let gpx = '<?xml version="1.0" encoding="UTF-8"?>\n';
+        gpx += '<gpx version="1.1" creator="Pikmin Tracker">\n';
+        gpx += `  <trk>\n    <name>${escapeHtml(window.currentCloudRoute.name)}</name>\n    <trkseg>\n`;
+        for (const pt of routeCoordinates) {
+            gpx += `      <trkpt lat="${pt.lat}" lon="${pt.lng}">\n`;
+            if (pt.name) gpx += `        <name>${escapeHtml(pt.name)}</name>\n`;
+            gpx += `      </trkpt>\n`;
+        }
+        gpx += '    </trkseg>\n  </trk>\n</gpx>';
+        
+        dbRef('routes/' + key).update({
+            gpxData: gpx,
+            nodeCount: routeCoordinates.length,
+            timestamp: Date.now()
+        });
+        alert('雲端路線已成功更新覆蓋！');
+    };
+
     window.saveRouteToCloud = function() {
         if (routeCoordinates.length === 0) return alert('目前畫面沒有路線！請先建立或上傳路線。');
         
@@ -834,13 +869,19 @@
         gpx += '    </trkseg>\n  </trk>\n</gpx>';
         
         if (routesRef && typeof routesRef.push === 'function') {
-            routesRef.push({
+            const newRef = routesRef.push({
                 name: name.trim(),
                 gpxData: gpx,
                 nodeCount: routeCoordinates.length,
                 timestamp: Date.now(),
                 uploaderId: localStorage.getItem('pikmin_custom_name') || 'unknown'
             });
+            window.currentCloudRoute = {
+                key: newRef.key,
+                name: name.trim(),
+                uploaderId: localStorage.getItem('pikmin_custom_name') || 'unknown'
+            };
+            updateRouteStatus();
             alert('路線已成功分享至雲端！');
         }
     };
@@ -5238,7 +5279,7 @@
 
         // 註冊 Service Worker (支援 Android Chrome 手機推播)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=202610092359').catch(err => {
+            navigator.serviceWorker.register('sw.js?v=202610100015').catch(err => {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }
