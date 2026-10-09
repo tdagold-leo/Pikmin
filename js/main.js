@@ -547,23 +547,8 @@
 
     window.downloadCurrentRoute = function() {
         if (routeCoordinates.length === 0) return alert('沒有可下載的路徑點！請先上傳或在地圖上點擊建立。');
-        let gpx = '<?xml version="1.0" encoding="UTF-8"?>\n';
-        gpx += '<gpx version="1.1" creator="Pikmin Tracker">\n';
-        gpx += '  <trk>\n    <name>匯出路線</name>\n    <trkseg>\n';
-        for (const pt of routeCoordinates) {
-            gpx += `      <trkpt lat="${pt.lat}" lon="${pt.lng}">\n`;
-            if (pt.name) gpx += `        <name>${escapeHtml(pt.name)}</name>\n`;
-            gpx += `      </trkpt>\n`;
-        }
-        gpx += '    </trkseg>\n  </trk>\n</gpx>';
-        
-        const blob = new Blob([gpx], {type: 'application/gpx+xml'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'route.gpx';
-        a.click();
-        URL.revokeObjectURL(url);
+        const format = document.getElementById('route-export-format') ? document.getElementById('route-export-format').value : 'gpx';
+        exportRouteData(routeCoordinates, format, 'export_route');
     };
 
     window.handleRouteUpload = function(event) {
@@ -683,20 +668,61 @@
         cloudRoutes.forEach(r => {
             const dateStr = r.timestamp ? new Date(r.timestamp).toLocaleDateString() : '';
             html += `
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:6px 8px; display:flex; flex-direction:column; gap:4px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:12px; font-weight:bold; color:#0f172a; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(r.name || '未命名')}</span>
-                    <span style="font-size:10px; color:#94a3b8;">${dateStr}</span>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:4px 6px; display:flex; align-items:center; gap:4px; margin-bottom:4px;">
+                <div style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+                    <span style="font-size:12px; font-weight:bold; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(r.name || '未命名')}">${escapeHtml(r.name || '未命名')}</span>
+                    <span style="font-size:9px; color:#94a3b8;">${dateStr}</span>
                 </div>
-                <div style="display:flex; gap:4px;">
-                    <button class="btn-sm btn-default" onclick="loadCloudRoute('${r.key}')" style="flex:1; padding:4px; font-size:11px; border-radius:4px; background:#ecfdf5; border:1px solid #a7f3d0; color:#059669;">👀 顯示在地圖</button>
-                    <button class="btn-sm btn-default" onclick="downloadCloudRoute('${r.key}')" style="flex:1; padding:4px; font-size:11px; border-radius:4px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb;">💾 下載 (.gpx)</button>
-                    ${r.uploaderId === window.currentUserUid ? `<button class="btn-sm btn-default" onclick="deleteCloudRoute('${r.key}')" style="padding:4px; font-size:11px; border-radius:4px; color:#ef4444; border:1px solid #fca5a5; background:#fef2f2;" title="刪除">🗑️</button>` : ''}
+                <div style="display:flex; gap:2px;">
+                    <button class="btn-sm" onclick="loadCloudRoute('${r.key}')" style="padding:2px 4px; font-size:12px; background:#ecfdf5; border:1px solid #a7f3d0; color:#059669; border-radius:4px;" title="顯示在地圖">👁️</button>
+                    <button class="btn-sm" onclick="downloadCloudRoute('${r.key}')" style="padding:2px 4px; font-size:12px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; border-radius:4px;" title="下載">💾</button>
+                    ${r.uploaderId === window.currentUserUid ? `<button class="btn-sm" onclick="deleteCloudRoute('${r.key}')" style="padding:2px 4px; font-size:12px; color:#ef4444; border:1px solid #fca5a5; background:#fef2f2; border-radius:4px;" title="刪除">🗑️</button>` : ''}
                 </div>
             </div>`;
         });
         container.innerHTML = html;
     }
+
+    window.exportRouteData = function(coords, format, filename) {
+        if (!coords || coords.length === 0) return alert('沒有可下載的路徑點！');
+        let data = '';
+        let mime = 'text/plain';
+        
+        if (format === 'gpx') {
+            data = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Pikmin Tracker">\n  <trk>\n    <name>' + escapeHtml(filename) + '</name>\n    <trkseg>\n';
+            for (const pt of coords) {
+                data += `      <trkpt lat="${pt.lat}" lon="${pt.lng}">\n`;
+                if (pt.name) data += `        <name>${escapeHtml(pt.name)}</name>\n`;
+                data += `      </trkpt>\n`;
+            }
+            data += '    </trkseg>\n  </trk>\n</gpx>';
+            mime = 'application/gpx+xml';
+        } else if (format === 'kml') {
+            data = '<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n  <Document>\n    <name>' + escapeHtml(filename) + '</name>\n    <Placemark>\n      <name>Route</name>\n      <LineString>\n        <coordinates>\n';
+            for (const pt of coords) {
+                data += `${pt.lng},${pt.lat},0 `;
+            }
+            data += '\n        </coordinates>\n      </LineString>\n    </Placemark>\n  </Document>\n</kml>';
+            mime = 'application/vnd.google-earth.kml+xml';
+        } else if (format === 'json') {
+            data = JSON.stringify(coords, null, 2);
+            mime = 'application/json';
+        } else if (format === 'csv') {
+            data = 'lat,lng,name\n';
+            for (const pt of coords) {
+                data += `${pt.lat},${pt.lng},${pt.name || ''}\n`;
+            }
+            mime = 'text/csv';
+        }
+        
+        const blob = new Blob([data], {type: mime});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename + '.' + format;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
 
     window.saveRouteToCloud = function() {
         if (routeCoordinates.length === 0) return alert('目前畫面沒有路線！請先建立或上傳路線。');
@@ -761,13 +787,23 @@
         const route = cloudRoutes.find(r => r.key === key);
         if (!route || !route.gpxData) return;
         
-        const blob = new Blob([route.gpxData], {type: 'application/gpx+xml'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${route.name || 'route'}.gpx`;
-        a.click();
-        URL.revokeObjectURL(url);
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(route.gpxData, 'text/xml');
+        let coords = [];
+        const trkpts = doc.querySelectorAll('trkpt, rtept, wpt');
+        trkpts.forEach(pt => {
+            const lat = parseFloat(pt.getAttribute('lat'));
+            const lng = parseFloat(pt.getAttribute('lon'));
+            if (!isNaN(lat) && !isNaN(lng)) {
+                let name = '節點';
+                const nameNode = pt.querySelector('name');
+                if (nameNode) name = nameNode.textContent;
+                coords.push({lat, lng, name});
+            }
+        });
+        
+        const format = document.getElementById('route-export-format') ? document.getElementById('route-export-format').value : 'gpx';
+        exportRouteData(coords, format, route.name || 'route');
     };
 
     window.deleteCloudRoute = function(key) {

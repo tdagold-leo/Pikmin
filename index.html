@@ -2364,7 +2364,7 @@
                     </div>
                 </div>
                 <div class="settings-card-body">
-                    <a href="ocr.html?v=202610092240" target="_blank" class="btn-sm btn-primary btn-block" style="padding:10px; font-size:14px; border-radius:10px; width:100%; display:block; text-align:center; text-decoration:none; box-sizing:border-box;">🔗 開啟擷取工具</a>
+                    <a href="ocr.html?v=202610092245" target="_blank" class="btn-sm btn-primary btn-block" style="padding:10px; font-size:14px; border-radius:10px; width:100%; display:block; text-align:center; text-decoration:none; box-sizing:border-box;">🔗 開啟擷取工具</a>
                 </div>
             </div>
 
@@ -2525,8 +2525,14 @@
                     <div style="display:flex; flex-direction:column; gap:8px;">
                         <div style="display:flex; gap:6px;">
                             <input type="file" id="route-upload-file" accept=".gpx,.kml,.json,.txt,.csv" style="display:none;" onchange="handleRouteUpload(event)">
-                            <button class="btn-sm btn-default" onclick="document.getElementById('route-upload-file').click()" style="flex:1; padding:6px; font-size:12px; border-radius:6px; font-weight:600;">📂 上傳路徑</button>
-                            <button class="btn-sm btn-primary" onclick="downloadCurrentRoute()" style="flex:1; padding:6px; font-size:12px; border-radius:6px; background:#0ea5e9; border-color:#0284c7; color:#fff; font-weight:600;">💾 下載分享</button>
+                            <button class="btn-sm btn-default" onclick="document.getElementById('route-upload-file').click()" style="flex:1; padding:6px; font-size:12px; border-radius:6px; font-weight:600;" title="上傳">📂 上傳</button>
+                            <select id="route-export-format" style="border:1px solid #cbd5e1; border-radius:6px; font-size:12px; padding:0 2px; outline:none; cursor:pointer;" title="格式">
+                                <option value="gpx">GPX</option>
+                                <option value="kml">KML</option>
+                                <option value="json">JSON</option>
+                                <option value="csv">CSV</option>
+                            </select>
+                            <button class="btn-sm btn-primary" onclick="downloadCurrentRoute()" style="flex:1; padding:6px; font-size:12px; border-radius:6px; background:#0ea5e9; border-color:#0284c7; color:#fff; font-weight:600;" title="下載">💾 下載</button>
                         </div>
                         <div style="border-top:1px solid #cbd5e1; margin:4px 0;"></div>
                         <div style="display:flex; gap:6px; align-items:center;">
@@ -2541,7 +2547,7 @@
                     <div style="font-weight:bold; margin-top:12px; font-size:12px; color:#334155; display:flex; align-items:center; gap:4px;">
                         <span>☁️ 雲端分享列表</span>
                     </div>
-                    <div id="cloud-route-list" style="display:flex; flex-direction:column; gap:6px; max-height:160px; overflow-y:auto; margin-top:6px; padding-right:2px;">
+                    <div id="cloud-route-list" style="display:flex; flex-direction:column; gap:6px; max-height:200px; overflow-y:auto; margin-top:6px; padding-right:2px;">
                         <div style="font-size:11px; color:#94a3b8; text-align:center;">載入中...</div>
                     </div>
                 </div>
@@ -3265,9 +3271,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.10.09.2240";</script>
-    <script src="js/main.js?v=202610092240"></script>
-    <script src="js/autofill.js?v=202610092240"></script>
+    <script>const APP_VERSION = "2026.10.09.2245";</script>
+    <script src="js/main.js?v=202610092245"></script>
+    <script src="js/autofill.js?v=202610092245"></script>
 </body>
 </html>
 
