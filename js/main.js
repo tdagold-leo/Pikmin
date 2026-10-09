@@ -707,10 +707,17 @@
         let html = '';
         cloudRoutes.forEach(r => {
             const dateStr = r.timestamp ? new Date(r.timestamp).toLocaleDateString() : '';
+            let count = r.nodeCount;
+            if (!count && r.gpxData) {
+                const match = r.gpxData.match(/<trkpt/g);
+                count = match ? match.length : 0;
+            }
+            const countStr = count ? ` (${count} 節點)` : '';
+            const titleFull = (r.name || '未命名') + countStr;
             html += `
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:4px 6px; display:flex; align-items:center; gap:4px; margin-bottom:4px;">
                 <div style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
-                    <span style="font-size:12px; font-weight:bold; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(r.name || '未命名')}">${escapeHtml(r.name || '未命名')}</span>
+                    <span style="font-size:12px; font-weight:bold; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(titleFull)}">${escapeHtml(r.name || '未命名')}<span style="color:#64748b; font-weight:normal; font-size:11px; margin-left:2px;">${countStr}</span></span>
                     <span style="font-size:9px; color:#94a3b8;">${dateStr}</span>
                 </div>
                 <div style="display:flex; gap:2px;">
@@ -790,6 +797,7 @@
             routesRef.push({
                 name: name.trim(),
                 gpxData: gpx,
+                nodeCount: routeCoordinates.length,
                 timestamp: Date.now(),
                 uploaderId: window.currentUserUid || 'unknown'
             });
