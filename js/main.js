@@ -3147,6 +3147,8 @@
                 pushData.sgType = sgTypeEl ? sgTypeEl.value : '常駐';
                 const sgActivityEl = document.getElementById('post-sg-activity');
                 pushData.sgActivity = sgActivityEl ? sgActivityEl.value.trim() : '';
+                const sgSubEl = document.getElementById('post-sg-sub');
+                if (sgSubEl && sgSubEl.value.trim()) pushData.sgSubActivity = sgSubEl.value.trim();
                 if (pushData.sgType === '期間') {
                     pushData.sgStart = document.getElementById('post-sg-start').value || '';
                     pushData.sgEnd = document.getElementById('post-sg-end').value || '';
@@ -3340,6 +3342,8 @@
                 document.getElementById('edit-post-sg-fields').style.display = 'flex';
                 document.getElementById('edit-post-sg-type').value = item.sgType || '常駐';
                 document.getElementById('edit-post-sg-activity').value = item.sgActivity || item.tag || '';
+                const subEl = document.getElementById('edit-post-sg-sub');
+                if (subEl) subEl.value = item.sgSubActivity || '';
                 if (item.sgType === '期間') {
                     document.getElementById('edit-post-sg-dates').style.display = 'flex';
                     document.getElementById('edit-post-sg-start').value = item.sgStart || '';
@@ -3429,11 +3433,13 @@
         const sgFields = document.getElementById(prefix + '-sg-fields');
         const ocrButtons = document.getElementById(prefix + '-image-ocr-buttons');
         const tagContainer = document.getElementById(prefix + '-tag-container');
+        const subContainer = document.getElementById(prefix + '-sg-sub-container');
         if (typeEl) {
             const isSg = typeEl.value === '特殊金盆';
             if (sgFields) sgFields.style.display = isSg ? 'flex' : 'none';
             if (ocrButtons) ocrButtons.style.display = isSg ? 'none' : 'flex';
             if (tagContainer) tagContainer.style.display = isSg ? 'none' : 'flex';
+            if (subContainer) subContainer.style.display = isSg ? 'flex' : 'none';
         }
     };
     window.togglePostcardSgDates = function(prefix) {
@@ -3542,6 +3548,9 @@
             if (pType === '特殊金盆') {
                 updates.sgType = document.getElementById('edit-post-sg-type').value || '常駐';
                 updates.sgActivity = document.getElementById('edit-post-sg-activity').value.trim();
+                const sgSubVal = document.getElementById('edit-post-sg-sub').value.trim();
+                if (sgSubVal) updates.sgSubActivity = sgSubVal;
+                else updates.sgSubActivity = null;
                 if (updates.sgType === '期間') {
                     updates.sgStart = document.getElementById('edit-post-sg-start').value || '';
                     updates.sgEnd = document.getElementById('edit-post-sg-end').value || '';
@@ -3558,6 +3567,7 @@
             } else {
                 updates.sgType = null;
                 updates.sgActivity = null;
+                updates.sgSubActivity = null;
                 updates.sgStart = null;
                 updates.sgEnd = null;
                 updates.sgCooldown = null;
@@ -5014,12 +5024,14 @@
                             tItems.forEach(item => {
                                 const rawAct = (item.sgActivity || item.tag || '未分類').trim();
                                 let mainAct = rawAct;
-                                let subAct = '';
-                                const sepMatch = rawAct.match(/\s*(?:[-/＞>]|——|=>|->)\s*/);
+                                let subAct = (item.sgSubActivity || '').trim();
+                                if (!subAct) {
+                                    const sepMatch = rawAct.match(/\s*(?:[-/＞>]|——|=>|->)\s*/);
                                 if (sepMatch) {
                                     const sepIdx = rawAct.indexOf(sepMatch[0]);
                                     mainAct = rawAct.substring(0, sepIdx).trim();
                                     subAct = rawAct.substring(sepIdx + sepMatch[0].length).trim();
+                                    }
                                 }
                                 
                                 if (!mainActMap[mainAct]) { mainActMap[mainAct] = {}; mainActOrder.push(mainAct); }
@@ -5365,7 +5377,7 @@
 
         // 註冊 Service Worker (支援 Android Chrome 手機推播)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=202610110255').catch(err => {
+            navigator.serviceWorker.register('sw.js?v=202610110325').catch(err => {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }
