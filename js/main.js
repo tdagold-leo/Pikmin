@@ -2294,11 +2294,15 @@
                 
                 let displayHtml = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-weight:bold;"><span>✅ 辨識成功：</span><button class="btn-sm btn-default" style="padding:2px 6px; font-size:10px;" onclick="navigator.clipboard.writeText(this.parentElement.nextSibling.innerText); const o=this.innerText; this.innerText='已複製'; setTimeout(()=>{this.innerText=o},2000)">複製全部</button></div><div style="user-select:text;">${escapeHtml(limitedText)}</div>`;
                 
+                let autoFilled = [];
+                let nameField = null;
+                let coordsField = null;
+                let tagField = null;
+                
                 if (isPostcard) {
-                    let autoFilled = [];
-                    const nameField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-name' : 'edit-post-name');
-                    const coordsField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-coords' : 'edit-post-coords');
-                    const tagField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-tag' : 'edit-post-tag');
+                    nameField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-name' : 'edit-post-name');
+                    coordsField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-coords' : 'edit-post-coords');
+                    tagField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-tag' : 'edit-post-tag');
                     
                     if (lines.length > 0) {
                         if (nameField && (!nameField.value || nameField.value.trim() === '')) {
@@ -2324,10 +2328,9 @@
                         }
                     }
                 } else if (isMushroom) {
-                    let autoFilled = [];
-                    const tagField = document.getElementById('tag');
+                    tagField = document.getElementById('tag');
                     
-                                        const regexType = /(小|普通|大|巨大)\s*([\u4e00-\u9fa5]{1,4}?)\s*色?\s*蘑菇/;
+                    const regexType = /(小|普通|大|巨大)\s*([\u4e00-\u9fa5]{1,4}?)\s*色?\s*蘑菇/;
                     let foundType = '';
                     for (const line of lines) {
                         const match = regexType.exec(line);
@@ -5338,7 +5341,7 @@
 
         // 註冊 Service Worker (支援 Android Chrome 手機推播)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=202610100050').catch(err => {
+            navigator.serviceWorker.register('sw.js?v=202610110245').catch(err => {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }
