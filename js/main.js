@@ -1643,7 +1643,7 @@
         updateView();
     }
 
-    function markGroupClaimedToday(actName, e) {
+    function markGroupClaimedToday(mainAct, subAct, e) {
         if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
         const now = new Date();
         const y = now.getFullYear();
@@ -1659,8 +1659,7 @@
         let count = 0;
         const changed = {};
         postcardList.forEach(item => {
-            const itemAct = (item.sgActivity || item.tag || '未分類').trim();
-            if (itemAct === actName && item.type === '特殊金盆') {
+            if (item.type === '特殊金盆' && item._computedMainAct === mainAct && item._computedSubAct === subAct) {
                 item.sgLast = todayStr;
                 personal[item.id] = todayStr;
                 changed[item.id] = todayStr;
@@ -3607,14 +3606,13 @@
     }
 
     // 一鍵複製群組內所有座標（每行一筆，格式同 copyCoords）
-    function copyGroupCoords(actName, e) {
+    function copyGroupCoords(mainAct, subAct, e) {
         if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
         const btn = e && (e.currentTarget || e.target);
         const os = detectOS();
         const lines = [];
         postcardList.forEach(item => {
-            const itemAct = (item.sgActivity || item.tag || '未分類').trim();
-            if (itemAct === actName && item.type === '特殊金盆' && item.coords) {
+            if (item.type === '特殊金盆' && item._computedMainAct === mainAct && item._computedSubAct === subAct && item.coords) {
                 const normalized = normalizeCoords(String(item.coords));
                 lines.push((os === 'ios' || os === 'macos' || os === 'windows') ? normalized.replace(/,/g, ' ') : normalized);
             }
@@ -5034,6 +5032,8 @@
                                     subAct = rawAct.substring(sepIdx + sepMatch[0].length).trim();
                                     }
                                 }
+                                item._computedMainAct = mainAct;
+                                item._computedSubAct = subAct;
                                 
                                 if (!mainActMap[mainAct]) { mainActMap[mainAct] = {}; mainActOrder.push(mainAct); }
                                 if (!mainActMap[mainAct][subAct]) { mainActMap[mainAct][subAct] = []; }
@@ -5139,7 +5139,7 @@
                                     const allDiscontinued = itemsList.length > 0 && itemsList.every(item => item._localIsDisc);
                                     const groupClaimBtnHtml = allDiscontinued ? '' : `
                                         <button type="button" class="group-claim-btn ${!hasClaimable ? 'claimed' : ''}" 
-                                                onclick="markGroupClaimedToday('${escapeHtml(rawAct).replace(/'/g, "\\'")}', event)" 
+                                                onclick="markGroupClaimedToday('${escapeHtml(mainAct).replace(/'/g, "\\'")}', '${escapeHtml(subAct).replace(/'/g, "\\'")}', event)" 
                                                 title="一鍵將群組內所有卡片設為今日已領">
                                             ${!hasClaimable ? '✓ 今日已領' : '🎁 今日領取'}
                                         </button>
@@ -5147,7 +5147,7 @@
                                     
                                     const groupCopyBtnHtml = `
                                         <button type="button" class="group-claim-btn claimed"
-                                                onclick="copyGroupCoords('${escapeHtml(rawAct).replace(/'/g, "\\'")}', event)"
+                                                onclick="copyGroupCoords('${escapeHtml(mainAct).replace(/'/g, "\\'")}', '${escapeHtml(subAct).replace(/'/g, "\\'")}', event)"
                                                 title="一鍵複製群組內所有座標">
                                             📋 複製座標
                                         </button>
@@ -5378,7 +5378,7 @@
 
         // 註冊 Service Worker (支援 Android Chrome 手機推播)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=202610110330').catch(err => {
+            navigator.serviceWorker.register('sw.js?v=202610110335').catch(err => {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }
