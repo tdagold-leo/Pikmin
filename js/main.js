@@ -1747,6 +1747,7 @@
                     sgStart: cloudData[key].sgStart || null,
                     sgEnd: cloudData[key].sgEnd || null,
                     sgActivity: cloudData[key].sgActivity || "",
+                    sgSubActivity: cloudData[key].sgSubActivity || "",
                     sgCooldown: cloudData[key].sgCooldown || "",
                     sgLast: "" // sgLast 屬個人記錄，不從共享資料庫讀取，由下方 localStorage 合併
                 });
@@ -5377,7 +5378,7 @@
 
         // 註冊 Service Worker (支援 Android Chrome 手機推播)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=202610110325').catch(err => {
+            navigator.serviceWorker.register('sw.js?v=202610110330').catch(err => {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }
