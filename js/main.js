@@ -1672,6 +1672,22 @@
         updateView();
     }
 
+    function getPostcardActInfo(item) {
+        if (!item) return { mainAct: '未分類', subAct: '' };
+        const rawAct = (item.sgActivity || item.tag || '未分類').trim();
+        let mainAct = rawAct;
+        let subAct = (item.sgSubActivity || '').trim();
+        if (!subAct) {
+            const sepMatch = rawAct.match(/\s*(?:[-/＞>]|——|=>|->)\s*/);
+            if (sepMatch) {
+                const sepIdx = rawAct.indexOf(sepMatch[0]);
+                mainAct = rawAct.substring(0, sepIdx).trim();
+                subAct = rawAct.substring(sepIdx + sepMatch[0].length).trim();
+            }
+        }
+        return { mainAct, subAct };
+    }
+
     function markGroupClaimedToday(mainAct, subAct, e) {
         if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
         const now = new Date();
@@ -1688,12 +1704,15 @@
         let count = 0;
         const changed = {};
         postcardList.forEach(item => {
-            if (item.type === '特殊金盆' && item._computedMainAct === mainAct) {
-                if (subAct === '__ALL__' || item._computedSubAct === subAct) {
-                    item.sgLast = todayStr;
-                    personal[item.id] = todayStr;
-                    changed[item.id] = todayStr;
-                    count++;
+            if (item.type === '特殊金盆') {
+                const info = getPostcardActInfo(item);
+                if (info.mainAct === mainAct) {
+                    if (subAct === '__ALL__' || info.subAct === subAct) {
+                        item.sgLast = todayStr;
+                        personal[item.id] = todayStr;
+                        changed[item.id] = todayStr;
+                        count++;
+                    }
                 }
             }
         });
@@ -3190,7 +3209,20 @@
                 pushData.sgCooldown = (cdEl && cdEl.value === 'custom') ? (cdCustomEl && cdCustomEl.value ? String(parseInt(cdCustomEl.value, 10)) : '') : (cdEl ? cdEl.value : '');
                 // sgLast 不寫入共享資料庫，由個人記錄管理
             }
-            dbRef('postcards').push(pushData);
+            const newRef = dbRef('postcards').push(pushData);
+            const postLastEl = document.getElementById('post-sg-last');
+            const postLastVal = postLastEl ? postLastEl.value.trim() : '';
+            if (newRef && newRef.key && postLastVal) {
+                try {
+                    let personal = JSON.parse(localStorage.getItem('pikmin_sgLast_map') || '{}');
+                    personal[newRef.key] = postLastVal;
+                    localStorage.setItem('pikmin_sgLast_map', JSON.stringify(personal));
+                    if (typeof currentSyncId !== 'undefined' && currentSyncId) {
+                        dbRef('user_sg_last/' + currentSyncId).update({ [newRef.key]: postLastVal });
+                    }
+                } catch(e) {}
+            }
+            if (postLastEl) postLastEl.value = '';
             countryEl.value = ''; if(cityEl) cityEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = ''; imageEl.value = '';
             const authEl = document.getElementById('post-auth'); if(authEl) authEl.value = '';
             document.getElementById('post-tz-hint').innerText = '';
@@ -3594,6 +3626,25 @@
                 const ecdCustomEl = document.getElementById('edit-post-sg-cooldown-custom');
                 updates.sgCooldown = (ecdEl && ecdEl.value === 'custom') ? (ecdCustomEl && ecdCustomEl.value ? String(parseInt(ecdCustomEl.value, 10)) : '') : (ecdEl ? ecdEl.value : '');
                 // sgLast 不寫入共享資料庫，由個人記錄管理
+                const editLastEl = document.getElementById('edit-post-sg-last');
+                const editLastVal = editLastEl ? editLastEl.value.trim() : '';
+                try {
+                    let personal = JSON.parse(localStorage.getItem('pikmin_sgLast_map') || '{}');
+                    if (editLastVal) {
+                        personal[currentEditingTimeId] = editLastVal;
+                        if (typeof currentSyncId !== 'undefined' && currentSyncId) {
+                            dbRef('user_sg_last/' + currentSyncId).update({ [currentEditingTimeId]: editLastVal });
+                        }
+                    } else {
+                        delete personal[currentEditingTimeId];
+                        if (typeof currentSyncId !== 'undefined' && currentSyncId) {
+                            dbRef('user_sg_last/' + currentSyncId + '/' + currentEditingTimeId).remove();
+                        }
+                    }
+                    localStorage.setItem('pikmin_sgLast_map', JSON.stringify(personal));
+                } catch(e) {}
+                const editedItem = postcardList.find(x => x.id === currentEditingTimeId);
+                if (editedItem) editedItem.sgLast = editLastVal;
             } else {
                 updates.sgType = null;
                 updates.sgActivity = null;
@@ -3642,10 +3693,13 @@
         const os = detectOS();
         const lines = [];
         postcardList.forEach(item => {
-            if (item.type === '特殊金盆' && item._computedMainAct === mainAct && item.coords) {
-                if (subAct === '__ALL__' || item._computedSubAct === subAct) {
-                    const normalized = normalizeCoords(String(item.coords));
-                    lines.push((os === 'ios' || os === 'macos' || os === 'windows') ? normalized.replace(/,/g, ' ') : normalized);
+            if (item.type === '特殊金盆' && item.coords) {
+                const info = getPostcardActInfo(item);
+                if (info.mainAct === mainAct) {
+                    if (subAct === '__ALL__' || info.subAct === subAct) {
+                        const normalized = normalizeCoords(String(item.coords));
+                        lines.push((os === 'ios' || os === 'macos' || os === 'windows') ? normalized.replace(/,/g, ' ') : normalized);
+                    }
                 }
             }
         });
@@ -5057,17 +5111,9 @@
                             const actMap = {};
                             const mainActOrder = [];
                             tItems.forEach(item => {
-                                const rawAct = (item.sgActivity || item.tag || '未分類').trim();
-                                let mainAct = rawAct;
-                                let subAct = (item.sgSubActivity || '').trim();
-                                if (!subAct) {
-                                    const sepMatch = rawAct.match(/\s*(?:[-/＞>]|——|=>|->)\s*/);
-                                    if (sepMatch) {
-                                        const sepIdx = rawAct.indexOf(sepMatch[0]);
-                                        mainAct = rawAct.substring(0, sepIdx).trim();
-                                        subAct = rawAct.substring(sepIdx + sepMatch[0].length).trim();
-                                    }
-                                }
+                                const info = getPostcardActInfo(item);
+                                const mainAct = info.mainAct;
+                                const subAct = info.subAct;
                                 item._computedMainAct = mainAct;
                                 item._computedSubAct = subAct;
 
@@ -5167,7 +5213,7 @@
                                     <button type="button" class="group-claim-btn ${!hasClaimable ? 'claimed' : ''}" 
                                             onclick="markGroupClaimedToday('${escapeHtml(mainAct).replace(/'/g, "\\'")}', '__ALL__', event)" 
                                             title="一鍵將群組內所有卡片設為今日已領">
-                                        ${!hasClaimable ? '✓ 今日已領' : '🎁 今日領取'}
+                                        ${!hasClaimable ? (firstItem && firstItem.sgCooldown === 'once' ? '✓ 已領取' : '✓ 今日已領') : '🎁 今日領取'}
                                     </button>
                                 `;
                                 
@@ -5229,7 +5275,7 @@
                                             
                                             const titleHtml = `<div style="font-size:13px; font-weight:bold; color:#475569; display:flex; align-items:center; gap:6px;">📍 ${escapeHtml(displaySubName)} <span style="color:#64748b; font-size:11px; font-weight:normal; background:#e2e8f0; padding:2px 6px; border-radius:12px;">${subItems.length}</span></div>`;
                                             
-                                            const subClaimBtn = subAllDisc ? '' : `<button type="button" class="group-claim-btn ${!subHasClaimable ? 'claimed' : ''}" onclick="markGroupClaimedToday('${escapeHtml(mainAct).replace(/'/g, "\\'")}', '${escapeHtml(subAct).replace(/'/g, "\\'")}', event)" style="padding:4px 8px; font-size:11px; margin:0; min-height:0;">${!subHasClaimable ? '✓ 已領' : '🎁 領取'}</button>`;
+                                            const subClaimBtn = subAllDisc ? '' : `<button type="button" class="group-claim-btn ${!subHasClaimable ? 'claimed' : ''}" onclick="markGroupClaimedToday('${escapeHtml(mainAct).replace(/'/g, "\\'")}', '${escapeHtml(subAct).replace(/'/g, "\\'")}', event)" style="padding:4px 8px; font-size:11px; margin:0; min-height:0;">${!subHasClaimable ? (subItems[0] && subItems[0].sgCooldown === 'once' ? '✓ 已領取' : '✓ 已領') : '🎁 領取'}</button>`;
                                             const subCopyBtn = `<button type="button" class="group-claim-btn claimed" onclick="copyGroupCoords('${escapeHtml(mainAct).replace(/'/g, "\\'")}', '${escapeHtml(subAct).replace(/'/g, "\\'")}', event)" style="padding:4px 8px; font-size:11px; margin-left:6px; min-height:0;">📋 座標</button>`;
                                             
                                             divider.innerHTML = `${titleHtml}<div style="display:flex; align-items:center;">${subClaimBtn}${subCopyBtn}</div>`;
@@ -5450,7 +5496,7 @@
 
         // 註冊 Service Worker (支援 Android Chrome 手機推播)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=202610120250').catch(err => {
+            navigator.serviceWorker.register('sw.js?v=202610120255').catch(err => {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }
