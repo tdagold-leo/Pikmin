@@ -1116,13 +1116,16 @@
         if (addModal) addModal.style.display = 'flex';
     }
     
-    // 巨菇新增頁：偵測到名稱與座標皆已填寫時，按鈕變色提示可新增
+    // 巨菇新增頁：偵測到名稱、座標、國家、城市（含自動帶入）皆已填寫時，按鈕變色提示可新增
     function updateMushroomAddBtnReady() {
         const btn = document.getElementById('add-submit-btn');
         if (!btn || currentMode !== 'mushroom') return;
         const nameEl = document.getElementById('name');
         const coordsEl = document.getElementById('coords');
-        const ready = !!(nameEl && coordsEl && nameEl.value.trim() && coordsEl.value.trim());
+        const countryEl = document.getElementById('country');
+        const cityEl = document.getElementById('city');
+        const ready = !!(nameEl && coordsEl && countryEl && cityEl &&
+            nameEl.value.trim() && coordsEl.value.trim() && countryEl.value.trim() && cityEl.value.trim());
         if (ready) {
             btn.style.background = 'linear-gradient(135deg, #16a34a, #15803d)';
             btn.style.boxShadow = '0 0 0 3px rgba(34, 197, 94, 0.35), 0 4px 14px rgba(22, 163, 74, 0.5)';
@@ -5443,7 +5446,7 @@
 
         // 註冊 Service Worker (支援 Android Chrome 手機推播)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=202610120220').catch(err => {
+            navigator.serviceWorker.register('sw.js?v=202610120225').catch(err => {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }
