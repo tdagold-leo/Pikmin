@@ -3839,13 +3839,9 @@
         const offset = getOffsetByCountry(item.country);
         const createdLocal = new Date(createdUTC + offset * 3600000);
         const midnightLocal = new Date(createdLocal);
-        // 當地時間 03:00 換日
-        if (midnightLocal.getUTCHours() < 3) {
-            midnightLocal.setUTCHours(3, 0, 0, 0);
-        } else {
-            midnightLocal.setUTCDate(midnightLocal.getUTCDate() + 1);
-            midnightLocal.setUTCHours(3, 0, 0, 0);
-        }
+        // 當地時間 00:00 換日（建立日的隔天零點）
+        midnightLocal.setUTCDate(midnightLocal.getUTCDate() + 1);
+        midnightLocal.setUTCHours(0, 0, 0, 0);
         return midnightLocal.getTime() - offset * 3600000;
     }
 
@@ -5445,7 +5441,7 @@
 
         // 註冊 Service Worker (支援 Android Chrome 手機推播)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=202610120235').catch(err => {
+            navigator.serviceWorker.register('sw.js?v=202610120240').catch(err => {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }
