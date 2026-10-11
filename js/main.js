@@ -3183,11 +3183,12 @@
                 if (pushData.sgType === '期間') {
                     pushData.sgStart = document.getElementById('post-sg-start').value || '';
                     pushData.sgEnd = document.getElementById('post-sg-end').value || '';
-                    const cdEl = document.getElementById('post-sg-cooldown');
-                    const cdCustomEl = document.getElementById('post-sg-cooldown-custom');
-                    pushData.sgCooldown = (cdEl && cdEl.value === 'custom') ? (cdCustomEl && cdCustomEl.value ? String(parseInt(cdCustomEl.value, 10)) : '') : (cdEl ? cdEl.value : '');
-                    // sgLast 不寫入共享資料庫，由個人記錄管理
                 }
+                // 常駐與期間皆可設定幾天可領取
+                const cdEl = document.getElementById('post-sg-cooldown');
+                const cdCustomEl = document.getElementById('post-sg-cooldown-custom');
+                pushData.sgCooldown = (cdEl && cdEl.value === 'custom') ? (cdCustomEl && cdCustomEl.value ? String(parseInt(cdCustomEl.value, 10)) : '') : (cdEl ? cdEl.value : '');
+                // sgLast 不寫入共享資料庫，由個人記錄管理
             }
             dbRef('postcards').push(pushData);
             countryEl.value = ''; if(cityEl) cityEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = ''; imageEl.value = '';
@@ -3379,30 +3380,28 @@
                     document.getElementById('edit-post-sg-dates').style.display = 'flex';
                     document.getElementById('edit-post-sg-start').value = item.sgStart || '';
                     document.getElementById('edit-post-sg-end').value = item.sgEnd || '';
-                    // 若 sgCooldown 不在預設選項中，選「自訂」並填入數字
-                    (function() {
-                        const cdVal = item.sgCooldown || '';
-                        const cdSel = document.getElementById('edit-post-sg-cooldown');
-                        const cdCustom = document.getElementById('edit-post-sg-cooldown-custom');
-                        const presets = ['', '1', '7', '14', '30'];
-                        if (cdVal && !presets.includes(cdVal)) {
-                            cdSel.value = 'custom';
-                            cdCustom.value = cdVal;
-                            cdCustom.style.display = 'block';
-                        } else {
-                            cdSel.value = cdVal;
-                            cdCustom.style.display = 'none';
-                            cdCustom.value = '';
-                        }
-                    })();
-                    document.getElementById('edit-post-sg-last').value = item.sgLast || '';
                 } else {
                     document.getElementById('edit-post-sg-dates').style.display = 'none';
                     document.getElementById('edit-post-sg-start').value = '';
                     document.getElementById('edit-post-sg-end').value = '';
-                    document.getElementById('edit-post-sg-cooldown').value = '';
-                    document.getElementById('edit-post-sg-last').value = '';
                 }
+                // 常駐與期間皆可設定幾天可領取：若 sgCooldown 不在預設選項中，選「自訂」並填入數字
+                (function() {
+                    const cdVal = item.sgCooldown || '';
+                    const cdSel = document.getElementById('edit-post-sg-cooldown');
+                    const cdCustom = document.getElementById('edit-post-sg-cooldown-custom');
+                    const presets = ['', '1', '7', '14', '30'];
+                    if (cdVal && !presets.includes(cdVal)) {
+                        cdSel.value = 'custom';
+                        cdCustom.value = cdVal;
+                        cdCustom.style.display = 'block';
+                    } else {
+                        cdSel.value = cdVal;
+                        cdCustom.style.display = 'none';
+                        cdCustom.value = '';
+                    }
+                })();
+                document.getElementById('edit-post-sg-last').value = item.sgLast || '';
             } else {
                 document.getElementById('edit-post-sg-fields').style.display = 'none';
             }
@@ -3585,16 +3584,16 @@
                 if (updates.sgType === '期間') {
                     updates.sgStart = document.getElementById('edit-post-sg-start').value || '';
                     updates.sgEnd = document.getElementById('edit-post-sg-end').value || '';
-                    const ecdEl = document.getElementById('edit-post-sg-cooldown');
-                    const ecdCustomEl = document.getElementById('edit-post-sg-cooldown-custom');
-                    updates.sgCooldown = (ecdEl && ecdEl.value === 'custom') ? (ecdCustomEl && ecdCustomEl.value ? String(parseInt(ecdCustomEl.value, 10)) : '') : (ecdEl ? ecdEl.value : '');
-                    // sgLast 不寫入共享資料庫，由個人記錄管理
                 } else {
                     updates.sgStart = null;
                     updates.sgEnd = null;
-                    updates.sgCooldown = null;
                     updates.sgLast = null; // 清除舊有共享資料庫中的 sgLast
                 }
+                // 常駐與期間皆可設定幾天可領取
+                const ecdEl = document.getElementById('edit-post-sg-cooldown');
+                const ecdCustomEl = document.getElementById('edit-post-sg-cooldown-custom');
+                updates.sgCooldown = (ecdEl && ecdEl.value === 'custom') ? (ecdCustomEl && ecdCustomEl.value ? String(parseInt(ecdCustomEl.value, 10)) : '') : (ecdEl ? ecdEl.value : '');
+                // sgLast 不寫入共享資料庫，由個人記錄管理
             } else {
                 updates.sgType = null;
                 updates.sgActivity = null;
@@ -3945,8 +3944,8 @@
             if (sgType === '期間') {
                 pushData.sgStart = sgStart;
                 pushData.sgEnd = sgEnd;
-                pushData.sgCooldown = sgCooldown;
             }
+            pushData.sgCooldown = sgCooldown;
             dbRef('postcards').push(pushData);
             success++;
         });
@@ -4560,7 +4559,7 @@
                 endDate.setHours(23, 59, 59, 999);
                 if (nowMsForNav > endDate.getTime()) isDisc = true;
             }
-            if (item.type === '特殊金盆' && item.sgType !== '常駐' && item.sgCooldown && !isDisc) {
+            if (item.type === '特殊金盆' && item.sgCooldown && !isDisc) {
                 let hasStarted = true;
                 if (item.sgStart) {
                     const startDate = new Date(item.sgStart + 'T00:00:00');
@@ -5446,7 +5445,7 @@
 
         // 註冊 Service Worker (支援 Android Chrome 手機推播)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=202610120225').catch(err => {
+            navigator.serviceWorker.register('sw.js?v=202610120235').catch(err => {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }
