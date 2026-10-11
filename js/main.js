@@ -1109,12 +1109,38 @@
                 submitBtn.style.boxShadow = '0 4px 14px rgba(79, 70, 229, 0.35)';
                 submitBtn.innerText = '➕ 新增純點';
             }
+            updateMushroomAddBtnReady();
         }
         
         const addModal = document.getElementById('add-modal');
         if (addModal) addModal.style.display = 'flex';
     }
     
+    // 巨菇新增頁：偵測到名稱與座標皆已填寫時，按鈕變色提示可新增
+    function updateMushroomAddBtnReady() {
+        const btn = document.getElementById('add-submit-btn');
+        if (!btn || currentMode !== 'mushroom') return;
+        const nameEl = document.getElementById('name');
+        const coordsEl = document.getElementById('coords');
+        const ready = !!(nameEl && coordsEl && nameEl.value.trim() && coordsEl.value.trim());
+        if (ready) {
+            btn.style.background = 'linear-gradient(135deg, #16a34a, #15803d)';
+            btn.style.boxShadow = '0 0 0 3px rgba(34, 197, 94, 0.35), 0 4px 14px rgba(22, 163, 74, 0.5)';
+            btn.style.color = 'white';
+            btn.innerText = '✅ 新增巨菇';
+        } else {
+            btn.style.background = '#cbd5e1';
+            btn.style.boxShadow = 'none';
+            btn.style.color = '#64748b';
+            btn.innerText = '➕ 新增巨菇';
+        }
+    }
+    // 座標/名稱可能由 OCR、貼上或自動填入以程式方式寫入（不觸發 input 事件），故用輕量輪詢
+    setInterval(() => {
+        const m = document.getElementById('add-modal');
+        if (m && m.style.display === 'flex') updateMushroomAddBtnReady();
+    }, 300);
+
     function closeModal(id) {
         document.getElementById(id).style.display = 'none';
         if(id === 'claim-modal') currentClaimingId = null;
@@ -5417,7 +5443,7 @@
 
         // 註冊 Service Worker (支援 Android Chrome 手機推播)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=202610110340').catch(err => {
+            navigator.serviceWorker.register('sw.js?v=202610120220').catch(err => {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }
