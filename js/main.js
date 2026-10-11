@@ -3390,7 +3390,7 @@
                     const cdVal = item.sgCooldown || '';
                     const cdSel = document.getElementById('edit-post-sg-cooldown');
                     const cdCustom = document.getElementById('edit-post-sg-cooldown-custom');
-                    const presets = ['', '1', '7', '14', '30'];
+                    const presets = ['', '1', '7', '14', '30', 'once'];
                     if (cdVal && !presets.includes(cdVal)) {
                         cdSel.value = 'custom';
                         cdCustom.value = cdVal;
@@ -4567,7 +4567,7 @@
                     if (!item.sgLast) hasReadyGoldBasin = true;
                     else {
                         const lastDate = new Date(item.sgLast + 'T00:00:00');
-                        const nextDate = new Date(lastDate.getTime() + parseInt(item.sgCooldown, 10) * 86400000);
+                        const nextDate = item.sgCooldown === 'once' ? new Date(8.64e15) : new Date(lastDate.getTime() + parseInt(item.sgCooldown, 10) * 86400000);
                         const today = new Date();
                         today.setHours(0,0,0,0);
                         if (nextDate <= today) hasReadyGoldBasin = true;
@@ -4813,11 +4813,16 @@
                         </div>`;
                     } else {
                         const lastDate = new Date(item.sgLast + 'T00:00:00');
-                        const nextDate = parseInt(cdVal, 10) === 30 ? new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, lastDate.getDate()) : new Date(lastDate.getTime() + parseInt(cdVal, 10) * 86400000);
-                        const nextStr = `${nextDate.getFullYear()}/${String(nextDate.getMonth()+1).padStart(2,'0')}/${String(nextDate.getDate()).padStart(2,'0')}`;
+                        // 限領一次：領過之後不再有下次可領日
+                                    const nextDate = cdVal === 'once' ? new Date(8.64e15) : (parseInt(cdVal, 10) === 30 ? new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, lastDate.getDate()) : new Date(lastDate.getTime() + parseInt(cdVal, 10) * 86400000));
+                        const nextStr = cdVal === 'once' ? '' : `${nextDate.getFullYear()}/${String(nextDate.getMonth()+1).padStart(2,'0')}/${String(nextDate.getDate()).padStart(2,'0')}`;
                         const today = new Date();
                         today.setHours(0,0,0,0);
-                        if (nextDate <= today) {
+                        if (cdVal === 'once') {
+                            sgDateBadge += `<div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
+                                <div style="flex:1; color: #64748b; font-size: 11px; font-weight: bold; background: #f1f5f9; padding: 5px 6px; border-radius: 6px; border: 1px solid #cbd5e1; text-align: center;">✓ 已領取（限領一次）</div>
+                            </div>`;
+                        } else if (nextDate <= today) {
                             sgDateBadge += `<div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
                                 <div style="flex:1; color: #15803d; font-size: 11px; font-weight: bold; background: #dcfce7; padding: 5px 6px; border-radius: 6px; border: 1px solid #86efac; text-align: center;">✅ 可領取！</div>
                                 <button type="button" onclick="markPostcardClaimedToday('${item.id}', event)" style="background: linear-gradient(135deg, #22c55e, #16a34a); color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 3px; white-space: nowrap;">🎁 今日領取</button>
@@ -4898,7 +4903,8 @@
                                 if (!item.sgLast) hasClaimableGroup = true;
                                 else {
                                     const lastDate = new Date(item.sgLast + 'T00:00:00');
-                                    const nextDate = parseInt(cdVal, 10) === 30 ? new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, lastDate.getDate()) : new Date(lastDate.getTime() + parseInt(cdVal, 10) * 86400000);
+                                    // 限領一次：領過之後不再有下次可領日
+                                    const nextDate = cdVal === 'once' ? new Date(8.64e15) : (parseInt(cdVal, 10) === 30 ? new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, lastDate.getDate()) : new Date(lastDate.getTime() + parseInt(cdVal, 10) * 86400000));
                                     const today = new Date();
                                     today.setHours(0,0,0,0);
                                     if (nextDate <= today) hasClaimableGroup = true;
@@ -5000,7 +5006,8 @@
                                     if (!item.sgLast) hasClaimableTop = true;
                                     else {
                                         const lastDate = new Date(item.sgLast + 'T00:00:00');
-                                        const nextDate = parseInt(cdVal, 10) === 30 ? new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, lastDate.getDate()) : new Date(lastDate.getTime() + parseInt(cdVal, 10) * 86400000);
+                                        // 限領一次：領過之後不再有下次可領日
+                                    const nextDate = cdVal === 'once' ? new Date(8.64e15) : (parseInt(cdVal, 10) === 30 ? new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, lastDate.getDate()) : new Date(lastDate.getTime() + parseInt(cdVal, 10) * 86400000));
                                         const today = new Date();
                                         today.setHours(0,0,0,0);
                                         if (nextDate <= today) hasClaimableTop = true;
@@ -5117,7 +5124,8 @@
                                             if (!item.sgLast) hasClaimable = true;
                                             else {
                                                 const lastDate = new Date(item.sgLast + 'T00:00:00');
-                                                const nextDate = parseInt(cdVal, 10) === 30 ? new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, lastDate.getDate()) : new Date(lastDate.getTime() + parseInt(cdVal, 10) * 86400000);
+                                                // 限領一次：領過之後不再有下次可領日
+                                    const nextDate = cdVal === 'once' ? new Date(8.64e15) : (parseInt(cdVal, 10) === 30 ? new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, lastDate.getDate()) : new Date(lastDate.getTime() + parseInt(cdVal, 10) * 86400000));
                                                 const today = new Date(); today.setHours(0,0,0,0);
                                                 if (nextDate <= today) hasClaimable = true;
                                             }
@@ -5145,7 +5153,7 @@
                                     if (!cdVal && (firstItem.sgType === '期間' || firstItem.sgType === '常駐')) cdVal = '30';
                                     if (cdVal && !firstItem._localIsDisc) {
                                         const cdNum = parseInt(cdVal, 10);
-                                        const cdLabel = cdNum === 1 ? '每天可領' : cdNum === 30 ? '每月可領' : `每 ${cdNum} 天可領`;
+                                        const cdLabel = cdVal === 'once' ? '限領一次' : cdNum === 1 ? '每天可領' : cdNum === 30 ? '每月可領' : `每 ${cdNum} 天可領`;
                                         cooldownBadge = `<div style="font-size:11px; color:#b45309; background:#fef3c7; padding:2px 8px; border-radius:12px; margin-top:4px; font-weight:bold; display:inline-block; border:1px solid #fde68a; letter-spacing:0.5px;">⏱ ${cdLabel}</div>`;
                                     }
                                 }
@@ -5206,7 +5214,8 @@
                                                     if (!item.sgLast) subHasClaimable = true;
                                                     else {
                                                         const lastDate = new Date(item.sgLast + 'T00:00:00');
-                                                        const nextDate = parseInt(cdVal, 10) === 30 ? new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, lastDate.getDate()) : new Date(lastDate.getTime() + parseInt(cdVal, 10) * 86400000);
+                                                        // 限領一次：領過之後不再有下次可領日
+                                    const nextDate = cdVal === 'once' ? new Date(8.64e15) : (parseInt(cdVal, 10) === 30 ? new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, lastDate.getDate()) : new Date(lastDate.getTime() + parseInt(cdVal, 10) * 86400000));
                                                         const today = new Date(); today.setHours(0,0,0,0);
                                                         if (nextDate <= today) subHasClaimable = true;
                                                     }
@@ -5441,7 +5450,7 @@
 
         // 註冊 Service Worker (支援 Android Chrome 手機推播)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=202610120240').catch(err => {
+            navigator.serviceWorker.register('sw.js?v=202610120250').catch(err => {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }
