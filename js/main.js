@@ -1211,6 +1211,8 @@
                     else if (extractedTag.includes('大藍')) isElem = true;
                     else if (extractedTag.includes('大白')) isElem = true;
                     else if (extractedTag.includes('大紫')) isElem = true;
+                    else if (extractedTag.includes('大黃') || extractedTag.includes('黃')) isElem = true;
+                    else if (extractedTag.includes('大灰') || extractedTag.includes('灰')) isElem = true;
 
                     if (isElem) {
                         let targetKindId = (countryInputId === 'country') ? 'mushroom-kind' : (countryInputId === 'edit-mushroom-country' ? 'edit-mushroom-kind' : null);
@@ -2405,6 +2407,8 @@
                         else if (foundType.includes('大藍')) isElem = true;
                         else if (foundType.includes('大白')) isElem = true;
                         else if (foundType.includes('大紫')) isElem = true;
+                        else if (foundType.includes('大黃') || foundType.includes('黃')) isElem = true;
+                        else if (foundType.includes('大灰') || foundType.includes('灰')) isElem = true;
 
                         if (isElem) {
                             const kindField = document.getElementById('mushroom-kind');
@@ -4037,6 +4041,8 @@
         else if (checkStr.includes('大藍')) isElem = true;
         else if (checkStr.includes('大白')) isElem = true;
         else if (checkStr.includes('大紫')) isElem = true;
+        else if (checkStr.includes('大黃') || tag.includes('黃')) isElem = true;
+        else if (checkStr.includes('大灰') || tag.includes('灰')) isElem = true;
 
         if (isElem) {
             if (checkStr.includes('水晶')) {
@@ -4063,7 +4069,7 @@
                 elemClass = 'elem-火';
                 elemHeaderBg = isExpired ? '#f3f4f6' : '#fff1f2';
                 elemHeaderColor = '#991b1b';
-                        } else if (checkStr.includes('電')) {
+                        } else if (checkStr.includes('電') || checkStr.includes('大黃') || tag.includes('黃')) {
                 elemClass = 'elem-電';
                 elemHeaderBg = isExpired ? '#f3f4f6' : '#fffbeb';
                 elemHeaderColor = '#92400e';
@@ -4075,6 +4081,10 @@
                 elemClass = 'elem-紫';
                 elemHeaderBg = isExpired ? '#f3f4f6' : '#faf5ff';
                 elemHeaderColor = '#6b21a8';
+            } else if (checkStr.includes('大灰') || tag.includes('灰')) {
+                elemClass = 'elem-灰';
+                elemHeaderBg = isExpired ? '#f3f4f6' : '#f1f5f9';
+                elemHeaderColor = '#334155';
             } else {
                 // 元素菇但標籤沒指定元素
                 elemHeaderBg = isExpired ? '#f3f4f6' : '#d1fae5';
@@ -4113,7 +4123,7 @@
         slotsHtml += `</div></div>`;
 
         // 元素圖示
-        const elemEmoji = elemClass === 'elem-水' ? '💧' : elemClass === 'elem-火' ? '🔥' : elemClass === 'elem-電' ? '⚡' : elemClass === 'elem-毒' ? '☠️' : elemClass === 'elem-水晶' ? '💎' : '';
+        const elemEmoji = elemClass === 'elem-水' ? '💧' : elemClass === 'elem-火' ? '🔥' : elemClass === 'elem-電' ? '⚡' : elemClass === 'elem-毒' ? '☠️' : elemClass === 'elem-水晶' ? '💎' : elemClass === 'elem-灰' ? '🪨' : '';
         const kindLabel = isElem ? `元素${elemEmoji}` : '巨';
         const kindBg = isElem ? elemHeaderBg : '#fef3c7';
         const kindColor = isElem ? elemHeaderColor : '#92400e';
@@ -5496,7 +5506,7 @@
 
         // 註冊 Service Worker (支援 Android Chrome 手機推播)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=202610120255').catch(err => {
+            navigator.serviceWorker.register('sw.js?v=202610150050').catch(err => {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }
