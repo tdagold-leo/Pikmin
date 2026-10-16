@@ -5506,7 +5506,7 @@
 
         // 註冊 Service Worker (支援 Android Chrome 手機推播)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=202610170205').catch(err => {
+            navigator.serviceWorker.register('sw.js?v=202610170210').catch(err => {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }

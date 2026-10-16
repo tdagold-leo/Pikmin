@@ -139,11 +139,25 @@
     </div>
 
     <div class="result-area">
-        <label style="font-size: 13px; font-weight: bold; color: var(--text-main);">📝 擷取結果：</label>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+            <label style="font-size: 13px; font-weight: bold; color: var(--text-main);">📝 擷取結果：</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:12px; color:var(--text-muted); display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
+                    <input type="checkbox" id="dedupe-check" onchange="sortCoordinates(true)" checked> 自動去重
+                </label>
+                <select id="sort-select" onchange="sortCoordinates(true)" style="padding:4px 8px; border-radius:6px; border:1px solid #cbd5e1; font-size:12px; background:white; color:#334155; outline:none; cursor:pointer;">
+                    <option value="lat-asc">依緯度 (由小到大 ↑)</option>
+                    <option value="lat-desc">依緯度 (由大到小 ↓)</option>
+                    <option value="lng-asc">依經度 (由小到大 ↑)</option>
+                    <option value="lng-desc">依經度 (由大到小 ↓)</option>
+                </select>
+            </div>
+        </div>
         <textarea id="result-text" placeholder="擷取的座標會顯示在這裡..."></textarea>
     </div>
 
     <div class="btn-group">
+        <button class="action-btn" onclick="sortCoordinates(true)" style="background:#e0f2fe; color:#0369a1;">🔃 排序</button>
         <button class="action-btn btn-clear" onclick="clearText()">🗑️ 清空</button>
         <button class="action-btn btn-copy" onclick="copyText()">📋 一鍵複製</button>
     </div>
@@ -193,7 +207,8 @@
             }
         }
         
-        statusEl.innerText = `✅ 全部處理完成！`;
+        sortCoordinates(false);
+        statusEl.innerText = `✅ 全部處理完成！已自動按座標排序。`;
         setLoading(false);
         // 清空選擇的檔案，讓使用者可以重新選擇同一張
         document.getElementById('file-input').value = '';
@@ -295,6 +310,98 @@
         }
         resultText.scrollTop = resultText.scrollHeight;
     }
+
+    function parseCoordLine(line) {
+        const trimmed = line.trim();
+        if (!trimmed) return null;
+        // 支援包含括號、逗號或空格的經緯度
+        const match = trimmed.match(/[(（\[]?\s*(-?\d{1,3}(?:\.\d+)?)\s*[,，\s]+\s*(-?\d{1,3}(?:\.\d+)?)\s*[)）\]]?/);
+        if (match) {
+            const lat = parseFloat(match[1]);
+            const lng = parseFloat(match[2]);
+            if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                return { raw: `${match[1]}, ${match[2]}`, lat, lng, isCoord: true };
+            }
+        }
+        return { raw: trimmed, isCoord: false };
+    }
+
+    function sortCoordinates(showFeedback = false) {
+        const select = document.getElementById('sort-select');
+        const mode = select ? select.value : 'lat-asc';
+        const dedupe = document.getElementById('dedupe-check') ? document.getElementById('dedupe-check').checked : true;
+
+        try {
+            localStorage.setItem('pikmin_ocr_sort_mode', mode);
+            localStorage.setItem('pikmin_ocr_dedupe', dedupe ? '1' : '0');
+        } catch(e) {}
+
+        const val = resultText.value.trim();
+        if (!val) return;
+
+        const lines = val.split('\n');
+        let coords = [];
+        const nonCoords = [];
+
+        lines.forEach(line => {
+            const parsed = parseCoordLine(line);
+            if (!parsed) return;
+            if (parsed.isCoord) {
+                coords.push(parsed);
+            } else {
+                nonCoords.push(parsed.raw);
+            }
+        });
+
+        if (dedupe) {
+            const seen = new Set();
+            coords = coords.filter(c => {
+                const key = `${c.lat},${c.lng}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+        }
+
+        coords.sort((a, b) => {
+            if (mode === 'lat-asc') {
+                return a.lat !== b.lat ? a.lat - b.lat : a.lng - b.lng;
+            } else if (mode === 'lat-desc') {
+                return a.lat !== b.lat ? b.lat - a.lat : a.lng - b.lng;
+            } else if (mode === 'lng-asc') {
+                return a.lng !== b.lng ? a.lng - b.lng : a.lat - b.lat;
+            } else if (mode === 'lng-desc') {
+                return a.lng !== b.lng ? b.lng - a.lng : a.lat - b.lat;
+            }
+            return 0;
+        });
+
+        const outputLines = coords.map(c => c.raw);
+        if (nonCoords.length > 0) {
+            outputLines.push(...nonCoords);
+        }
+
+        resultText.value = outputLines.join('\n');
+
+        if (showFeedback && coords.length > 0) {
+            const orig = statusEl.innerText;
+            statusEl.innerText = `✅ 已按座標排序 (${coords.length} 筆)！`;
+            statusEl.style.color = '#059669';
+            setTimeout(() => { statusEl.innerText = orig; }, 2000);
+        }
+    }
+
+    // 初始化讀取使用者偏好的排序方式
+    try {
+        const savedMode = localStorage.getItem('pikmin_ocr_sort_mode');
+        if (savedMode && document.getElementById('sort-select')) {
+            document.getElementById('sort-select').value = savedMode;
+        }
+        const savedDedupe = localStorage.getItem('pikmin_ocr_dedupe');
+        if (savedDedupe !== null && document.getElementById('dedupe-check')) {
+            document.getElementById('dedupe-check').checked = (savedDedupe === '1');
+        }
+    } catch(e) {}
 
     function copyText() {
         if (!resultText.value) return;
