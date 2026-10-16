@@ -208,8 +208,8 @@
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     
-                    // 裁切底部 25%，提高 Tesseract 辨識速度與準確度
-                    const cropRatio = 0.25; 
+                    // 裁切底部 50%，涵蓋明信片底部與皮克敏卡片下半部座標
+                    const cropRatio = 0.50; 
                     const cropHeight = Math.floor(img.height * cropRatio);
                     const startY = img.height - cropHeight;
                     
@@ -220,23 +220,12 @@
                     const croppedDataUrl = canvas.toDataURL('image/png');
                     
                     try {
-                        const result = await Tesseract.recognize(croppedDataUrl, 'eng', {
-                            tessedit_char_whitelist: '0123456789.,()-+ '
-                        });
+                        const result = await Tesseract.recognize(croppedDataUrl, 'eng');
                         const text = result.data.text;
                         
-                        // Regex matching: (37.2921367, 140.3838253) or 37.2921367, 140.3838253
-                        const regex = /(-?\d{1,3}\.\d{4,})\s*[,，]\s*(-?\d{1,3}\.\d{4,})/;
-                        const match = regex.exec(text);
-                        
-                        if (match) {
-                            const lat = parseFloat(match[1]);
-                            const lng = parseFloat(match[2]);
-                            if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-                                appendResult(`${lat}, ${lng}`);
-                            } else {
-                                appendResult(`[格式異常] ${match[1]}, ${match[2]}`);
-                            }
+                        const coords = extractCoordinates(text);
+                        if (coords) {
+                            appendResult(coords);
                         } else {
                             console.log("原文:", text);
                             appendResult(`[未找到座標] ${file.name}`);
@@ -252,6 +241,49 @@
             reader.onerror = reject;
             reader.readAsDataURL(file);
         });
+    }
+
+    function recoverMissingDot(numStr) {
+        if (!numStr || numStr.includes('.')) return numStr;
+        const isNegative = numStr.startsWith('-');
+        const digits = isNegative ? numStr.slice(1) : numStr;
+        // 皮克敏 GPS 座標通常固定為 7 位小數
+        // 例如經緯度整數部分為 1~3 位數，加上 7 位小數後純數字長度為 8~10 位數
+        if (digits.length >= 8 && digits.length <= 10) {
+            const intLen = digits.length - 7;
+            return (isNegative ? '-' : '') + digits.slice(0, intLen) + '.' + digits.slice(intLen);
+        }
+        return numStr;
+    }
+
+    function extractCoordinates(text) {
+        if (!text) return null;
+
+        // 1. 標準格式比對：(43.0697711, 5.7991976) 或 25.0526331, 121.4485422
+        const stdRegex = /(-?\d{1,3}\.\d{3,})\s*[,，\s]\s*(-?\d{1,3}\.\d{3,})/;
+        const match = stdRegex.exec(text);
+        if (match) {
+            const lat = parseFloat(match[1]);
+            const lng = parseFloat(match[2]);
+            if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                return `${lat}, ${lng}`;
+            }
+        }
+
+        // 2. 智慧容錯：針對小數點被 OCR 漏掉的狀況（例如 (43.0697711, 57991976) 或 (250526331, 121.4485422)）
+        const parenRegex = /[(（\[]\s*(-?\d+(?:\.\d+)?)\s*[,，\s]+\s*(-?\d+(?:\.\d+)?)\s*[)）\]]/g;
+        let pMatch;
+        while ((pMatch = parenRegex.exec(text)) !== null) {
+            const s1 = recoverMissingDot(pMatch[1]);
+            const s2 = recoverMissingDot(pMatch[2]);
+            const lat = parseFloat(s1);
+            const lng = parseFloat(s2);
+            if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                return `${lat}, ${lng}`;
+            }
+        }
+
+        return null;
     }
 
     function appendResult(text) {
