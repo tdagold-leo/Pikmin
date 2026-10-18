@@ -161,11 +161,46 @@
         <button class="action-btn btn-clear" onclick="clearText()">🗑️ 清空</button>
         <button class="action-btn btn-copy" onclick="copyText()">📋 一鍵複製</button>
     </div>
+
+    <!-- 傳送至通用暫存區快捷列 -->
+    <div style="display:flex; flex-direction:column; gap:8px; padding-top:4px; border-top:1px dashed #e2e8f0;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+            <label style="font-size:12px; color:#0369a1; font-weight:bold; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
+                <input type="checkbox" id="auto-sync-check" onchange="saveAutoSyncPref()" checked> 辨識完自動追加至通用暫存區
+            </label>
+        </div>
+        <div class="btn-group">
+            <button class="action-btn" onclick="appendToSharedScratchpad()" style="background:#f0f9ff; color:#0284c7; border:1px solid #bae6fd; padding:9px; font-size:13px;">➕ 追加至暫存區</button>
+            <button class="action-btn" onclick="overwriteSharedScratchpad()" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:9px; font-size:13px;">⬆️ 覆蓋至暫存區</button>
+        </div>
+    </div>
+
+    <!-- 通用座標暫存區 (跨裝置即時同步) -->
+    <div class="result-area" style="background:linear-gradient(160deg, #f0f9ff 0%, #f8fafc 100%); border:1.5px solid #bae6fd; border-radius:12px; padding:14px; margin-top:4px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+                <label style="font-size: 14px; font-weight: 800; color: #0369a1;">☁️ 通用座標暫存區</label>
+                <span style="font-size:10px; background:#0284c7; color:white; padding:2px 6px; border-radius:99px; font-weight:bold;">跨裝置同步</span>
+            </div>
+            <span id="cloud-sync-status" style="font-size:11px; color:#059669; font-weight:bold;">⏳ 連線中...</span>
+        </div>
+        <div style="font-size:11px; color:#64748b; margin-bottom:2px;">所有裝置皆可即時查看與編輯此處座標（支援直接打字或貼上自動同步）</div>
+        <textarea id="shared-result-text" placeholder="此處的座標會即時同步到所有裝置，可直接輸入或由上方傳入..." oninput="onSharedInput()" style="border-color:#93c5fd; background:#ffffff; height:150px;"></textarea>
+        <div class="btn-group" style="margin-top:4px;">
+            <button class="action-btn" onclick="sortSharedCoordinates()" style="background:#e0f2fe; color:#0369a1;">🔃 排序</button>
+            <button class="action-btn btn-clear" onclick="clearSharedText()" style="background:#fee2e2; color:#b91c1c;">🗑️ 清空</button>
+            <button class="action-btn btn-copy" onclick="copySharedText()" style="background:linear-gradient(135deg,#0284c7,#0369a1); box-shadow:0 2px 4px rgba(2,132,199,0.3);">📋 複製暫存區</button>
+        </div>
+    </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
     const resultText = document.getElementById('result-text');
+    const sharedResultText = document.getElementById('shared-result-text');
+    const cloudSyncStatus = document.getElementById('cloud-sync-status');
     const statusEl = document.getElementById('status');
     const loader = document.getElementById('loader');
 
@@ -208,7 +243,13 @@
         }
         
         sortCoordinates(false);
-        statusEl.innerText = `✅ 全部處理完成！已自動按座標排序。`;
+        const autoSyncEl = document.getElementById('auto-sync-check');
+        if (autoSyncEl && autoSyncEl.checked) {
+            appendToSharedScratchpad(true);
+            statusEl.innerText = `✅ 全部處理完成！已自動排序並同步至通用暫存區。`;
+        } else {
+            statusEl.innerText = `✅ 全部處理完成！已自動按座標排序。`;
+        }
         setLoading(false);
         // 清空選擇的檔案，讓使用者可以重新選擇同一張
         document.getElementById('file-input').value = '';
@@ -401,7 +442,213 @@
         if (savedDedupe !== null && document.getElementById('dedupe-check')) {
             document.getElementById('dedupe-check').checked = (savedDedupe === '1');
         }
+        const savedAutoSync = localStorage.getItem('pikmin_ocr_auto_sync');
+        if (savedAutoSync !== null && document.getElementById('auto-sync-check')) {
+            document.getElementById('auto-sync-check').checked = (savedAutoSync === '1');
+        }
     } catch(e) {}
+
+    function saveAutoSyncPref() {
+        try {
+            const el = document.getElementById('auto-sync-check');
+            if (el) localStorage.setItem('pikmin_ocr_auto_sync', el.checked ? '1' : '0');
+        } catch(e) {}
+    }
+
+    // ======= Firebase 通用座標暫存區同步 =======
+    const firebaseConfig = {
+        apiKey: "AIzaSyBkmQhSKbiSTeHkbAnjSZTgYtGbmPySJbo",
+        authDomain: "pikmin-tracker-3cf56.firebaseapp.com",
+        databaseURL: "https://pikmin-tracker-3cf56-default-rtdb.firebaseio.com/",
+        projectId: "pikmin-tracker-3cf56",
+        storageBucket: "pikmin-tracker-3cf56.firebasestorage.app",
+        messagingSenderId: "848190561510",
+        appId: "1:848190561510:web:07ceb7fa8bc57a7004af27"
+    };
+
+    let scratchpadRef = null;
+    let isLocalUpdatingCloud = false;
+    let sharedInputTimer = null;
+
+    try {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const database = firebase.database();
+        scratchpadRef = database.ref('ocrScratchpad');
+
+        scratchpadRef.on('value', (snap) => {
+            const data = snap.val();
+            const remoteText = (data && typeof data.text === 'string') ? data.text : '';
+            if (!isLocalUpdatingCloud || document.activeElement !== sharedResultText) {
+                if (sharedResultText.value !== remoteText) {
+                    sharedResultText.value = remoteText;
+                }
+            }
+            isLocalUpdatingCloud = false;
+            if (data && data.updatedAt) {
+                const d = new Date(data.updatedAt);
+                const timeStr = [d.getHours(), d.getMinutes(), d.getSeconds()]
+                    .map(n => String(n).padStart(2, '0')).join(':');
+                cloudSyncStatus.innerText = `🟢 已同步 (${timeStr})`;
+                cloudSyncStatus.style.color = '#059669';
+            } else {
+                cloudSyncStatus.innerText = '🟢 已連線 (尚無資料)';
+                cloudSyncStatus.style.color = '#059669';
+            }
+        }, (err) => {
+            console.error('Firebase sync error:', err);
+            cloudSyncStatus.innerText = '⚠️ 雲端連線異常';
+            cloudSyncStatus.style.color = '#dc2626';
+        });
+    } catch (err) {
+        console.error('Firebase init error:', err);
+        if (cloudSyncStatus) {
+            cloudSyncStatus.innerText = '⚠️ 離線模式';
+            cloudSyncStatus.style.color = '#d97706';
+        }
+    }
+
+    function saveToCloud(text, statusMsg) {
+        if (!scratchpadRef) return;
+        isLocalUpdatingCloud = true;
+        cloudSyncStatus.innerText = '⏳ 同步中...';
+        cloudSyncStatus.style.color = '#0284c7';
+        scratchpadRef.set({
+            text: text || '',
+            updatedAt: Date.now()
+        }).then(() => {
+            if (statusMsg) {
+                const orig = statusEl.innerText;
+                statusEl.innerText = statusMsg;
+                statusEl.style.color = '#059669';
+                setTimeout(() => { statusEl.innerText = orig; }, 2000);
+            }
+        }).catch((err) => {
+            console.error('Save to cloud failed:', err);
+            cloudSyncStatus.innerText = '❌ 同步失敗';
+            cloudSyncStatus.style.color = '#dc2626';
+        });
+    }
+
+    function onSharedInput() {
+        cloudSyncStatus.innerText = '✏️ 編輯中...';
+        cloudSyncStatus.style.color = '#d97706';
+        if (sharedInputTimer) clearTimeout(sharedInputTimer);
+        sharedInputTimer = setTimeout(() => {
+            saveToCloud(sharedResultText.value);
+        }, 450);
+    }
+
+    function formatCoordText(rawText) {
+        const select = document.getElementById('sort-select');
+        const mode = select ? select.value : 'lat-asc';
+        const dedupe = document.getElementById('dedupe-check') ? document.getElementById('dedupe-check').checked : true;
+
+        const lines = (rawText || '').trim().split('\n');
+        let coords = [];
+        const nonCoords = [];
+
+        lines.forEach(line => {
+            const parsed = parseCoordLine(line);
+            if (!parsed) return;
+            if (parsed.isCoord) {
+                coords.push(parsed);
+            } else {
+                nonCoords.push(parsed.raw);
+            }
+        });
+
+        if (dedupe) {
+            const seen = new Set();
+            coords = coords.filter(c => {
+                const key = `${c.lat},${c.lng}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+        }
+
+        coords.sort((a, b) => {
+            if (mode === 'lat-asc') {
+                return a.lat !== b.lat ? a.lat - b.lat : a.lng - b.lng;
+            } else if (mode === 'lat-desc') {
+                return a.lat !== b.lat ? b.lat - a.lat : a.lng - b.lng;
+            } else if (mode === 'lng-asc') {
+                return a.lng !== b.lng ? a.lng - b.lng : a.lat - b.lat;
+            } else if (mode === 'lng-desc') {
+                return a.lng !== b.lng ? b.lng - a.lng : a.lat - b.lat;
+            }
+            return 0;
+        });
+
+        const outputLines = coords.map(c => c.raw);
+        if (nonCoords.length > 0) {
+            outputLines.push(...nonCoords);
+        }
+        return { text: outputLines.join('\n'), count: coords.length };
+    }
+
+    function extractOnlyValidCoords(rawText) {
+        const lines = (rawText || '').trim().split('\n');
+        const valid = [];
+        lines.forEach(line => {
+            const parsed = parseCoordLine(line);
+            if (parsed && parsed.isCoord) valid.push(parsed.raw);
+        });
+        return valid.join('\n');
+    }
+
+    function appendToSharedScratchpad(silent = false) {
+        const newCoords = extractOnlyValidCoords(resultText.value);
+        if (!newCoords) {
+            if (!silent) alert('上方擷取結果中沒有有效的座標可供追加！');
+            return;
+        }
+        const combined = sharedResultText.value.trim()
+            ? (sharedResultText.value.trim() + '\n' + newCoords)
+            : newCoords;
+        const formatted = formatCoordText(combined);
+        sharedResultText.value = formatted.text;
+        saveToCloud(formatted.text, silent ? null : `☁️ 已追加並同步至通用暫存區 (共 ${formatted.count} 筆)！`);
+    }
+
+    function overwriteSharedScratchpad() {
+        const newCoords = extractOnlyValidCoords(resultText.value);
+        if (!newCoords) {
+            alert('上方擷取結果中沒有有效的座標可供覆蓋！');
+            return;
+        }
+        const formatted = formatCoordText(newCoords);
+        sharedResultText.value = formatted.text;
+        saveToCloud(formatted.text, `☁️ 已覆蓋同步至通用暫存區 (共 ${formatted.count} 筆)！`);
+    }
+
+    function sortSharedCoordinates() {
+        if (!sharedResultText.value.trim()) return;
+        const formatted = formatCoordText(sharedResultText.value);
+        sharedResultText.value = formatted.text;
+        saveToCloud(formatted.text, `✅ 通用暫存區已排序並同步 (${formatted.count} 筆)！`);
+    }
+
+    function clearSharedText() {
+        if (!sharedResultText.value.trim()) return;
+        sharedResultText.value = '';
+        saveToCloud('', '🗑️ 已清空通用暫存區！');
+    }
+
+    function copySharedText() {
+        if (!sharedResultText.value) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(sharedResultText.value).then(() => {
+                showCopySuccess('✅ 暫存區複製成功！');
+            }).catch(() => {
+                fallbackCopyTarget(sharedResultText, '✅ 暫存區複製成功！');
+            });
+        } else {
+            fallbackCopyTarget(sharedResultText, '✅ 暫存區複製成功！');
+        }
+    }
 
     function copyText() {
         if (!resultText.value) return;
@@ -410,27 +657,27 @@
             navigator.clipboard.writeText(resultText.value).then(() => {
                 showCopySuccess();
             }).catch(() => {
-                fallbackCopy();
+                fallbackCopyTarget(resultText);
             });
         } else {
-            fallbackCopy();
+            fallbackCopyTarget(resultText);
         }
     }
 
-    function fallbackCopy() {
-        resultText.select();
-        resultText.setSelectionRange(0, 99999); // 行動裝置需要
+    function fallbackCopyTarget(targetEl, customMsg) {
+        targetEl.select();
+        targetEl.setSelectionRange(0, 99999); // 行動裝置需要
         try {
             document.execCommand('copy');
-            showCopySuccess();
+            showCopySuccess(customMsg);
         } catch (e) {
             statusEl.innerText = '❌ 複製失敗，請手動全選複製';
         }
     }
 
-    function showCopySuccess() {
+    function showCopySuccess(msg) {
         const orig = statusEl.innerText;
-        statusEl.innerText = '✅ 複製成功！';
+        statusEl.innerText = msg || '✅ 複製成功！';
         statusEl.style.color = '#059669';
         setTimeout(() => { statusEl.innerText = orig; }, 2000);
     }
