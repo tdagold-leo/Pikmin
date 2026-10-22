@@ -1,5 +1,5 @@
 // JS logic begins
-    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.07.24.2104";
+    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.23.0100";
 
     // 自動清理網址列上的版本號參數，保持網址乾淨漂亮 (例如保持為 https://tdagold-leo.github.io/Pikmin/)
     if (window.location.search && (window.location.search.includes('v=') || window.location.search.includes('_t='))) {
@@ -21,8 +21,9 @@
         }
 
         // 檢查當前部署站點的 index.html（確保 GitHub Pages 已完成發布才重整）
-        const checkUrl = window.location.origin + window.location.pathname + (window.location.pathname.endsWith('/') ? '' : '/') + 'index.html?nocache=' + Date.now();
-        fetch(checkUrl, { cache: 'no-store' })
+        const basePath = window.location.pathname.replace(/\/index\.html$/i, '').replace(/\/+$/, '');
+        const checkUrl = window.location.origin + basePath + '/index.html?nocache=' + Date.now();
+        fetch(checkUrl, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' } })
             .then(res => res.text())
             .then(html => {
                 const match = html.match(/const APP_VERSION = ['"]([^'"]+)['"]/);
@@ -54,7 +55,7 @@
                     document.body.appendChild(toast);
 
                     setTimeout(() => {
-                        window.location.reload();
+                        window.location.replace(window.location.origin + window.location.pathname + '?v=' + encodeURIComponent(match[1]) + '&_t=' + Date.now());
                     }, 600);
                 } else if (isManual) {
                     alert('✅ 當前已是最新版本 (v' + CURRENT_APP_VERSION + ')！');
