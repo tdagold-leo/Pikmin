@@ -1907,60 +1907,69 @@
         return R * c;
     }
 
-    // ===== 純點種類標準定義（41種皮克敏純點 + 天氣與自訂種類自動整合） =====
+    // ===== 純點種類標準定義（原創5大色系方卡圖示 + 完整別名相容） =====
+    // 色系：nature(自然翠綠)、food(美食暖橘)、shop(購物粉紫)、transit(交通天藍)、culture(文化靛藍)
+    const LM_THEME_PALETTES = {
+        nature:  { bg: '#dcfce7', border: '#86efac' },
+        food:    { bg: '#ffedd5', border: '#fdba74' },
+        shop:    { bg: '#fae8ff', border: '#f0abfc' },
+        transit: { bg: '#e0f2fe', border: '#7dd3fc' },
+        culture: { bg: '#e0e7ff', border: '#a5b4fc' }
+    };
+
     const LM_STANDARD_CATEGORIES = [
-        { label: '大學&學院', icon: '🎓', aliases: ['大學&學院', '大學', '學院', '大學和學院'] },
-        { label: '山丘', icon: '⛰️', aliases: ['山丘', '山'] },
-        { label: '五金行', icon: '🔧', aliases: ['五金行', '五金店'] },
-        { label: '公車站', icon: '🚌', aliases: ['公車站', '巴士站', '公車'] },
-        { label: '公園', icon: '🌳', aliases: ['公園'] },
-        { label: '化妝品', icon: '💄', aliases: ['化妝品', '化妝品商店', '美妝', '美妝店', '化妝品店'] },
-        { label: '文具店', icon: '✏️', aliases: ['文具店', '文具'] },
-        { label: '水邊', icon: '🌊', aliases: ['水邊', '河邊', '湖邊', '運河', '水岸'] },
-        { label: '主題樂園', icon: '🎡', aliases: ['主題樂園', '遊樂園'] },
-        { label: '自助洗衣店&乾洗', icon: '🧺', aliases: ['自助洗衣店&乾洗', '自助洗衣店和乾洗店', '自助洗衣店', '洗衣店', '乾洗', '乾洗店'] },
-        { label: '車站', icon: '🚉', aliases: ['車站', '火車站', '捷運站', '地鐵站', '電車站'] },
-        { label: '咖哩', icon: '🍛', aliases: ['咖哩', '咖哩店', '咖哩餐廳'] },
-        { label: '咖啡杯', icon: '☕', aliases: ['咖啡杯', '咖啡廳', '咖啡店', '咖啡'] },
-        { label: '拉麵店', icon: '🍜', aliases: ['拉麵店', '拉麵'] },
-        { label: '服裝店', icon: '👕', aliases: ['服裝店', '服飾店'] },
-        { label: '便利店', icon: '🏪', aliases: ['便利店', '便利商店', '超商'] },
-        { label: '美容院', icon: '✂️', aliases: ['美容院', '美髮店', '理髮店', '髮廊'] },
-        { label: '美術館', icon: '🖼️', aliases: ['美術館', '畫廊'] },
-        { label: '海灘', icon: '🏖️', aliases: ['海灘', '沙灘', '海邊'] },
-        { label: '神社和寺廟', icon: '⛩️', aliases: ['神社和寺廟', '神社', '寺廟'] },
-        { label: '動物園', icon: '🦒', aliases: ['動物園'] },
-        { label: '甜點店', icon: '🍰', aliases: ['甜點店', '馬卡龍', '甜甜圈', '蛋糕店', '甜點'] },
-        { label: '森林', icon: '🌲', aliases: ['森林'] },
-        { label: '超市', icon: '🛒', aliases: ['超市', '超級市場'] },
-        { label: '郵局', icon: '📮', aliases: ['郵局'] },
-        { label: '飯店', icon: '🏨', aliases: ['飯店', '旅館', '酒店'] },
-        { label: '義式餐廳', icon: '🍝', aliases: ['義式餐廳', '披薩', '義大利麵', '義式料理'] },
-        { label: '路邊', icon: '🛣️', aliases: ['路邊'] },
-        { label: '電影院', icon: '🎬', aliases: ['電影院', '戲院'] },
-        { label: '電器行', icon: '🔌', aliases: ['電器行', '電池', '電器店'] },
-        { label: '圖書館', icon: '📚', aliases: ['圖書館', '書店'] },
-        { label: '壽司', icon: '🍣', aliases: ['壽司', '壽司店', '壽司餐廳'] },
-        { label: '漢堡', icon: '🍔', aliases: ['漢堡', '漢堡店'] },
-        { label: '墨西哥餐廳', icon: '🌮', aliases: ['墨西哥餐廳', '塔可'] },
-        { label: '橋樑', icon: '🌉', aliases: ['橋樑', '橋'] },
-        { label: '機場', icon: '✈️', aliases: ['機場'] },
-        { label: '餐廳', icon: '🍴', aliases: ['餐廳'] },
-        { label: '韓國餐廳', icon: '🥘', aliases: ['韓國餐廳', '韓式餐廳', '韓式料理'] },
-        { label: '藥局', icon: '💊', aliases: ['藥局', '藥妝店'] },
-        { label: '麵包店', icon: '🥐', aliases: ['麵包店', '烘焙坊'] },
-        { label: '體育館', icon: '🏟️', aliases: ['體育館', '體育場', '運動場'] },
-        { label: '下雪', icon: '❄️', aliases: ['下雪', '雪', '雪天'] }
+        { label: '大學&學院',       icon: '🏛️', theme: 'culture', aliases: ['大學&學院', '大學＆學院', '大學', '學院', '大學和學院'] },
+        { label: '山丘',            icon: '🏔️', theme: 'nature',  aliases: ['山丘', '山岳景觀', '山'] },
+        { label: '五金行',          icon: '🛠️', theme: 'shop',    aliases: ['五金行', '五金工具', '五金店'] },
+        { label: '公車站',          icon: '🚏', theme: 'transit', aliases: ['公車站', '公車站牌', '巴士站', '公車'] },
+        { label: '公園',            icon: '🍀', theme: 'nature',  aliases: ['公園', '公園綠地'] },
+        { label: '化妝品',          icon: '💅', theme: 'shop',    aliases: ['化妝品', '美妝百貨', '化妝品商店', '美妝', '美妝店', '化妝品店'] },
+        { label: '文具店',          icon: '📐', theme: 'culture', aliases: ['文具店', '文具書坊', '文具'] },
+        { label: '水邊',            icon: '💧', theme: 'nature',  aliases: ['水邊', '親水水岸', '河邊', '湖邊', '運河', '水岸'] },
+        { label: '主題樂園',        icon: '🎠', theme: 'culture', aliases: ['主題樂園', '遊樂園區', '遊樂園'] },
+        { label: '自助洗衣店&乾洗', icon: '🫧', theme: 'shop',    aliases: ['自助洗衣店&乾洗', '自助洗衣店&乾洗店', '自助洗衣店＆乾洗店', '洗衣＆乾洗', '自助洗衣店和乾洗店', '自助洗衣店', '洗衣店', '乾洗', '乾洗店'] },
+        { label: '車站',            icon: '🚆', theme: 'transit', aliases: ['車站', '鐵道車站', '火車站', '捷運站', '地鐵站', '電車站'] },
+        { label: '咖哩',            icon: '🥘', theme: 'food',    aliases: ['咖哩', '濃香咖哩', '咖哩店', '咖哩餐廳'] },
+        { label: '咖啡杯',          icon: '🧋', theme: 'food',    aliases: ['咖啡杯', '咖啡茶飲', '咖啡廳', '咖啡店', '咖啡'] },
+        { label: '拉麵店',          icon: '🍥', theme: 'food',    aliases: ['拉麵店', '日式拉麵', '拉麵'] },
+        { label: '服裝店',          icon: '🧥', theme: 'shop',    aliases: ['服裝店', '時尚服飾', '服飾店'] },
+        { label: '便利店',          icon: '🏪', theme: 'shop',    aliases: ['便利店', '超商便利店', '便利商店', '超商'] },
+        { label: '美容院',          icon: '💇', theme: 'shop',    aliases: ['美容院', '沙龍美髮', '美髮店', '理髮店', '髮廊'] },
+        { label: '美術館',          icon: '🎨', theme: 'culture', aliases: ['美術館', '藝廊美術館', '畫廊'] },
+        { label: '海灘',            icon: '🐚', theme: 'nature',  aliases: ['海灘', '陽光海灘', '沙灘', '海邊'] },
+        { label: '神社和寺廟',      icon: '🏮', theme: 'culture', aliases: ['神社和寺廟', '神社與寺院', '神社', '寺廟'] },
+        { label: '動物園',          icon: '🦁', theme: 'nature',  aliases: ['動物園', '生態動物園'] },
+        { label: '甜點店',          icon: '🧁', theme: 'food',    aliases: ['甜點店', '法式甜點', '馬卡龍', '甜甜圈', '蛋糕店', '甜點'] },
+        { label: '森林',            icon: '🌿', theme: 'nature',  aliases: ['森林', '森林步道'] },
+        { label: '超市',            icon: '🧺', theme: 'shop',    aliases: ['超市', '生鮮超市', '超級市場'] },
+        { label: '郵局',            icon: '✉️', theme: 'transit', aliases: ['郵局', '郵政局所'] },
+        { label: '飯店',            icon: '🛎️', theme: 'transit', aliases: ['飯店', '渡假飯店', '旅館', '酒店'] },
+        { label: '義式餐廳',        icon: '🍕', theme: 'food',    aliases: ['義式餐廳', '義式披薩', '披薩', '義大利麵', '義式料理'] },
+        { label: '路邊',            icon: '🪧', theme: 'transit', aliases: ['路邊', '街角路邊'] },
+        { label: '電影院',          icon: '🍿', theme: 'culture', aliases: ['電影院', '影城戲院', '戲院'] },
+        { label: '電器行',          icon: '🔋', theme: 'shop',    aliases: ['電器行', '3C電器行', '電池', '電器店'] },
+        { label: '圖書館',          icon: '📖', theme: 'culture', aliases: ['圖書館', '圖書閱覽館', '書店'] },
+        { label: '壽司',            icon: '🍱', theme: 'food',    aliases: ['壽司', '握壽司店', '壽司店', '壽司餐廳'] },
+        { label: '漢堡',            icon: '🍟', theme: 'food',    aliases: ['漢堡', '美式漢堡', '漢堡店'] },
+        { label: '墨西哥餐廳',      icon: '🌯', theme: 'food',    aliases: ['墨西哥餐廳', '墨式塔可', '塔可'] },
+        { label: '橋樑',            icon: '🌁', theme: 'transit', aliases: ['橋樑', '景觀橋樑', '橋'] },
+        { label: '機場',            icon: '🛫', theme: 'transit', aliases: ['機場', '國際機場'] },
+        { label: '餐廳',            icon: '🍽️', theme: 'food',    aliases: ['餐廳', '主廚餐廳'] },
+        { label: '韓國餐廳',        icon: '🍲', theme: 'food',    aliases: ['韓國餐廳', '韓式料理', '韓式餐廳'] },
+        { label: '藥局',            icon: '🩺', theme: 'shop',    aliases: ['藥局', '健保藥局', '藥妝店'] },
+        { label: '麵包店',          icon: '🥖', theme: 'food',    aliases: ['麵包店', '烘焙麵包坊', '烘焙坊'] },
+        { label: '體育館',          icon: '🏅', theme: 'culture', aliases: ['體育館', '運動體育館', '體育場', '運動場'] },
+        { label: '下雪',            icon: '☃️', theme: 'nature',  aliases: ['下雪', '降雪限定', '雪', '雪天'] }
     ];
 
     const LM_EXTRA_ICONS = {
-        '下雪': '❄️',
-        '雨天': '🌧️',
-        '下雨': '🌧️',
-        '植物園': '🌿',
-        '博物館': '🏛️',
-        '展覽': '🎪',
-        '景點': '📸'
+        '下雪': '☃️',
+        '雨天': '☔',
+        '下雨': '☔',
+        '植物園': '🪴',
+        '博物館': '🏺',
+        '展覽': '🎭',
+        '景點': '🔭'
     };
 
     let selectedLmTypes = new Set();
@@ -2197,20 +2206,28 @@
             actionsContainer.innerHTML = btns.join('');
         }
 
-        // 渲染純點種類膠囊按鈕網格
+        // 渲染純點種類膠囊按鈕網格（做法B：有資料的分類排前面，0筆的分類變暗並排在最後）
         if (pillsContainer) {
-            const displayCategories = lmShowOnlyAvailable
+            const baseCategories = lmShowOnlyAvailable
                 ? allCategories.filter(cat => (catCounts.get(cat.label) || 0) > 0 || selectedLmTypes.has(cat.label))
                 : allCategories;
+
+            const withData = baseCategories.filter(cat => (catCounts.get(cat.label) || 0) > 0);
+            const withoutData = baseCategories.filter(cat => (catCounts.get(cat.label) || 0) === 0);
+            const displayCategories = [...withData, ...withoutData];
 
             pillsContainer.innerHTML = displayCategories.map(cat => {
                 const isActive = selectedLmTypes.has(cat.label);
                 const cnt = catCounts.get(cat.label) || 0;
-                const countBadge = cnt > 0 ? `<span class="lm-pill-count">${cnt}</span>` : '';
+                const isEmptyCat = cnt === 0 && !isActive;
+                const countBadge = cnt > 0
+                    ? `<span class="lm-pill-count">${cnt}</span>`
+                    : `<span class="lm-pill-count zero">0</span>`;
                 const safeLabel = escapeHtml(cat.label).replace(/'/g, "\\'");
-                return `<button type="button" class="lm-cat-pill${isActive ? ' active' : ''}" onclick="toggleLmCategoryFilter('${safeLabel}')" title="${escapeHtml(cat.label)} (${cnt} 筆)">
-                    <span>${cat.icon}</span>
-                    <span>${escapeHtml(cat.label)}</span>
+                const pal = LM_THEME_PALETTES[cat.theme] || { bg: '#f1f5f9', border: '#e2e8f0' };
+                return `<button type="button" class="lm-cat-pill${isActive ? ' active' : ''}${isEmptyCat ? ' lm-empty-cat' : ''}" style="--chip-bg:${pal.bg}; --chip-border:${pal.border};" onclick="toggleLmCategoryFilter('${safeLabel}')" title="${escapeHtml(cat.label)} (${cnt} 筆)">
+                    <span class="lm-chip-icon">${cat.icon}</span>
+                    <span class="lm-chip-label">${escapeHtml(cat.label)}</span>
                     ${countBadge}
                 </button>`;
             }).join('');
@@ -5814,7 +5831,7 @@
 
         // 註冊 Service Worker (支援 Android Chrome 手機推播)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=202610230015').catch(err => {
+            navigator.serviceWorker.register('sw.js?v=202610230026').catch(err => {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }
