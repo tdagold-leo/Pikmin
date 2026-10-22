@@ -1,5 +1,5 @@
 // JS logic begins
-    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.23.0100";
+    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.23.0132";
 
     // 自動清理網址列上的版本號參數，保持網址乾淨漂亮 (例如保持為 https://tdagold-leo.github.io/Pikmin/)
     if (window.location.search && (window.location.search.includes('v=') || window.location.search.includes('_t='))) {
@@ -3752,7 +3752,7 @@
                     const cdVal = item.sgCooldown || '';
                     const cdSel = document.getElementById('edit-post-sg-cooldown');
                     const cdCustom = document.getElementById('edit-post-sg-cooldown-custom');
-                    const presets = ['', '1', '7', '14', '30', 'once'];
+                    const presets = ['', '1', '7', '14', '30', 'yearly_jan1', 'once'];
                     if (cdVal && !presets.includes(cdVal)) {
                         cdSel.value = 'custom';
                         cdCustom.value = cdVal;
@@ -4251,10 +4251,182 @@
         updateView();
     }
 
+    // ===== 特殊金盆冷卻計算與篩選狀態管理 =====
+    let gbCategoryTab = 'all'; // 'all' | 'limited' | 'permanent' | 'discontinued'
+    let gbStatusFilter = 'all'; // 'all' | 'claimable' | 'cooling' | 'missing'
+    let currentClaimableGbList = [];
+
+    function resolveSgCooldown(item) {
+        if (!item) return '';
+        let cdVal = item.sgCooldown;
+        if (!cdVal && item.tag) {
+            if (item.tag.includes('一年一次') || item.tag.includes('每年')) cdVal = 'yearly_jan1';
+            else if (item.tag.includes('30天') || item.tag.includes('30 天') || item.tag.includes('一個月') || item.tag.includes('30 days')) cdVal = '30';
+        }
+        if (!cdVal && (item.sgType === '期間' || item.sgType === '常駐')) {
+            cdVal = '30';
+        }
+        return cdVal || '';
+    }
+
+    function calcSgNextDate(lastStr, cdVal) {
+        if (!lastStr || !cdVal) return null;
+        const lastDate = new Date(lastStr + 'T00:00:00');
+        if (isNaN(lastDate.getTime())) return null;
+        if (cdVal === 'once') return new Date(8.64e15);
+        if (cdVal === 'yearly_jan1') {
+            return new Date(lastDate.getFullYear() + 1, 0, 1, 0, 0, 0, 0);
+        }
+        const n = parseInt(cdVal, 10);
+        if (n === 30) {
+            return new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, lastDate.getDate());
+        }
+        return new Date(lastDate.getTime() + (n || 30) * 86400000);
+    }
+
+    function formatSgCooldownLabel(cdVal) {
+        if (!cdVal) return '';
+        if (cdVal === 'once') return '限領一次';
+        if (cdVal === 'yearly_jan1') return '一年一次 (明年1/1)';
+        const cdNum = parseInt(cdVal, 10);
+        if (cdNum === 1) return '每天可領';
+        if (cdNum === 30) return '每月可領';
+        return `每 ${cdNum} 天可領`;
+    }
+
+    function getSgItemStatus(item) {
+        const nowMs = Date.now();
+        let isDisc = item.discontinued === true;
+        let daysLeft = null;
+        if (item.sgType === '期間' && item.sgEnd) {
+            const endDate = new Date(item.sgEnd);
+            endDate.setHours(23, 59, 59, 999);
+            if (nowMs > endDate.getTime()) {
+                isDisc = true;
+            } else {
+                daysLeft = Math.ceil((endDate.getTime() - nowMs) / 86400000);
+            }
+        }
+        const cdVal = resolveSgCooldown(item);
+        let hasStarted = true;
+        if (item.sgType === '期間' && item.sgStart) {
+            const startDate = new Date(item.sgStart + 'T00:00:00');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (startDate > today) hasStarted = false;
+        }
+        let isClaimable = false;
+        let isCooling = false;
+        let nextDate = null;
+        let nextStr = '';
+        if (cdVal && !isDisc && hasStarted) {
+            if (!item.sgLast) {
+                isClaimable = true;
+            } else {
+                nextDate = calcSgNextDate(item.sgLast, cdVal);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                if (nextDate && nextDate <= today) {
+                    isClaimable = true;
+                } else {
+                    isCooling = true;
+                    if (cdVal !== 'once' && nextDate) {
+                        nextStr = `${nextDate.getFullYear()}/${String(nextDate.getMonth() + 1).padStart(2, '0')}/${String(nextDate.getDate()).padStart(2, '0')}`;
+                    }
+                }
+            }
+        }
+        const hasMissing = Boolean(
+            (item.missingFields && item.missingFields.length > 0) ||
+            (item.tag || '').includes('缺') ||
+            (item.name || '').includes('缺') ||
+            (item.note || '').includes('缺') ||
+            (item.user || '').includes('缺')
+        );
+        return { isDisc, hasStarted, cdVal, isClaimable, isCooling, nextDate, nextStr, daysLeft, hasMissing };
+    }
+
+    function getSgCountdownBadgeHtml(daysLeft) {
+        if (daysLeft === null || daysLeft === undefined || daysLeft < 0) return '';
+        if (daysLeft <= 3) {
+            return `<span class="gb-countdown-badge urgent">🔥 最後 ${daysLeft} 天！</span>`;
+        } else if (daysLeft <= 7) {
+            return `<span class="gb-countdown-badge soon">⏰ 剩餘 ${daysLeft} 天</span>`;
+        }
+        return `<span class="gb-countdown-badge normal">⏳ 剩餘 ${daysLeft} 天</span>`;
+    }
+
+    window.setGbCategoryTab = function(tab) {
+        gbCategoryTab = tab || 'all';
+        if (tab === 'discontinued') {
+            collapsedGroups.delete('pc-sg-top-絕版');
+        } else if (tab === 'limited') {
+            collapsedGroups.delete('pc-sg-top-期間 (進行中)');
+        } else if (tab === 'permanent') {
+            collapsedGroups.delete('pc-sg-top-常駐');
+        }
+        updateView();
+    };
+
+    window.setGbStatusFilter = function(status) {
+        gbStatusFilter = status || 'all';
+        updateView();
+    };
+
+    window.onGbLocationFilterChange = function(level) {
+        if (level === 'country') {
+            const cityEl = document.getElementById('goldbasin-city-filter');
+            if (cityEl) cityEl.value = '';
+        }
+        updateView();
+    };
+
+    window.expandAllGoldbasinGroups = function() {
+        Array.from(collapsedGroups).forEach(id => {
+            if (id.startsWith('pc-act-') || id.startsWith('pc-sg-top-')) {
+                collapsedGroups.delete(id);
+            }
+        });
+        updateView();
+    };
+
     function collapseAllGoldbasinGroups() {
-        knownPostcardGroups.forEach(id => collapsedGroups.add(id));
+        knownPostcardGroups.forEach(id => {
+            if (id.startsWith('pc-act-')) {
+                collapsedGroups.add(id);
+            }
+        });
         updateView();
     }
+
+    window.copyClaimableGoldbasinCoords = function(btn) {
+        const list = currentClaimableGbList || [];
+        if (list.length === 0) {
+            alert('目前沒有今日可領取的特殊金盆座標！');
+            return;
+        }
+        const os = typeof detectOS === 'function' ? detectOS() : 'unknown';
+        const seen = new Set();
+        const lines = [];
+        list.forEach(item => {
+            if (!item.coords) return;
+            const normalized = normalizeCoords(String(item.coords));
+            if (!normalized || seen.has(normalized)) return;
+            seen.add(normalized);
+            lines.push((os === 'ios' || os === 'macos' || os === 'windows') ? normalized.replace(/,/g, ' ') : normalized);
+        });
+        if (lines.length === 0) {
+            alert('目前可領取的金盆中沒有有效座標！');
+            return;
+        }
+        const origHtml = btn ? btn.innerHTML : '';
+        navigator.clipboard.writeText(lines.join('\n')).then(() => {
+            if (btn) {
+                btn.innerHTML = `✅ 已複製 ${lines.length} 筆座標！`;
+                setTimeout(() => { btn.innerHTML = origHtml; }, 1800);
+            }
+        }).catch(() => alert('複製失敗，請手動複製。'));
+    };
 
     function saveMushroomViewPref() {
         if (document.getElementById('mushroom-group-logic')) {
@@ -4937,31 +5109,156 @@
         }
 
         let hasReadyGoldBasin = false;
-        const nowMsForNav = Date.now();
         for (let item of postcardList) {
-            let isDisc = item.discontinued === true;
-            if (item.sgType === '期間' && item.sgEnd) {
-                const endDate = new Date(item.sgEnd);
-                endDate.setHours(23, 59, 59, 999);
-                if (nowMsForNav > endDate.getTime()) isDisc = true;
-            }
-            if (item.type === '特殊金盆' && item.sgCooldown && !isDisc) {
-                let hasStarted = true;
-                if (item.sgStart) {
-                    const startDate = new Date(item.sgStart + 'T00:00:00');
-                    const today = new Date();
-                    today.setHours(0,0,0,0);
-                    if (startDate > today) hasStarted = false;
+            if (item.type === '特殊金盆' && item.sgCooldown) {
+                const st = getSgItemStatus(item);
+                if (st.isClaimable) {
+                    hasReadyGoldBasin = true;
+                    break;
                 }
-                if (hasStarted) {
-                    if (!item.sgLast) hasReadyGoldBasin = true;
-                    else {
-                        const lastDate = new Date(item.sgLast + 'T00:00:00');
-                        const nextDate = item.sgCooldown === 'once' ? new Date(8.64e15) : new Date(lastDate.getTime() + parseInt(item.sgCooldown, 10) * 86400000);
-                        const today = new Date();
-                        today.setHours(0,0,0,0);
-                        if (nextDate <= today) hasReadyGoldBasin = true;
-                    }
+            }
+        }
+
+        // ===== 特殊金盆專屬：地區連動選單、Bento 儀表板、狀態快篩列 =====
+        if (currentMode === 'goldbasin') {
+            const allGbItems = postcardList.filter(i => i.type === '特殊金盆');
+            const gbCountryEl = document.getElementById('goldbasin-country-filter');
+            const gbCityEl = document.getElementById('goldbasin-city-filter');
+            let selGbCountry = gbCountryEl ? gbCountryEl.value : '';
+            if (gbCountryEl) {
+                const countries = [...new Set(allGbItems.map(i => toTW((i.country || '').trim())).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-Hant'));
+                if (selGbCountry && !countries.includes(selGbCountry)) selGbCountry = '';
+                gbCountryEl.innerHTML = '<option value="">🌍 全部國家</option>' +
+                    countries.map(c => `<option value="${escapeHtml(c)}" ${selGbCountry === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('');
+            }
+            const countryPool = selGbCountry ? allGbItems.filter(i => toTW((i.country || '').trim()) === selGbCountry) : allGbItems;
+            let selGbCity = gbCityEl ? gbCityEl.value : '';
+            if (gbCityEl) {
+                const cities = [...new Set(countryPool.map(i => (i.city || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-Hant'));
+                if (selGbCity && !cities.includes(selGbCity)) selGbCity = '';
+                gbCityEl.innerHTML = '<option value="">🏙️ 全部城市</option>' +
+                    cities.map(c => `<option value="${escapeHtml(c)}" ${selGbCity === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('');
+            }
+
+            // 以 filteredPc (已套用關鍵字/收藏/時間) 再套用國家與城市過濾
+            if (selGbCountry) {
+                for (let idx = filteredPc.length - 1; idx >= 0; idx--) {
+                    if (toTW((filteredPc[idx].country || '').trim()) !== selGbCountry) filteredPc.splice(idx, 1);
+                }
+            }
+            if (selGbCity) {
+                for (let idx = filteredPc.length - 1; idx >= 0; idx--) {
+                    if ((filteredPc[idx].city || '').trim() !== selGbCity) filteredPc.splice(idx, 1);
+                }
+            }
+
+            // 計算三大分類統計（供頂部 Bento 儀表板顯示）
+            let limTotal = 0, limClaimable = 0, limMinDays = null;
+            let permTotal = 0, permClaimable = 0;
+            let discTotal = 0;
+
+            filteredPc.forEach(item => {
+                const st = getSgItemStatus(item);
+                item._sgStatus = st;
+                if (st.isDisc) {
+                    discTotal++;
+                } else if (item.sgType === '期間') {
+                    limTotal++;
+                    if (st.isClaimable) limClaimable++;
+                    if (st.daysLeft !== null && (limMinDays === null || st.daysLeft < limMinDays)) limMinDays = st.daysLeft;
+                } else {
+                    permTotal++;
+                    if (st.isClaimable) permClaimable++;
+                }
+            });
+
+            const bentoEl = document.getElementById('gb-bento-dashboard');
+            if (bentoEl) {
+                const activeTotal = limTotal + permTotal;
+                const activeClaimable = limClaimable + permClaimable;
+                bentoEl.innerHTML = `
+                    <button type="button" class="gb-bento-card ${gbCategoryTab === 'all' ? 'active-all' : ''}" onclick="setGbCategoryTab('all')">
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                            <span style="font-size:12px; font-weight:800; opacity:0.85;">🌟 全部總覽</span>
+                            ${activeClaimable > 0 ? `<span style="background:#fef3c7; color:#b45309; border:1px solid #fcd34d; font-size:10.5px; font-weight:800; padding:1px 6px; border-radius:999px;">🎁 可領 ${activeClaimable}</span>` : ''}
+                        </div>
+                        <div style="font-size:22px; font-weight:900; line-height:1.15; margin-top:2px;">${filteredPc.length} <span style="font-size:11px; font-weight:700; opacity:0.75;">筆 (進行中 ${activeTotal})</span></div>
+                    </button>
+                    <button type="button" class="gb-bento-card ${gbCategoryTab === 'limited' ? 'active-limited' : ''}" onclick="setGbCategoryTab('limited')">
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                            <span style="font-size:12px; font-weight:800; color:#c2410c;">🔥 期間 (進行中)</span>
+                            ${limClaimable > 0 ? `<span style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:10.5px; font-weight:800; padding:1px 6px; border-radius:999px;">🎁 可領 ${limClaimable}</span>` : ''}
+                        </div>
+                        <div style="display:flex; align-items:baseline; gap:6px; margin-top:2px; flex-wrap:wrap;">
+                            <span style="font-size:22px; font-weight:900; color:#9a3412; line-height:1.15;">${limTotal} <span style="font-size:11px; font-weight:700;">筆</span></span>
+                            ${limMinDays !== null ? `<span style="font-size:10.5px; font-weight:800; color:${limMinDays <= 3 ? '#dc2626' : '#d97706'};">⏰ 最近剩 ${limMinDays} 天</span>` : ''}
+                        </div>
+                    </button>
+                    <button type="button" class="gb-bento-card ${gbCategoryTab === 'permanent' ? 'active-permanent' : ''}" onclick="setGbCategoryTab('permanent')">
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                            <span style="font-size:12px; font-weight:800; color:#0369a1;">📌 常駐金盆</span>
+                            ${permClaimable > 0 ? `<span style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:10.5px; font-weight:800; padding:1px 6px; border-radius:999px;">🎁 可領 ${permClaimable}</span>` : ''}
+                        </div>
+                        <div style="font-size:22px; font-weight:900; color:#0c4a6e; line-height:1.15; margin-top:2px;">${permTotal} <span style="font-size:11px; font-weight:700;">筆</span></div>
+                    </button>
+                    <button type="button" class="gb-bento-card ${gbCategoryTab === 'discontinued' ? 'active-discontinued' : ''}" onclick="setGbCategoryTab('discontinued')">
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                            <span style="font-size:12px; font-weight:800; color:#475569;">📦 絕版典藏</span>
+                        </div>
+                        <div style="font-size:22px; font-weight:900; color:#334155; line-height:1.15; margin-top:2px;">${discTotal} <span style="font-size:11px; font-weight:700;">筆</span></div>
+                    </button>
+                `;
+            }
+
+            // 套用大分類 Tab 過濾
+            if (gbCategoryTab !== 'all') {
+                for (let idx = filteredPc.length - 1; idx >= 0; idx--) {
+                    const item = filteredPc[idx];
+                    const st = item._sgStatus || getSgItemStatus(item);
+                    if (gbCategoryTab === 'limited' && (st.isDisc || item.sgType !== '期間')) filteredPc.splice(idx, 1);
+                    else if (gbCategoryTab === 'permanent' && (st.isDisc || item.sgType === '期間')) filteredPc.splice(idx, 1);
+                    else if (gbCategoryTab === 'discontinued' && !st.isDisc) filteredPc.splice(idx, 1);
+                }
+            }
+
+            // 統計目前分類下的狀態數量（供狀態快篩列與一鍵複製可領座標使用）
+            const claimablePool = filteredPc.filter(i => (i._sgStatus || getSgItemStatus(i)).isClaimable);
+            const coolingPool = filteredPc.filter(i => (i._sgStatus || getSgItemStatus(i)).isCooling);
+            const missingPool = filteredPc.filter(i => (i._sgStatus || getSgItemStatus(i)).hasMissing);
+            currentClaimableGbList = claimablePool;
+
+            const statusBarEl = document.getElementById('gb-status-bar');
+            if (statusBarEl) {
+                statusBarEl.innerHTML = `
+                    <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
+                        <button type="button" class="gb-status-pill ${gbStatusFilter === 'all' ? 'active-all' : ''}" onclick="setGbStatusFilter('all')">
+                            全部狀態 (${filteredPc.length})
+                        </button>
+                        <button type="button" class="gb-status-pill ${gbStatusFilter === 'claimable' ? 'active-claimable' : ''}" onclick="setGbStatusFilter('claimable')">
+                            🎁 今日可領 (${claimablePool.length})
+                        </button>
+                        <button type="button" class="gb-status-pill ${gbStatusFilter === 'cooling' ? 'active-cooling' : ''}" onclick="setGbStatusFilter('cooling')">
+                            ⏳ 冷卻倒數中 (${coolingPool.length})
+                        </button>
+                        <button type="button" class="gb-status-pill ${gbStatusFilter === 'missing' ? 'active-missing' : ''}" onclick="setGbStatusFilter('missing')">
+                            ⚠️ 缺資料 (${missingPool.length})
+                        </button>
+                    </div>
+                    ${claimablePool.length > 0 ? `
+                        <button type="button" onclick="copyClaimableGoldbasinCoords(this)" style="background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; border:none; border-radius:10px; padding:6px 12px; font-size:12px; font-weight:800; cursor:pointer; box-shadow:0 2px 8px rgba(217,119,6,0.3); display:inline-flex; align-items:center; gap:5px; white-space:nowrap;">
+                            📋 複製今日可領座標 (${claimablePool.length} 筆)
+                        </button>
+                    ` : ''}
+                `;
+            }
+
+            // 套用狀態快篩
+            if (gbStatusFilter !== 'all') {
+                for (let idx = filteredPc.length - 1; idx >= 0; idx--) {
+                    const st = filteredPc[idx]._sgStatus || getSgItemStatus(filteredPc[idx]);
+                    if (gbStatusFilter === 'claimable' && !st.isClaimable) filteredPc.splice(idx, 1);
+                    else if (gbStatusFilter === 'cooling' && !st.isCooling) filteredPc.splice(idx, 1);
+                    else if (gbStatusFilter === 'missing' && !st.hasMissing) filteredPc.splice(idx, 1);
                 }
             }
         }
@@ -5162,67 +5459,32 @@
                 : '';
 
             let sgDateBadge = '';
-            let localIsDisc = item.discontinued === true;
             if (item.type === '特殊金盆') {
+                const st = item._sgStatus || getSgItemStatus(item);
                 const s = item.sgStart || '';
                 const e = item.sgEnd || '';
-                
-                if (item.sgType === '期間' && e) {
-                    const endDate = new Date(e);
-                    endDate.setHours(23, 59, 59, 999);
-                    if (Date.now() > endDate.getTime()) localIsDisc = true;
-                }
-
                 if (item.sgType === '期間' && (s || e)) {
-                    sgDateBadge += `<div style="color: #6d28d9; font-size: 10px; font-weight: bold; margin-top: 4px; background: #f5f3ff; padding: 4px 6px; border-radius: 4px; border: 1px dashed #8b5cf6; text-align: center;">📅 期間：${s || '未定'} ~ ${e || '未定'}</div>`;
+                    const cdBadge = !st.isDisc ? getSgCountdownBadgeHtml(st.daysLeft) : '';
+                    sgDateBadge += `<div style="color: #6d28d9; font-size: 10px; font-weight: bold; margin-top: 4px; background: #f5f3ff; padding: 4px 6px; border-radius: 6px; border: 1px dashed #8b5cf6; display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap;"><span>📅 ${s || '未定'} ~ ${e || '未定'}</span>${cdBadge}</div>`;
                 }
 
-                let cdVal = item.sgCooldown;
-                if (!cdVal && item.tag && (item.tag.includes('30天') || item.tag.includes('30 天') || item.tag.includes('一個月') || item.tag.includes('30 days'))) {
-                    cdVal = '30';
-                }
-                if (!cdVal && (item.sgType === '期間' || item.sgType === '常駐')) {
-                    cdVal = '30'; // 特殊金盆預設以30天CD為基準計算
-                }
-
-                if (cdVal && !localIsDisc) {
-                    let hasStarted = true;
-                    if (item.sgType === '期間' && item.sgStart) {
-                        const startDate = new Date(item.sgStart + 'T00:00:00');
-                        const today = new Date();
-                        today.setHours(0,0,0,0);
-                        if (startDate > today) hasStarted = false;
-                    }
-
-                    if (!hasStarted) {
+                if (st.cdVal && !st.isDisc) {
+                    if (!st.hasStarted) {
                         sgDateBadge += `<div style="color: #b45309; font-size: 11px; font-weight: bold; margin-top: 6px; background: #fef3c7; padding: 4px 8px; border-radius: 6px; border: 1px solid #fde68a; text-align: center; letter-spacing:0.5px;">⏳ 尚未開始</div>`;
-                    } else if (!item.sgLast) {
+                    } else if (st.isClaimable) {
                         sgDateBadge += `<div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
                             <div style="flex:1; color: #15803d; font-size: 11px; font-weight: bold; background: #dcfce7; padding: 5px 6px; border-radius: 6px; border: 1px solid #86efac; text-align: center;">✅ 可領取！</div>
                             <button type="button" onclick="markPostcardClaimedToday('${item.id}', event)" style="background: linear-gradient(135deg, #22c55e, #16a34a); color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 3px; white-space: nowrap;">🎁 今日領取</button>
                         </div>`;
+                    } else if (st.cdVal === 'once') {
+                        sgDateBadge += `<div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
+                            <div style="flex:1; color: #64748b; font-size: 11px; font-weight: bold; background: #f1f5f9; padding: 5px 6px; border-radius: 6px; border: 1px solid #cbd5e1; text-align: center;">✓ 已領取（限領一次）</div>
+                        </div>`;
                     } else {
-                        const lastDate = new Date(item.sgLast + 'T00:00:00');
-                        // 限領一次：領過之後不再有下次可領日
-                                    const nextDate = cdVal === 'once' ? new Date(8.64e15) : (parseInt(cdVal, 10) === 30 ? new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, lastDate.getDate()) : new Date(lastDate.getTime() + parseInt(cdVal, 10) * 86400000));
-                        const nextStr = cdVal === 'once' ? '' : `${nextDate.getFullYear()}/${String(nextDate.getMonth()+1).padStart(2,'0')}/${String(nextDate.getDate()).padStart(2,'0')}`;
-                        const today = new Date();
-                        today.setHours(0,0,0,0);
-                        if (cdVal === 'once') {
-                            sgDateBadge += `<div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
-                                <div style="flex:1; color: #64748b; font-size: 11px; font-weight: bold; background: #f1f5f9; padding: 5px 6px; border-radius: 6px; border: 1px solid #cbd5e1; text-align: center;">✓ 已領取（限領一次）</div>
-                            </div>`;
-                        } else if (nextDate <= today) {
-                            sgDateBadge += `<div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
-                                <div style="flex:1; color: #15803d; font-size: 11px; font-weight: bold; background: #dcfce7; padding: 5px 6px; border-radius: 6px; border: 1px solid #86efac; text-align: center;">✅ 可領取！</div>
-                                <button type="button" onclick="markPostcardClaimedToday('${item.id}', event)" style="background: linear-gradient(135deg, #22c55e, #16a34a); color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 3px; white-space: nowrap;">🎁 今日領取</button>
-                            </div>`;
-                        } else {
-                            sgDateBadge += `<div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
-                                <div style="flex:1; color: #0369a1; font-size: 11px; font-weight: bold; background: #e0f2fe; padding: 5px 6px; border-radius: 6px; border: 1px solid #bae6fd; text-align: center;">⏳ 下次：${nextStr}</div>
-                                <button type="button" onclick="markPostcardClaimedToday('${item.id}', event)" title="重新設定為今日已領" style="background: #f8fafc; color: #64748b; border: 1px solid #cbd5e1; padding: 5px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 3px; white-space: nowrap;">✓ 今日已領</button>
-                            </div>`;
-                        }
+                        sgDateBadge += `<div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
+                            <div style="flex:1; color: #0369a1; font-size: 11px; font-weight: bold; background: #e0f2fe; padding: 5px 6px; border-radius: 6px; border: 1px solid #bae6fd; text-align: center;">⏳ 下次：${st.nextStr}</div>
+                            <button type="button" onclick="markPostcardClaimedToday('${item.id}', event)" title="重新設定為今日已領" style="background: #f8fafc; color: #64748b; border: 1px solid #cbd5e1; padding: 5px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 3px; white-space: nowrap;">✓ 今日已領</button>
+                        </div>`;
                     }
                 }
             }
@@ -5278,29 +5540,8 @@
                         hasMissingGroup = true;
                     }
                     if (item.type === '特殊金盆') {
-                        let cdVal = item.sgCooldown;
-                        if (!cdVal && item.tag && (item.tag.includes('30天') || item.tag.includes('30 天') || item.tag.includes('一個月') || item.tag.includes('30 days'))) cdVal = '30';
-                        if (!cdVal && (item.sgType === '期間' || item.sgType === '常駐')) cdVal = '30';
-                        if (cdVal && !item.discontinued) {
-                            let hasStarted = true;
-                            if (item.sgType === '期間' && item.sgStart) {
-                                const startDate = new Date(item.sgStart + 'T00:00:00');
-                                const today = new Date();
-                                today.setHours(0,0,0,0);
-                                if (startDate > today) hasStarted = false;
-                            }
-                            if (hasStarted) {
-                                if (!item.sgLast) hasClaimableGroup = true;
-                                else {
-                                    const lastDate = new Date(item.sgLast + 'T00:00:00');
-                                    // 限領一次：領過之後不再有下次可領日
-                                    const nextDate = cdVal === 'once' ? new Date(8.64e15) : (parseInt(cdVal, 10) === 30 ? new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, lastDate.getDate()) : new Date(lastDate.getTime() + parseInt(cdVal, 10) * 86400000));
-                                    const today = new Date();
-                                    today.setHours(0,0,0,0);
-                                    if (nextDate <= today) hasClaimableGroup = true;
-                                }
-                            }
-                        }
+                        const st = item._sgStatus || getSgItemStatus(item);
+                        if (st.isClaimable) hasClaimableGroup = true;
                     }
                 });
 
@@ -5327,117 +5568,80 @@
                 }
 
                 if (type === '特殊金盆' && !searchCoords) {
-                    // 分大類：常駐、期間、絕版
-                    const topGroups = { '常駐': [], '期間 (進行中)': [], '絕版': [] };
+                    // 分大類：期間 (進行中) 優先置頂、其次 常駐、最後 絕版
+                    const topGroups = { '期間 (進行中)': [], '常駐': [], '絕版': [] };
                     pcGroups[type].forEach(item => {
-                        let isDisc = item.discontinued === true;
-                        let sType = item.sgType || '常駐';
-                        
-                        if (sType === '期間' && item.sgEnd) {
-                            // 自動絕版判定: 結束日期的 23:59:59 之後算絕版
-                            const endDate = new Date(item.sgEnd);
-                            endDate.setHours(23, 59, 59, 999);
-                            if (now > endDate.getTime()) {
-                                isDisc = true;
-                            }
-                        }
-                        
-                        item._isDisc = isDisc; // inject for later logic
+                        const st = item._sgStatus || getSgItemStatus(item);
+                        item._sgStatus = st;
+                        item._isDisc = st.isDisc;
 
-                        if (isDisc) {
+                        if (st.isDisc) {
                             topGroups['絕版'].push(item);
-                        } else if (sType === '期間') {
+                        } else if (item.sgType === '期間') {
                             topGroups['期間 (進行中)'].push(item);
                         } else {
                             topGroups['常駐'].push(item);
                         }
                     });
 
-                    // 依序渲染這三大類
-                    const topOrder = ['常駐', '期間 (進行中)', '絕版'];
+                    // 依序渲染這三大類（期間進行中置頂！）
+                    const topOrder = ['期間 (進行中)', '常駐', '絕版'];
                     topOrder.forEach(tName => {
                         const tItems = topGroups[tName];
                         if (tItems.length === 0) return;
                         
-                        // 大分類標題
+                        // 大分類標題：期間(進行中)與常駐預設直接展開，減少點擊層級；絕版預設收合
                         const topId = 'pc-sg-top-' + tName;
-                        if (!knownPostcardGroups.has(topId)) { collapsedGroups.add(topId); knownPostcardGroups.add(topId); }
-                        const isTopCol = collapsedGroups.has(topId);
+                        if (!knownPostcardGroups.has(topId)) {
+                            if (tName === '絕版' && gbCategoryTab !== 'discontinued') {
+                                collapsedGroups.add(topId);
+                            }
+                            knownPostcardGroups.add(topId);
+                        }
+                        const isTopCol = collapsedGroups.has(topId) && gbStatusFilter === 'all' && !isSearching;
                         
-                        let hasClaimableTop = false;
-                        let hasMissingTop = false;
+                        let claimableTopCount = 0;
+                        let missingTopCount = 0;
                         tItems.forEach(item => {
-                            if ((item.tag || '').includes('缺') || (item.name || '').includes('缺') || (item.note || '').includes('缺') || (item.user || '').includes('缺')) {
-                                hasMissingTop = true;
-                            }
-                            let localIsDisc = item.discontinued === true;
-                            if (item.sgType === '期間' && item.sgEnd) {
-                                const endDate = new Date(item.sgEnd);
-                                endDate.setHours(23, 59, 59, 999);
-                                if (Date.now() > endDate.getTime()) localIsDisc = true;
-                            }
-
-                            let cdVal = item.sgCooldown;
-                            if (!cdVal && item.tag && (item.tag.includes('30天') || item.tag.includes('30 天') || item.tag.includes('一個月') || item.tag.includes('30 days'))) {
-                                cdVal = '30';
-                            }
-                            if (!cdVal && (item.sgType === '期間' || item.sgType === '常駐')) {
-                                cdVal = '30';
-                            }
-                            if (cdVal && !localIsDisc) {
-                                let hasStarted = true;
-                                if (item.sgType === '期間' && item.sgStart) {
-                                    const startDate = new Date(item.sgStart + 'T00:00:00');
-                                    const today = new Date();
-                                    today.setHours(0,0,0,0);
-                                    if (startDate > today) hasStarted = false;
-                                }
-                                if (hasStarted) {
-                                    if (!item.sgLast) hasClaimableTop = true;
-                                    else {
-                                        const lastDate = new Date(item.sgLast + 'T00:00:00');
-                                        // 限領一次：領過之後不再有下次可領日
-                                    const nextDate = cdVal === 'once' ? new Date(8.64e15) : (parseInt(cdVal, 10) === 30 ? new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, lastDate.getDate()) : new Date(lastDate.getTime() + parseInt(cdVal, 10) * 86400000));
-                                        const today = new Date();
-                                        today.setHours(0,0,0,0);
-                                        if (nextDate <= today) hasClaimableTop = true;
-                                    }
-                                }
-                            }
+                            const st = item._sgStatus || getSgItemStatus(item);
+                            if (st.hasMissing) missingTopCount++;
+                            if (st.isClaimable) claimableTopCount++;
                         });
 
-                        // 在 pcEl 網格內放一個橫跨全寬的大標題，類似原本金盆的大標題，但稍微小一點以示區別
-                                                const th = document.createElement('div');
+                        const th = document.createElement('div');
                         th.className = 'group-header';
-                        th.style.background = 'transparent';
-                        th.style.boxShadow = 'none';
-                        th.style.justifyContent = 'flex-start';
-                        th.style.padding = '4px 0';
-                        th.style.marginTop = '16px';
+                        th.style.cssText = 'grid-column: 1 / -1; background: transparent; box-shadow: none; padding: 4px 0; margin-top: 12px; cursor: pointer;';
 
-                        let pastelBg = 'hsl(200, 85%, 94%)';
-                        let darkText = 'hsl(200, 85%, 30%)';
-                        let borderColor = 'hsl(200, 85%, 85%)';
+                        let bannerBg = 'linear-gradient(90deg, #e0f2fe 0%, #f0f9ff 100%)';
+                        let darkText = '#0369a1';
+                        let borderColor = '#7dd3fc';
+                        let iconStr = '📌';
 
                         if (tName === '期間 (進行中)') {
-                            pastelBg = 'hsl(35, 85%, 94%)';
-                            darkText = 'hsl(35, 85%, 30%)';
-                            borderColor = 'hsl(35, 85%, 85%)';
+                            bannerBg = 'linear-gradient(90deg, #ffedd5 0%, #fff7ed 100%)';
+                            darkText = '#c2410c';
+                            borderColor = '#fdba74';
+                            iconStr = '🔥';
                         } else if (tName === '絕版') {
-                            pastelBg = 'hsl(215, 16%, 94%)';
-                            darkText = 'hsl(215, 16%, 30%)';
-                            borderColor = 'hsl(215, 16%, 85%)';
+                            bannerBg = 'linear-gradient(90deg, #e2e8f0 0%, #f8fafc 100%)';
+                            darkText = '#475569';
+                            borderColor = '#cbd5e1';
+                            iconStr = '📦';
                         }
 
                         let topReminders = '';
-                        if (hasMissingTop) topReminders += ' <span style="color:#dc2626; font-size:12px; font-weight:bold; background:#fef2f2; border:1px solid #fca5a5; padding:2px 8px; border-radius:12px; margin-left:8px;">⚠️ 缺</span>';
-                        if (hasClaimableTop) topReminders += ' <span style="color:#d97706; font-size:12px; font-weight:bold; background:#fffbeb; border:1px solid #fcd34d; padding:2px 8px; border-radius:12px; margin-left:8px;">🎁 可拿</span>';
+                        if (claimableTopCount > 0) topReminders += ` <span style="color:#15803d; font-size:12px; font-weight:800; background:#dcfce7; border:1px solid #86efac; padding:3px 10px; border-radius:999px;">🎁 可領 ${claimableTopCount} 筆</span>`;
+                        if (missingTopCount > 0) topReminders += ` <span style="color:#dc2626; font-size:12px; font-weight:800; background:#fef2f2; border:1px solid #fca5a5; padding:3px 10px; border-radius:999px;">⚠️ 缺 ${missingTopCount} 筆</span>`;
 
                         th.innerHTML = `
-                            <div style="background:${pastelBg}; border:1px solid ${borderColor}; color:${darkText}; padding:6px 14px; border-radius:16px; display:inline-flex; align-items:center; gap:10px; font-size:16px; font-weight:bold; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition:all 0.2s;">
-                                <span>${isTopCol?'▶':'▼'} 📌 ${tName}</span>
-                                <span style="background:rgba(255,255,255,0.7); padding:2px 8px; border-radius:12px; font-size:13px; font-weight:900;">${tItems.length} 筆</span>
-                            </div>${topReminders}
+                            <div style="width:100%; background:${bannerBg}; border:1.5px solid ${borderColor}; border-left:5px solid ${darkText}; color:${darkText}; padding:9px 15px; border-radius:14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:15px; font-weight:900; box-shadow:0 2px 6px rgba(15,23,42,0.04); box-sizing:border-box;">
+                                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                    <span>${isTopCol ? '▶' : '▼'} ${iconStr} ${tName}</span>
+                                    <span style="background:rgba(255,255,255,0.85); padding:2px 9px; border-radius:999px; font-size:12.5px; font-weight:900;">${tItems.length} 筆</span>
+                                    ${topReminders}
+                                </div>
+                                <span style="font-size:11.5px; font-weight:700; opacity:0.75;">${isTopCol ? '點擊展開群組' : '點擊收合大類'}</span>
+                            </div>
                         `;
                         th.addEventListener('click', () => toggleGroup(topId));
                         pcEl.appendChild(th);
@@ -5470,54 +5674,46 @@
                                 
                                 const actId = 'pc-act-' + tName + '-' + mainAct;
                                 if (!knownPostcardGroups.has(actId)) { collapsedGroups.add(actId); knownPostcardGroups.add(actId); }
-                                const isActCol = collapsedGroups.has(actId);
+                                // 若使用者點選「🎁 今日可領」快篩或正在搜尋，自動展開活動方便直接看卡片
+                                const isActCol = collapsedGroups.has(actId) && gbStatusFilter !== 'claimable' && !isSearching;
                                 const ah = document.createElement('div');
                                 ah.className = 'sq-group-header';
                                 
-                                let hasClaimable = false;
+                                let claimableCount = 0;
+                                let claimedCount = 0;
                                 let hasMissing = false;
-                                const now = new Date();
-                                const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+                                let earliestNextDate = null;
+                                let earliestNextStr = '';
+                                let groupDaysLeft = null;
 
                                 itemsList.forEach(item => {
-                                    if ((item.tag || '').includes('缺') || (item.name || '').includes('缺') || (item.note || '').includes('缺') || (item.user || '').includes('缺')) {
-                                        hasMissing = true;
-                                    }
-                                    let localIsDisc = item.discontinued === true;
-                                    if (item.sgType === '期間' && item.sgEnd) {
-                                        const endDate = new Date(item.sgEnd);
-                                        endDate.setHours(23, 59, 59, 999);
-                                        if (Date.now() > endDate.getTime()) localIsDisc = true;
-                                    }
-                                    item._localIsDisc = localIsDisc; 
-
-                                    let cdVal = item.sgCooldown;
-                                    if (!cdVal && item.tag && (item.tag.includes('30天') || item.tag.includes('30 天') || item.tag.includes('一個月') || item.tag.includes('30 days'))) cdVal = '30';
-                                    if (!cdVal && (item.sgType === '期間' || item.sgType === '常駐')) cdVal = '30';
-                                    
-                                    if (cdVal && !localIsDisc) {
-                                        let hasStarted = true;
-                                        if (item.sgType === '期間' && item.sgStart) {
-                                            const startDate = new Date(item.sgStart + 'T00:00:00');
-                                            const today = new Date(); today.setHours(0,0,0,0);
-                                            if (startDate > today) hasStarted = false;
-                                        }
-                                        if (hasStarted) {
-                                            if (!item.sgLast) hasClaimable = true;
-                                            else {
-                                                const lastDate = new Date(item.sgLast + 'T00:00:00');
-                                                // 限領一次：領過之後不再有下次可領日
-                                    const nextDate = cdVal === 'once' ? new Date(8.64e15) : (parseInt(cdVal, 10) === 30 ? new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, lastDate.getDate()) : new Date(lastDate.getTime() + parseInt(cdVal, 10) * 86400000));
-                                                const today = new Date(); today.setHours(0,0,0,0);
-                                                if (nextDate <= today) hasClaimable = true;
+                                    const st = item._sgStatus || getSgItemStatus(item);
+                                    item._localIsDisc = st.isDisc;
+                                    if (st.hasMissing) hasMissing = true;
+                                    if (st.isClaimable) {
+                                        claimableCount++;
+                                    } else if (st.isCooling || item.sgLast) {
+                                        claimedCount++;
+                                        if (st.nextDate && st.cdVal !== 'once') {
+                                            if (!earliestNextDate || st.nextDate < earliestNextDate) {
+                                                earliestNextDate = st.nextDate;
+                                                earliestNextStr = st.nextStr;
                                             }
                                         }
                                     }
+                                    if (st.daysLeft !== null && (groupDaysLeft === null || st.daysLeft < groupDaysLeft)) {
+                                        groupDaysLeft = st.daysLeft;
+                                    }
                                 });
+
+                                const hasClaimable = claimableCount > 0;
+                                const allDiscontinued = itemsList.length > 0 && itemsList.every(item => item._localIsDisc);
 
                                 if (hasClaimable) {
                                     ah.className += ' alert-pulse';
                                     ah.style.position = 'relative';
+                                } else if (!allDiscontinued && itemsList.length > 0) {
+                                    ah.className += ' all-claimed';
                                 }
 
                                 let dateSubtitle = '';
@@ -5525,31 +5721,52 @@
                                 if (firstItem && firstItem.sgType === '期間' && (firstItem.sgStart || firstItem.sgEnd)) {
                                     const sStr = firstItem.sgStart ? firstItem.sgStart.substring(5).replace('-', '/') : '未定';
                                     const eStr = firstItem.sgEnd ? firstItem.sgEnd.substring(5).replace('-', '/') : '未定';
-                                    dateSubtitle = `<div style="font-size:11px; color:#5b21b6; background:#e0e7ff; padding:3px 8px; border-radius:12px; margin-top:4px; font-weight:bold; display:inline-block; border:1px solid #c7d2fe; letter-spacing:0.5px;">📅 ${sStr} ~ ${eStr}</div>`;
+                                    const cdBadge = !allDiscontinued ? getSgCountdownBadgeHtml(groupDaysLeft) : '';
+                                    dateSubtitle = `<div style="display:flex; align-items:center; justify-content:center; gap:4px; flex-wrap:wrap; margin-top:2px;">
+                                        <span style="font-size:10.5px; color:#5b21b6; background:#e0e7ff; padding:2px 7px; border-radius:999px; font-weight:700; border:1px solid #c7d2fe;">📅 ${sStr}~${eStr}</span>
+                                        ${cdBadge}
+                                    </div>`;
                                 }
 
                                 let cooldownBadge = '';
                                 if (firstItem) {
-                                    let cdVal = firstItem.sgCooldown;
-                                    if (!cdVal && firstItem.tag && (firstItem.tag.includes('30天') || firstItem.tag.includes('30 天') || firstItem.tag.includes('一個月') || firstItem.tag.includes('30 days'))) cdVal = '30';
-                                    if (!cdVal && (firstItem.sgType === '期間' || firstItem.sgType === '常駐')) cdVal = '30';
+                                    const cdVal = resolveSgCooldown(firstItem);
                                     if (cdVal && !firstItem._localIsDisc) {
-                                        const cdNum = parseInt(cdVal, 10);
-                                        const cdLabel = cdVal === 'once' ? '限領一次' : cdNum === 1 ? '每天可領' : cdNum === 30 ? '每月可領' : `每 ${cdNum} 天可領`;
-                                        cooldownBadge = `<div style="font-size:11px; color:#b45309; background:#fef3c7; padding:2px 8px; border-radius:12px; margin-top:4px; font-weight:bold; display:inline-block; border:1px solid #fde68a; letter-spacing:0.5px;">⏱ ${cdLabel}</div>`;
+                                        const cdLabel = formatSgCooldownLabel(cdVal);
+                                        cooldownBadge = `<div style="font-size:10.5px; color:#b45309; background:#fef3c7; padding:2px 8px; border-radius:999px; font-weight:700; display:inline-block; border:1px solid #fde68a;">⏱ ${cdLabel}</div>`;
                                     }
+                                }
+
+                                // 領取進度條與最早下次可領日
+                                let progressHtml = '';
+                                if (!allDiscontinued && itemsList.length > 0) {
+                                    const pct = Math.round((claimedCount / itemsList.length) * 100);
+                                    const barColor = hasClaimable ? 'linear-gradient(90deg, #f59e0b, #10b981)' : '#10b981';
+                                    const statusNote = hasClaimable
+                                        ? `<span style="color:#d97706; font-weight:800;">🎁 可拿 ${claimableCount}</span>`
+                                        : (earliestNextStr ? `<span style="color:#0369a1; font-weight:700;">⏳ 下次 ${earliestNextStr}</span>` : `<span style="color:#15803d; font-weight:800;">✓ 全數已領</span>`);
+                                    progressHtml = `
+                                        <div class="sq-progress-wrap">
+                                            <div style="display:flex; justify-content:space-between; align-items:center; font-size:10.5px; color:#64748b; font-weight:700;">
+                                                <span>已領 ${claimedCount}/${itemsList.length}</span>
+                                                ${statusNote}
+                                            </div>
+                                            <div class="sq-progress-bar-bg">
+                                                <div class="sq-progress-bar-fill" style="width:${pct}%; background:${barColor};"></div>
+                                            </div>
+                                        </div>
+                                    `;
                                 }
 
                                 let subReminders = '';
                                 if (hasMissing) subReminders += ' <span style="color:#ef4444; font-size:11px; font-weight:bold; margin-left:2px;">❗缺</span>';
-                                if (hasClaimable) subReminders += ' <span style="color:#d97706; font-size:11px; font-weight:bold; margin-left:2px;">⚠️可拿</span>';
 
-                                const allDiscontinued = itemsList.length > 0 && itemsList.every(item => item._localIsDisc);
+                                const firstCdVal = firstItem ? resolveSgCooldown(firstItem) : '';
                                 const groupClaimBtnHtml = allDiscontinued ? '' : `
                                     <button type="button" class="group-claim-btn ${!hasClaimable ? 'claimed' : ''}" 
                                             onclick="markGroupClaimedToday('${escapeHtml(mainAct).replace(/'/g, "\\'")}', '__ALL__', event)" 
                                             title="一鍵將群組內所有卡片設為今日已領">
-                                        ${!hasClaimable ? (firstItem && firstItem.sgCooldown === 'once' ? '✓ 已領取' : '✓ 今日已領') : '🎁 今日領取'}
+                                        ${!hasClaimable ? (firstCdVal === 'once' ? '✓ 已領取' : '✓ 今日已領') : '🎁 今日領取'}
                                     </button>
                                 `;
                                 
@@ -5562,11 +5779,15 @@
                                 `;
 
                                 ah.innerHTML = `
-                                    <div class="count">${itemsList.length}</div>
+                                    <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
+                                        <div class="count">${itemsList.length}</div>
+                                        <span style="font-size:11px; color:#64748b; font-weight:700;">筆</span>
+                                    </div>
                                     <div class="title">${isActCol ? '▶' : '▼'} ${escapeHtml(mainAct)}${subReminders}</div>
+                                    ${progressHtml}
                                     ${dateSubtitle}
                                     ${cooldownBadge}
-                                    <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">${groupClaimBtnHtml}${groupCopyBtnHtml}</div>
+                                    <div style="display:flex; gap:5px; justify-content:center; flex-wrap:wrap; margin-top:2px;">${groupClaimBtnHtml}${groupCopyBtnHtml}</div>
                                 `;
                                 ah.addEventListener('click', () => toggleGroup(actId));
                                 pcEl.appendChild(ah);
@@ -5584,34 +5805,19 @@
                                             
                                             let subHasClaimable = false;
                                             subItems.forEach(item => {
-                                                if (item._localIsDisc) return;
-                                                let cdVal = item.sgCooldown || '30';
-                                                let hasStarted = true;
-                                                if (item.sgType === '期間' && item.sgStart) {
-                                                    const startDate = new Date(item.sgStart + 'T00:00:00');
-                                                    const today = new Date(); today.setHours(0,0,0,0);
-                                                    if (startDate > today) hasStarted = false;
-                                                }
-                                                if (hasStarted) {
-                                                    if (!item.sgLast) subHasClaimable = true;
-                                                    else {
-                                                        const lastDate = new Date(item.sgLast + 'T00:00:00');
-                                                        // 限領一次：領過之後不再有下次可領日
-                                    const nextDate = cdVal === 'once' ? new Date(8.64e15) : (parseInt(cdVal, 10) === 30 ? new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, lastDate.getDate()) : new Date(lastDate.getTime() + parseInt(cdVal, 10) * 86400000));
-                                                        const today = new Date(); today.setHours(0,0,0,0);
-                                                        if (nextDate <= today) subHasClaimable = true;
-                                                    }
-                                                }
+                                                const st = item._sgStatus || getSgItemStatus(item);
+                                                if (st.isClaimable) subHasClaimable = true;
                                             });
 
                                             const subAllDisc = subItems.length > 0 && subItems.every(item => item._localIsDisc);
+                                            const subFirstCd = subItems[0] ? resolveSgCooldown(subItems[0]) : '';
 
                                             const divider = document.createElement('div');
                                             divider.style.cssText = 'grid-column: 1 / -1; display:flex; align-items:center; justify-content:space-between; padding:8px 12px; margin:12px 0 4px; background:#f8fafc; border-radius:8px; border-left:4px solid #94a3b8; box-shadow:0 1px 2px rgba(0,0,0,0.05);';
                                             
                                             const titleHtml = `<div style="font-size:13px; font-weight:bold; color:#475569; display:flex; align-items:center; gap:6px;">📍 ${escapeHtml(displaySubName)} <span style="color:#64748b; font-size:11px; font-weight:normal; background:#e2e8f0; padding:2px 6px; border-radius:12px;">${subItems.length}</span></div>`;
                                             
-                                            const subClaimBtn = subAllDisc ? '' : `<button type="button" class="group-claim-btn ${!subHasClaimable ? 'claimed' : ''}" onclick="markGroupClaimedToday('${escapeHtml(mainAct).replace(/'/g, "\\'")}', '${escapeHtml(subAct).replace(/'/g, "\\'")}', event)" style="padding:4px 8px; font-size:11px; margin:0; min-height:0;">${!subHasClaimable ? (subItems[0] && subItems[0].sgCooldown === 'once' ? '✓ 已領取' : '✓ 已領') : '🎁 領取'}</button>`;
+                                            const subClaimBtn = subAllDisc ? '' : `<button type="button" class="group-claim-btn ${!subHasClaimable ? 'claimed' : ''}" onclick="markGroupClaimedToday('${escapeHtml(mainAct).replace(/'/g, "\\'")}', '${escapeHtml(subAct).replace(/'/g, "\\'")}', event)" style="padding:4px 8px; font-size:11px; margin:0; min-height:0;">${!subHasClaimable ? (subFirstCd === 'once' ? '✓ 已領取' : '✓ 已領') : '🎁 領取'}</button>`;
                                             const subCopyBtn = `<button type="button" class="group-claim-btn claimed" onclick="copyGroupCoords('${escapeHtml(mainAct).replace(/'/g, "\\'")}', '${escapeHtml(subAct).replace(/'/g, "\\'")}', event)" style="padding:4px 8px; font-size:11px; margin-left:6px; min-height:0;">📋 座標</button>`;
                                             
                                             divider.innerHTML = `${titleHtml}<div style="display:flex; align-items:center;">${subClaimBtn}${subCopyBtn}</div>`;
