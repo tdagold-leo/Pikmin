@@ -1907,10 +1907,191 @@
         return R * c;
     }
 
+    // ===== 純點種類標準定義（41種皮克敏純點 + 天氣與自訂種類自動整合） =====
+    const LM_STANDARD_CATEGORIES = [
+        { label: '大學&學院', icon: '🎓', aliases: ['大學&學院', '大學', '學院', '大學和學院'] },
+        { label: '山丘', icon: '⛰️', aliases: ['山丘', '山'] },
+        { label: '五金行', icon: '🔧', aliases: ['五金行', '五金店'] },
+        { label: '公車站', icon: '🚌', aliases: ['公車站', '巴士站', '公車'] },
+        { label: '公園', icon: '🌳', aliases: ['公園'] },
+        { label: '化妝品', icon: '💄', aliases: ['化妝品', '化妝品商店', '美妝', '美妝店', '化妝品店'] },
+        { label: '文具店', icon: '✏️', aliases: ['文具店', '文具'] },
+        { label: '水邊', icon: '🌊', aliases: ['水邊', '河邊', '湖邊', '運河', '水岸'] },
+        { label: '主題樂園', icon: '🎡', aliases: ['主題樂園', '遊樂園'] },
+        { label: '自助洗衣店&乾洗', icon: '🧺', aliases: ['自助洗衣店&乾洗', '自助洗衣店和乾洗店', '自助洗衣店', '洗衣店', '乾洗', '乾洗店'] },
+        { label: '車站', icon: '🚉', aliases: ['車站', '火車站', '捷運站', '地鐵站', '電車站'] },
+        { label: '咖哩', icon: '🍛', aliases: ['咖哩', '咖哩店', '咖哩餐廳'] },
+        { label: '咖啡杯', icon: '☕', aliases: ['咖啡杯', '咖啡廳', '咖啡店', '咖啡'] },
+        { label: '拉麵店', icon: '🍜', aliases: ['拉麵店', '拉麵'] },
+        { label: '服裝店', icon: '👕', aliases: ['服裝店', '服飾店'] },
+        { label: '便利店', icon: '🏪', aliases: ['便利店', '便利商店', '超商'] },
+        { label: '美容院', icon: '✂️', aliases: ['美容院', '美髮店', '理髮店', '髮廊'] },
+        { label: '美術館', icon: '🖼️', aliases: ['美術館', '畫廊'] },
+        { label: '海灘', icon: '🏖️', aliases: ['海灘', '沙灘', '海邊'] },
+        { label: '神社和寺廟', icon: '⛩️', aliases: ['神社和寺廟', '神社', '寺廟'] },
+        { label: '動物園', icon: '🦒', aliases: ['動物園'] },
+        { label: '甜點店', icon: '🍰', aliases: ['甜點店', '馬卡龍', '甜甜圈', '蛋糕店', '甜點'] },
+        { label: '森林', icon: '🌲', aliases: ['森林'] },
+        { label: '超市', icon: '🛒', aliases: ['超市', '超級市場'] },
+        { label: '郵局', icon: '📮', aliases: ['郵局'] },
+        { label: '飯店', icon: '🏨', aliases: ['飯店', '旅館', '酒店'] },
+        { label: '義式餐廳', icon: '🍝', aliases: ['義式餐廳', '披薩', '義大利麵', '義式料理'] },
+        { label: '路邊', icon: '🛣️', aliases: ['路邊'] },
+        { label: '電影院', icon: '🎬', aliases: ['電影院', '戲院'] },
+        { label: '電器行', icon: '🔌', aliases: ['電器行', '電池', '電器店'] },
+        { label: '圖書館', icon: '📚', aliases: ['圖書館', '書店'] },
+        { label: '壽司', icon: '🍣', aliases: ['壽司', '壽司店', '壽司餐廳'] },
+        { label: '漢堡', icon: '🍔', aliases: ['漢堡', '漢堡店'] },
+        { label: '墨西哥餐廳', icon: '🌮', aliases: ['墨西哥餐廳', '塔可'] },
+        { label: '橋樑', icon: '🌉', aliases: ['橋樑', '橋'] },
+        { label: '機場', icon: '✈️', aliases: ['機場'] },
+        { label: '餐廳', icon: '🍴', aliases: ['餐廳'] },
+        { label: '韓國餐廳', icon: '🥘', aliases: ['韓國餐廳', '韓式餐廳', '韓式料理'] },
+        { label: '藥局', icon: '💊', aliases: ['藥局', '藥妝店'] },
+        { label: '麵包店', icon: '🥐', aliases: ['麵包店', '烘焙坊'] },
+        { label: '體育館', icon: '🏟️', aliases: ['體育館', '體育場', '運動場'] },
+        { label: '下雪', icon: '❄️', aliases: ['下雪', '雪', '雪天'] }
+    ];
+
+    const LM_EXTRA_ICONS = {
+        '下雪': '❄️',
+        '雨天': '🌧️',
+        '下雨': '🌧️',
+        '植物園': '🌿',
+        '博物館': '🏛️',
+        '展覽': '🎪',
+        '景點': '📸'
+    };
+
+    let selectedLmTypes = new Set();
+    let lmConfirmFilter = 'all'; // 'all' | 'confirmed' | 'unconfirmed'
+    let lmShowOnlyAvailable = false;
+    let lmForceShowAllCards = false;
+    let currentFilteredLandmarks = [];
+
+    function getLmCategoryIcon(typeStr) {
+        const t = (typeStr || '').trim();
+        for (const cat of LM_STANDARD_CATEGORIES) {
+            if (cat.label === t || cat.aliases.includes(t)) return cat.icon;
+        }
+        return LM_EXTRA_ICONS[t] || '📍';
+    }
+
+    function getLmStandardLabel(typeStr) {
+        const t = (typeStr || '').trim();
+        for (const cat of LM_STANDARD_CATEGORIES) {
+            if (cat.label === t || cat.aliases.includes(t)) return cat.label;
+        }
+        return t || '純點';
+    }
+
+    function doesItemMatchCategory(itemType, catObj) {
+        const t = (itemType || '').trim();
+        if (!t) return false;
+        return catObj.label === t || (catObj.aliases && catObj.aliases.includes(t));
+    }
+
+    window.onLmLocationFilterChange = function(level) {
+        const cityEl = document.getElementById('lm-city-filter');
+        const distEl = document.getElementById('lm-district-filter');
+        if (level === 'country') {
+            if (cityEl) cityEl.value = '';
+            if (distEl) distEl.value = '';
+        } else if (level === 'city') {
+            if (distEl) distEl.value = '';
+        }
+        lmForceShowAllCards = false;
+        renderLandmarks();
+    };
+
+    window.toggleLmCategoryFilter = function(catLabel) {
+        if (selectedLmTypes.has(catLabel)) {
+            selectedLmTypes.delete(catLabel);
+        } else {
+            selectedLmTypes.add(catLabel);
+        }
+        lmForceShowAllCards = false;
+        renderLandmarks();
+    };
+
+    window.clearLmCategoryFilter = function() {
+        selectedLmTypes.clear();
+        lmForceShowAllCards = false;
+        renderLandmarks();
+    };
+
+    window.setLmConfirmFilter = function(mode) {
+        lmConfirmFilter = mode || 'all';
+        renderLandmarks();
+    };
+
+    window.toggleLandmarkConfirmedQuick = function(id, currentConfirmed, event) {
+        if (event && typeof event.stopPropagation === 'function') event.stopPropagation();
+        dbRef('landmarks/' + id).update({ confirmed: !currentConfirmed });
+    };
+
+    window.toggleLmShowOnlyAvailable = function() {
+        lmShowOnlyAvailable = !lmShowOnlyAvailable;
+        renderLandmarks();
+    };
+
+    window.toggleLmForceShowAll = function(val) {
+        lmForceShowAllCards = !!val;
+        renderLandmarks();
+    };
+
+    window.copyFilteredLmCoords = function(btn, subsetMode) {
+        let sourceList = currentFilteredLandmarks || [];
+        if (subsetMode === 'confirmed') {
+            sourceList = sourceList.filter(i => !!i.confirmed);
+        } else if (subsetMode === 'unconfirmed') {
+            sourceList = sourceList.filter(i => !i.confirmed);
+        }
+        if (sourceList.length === 0) {
+            alert('目前沒有可複製的純點座標！');
+            return;
+        }
+        const os = typeof detectOS === 'function' ? detectOS() : 'unknown';
+        const seen = new Set();
+        const lines = [];
+        sourceList.forEach(item => {
+            if (!item.coords) return;
+            const normalized = normalizeCoords(String(item.coords));
+            if (!normalized || seen.has(normalized)) return;
+            seen.add(normalized);
+            lines.push((os === 'ios' || os === 'macos' || os === 'windows') ? normalized.replace(/,/g, ' ') : normalized);
+        });
+        if (lines.length === 0) {
+            alert('目前篩選結果中沒有有效座標！');
+            return;
+        }
+        const text = lines.join('\n');
+        const origHtml = btn ? btn.innerHTML : '';
+        const onSuccess = () => {
+            if (btn) {
+                btn.innerHTML = `✅ 已複製 ${lines.length} 筆！`;
+                setTimeout(() => { btn.innerHTML = origHtml; }, 1800);
+            }
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(onSuccess).catch(() => {
+                alert('複製失敗，請手動複製。');
+            });
+        } else {
+            alert('複製失敗，請手動複製。');
+        }
+    };
+
     function renderLandmarks() {
         const container = document.getElementById('landmark-list');
         const emptyEl = document.getElementById('landmark-empty');
-        const filterVal = (document.getElementById('lm-filter')?.value || '').trim();
+        const totalHeaderEl = document.getElementById('lm-total-header');
+        const countryEl = document.getElementById('lm-country-filter');
+        const cityEl = document.getElementById('lm-city-filter');
+        const distEl = document.getElementById('lm-district-filter');
+        const pillsContainer = document.getElementById('lm-category-pills');
+        const actionsContainer = document.getElementById('lm-cat-actions');
+        const statusFilterBar = document.getElementById('lm-status-filter-bar');
         const searchVal = (document.getElementById('lm-search')?.value || '').trim();
         if (!container) return;
 
@@ -1918,7 +2099,7 @@
         const dupPartners = new Map(); // id → [{type, subtype, note, dist_m}]
         const parsedItems = landmarkList.map(item => {
             const m = (item.coords || '').match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
-            return { id: item.id, type: item.type || '純點', subtype: item.subtype || '', note: item.note || '',
+            return { id: item.id, type: getLmStandardLabel(item.type), rawType: item.type || '純點', subtype: item.subtype || '', note: item.note || '',
                      lat: m ? parseFloat(m[1]) : null, lon: m ? parseFloat(m[2]) : null };
         });
         for (let i = 0; i < parsedItems.length; i++) {
@@ -1929,40 +2110,218 @@
                 if (distM <= 100 && a.type === b.type) {
                     if (!dupPartners.has(a.id)) dupPartners.set(a.id, []);
                     if (!dupPartners.has(b.id)) dupPartners.set(b.id, []);
-                    dupPartners.get(a.id).push({ type: b.type, subtype: b.subtype, note: b.note, distM });
-                    dupPartners.get(b.id).push({ type: a.type, subtype: a.subtype, note: a.note, distM });
+                    dupPartners.get(a.id).push({ type: b.rawType, subtype: b.subtype, note: b.note, distM });
+                    dupPartners.get(b.id).push({ type: a.rawType, subtype: a.subtype, note: a.note, distM });
                 }
             }
         }
         const checkLmDuplicate = (item) => dupPartners.has(item.id);
 
-        // 更新篩選下拉選單
-        const filterEl = document.getElementById('lm-filter');
-        if (filterEl) {
-            const types = [...new Set(landmarkList.map(i => i.type).filter(Boolean))];
-            const currentVal = filterEl.value;
-            filterEl.innerHTML = '<option value="">顯示全部</option>' + types.map(t => `<option value="${escapeHtml(t)}" ${currentVal === t ? 'selected' : ''}>${escapeHtml(t)}</option>`).join('');
+        // 1. 國家下拉選單更新
+        let selectedCountry = countryEl ? countryEl.value : '';
+        if (countryEl) {
+            const countries = [...new Set(landmarkList.map(i => (i.country || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-Hant'));
+            if (selectedCountry && !countries.includes(selectedCountry)) selectedCountry = '';
+            countryEl.innerHTML = '<option value="">全部國家</option>' +
+                countries.map(c => `<option value="${escapeHtml(c)}" ${selectedCountry === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('');
         }
 
-        let filtered = filterVal ? landmarkList.filter(i => i.type === filterVal) : [...landmarkList];
+        let locFiltered = selectedCountry
+            ? landmarkList.filter(i => (i.country || '').trim() === selectedCountry)
+            : [...landmarkList];
 
+        // 2. 縣市下拉選單更新（依所選國家連動）
+        let selectedCity = cityEl ? cityEl.value : '';
+        if (cityEl) {
+            const cities = [...new Set(locFiltered.map(i => (i.city || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-Hant'));
+            if (selectedCity && !cities.includes(selectedCity)) selectedCity = '';
+            cityEl.innerHTML = '<option value="">全部縣市</option>' +
+                cities.map(c => `<option value="${escapeHtml(c)}" ${selectedCity === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('');
+        }
+
+        if (selectedCity) {
+            locFiltered = locFiltered.filter(i => (i.city || '').trim() === selectedCity);
+        }
+
+        // 3. 行政區下拉選單更新（依所選國家 + 縣市連動）
+        let selectedDistrict = distEl ? distEl.value : '';
+        if (distEl) {
+            const districts = [...new Set(locFiltered.map(i => (i.district || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-Hant'));
+            if (selectedDistrict && !districts.includes(selectedDistrict)) selectedDistrict = '';
+            distEl.innerHTML = '<option value="">全部行政區</option>' +
+                districts.map(d => `<option value="${escapeHtml(d)}" ${selectedDistrict === d ? 'selected' : ''}>${escapeHtml(d)}</option>`).join('');
+        }
+
+        if (selectedDistrict) {
+            locFiltered = locFiltered.filter(i => (i.district || '').trim() === selectedDistrict);
+        }
+
+        // 4. 依確認狀態過濾前的統計（供狀態切換按鈕顯示數量）
+        // 整理所有純點種類（標準分類 + 資料庫中未涵蓋的自訂種類）
+        const allCategories = [...LM_STANDARD_CATEGORIES];
+        const existingTypes = [...new Set(landmarkList.map(i => (i.type || '').trim()).filter(Boolean))];
+        existingTypes.forEach(t => {
+            const alreadyCovered = allCategories.some(cat => cat.label === t || (cat.aliases && cat.aliases.includes(t)));
+            if (!alreadyCovered) {
+                allCategories.push({
+                    label: t,
+                    icon: getLmCategoryIcon(t),
+                    aliases: [t]
+                });
+            }
+        });
+
+        // 依確認狀態過濾做準備
+        const locAndStatusPool = lmConfirmFilter === 'confirmed'
+            ? locFiltered.filter(i => !!i.confirmed)
+            : lmConfirmFilter === 'unconfirmed'
+                ? locFiltered.filter(i => !i.confirmed)
+                : locFiltered;
+
+        // 計算各種類在目前地區(&狀態)篩選下的筆數
+        const catCounts = new Map();
+        let availableCatCount = 0;
+        allCategories.forEach(cat => {
+            const cnt = locAndStatusPool.filter(item => doesItemMatchCategory(item.type, cat)).length;
+            catCounts.set(cat.label, cnt);
+            if (cnt > 0) availableCatCount++;
+        });
+
+        // 渲染純點種類右上角操作按鈕
+        if (actionsContainer) {
+            const btns = [];
+            if (selectedLmTypes.size > 0) {
+                btns.push(`<button type="button" class="lm-cat-action-btn clear" onclick="clearLmCategoryFilter()">✕ 清除已選 (${selectedLmTypes.size})</button>`);
+            }
+            btns.push(`<button type="button" class="lm-cat-action-btn" onclick="toggleLmShowOnlyAvailable()">${lmShowOnlyAvailable ? '👁️ 顯示全部種類 (' + allCategories.length + ')' : '🔍 只看有資料種類 (' + availableCatCount + ')'}</button>`);
+            actionsContainer.innerHTML = btns.join('');
+        }
+
+        // 渲染純點種類膠囊按鈕網格
+        if (pillsContainer) {
+            const displayCategories = lmShowOnlyAvailable
+                ? allCategories.filter(cat => (catCounts.get(cat.label) || 0) > 0 || selectedLmTypes.has(cat.label))
+                : allCategories;
+
+            pillsContainer.innerHTML = displayCategories.map(cat => {
+                const isActive = selectedLmTypes.has(cat.label);
+                const cnt = catCounts.get(cat.label) || 0;
+                const countBadge = cnt > 0 ? `<span class="lm-pill-count">${cnt}</span>` : '';
+                const safeLabel = escapeHtml(cat.label).replace(/'/g, "\\'");
+                return `<button type="button" class="lm-cat-pill${isActive ? ' active' : ''}" onclick="toggleLmCategoryFilter('${safeLabel}')" title="${escapeHtml(cat.label)} (${cnt} 筆)">
+                    <span>${cat.icon}</span>
+                    <span>${escapeHtml(cat.label)}</span>
+                    ${countBadge}
+                </button>`;
+            }).join('');
+        }
+
+        // 5. 依選取的純點種類（可多選）過濾
+        let preStatusFiltered = [...locFiltered];
+        if (selectedLmTypes.size > 0) {
+            const activeCatObjs = allCategories.filter(cat => selectedLmTypes.has(cat.label));
+            preStatusFiltered = preStatusFiltered.filter(item => activeCatObjs.some(cat => doesItemMatchCategory(item.type, cat)));
+        }
+
+        // 6. 關鍵字或座標搜尋過濾
         let searchCoords = null;
         const coordMatch = searchVal.match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
         if (coordMatch) {
             searchCoords = { lat: parseFloat(coordMatch[1]), lon: parseFloat(coordMatch[2]) };
-            filtered.forEach(item => {
+            preStatusFiltered.forEach(item => {
                 const ic = (item.coords || '').match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
                 item._dist = ic ? getDistanceFromLatLonInKm(searchCoords.lat, searchCoords.lon, parseFloat(ic[1]), parseFloat(ic[2])) : 99999;
             });
-            filtered = filtered.filter(i => i._dist <= 1);
+            preStatusFiltered = preStatusFiltered.filter(i => i._dist <= 1);
         } else if (searchVal) {
             const terms = searchVal.toLowerCase().split(/\s+/).filter(Boolean);
-            filtered = filtered.filter(item => {
+            preStatusFiltered = preStatusFiltered.filter(item => {
                 const isDup = checkLmDuplicate(item);
                 const dupText = isDup ? '重複 重複座標 重複純點' : '';
-                const textToSearch = [item.country, item.city, item.district, item.type, item.subtype, item.note, dupText].filter(Boolean).join(' ').toLowerCase();
+                const confirmText = item.confirmed ? '已確認' : '未確認 待確認';
+                const stdType = getLmStandardLabel(item.type);
+                const textToSearch = [item.country, item.city, item.district, item.type, stdType, item.subtype, item.note, dupText, confirmText].filter(Boolean).join(' ').toLowerCase();
                 return terms.every(t => textToSearch.includes(t));
             });
+        }
+
+        // 統計目前條件下的「已確認」與「未確認」筆數，並渲染狀態切換膠囊
+        const confirmedTotalInPool = preStatusFiltered.filter(i => !!i.confirmed).length;
+        const unconfirmedTotalInPool = preStatusFiltered.length - confirmedTotalInPool;
+
+        if (statusFilterBar) {
+            statusFilterBar.innerHTML = `
+                <button type="button" class="lm-status-filter-pill ${lmConfirmFilter === 'all' ? 'active-all' : ''}" onclick="setLmConfirmFilter('all')">
+                    全部 (${preStatusFiltered.length})
+                </button>
+                <button type="button" class="lm-status-filter-pill ${lmConfirmFilter === 'confirmed' ? 'active-confirmed' : ''}" onclick="setLmConfirmFilter('confirmed')">
+                    ✅ 已確認 (${confirmedTotalInPool})
+                </button>
+                <button type="button" class="lm-status-filter-pill ${lmConfirmFilter === 'unconfirmed' ? 'active-unconfirmed' : ''}" onclick="setLmConfirmFilter('unconfirmed')">
+                    ⏳ 未確認 (${unconfirmedTotalInPool})
+                </button>
+            `;
+        }
+
+        let filtered = lmConfirmFilter === 'confirmed'
+            ? preStatusFiltered.filter(i => !!i.confirmed)
+            : lmConfirmFilter === 'unconfirmed'
+                ? preStatusFiltered.filter(i => !i.confirmed)
+                : [...preStatusFiltered];
+
+        // 判斷是否已設定任何篩選條件
+        const hasActiveFilter = Boolean(
+            selectedCountry ||
+            selectedCity ||
+            selectedDistrict ||
+            selectedLmTypes.size > 0 ||
+            lmConfirmFilter !== 'all' ||
+            searchVal ||
+            lmForceShowAllCards
+        );
+
+        // 排序篩選結果
+        const sortFn = (a, b) => {
+            if (searchCoords) return a._dist - b._dist;
+            const tA = getLmStandardLabel(a.type), tB = getLmStandardLabel(b.type);
+            if (tA !== tB) return tA.localeCompare(tB, 'zh-Hant');
+            const sA = a.subtype || '', sB = b.subtype || '';
+            if (sA !== sB) return sA.localeCompare(sB, 'zh-Hant');
+            const cA = a.country || '', cB = b.country || '';
+            if (cA !== cB) return cA.localeCompare(cB, 'zh-Hant');
+            const latA = parseFloat((a.coords || '').split(/[\s,，]+/)[0]) || 0;
+            const latB = parseFloat((b.coords || '').split(/[\s,，]+/)[0]) || 0;
+            return latB - latA;
+        };
+        filtered.sort(sortFn);
+
+        currentFilteredLandmarks = filtered;
+
+        // 7. 更新頂部總數、重複提示與「一鍵複製篩選座標」按鈕
+        const dupCount = filtered.filter(checkLmDuplicate).length;
+        const dupInfo = dupCount > 0
+            ? ` <span style="color:#ef4444; font-size:12px; font-weight:700; background:#fee2e2; padding:3px 9px; border-radius:999px; border:1px solid #fca5a5; cursor:pointer;" onclick="document.getElementById('lm-search').value='重複'; renderLandmarks()">⚠️ 重複 ${dupCount} 筆</span>`
+            : '';
+        const batchCopyBtn = (hasActiveFilter && filtered.length > 0)
+            ? ` <button type="button" class="lm-batch-copy-btn" onclick="copyFilteredLmCoords(this)" title="一鍵複製目前篩選出的所有純點座標">📋 複製篩選座標 (${filtered.length})</button>`
+            : '';
+        if (totalHeaderEl) {
+            const countLabel = (filtered.length !== landmarkList.length)
+                ? `篩選出 ${filtered.length} 個純點（共 ${landmarkList.length} 個）`
+                : `共 ${landmarkList.length} 個純點`;
+            totalHeaderEl.innerHTML = `<span>${countLabel}</span>${dupInfo}${batchCopyBtn}`;
+        }
+
+        // 若尚未點選任何「種類」、「地區」、「狀態」或輸入搜尋，預設保持下方乾淨
+        if (!hasActiveFilter) {
+            if (emptyEl) emptyEl.style.display = 'none';
+            container.innerHTML = `
+                <div class="lm-idle-hint">
+                    <div>👆 請點選上方任一「純點種類」、「確認狀態」或選擇「國家 / 縣市」以展開對應純點卡片</div>
+                    <button type="button" class="lm-cat-action-btn" onclick="toggleLmForceShowAll(true)" style="padding:5px 14px; font-size:12px;">👀 直接展開全部純點 (${landmarkList.length} 筆)</button>
+                </div>
+            `;
+            return;
         }
 
         if (filtered.length === 0) {
@@ -1973,31 +2332,26 @@
         if (emptyEl) emptyEl.style.display = 'none';
         container.innerHTML = '';
 
-        const summary = document.createElement('div');
-        summary.style.width = '100%';
-        const dupCount = filtered.filter(checkLmDuplicate).length;
-        const dupInfo = dupCount > 0 ? ` <span style="color:#ef4444; font-size:12px; font-weight:700; background:#fee2e2; padding:2px 8px; border-radius:10px; border:1px solid #fca5a5; cursor:pointer;" onclick="document.getElementById('lm-search').value='重複'; renderLandmarks()">⚠️ 重複 ${dupCount} 筆</span>` : '';
-        summary.innerHTML = `<div style="font-size:14px; font-weight:800; color:var(--text-main); margin-bottom:8px; display:flex; align-items:center; gap:8px;">📊 純點總計：${filtered.length} 筆${dupInfo}</div>`;
-        container.appendChild(summary);
-
         // 建立導航卡片的通用函數
         function makeLmCard(item, extraBadge) {
             const isDuplicate = checkLmDuplicate(item);
+            const isConfirmed = !!item.confirmed;
             const location = [escapeHtml(item.country), escapeHtml(item.city), escapeHtml(item.district)].filter(Boolean).join(' · ');
             const card = document.createElement('div');
-            card.className = 'lm-nav-card' + (isDuplicate ? ' lm-dup' : '');
+            card.className = 'lm-nav-card ' + (isConfirmed ? 'lm-is-confirmed' : 'lm-is-unconfirmed') + (isDuplicate ? ' lm-dup' : '');
 
-            // Header：只放種類 + 子分類 + 已確認 + 重複/距離標記，保持一行
-            const confirmedTag = item.confirmed
-                ? `<span class="lm-confirmed-dot" title="已確認">✅</span>`
-                : '';
+            const statusBadge = isConfirmed
+                ? `<span class="lm-status-badge confirmed" onclick="toggleLandmarkConfirmedQuick('${item.id}', true, event)" title="點擊可切換為未確認">✅ 已確認</span>`
+                : `<span class="lm-status-badge unconfirmed" onclick="toggleLandmarkConfirmedQuick('${item.id}', false, event)" title="點擊可標記為已確認">⏳ 未確認</span>`;
 
+            const typeIcon = getLmCategoryIcon(item.type);
+            const displayType = getLmStandardLabel(item.type);
             const headerBadges = [
-                `<span class="lm-type-pill">${escapeHtml(item.type || '純點')}</span>`,
+                `<span class="lm-type-pill"><span>${typeIcon}</span><span>${escapeHtml(displayType)}</span></span>`,
                 item.subtype ? `<span class="lm-subtype-pill">${escapeHtml(item.subtype)}</span>` : '',
-                confirmedTag,
                 isDuplicate ? `<span class="lm-dup-pill">⚠️ 重複</span>` : '',
-                extraBadge || ''
+                extraBadge || '',
+                statusBadge
             ].filter(Boolean).join('');
 
             // 重複對象資訊
@@ -2026,101 +2380,40 @@
             return card;
         }
 
-        // 座標搜尋：扁平清單，依距離排序
-        if (searchCoords) {
-            filtered.sort((a, b) => a._dist - b._dist);
+        // 將卡片明確分為「✅ 已確認純點」與「⏳ 未確認純點」兩大區塊顯示
+        const confirmedItems = filtered.filter(i => !!i.confirmed);
+        const unconfirmedItems = filtered.filter(i => !i.confirmed);
+
+        function renderStatusSection(title, itemsList, modeClass, subsetKey) {
+            if (itemsList.length === 0) return;
+            const secHeader = document.createElement('div');
+            secHeader.className = 'lm-status-section-header ' + modeClass;
+            secHeader.innerHTML = `
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span>${title}</span>
+                    <span style="font-size:12px; padding:2px 8px; border-radius:999px; background:rgba(255,255,255,0.7);">${itemsList.length} 筆</span>
+                </div>
+                <button type="button" class="lm-batch-copy-btn" style="${modeClass === 'unconfirmed' ? 'background:linear-gradient(135deg,#f59e0b,#d97706); box-shadow:0 2px 6px rgba(245,158,11,0.28);' : ''}" onclick="copyFilteredLmCoords(this, '${subsetKey}')">
+                    📋 複製此區座標 (${itemsList.length})
+                </button>
+            `;
+            container.appendChild(secHeader);
+
             const grid = document.createElement('div');
             grid.className = 'lm-nav-grid';
-            filtered.forEach(item => {
-                const distText = item._dist < 1 ? (item._dist * 1000).toFixed(0) + ' m' : item._dist.toFixed(1) + ' km';
-                const distBadge = `<span class="lm-dist-badge">📏 ${distText}</span>`;
-                grid.appendChild(makeLmCard(item, distBadge));
+            itemsList.forEach(item => {
+                let extraBadge = '';
+                if (searchCoords && typeof item._dist === 'number') {
+                    const distText = item._dist < 1 ? (item._dist * 1000).toFixed(0) + ' m' : item._dist.toFixed(1) + ' km';
+                    extraBadge = `<span class="lm-dist-badge">📏 ${distText}</span>`;
+                }
+                grid.appendChild(makeLmCard(item, extraBadge));
             });
             container.appendChild(grid);
-            return;
         }
 
-        // 一般模式：依種類分組
-        const groups = {};
-        filtered.forEach(item => {
-            const key = item.type || '未分類';
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(item);
-        });
-
-        Object.entries(groups).forEach(([type, items]) => {
-            const groupId = 'lm-grp-' + type.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_');
-
-            if (!knownLandmarkGroups.has(groupId)) {
-                collapsedGroups.add(groupId);
-                knownLandmarkGroups.add(groupId);
-            }
-
-            // 群組標題（卡片樣式）
-            const gHead = document.createElement('div');
-            gHead.className = 'card-group-header';
-            const isCollapsed = collapsedGroups.has(groupId);
-            const arrow = isCollapsed ? '▶' : '▼';
-            gHead.innerHTML = `
-                <span class="card-group-header-count">${items.length}</span>
-                <span>${arrow} 📂 ${escapeHtml(type)}</span>
-            `;
-            gHead.addEventListener('click', () => {
-                if (collapsedGroups.has(groupId)) collapsedGroups.delete(groupId);
-                else collapsedGroups.add(groupId);
-                renderLandmarks();
-            });
-            container.appendChild(gHead);
-
-            if (isCollapsed) return;
-
-            // 按子分類、國家、緯度由北到南排序
-            items.sort((a, b) => {
-                const sA = a.subtype || '無子分類', sB = b.subtype || '無子分類';
-                if (sA !== sB) return sA.localeCompare(sB);
-                const cA = a.country || '', cB = b.country || '';
-                if (cA !== cB) return cA.localeCompare(cB);
-                const latA = parseFloat((a.coords || '').split(/[\s,，]+/)[0]) || 0;
-                const latB = parseFloat((b.coords || '').split(/[\s,，]+/)[0]) || 0;
-                return latB - latA;
-            });
-
-            // 判斷是否需要子分類標題 (如果該大類下有多個不同子分類，或明確有子分類)
-            const subTypes = [...new Set(items.map(i => i.subtype || '無子分類'))];
-            const hasSubtypes = subTypes.length > 1 || (subTypes.length === 1 && subTypes[0] !== '無子分類');
-
-            if (hasSubtypes) {
-                let currentSub = null;
-                let currentGrid = null;
-                items.forEach(item => {
-                    const sub = item.subtype || '無子分類';
-                    if (sub !== currentSub) {
-                        currentSub = sub;
-                        const subHead = document.createElement('div');
-                        subHead.style.width = '100%';
-                        subHead.style.padding = '10px 4px 6px';
-                        subHead.style.fontSize = '13px';
-                        subHead.style.fontWeight = '800';
-                        subHead.style.color = '#6b7280';
-                        subHead.style.borderBottom = '1.5px dashed #e5e7eb';
-                        subHead.style.marginBottom = '8px';
-                        subHead.style.marginTop = '4px';
-                        subHead.innerText = `🏷️ ${sub}`;
-                        container.appendChild(subHead);
-                        
-                        currentGrid = document.createElement('div');
-                        currentGrid.className = 'lm-nav-grid';
-                        container.appendChild(currentGrid);
-                    }
-                    currentGrid.appendChild(makeLmCard(item, ''));
-                });
-            } else {
-                const grid = document.createElement('div');
-                grid.className = 'lm-nav-grid';
-                items.forEach(item => grid.appendChild(makeLmCard(item, '')));
-                container.appendChild(grid);
-            }
-        });
+        renderStatusSection('✅ 已確認純點（實測正確）', confirmedItems, 'confirmed', 'confirmed');
+        renderStatusSection('⏳ 未確認純點（待實測驗證）', unconfirmedItems, 'unconfirmed', 'unconfirmed');
     }
 
     function editLandmark(id) {
@@ -3115,12 +3408,27 @@
             }
 
             const mCoordsStr = normalizeCoords(coordsEl.value).toLowerCase();
+            const mCoordMatch = mCoordsStr.match(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+            const mLat = mCoordMatch ? parseFloat(mCoordMatch[1]) : null;
+            const mLon = mCoordMatch ? parseFloat(mCoordMatch[2]) : null;
             if (mCoordsStr) {
-                const isDup = dataList.some(item => {
-                    return normalizeCoords(item.coords || '').toLowerCase() === mCoordsStr;
+                const dupItem = dataList.find(item => {
+                    const icStr = normalizeCoords(item.coords || '').toLowerCase();
+                    if (icStr === mCoordsStr) return true;
+                    if (mLat !== null && mLon !== null) {
+                        const im = icStr.match(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+                        if (im) {
+                            const iLat = parseFloat(im[1]), iLon = parseFloat(im[2]);
+                            if (Math.abs(mLat - iLat) < 0.00001 && Math.abs(mLon - iLon) < 0.00001) return true;
+                        }
+                    }
+                    return false;
                 });
-                if (isDup) {
-                    if (!confirm("⚠️ 偵測到重複！\n此座標已有相同的巨菇/元素菇紀錄。\n\n確定要繼續新增嗎？")) return;
+                if (dupItem) {
+                    const dupLoc = [dupItem.country, dupItem.city].filter(Boolean).join(' · ');
+                    const dupUser = dupItem.user ? `（認領人：${dupItem.user}）` : '（未認領）';
+                    alert(`⛔ 禁止重複新增！\n\n此座標已有相同的巨菇/元素菇紀錄：\n🍄 名稱：${dupItem.name || '未命名'} ${dupUser}\n📍 地點：${dupLoc || '未知'}\n🧭 座標：${dupItem.coords}`);
+                    return;
                 }
             }
 
@@ -5506,7 +5814,7 @@
 
         // 註冊 Service Worker (支援 Android Chrome 手機推播)
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js?v=202610181638').catch(err => {
+            navigator.serviceWorker.register('sw.js?v=202610230015').catch(err => {
                 console.warn('ServiceWorker registration failed:', err);
             });
         }
