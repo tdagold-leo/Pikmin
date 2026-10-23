@@ -1,5 +1,5 @@
 // JS logic begins
-    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.23.0132";
+    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.23.1940";
 
     // 自動清理網址列上的版本號參數，保持網址乾淨漂亮 (例如保持為 https://tdagold-leo.github.io/Pikmin/)
     if (window.location.search && (window.location.search.includes('v=') || window.location.search.includes('_t='))) {
@@ -4284,41 +4284,46 @@
         return new Date(lastDate.getTime() + (n || 30) * 86400000);
     }
 
-    function formatSgCooldownLabel(cdVal) {
+    function formatSgCooldownLabel(cdVal, compact = false) {
         if (!cdVal) return '';
-        if (cdVal === 'once') return '限領一次';
-        if (cdVal === 'yearly_jan1') return '一年一次 (明年1/1)';
+        if (cdVal === 'once') return compact ? '限一次' : '限領一次';
+        if (cdVal === 'yearly_jan1') return compact ? '每年1/1' : '一年一次 (明年1/1)';
         const cdNum = parseInt(cdVal, 10);
-        if (cdNum === 1) return '每天可領';
-        if (cdNum === 30) return '每月可領';
-        return `每 ${cdNum} 天可領`;
+        if (cdNum === 1) return compact ? '每天' : '每天可領';
+        if (cdNum === 30) return compact ? '每月' : '每月可領';
+        return compact ? `每${cdNum}天` : `每 ${cdNum} 天可領`;
     }
 
     function getSgItemStatus(item) {
         const nowMs = Date.now();
         let isDisc = item.discontinued === true;
+        const cdVal = resolveSgCooldown(item);
+        let hasStarted = true;
+        let daysUntilStart = null;
+        if (item.sgType === '期間' && item.sgStart) {
+            const startDate = new Date(item.sgStart + 'T00:00:00');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (startDate > today) {
+                hasStarted = false;
+                daysUntilStart = Math.ceil((startDate.getTime() - today.getTime()) / 86400000);
+            }
+        }
         let daysLeft = null;
         if (item.sgType === '期間' && item.sgEnd) {
             const endDate = new Date(item.sgEnd);
             endDate.setHours(23, 59, 59, 999);
             if (nowMs > endDate.getTime()) {
                 isDisc = true;
-            } else {
+            } else if (hasStarted) {
                 daysLeft = Math.ceil((endDate.getTime() - nowMs) / 86400000);
             }
-        }
-        const cdVal = resolveSgCooldown(item);
-        let hasStarted = true;
-        if (item.sgType === '期間' && item.sgStart) {
-            const startDate = new Date(item.sgStart + 'T00:00:00');
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            if (startDate > today) hasStarted = false;
         }
         let isClaimable = false;
         let isCooling = false;
         let nextDate = null;
         let nextStr = '';
+        let nextShortStr = '';
         if (cdVal && !isDisc && hasStarted) {
             if (!item.sgLast) {
                 isClaimable = true;
@@ -4331,7 +4336,17 @@
                 } else {
                     isCooling = true;
                     if (cdVal !== 'once' && nextDate) {
-                        nextStr = `${nextDate.getFullYear()}/${String(nextDate.getMonth() + 1).padStart(2, '0')}/${String(nextDate.getDate()).padStart(2, '0')}`;
+                        const curYear = today.getFullYear();
+                        const mm = String(nextDate.getMonth() + 1).padStart(2, '0');
+                        const dd = String(nextDate.getDate()).padStart(2, '0');
+                        nextStr = `${nextDate.getFullYear()}/${mm}/${dd}`;
+                        if (nextDate.getFullYear() === curYear) {
+                            nextShortStr = `${mm}/${dd}`;
+                        } else if (nextDate.getFullYear() === curYear + 1 && mm === '01' && dd === '01') {
+                            nextShortStr = '明年 01/01';
+                        } else {
+                            nextShortStr = nextStr;
+                        }
                     }
                 }
             }
@@ -4343,11 +4358,22 @@
             (item.note || '').includes('缺') ||
             (item.user || '').includes('缺')
         );
-        return { isDisc, hasStarted, cdVal, isClaimable, isCooling, nextDate, nextStr, daysLeft, hasMissing };
+        return { isDisc, hasStarted, daysUntilStart, cdVal, isClaimable, isCooling, nextDate, nextStr, nextShortStr, daysLeft, hasMissing };
     }
 
-    function getSgCountdownBadgeHtml(daysLeft) {
+    function getSgCountdownBadgeHtml(daysLeft, compact = false, daysUntilStart = null) {
+        if (daysUntilStart !== null && daysUntilStart > 0) {
+            if (compact) {
+                return `<span class="gb-countdown-badge soon" style="font-size:10px; padding:1.5px 6px;">🔜${daysUntilStart}天後開跑</span>`;
+            }
+            return `<span class="gb-countdown-badge soon">🔜 距開跑 ${daysUntilStart} 天</span>`;
+        }
         if (daysLeft === null || daysLeft === undefined || daysLeft < 0) return '';
+        if (compact) {
+            if (daysLeft <= 3) return `<span class="gb-countdown-badge urgent" style="font-size:10px; padding:1.5px 6px;">🔥剩${daysLeft}天</span>`;
+            if (daysLeft <= 7) return `<span class="gb-countdown-badge soon" style="font-size:10px; padding:1.5px 6px;">⏰剩${daysLeft}天</span>`;
+            return `<span class="gb-countdown-badge normal" style="font-size:10px; padding:1.5px 6px;">⏳剩${daysLeft}天</span>`;
+        }
         if (daysLeft <= 3) {
             return `<span class="gb-countdown-badge urgent">🔥 最後 ${daysLeft} 天！</span>`;
         } else if (daysLeft <= 7) {
@@ -5464,7 +5490,7 @@
                 const s = item.sgStart || '';
                 const e = item.sgEnd || '';
                 if (item.sgType === '期間' && (s || e)) {
-                    const cdBadge = !st.isDisc ? getSgCountdownBadgeHtml(st.daysLeft) : '';
+                    const cdBadge = !st.isDisc ? getSgCountdownBadgeHtml(st.daysLeft, false, st.daysUntilStart) : '';
                     sgDateBadge += `<div style="color: #6d28d9; font-size: 10px; font-weight: bold; margin-top: 4px; background: #f5f3ff; padding: 4px 6px; border-radius: 6px; border: 1px dashed #8b5cf6; display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap;"><span>📅 ${s || '未定'} ~ ${e || '未定'}</span>${cdBadge}</div>`;
                 }
 
@@ -5681,15 +5707,19 @@
                                 
                                 let claimableCount = 0;
                                 let claimedCount = 0;
+                                let notStartedCount = 0;
                                 let hasMissing = false;
                                 let earliestNextDate = null;
                                 let earliestNextStr = '';
+                                let earliestNextShortStr = '';
                                 let groupDaysLeft = null;
+                                let groupDaysUntilStart = null;
 
                                 itemsList.forEach(item => {
                                     const st = item._sgStatus || getSgItemStatus(item);
                                     item._localIsDisc = st.isDisc;
                                     if (st.hasMissing) hasMissing = true;
+                                    if (!st.hasStarted) notStartedCount++;
                                     if (st.isClaimable) {
                                         claimableCount++;
                                     } else if (st.isCooling || item.sgLast) {
@@ -5698,56 +5728,72 @@
                                             if (!earliestNextDate || st.nextDate < earliestNextDate) {
                                                 earliestNextDate = st.nextDate;
                                                 earliestNextStr = st.nextStr;
+                                                earliestNextShortStr = st.nextShortStr || st.nextStr;
                                             }
                                         }
                                     }
                                     if (st.daysLeft !== null && (groupDaysLeft === null || st.daysLeft < groupDaysLeft)) {
                                         groupDaysLeft = st.daysLeft;
                                     }
+                                    if (st.daysUntilStart !== null && (groupDaysUntilStart === null || st.daysUntilStart < groupDaysUntilStart)) {
+                                        groupDaysUntilStart = st.daysUntilStart;
+                                    }
                                 });
 
                                 const hasClaimable = claimableCount > 0;
                                 const allDiscontinued = itemsList.length > 0 && itemsList.every(item => item._localIsDisc);
+                                const isAllClaimed = !allDiscontinued && itemsList.length > 0 && claimedCount >= itemsList.length && !hasClaimable;
+                                const groupNotStarted = !allDiscontinued && itemsList.length > 0 && notStartedCount > 0 && !hasClaimable && claimedCount < itemsList.length;
 
                                 if (hasClaimable) {
                                     ah.className += ' alert-pulse';
                                     ah.style.position = 'relative';
-                                } else if (!allDiscontinued && itemsList.length > 0) {
+                                } else if (isAllClaimed) {
                                     ah.className += ' all-claimed';
                                 }
 
-                                let dateSubtitle = '';
+                                const metaPills = [];
                                 const firstItem = itemsList[0];
                                 if (firstItem && firstItem.sgType === '期間' && (firstItem.sgStart || firstItem.sgEnd)) {
                                     const sStr = firstItem.sgStart ? firstItem.sgStart.substring(5).replace('-', '/') : '未定';
                                     const eStr = firstItem.sgEnd ? firstItem.sgEnd.substring(5).replace('-', '/') : '未定';
-                                    const cdBadge = !allDiscontinued ? getSgCountdownBadgeHtml(groupDaysLeft) : '';
-                                    dateSubtitle = `<div style="display:flex; align-items:center; justify-content:center; gap:4px; flex-wrap:wrap; margin-top:2px;">
-                                        <span style="font-size:10.5px; color:#5b21b6; background:#e0e7ff; padding:2px 7px; border-radius:999px; font-weight:700; border:1px solid #c7d2fe;">📅 ${sStr}~${eStr}</span>
-                                        ${cdBadge}
-                                    </div>`;
+                                    metaPills.push(`<span style="font-size:10px; color:#5b21b6; background:#e0e7ff; padding:1.5px 6px; border-radius:999px; font-weight:700; border:1px solid #c7d2fe; white-space:nowrap;">📅${sStr}~${eStr}</span>`);
+                                    if (!allDiscontinued) {
+                                        const cdBadge = getSgCountdownBadgeHtml(groupDaysLeft, true, groupNotStarted ? groupDaysUntilStart : null);
+                                        if (cdBadge) metaPills.push(cdBadge);
+                                    }
                                 }
 
-                                let cooldownBadge = '';
                                 if (firstItem) {
                                     const cdVal = resolveSgCooldown(firstItem);
                                     if (cdVal && !firstItem._localIsDisc) {
-                                        const cdLabel = formatSgCooldownLabel(cdVal);
-                                        cooldownBadge = `<div style="font-size:10.5px; color:#b45309; background:#fef3c7; padding:2px 8px; border-radius:999px; font-weight:700; display:inline-block; border:1px solid #fde68a;">⏱ ${cdLabel}</div>`;
+                                        const cdShort = formatSgCooldownLabel(cdVal, true);
+                                        metaPills.push(`<span style="font-size:10px; color:#b45309; background:#fef3c7; padding:1.5px 6px; border-radius:999px; font-weight:700; border:1px solid #fde68a; white-space:nowrap;">⏱${cdShort}</span>`);
                                     }
                                 }
+                                const metaPillsHtml = metaPills.length > 0 ? `<div class="sq-meta-pills">${metaPills.join('')}</div>` : '';
 
                                 // 領取進度條與最早下次可領日
                                 let progressHtml = '';
                                 if (!allDiscontinued && itemsList.length > 0) {
                                     const pct = Math.round((claimedCount / itemsList.length) * 100);
-                                    const barColor = hasClaimable ? 'linear-gradient(90deg, #f59e0b, #10b981)' : '#10b981';
-                                    const statusNote = hasClaimable
-                                        ? `<span style="color:#d97706; font-weight:800;">🎁 可拿 ${claimableCount}</span>`
-                                        : (earliestNextStr ? `<span style="color:#0369a1; font-weight:700;">⏳ 下次 ${earliestNextStr}</span>` : `<span style="color:#15803d; font-weight:800;">✓ 全數已領</span>`);
+                                    const barColor = hasClaimable ? 'linear-gradient(90deg, #f59e0b, #10b981)' : (isAllClaimed ? '#10b981' : '#38bdf8');
+                                    let statusNote = '';
+                                    if (hasClaimable) {
+                                        statusNote = `<span style="color:#d97706; font-weight:800;">🎁 可拿 ${claimableCount}</span>`;
+                                    } else if (groupNotStarted) {
+                                        const sShort = firstItem && firstItem.sgStart ? firstItem.sgStart.substring(5).replace('-', '/') : '';
+                                        statusNote = `<span style="color:#b45309; font-weight:800;">🔜 ${sShort ? sShort + '開跑' : '尚未開跑'}</span>`;
+                                    } else if (earliestNextShortStr && isAllClaimed) {
+                                        statusNote = `<span style="color:#0369a1; font-weight:700;">⏳ 下次 ${earliestNextShortStr}</span>`;
+                                    } else if (isAllClaimed) {
+                                        statusNote = `<span style="color:#15803d; font-weight:800;">✓ 全數已領</span>`;
+                                    } else {
+                                        statusNote = `<span style="color:#dc2626; font-weight:700;">待領 ${itemsList.length - claimedCount} 筆</span>`;
+                                    }
                                     progressHtml = `
                                         <div class="sq-progress-wrap">
-                                            <div style="display:flex; justify-content:space-between; align-items:center; font-size:10.5px; color:#64748b; font-weight:700;">
+                                            <div style="display:flex; justify-content:space-between; align-items:center; gap:4px; font-size:10.5px; color:#64748b; font-weight:700; white-space:nowrap;">
                                                 <span>已領 ${claimedCount}/${itemsList.length}</span>
                                                 ${statusNote}
                                             </div>
@@ -5762,11 +5808,14 @@
                                 if (hasMissing) subReminders += ' <span style="color:#ef4444; font-size:11px; font-weight:bold; margin-left:2px;">❗缺</span>';
 
                                 const firstCdVal = firstItem ? resolveSgCooldown(firstItem) : '';
+                                const claimBtnLabel = hasClaimable
+                                    ? '🎁 今日領取'
+                                    : (groupNotStarted ? '⏳ 尚未開跑' : (firstCdVal === 'once' && isAllClaimed ? '✓ 已領取' : (isAllClaimed ? '✓ 今日已領' : '🎁 今日領取')));
                                 const groupClaimBtnHtml = allDiscontinued ? '' : `
                                     <button type="button" class="group-claim-btn ${!hasClaimable ? 'claimed' : ''}" 
                                             onclick="markGroupClaimedToday('${escapeHtml(mainAct).replace(/'/g, "\\'")}', '__ALL__', event)" 
                                             title="一鍵將群組內所有卡片設為今日已領">
-                                        ${!hasClaimable ? (firstCdVal === 'once' ? '✓ 已領取' : '✓ 今日已領') : '🎁 今日領取'}
+                                        ${claimBtnLabel}
                                     </button>
                                 `;
                                 
@@ -5774,20 +5823,18 @@
                                     <button type="button" class="group-claim-btn claimed"
                                             onclick="copyGroupCoords('${escapeHtml(mainAct).replace(/'/g, "\\'")}', '__ALL__', event)"
                                             title="一鍵複製群組內所有座標">
-                                        📋 複製座標
+                                        📋 座標
                                     </button>
                                 `;
 
                                 ah.innerHTML = `
-                                    <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
-                                        <div class="count">${itemsList.length}</div>
-                                        <span style="font-size:11px; color:#64748b; font-weight:700;">筆</span>
+                                    <div class="sq-header-top">
+                                        <div class="title">${isActCol ? '▶' : '▼'} ${escapeHtml(mainAct)}${subReminders}</div>
+                                        <span class="sq-count-pill">${itemsList.length}筆</span>
                                     </div>
-                                    <div class="title">${isActCol ? '▶' : '▼'} ${escapeHtml(mainAct)}${subReminders}</div>
                                     ${progressHtml}
-                                    ${dateSubtitle}
-                                    ${cooldownBadge}
-                                    <div style="display:flex; gap:5px; justify-content:center; flex-wrap:wrap; margin-top:2px;">${groupClaimBtnHtml}${groupCopyBtnHtml}</div>
+                                    ${metaPillsHtml}
+                                    <div class="sq-btn-row">${groupClaimBtnHtml}${groupCopyBtnHtml}</div>
                                 `;
                                 ah.addEventListener('click', () => toggleGroup(actId));
                                 pcEl.appendChild(ah);
