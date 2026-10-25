@@ -2673,7 +2673,7 @@
                 <div class="mush-search-wrap" style="flex:1;">
                     <span class="mush-search-icon">🔍</span>
                     <input type="text" id="mushroom-search" class="mush-search-input"
-                        placeholder="搜尋名稱、座標…"
+                        placeholder="搜尋名稱、座標、國家、認領人、標籤…"
                         oninput="updateView()"
                         onchange="updateView()"
                         onkeyup="updateView()">
@@ -2684,6 +2684,9 @@
                     <!-- 內容由 JS 填寫 -->
                 </div>
             </div>
+
+            <!-- 巨菇快篩膠囊列 & 批次複製座標 -->
+            <div id="mushroom-quick-filter-bar" style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; justify-content:space-between; margin: 8px 0 12px 0;"></div>
 
             <div id="mushroom-summary" class="summary-widget" style="display:none;"></div>
 
@@ -2698,7 +2701,7 @@
             <div id="active-list" class="grid"></div>
             <div id="active-empty" class="empty-message" style="display: none;">目前沒有正在追蹤的項目</div>
 
-            <h3 style="font-size:15px; color:var(--primary-dark); border-bottom:2px dashed #d1d5db; padding-bottom:5px; margin:25px 0 10px 0;">🟡 待認領巨菇</h3>
+            <h3 id="unclaimed-section-heading" style="font-size:15px; color:var(--primary-dark); border-bottom:2px dashed #d1d5db; padding-bottom:5px; margin:25px 0 10px 0;">🟡 待認領巨菇</h3>
             <div id="unclaimed-list" class="grid"></div>
             <div id="unclaimed-empty" class="empty-message" style="display: none;">目前沒有待認領的項目</div>
         </section>
@@ -4001,8 +4004,8 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.10.23.1940";</script>
-    <script src="js/main.js?v=202610231940"></script>
+    <script>const APP_VERSION = "2026.10.26.0322";</script>
+    <script src="js/main.js?v=202610260322"></script>
     <script src="js/autofill.js?v=202610230026"></script>
 </body>
 </html>

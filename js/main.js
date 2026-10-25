@@ -1,5 +1,5 @@
 // JS logic begins
-    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.23.1940";
+    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.26.0322";
 
     // 自動清理網址列上的版本號參數，保持網址乾淨漂亮 (例如保持為 https://tdagold-leo.github.io/Pikmin/)
     if (window.location.search && (window.location.search.includes('v=') || window.location.search.includes('_t='))) {
@@ -176,9 +176,72 @@
         };
     }
 
+    let selectedMushPlayer = '';
+    let mushQuickFilter = 'all'; // 'all' | 'active' | 'unclaimed' | '24h' | 'open_slots' | 'giant' | 'elemental'
+    let currentFilteredMushrooms = [];
+
+    window.toggleMushPlayerFilter = function(playerName) {
+        if (window._rosterDeleteMode) return;
+        const clean = (playerName || '').trim();
+        if (selectedMushPlayer.toLowerCase() === clean.toLowerCase()) {
+            selectedMushPlayer = '';
+        } else {
+            selectedMushPlayer = clean;
+            if (mushQuickFilter === 'unclaimed') mushQuickFilter = 'all';
+        }
+        updateView();
+    };
+
+    window.setMushQuickFilter = function(mode) {
+        mushQuickFilter = mode || 'all';
+        if (mushQuickFilter === 'unclaimed') {
+            selectedMushPlayer = '';
+        }
+        updateView();
+    };
+
+    window.copyFilteredMushroomCoords = function(btn) {
+        const list = currentFilteredMushrooms || [];
+        if (list.length === 0) {
+            alert('目前篩選條件下沒有可複製的巨菇座標！');
+            return;
+        }
+        const os = typeof detectOS === 'function' ? detectOS() : 'unknown';
+        const seen = new Set();
+        const lines = [];
+        list.forEach(item => {
+            if (!item.coords) return;
+            const normalized = normalizeCoords(String(item.coords));
+            if (!normalized || seen.has(normalized)) return;
+            seen.add(normalized);
+            lines.push((os === 'ios' || os === 'macos' || os === 'windows') ? normalized.replace(/,/g, ' ') : normalized);
+        });
+        if (lines.length === 0) {
+            alert('目前篩選結果中沒有有效座標！');
+            return;
+        }
+        const origHtml = btn ? btn.innerHTML : '';
+        navigator.clipboard.writeText(lines.join('\n')).then(() => {
+            if (btn) {
+                btn.innerHTML = `✅ 已複製 ${lines.length} 筆！`;
+                setTimeout(() => { btn.innerHTML = origHtml; }, 1800);
+            }
+        }).catch(() => alert('複製失敗，請手動複製。'));
+    };
+
     function renderPlayerRoster() {
         const container = document.getElementById('player-roster');
         if (!container) return;
+
+        // 統計每位玩家目前認領中的巨菇數量
+        const playerCounts = {};
+        (dataList || []).forEach(item => {
+            const u = (item.user || '').trim();
+            if (u) {
+                const k = u.toLowerCase();
+                playerCounts[k] = (playerCounts[k] || 0) + 1;
+            }
+        });
 
         // 收集所有有頭像設定的玩家：Firebase userProfiles
         const profileUsers = userProfiles ? Object.keys(userProfiles).filter(k => userProfiles[k] && userProfiles[k].avatar) : [];
@@ -209,21 +272,32 @@
                 ? `background-image:${theme.bgImg}; background-size:${theme.bgSize||'cover'}; background-position:${theme.bgPos||'center'}; background-color:transparent;`
                 : `background:${theme.bg}; color:${theme.color};`;
             const initials = theme.bgImg ? '' : (name.slice(0, 2));
-            const border = theme.border && theme.border !== 'transparent' ? `border:2px solid ${theme.border};` : 'border:2px solid #e5e7eb;';
+            const isSelected = Boolean(selectedMushPlayer && selectedMushPlayer.toLowerCase() === name.toLowerCase());
+            const border = isSelected
+                ? 'border:2.5px solid #10b981; box-shadow:0 0 0 3px rgba(16,185,129,0.28), 0 3px 8px rgba(16,185,129,0.3);'
+                : ((theme.border && theme.border !== 'transparent' ? `border:2px solid ${theme.border};` : 'border:2px solid #e5e7eb;') + ' box-shadow:0 1px 3px rgba(0,0,0,0.1);');
             
             const safeKey = name.replace(/[.#$\[\]]/g, '_');
             const hasFirebaseProfile = profileUsers.includes(safeKey);
             const canDelete = window._rosterDeleteMode && hasFirebaseProfile && !specialUsers.includes(name);
             const isDeleteMode = window._rosterDeleteMode;
+            const count = playerCounts[name.toLowerCase()] || 0;
 
-            const deleteOverlay = canDelete ? `<div onclick="deleteUserProfile('${safeKey}', '${name}')" style="position:absolute; top:-4px; right:-4px; width:16px; height:16px; background:#ef4444; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.3); z-index:10;" title="刪除雲端頭像">✕</div>` : '';
+            const deleteOverlay = canDelete
+                ? `<div onclick="event.stopPropagation(); deleteUserProfile('${safeKey}', '${escapeHtml(name).replace(/'/g, "\\'")}' )" style="position:absolute; top:-4px; right:-4px; width:16px; height:16px; background:#ef4444; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.3); z-index:10;" title="刪除雲端頭像">✕</div>`
+                : (count > 0 && !isDeleteMode
+                    ? `<div style="position:absolute; top:-4px; right:-4px; min-width:17px; height:17px; padding:0 4px; background:${isSelected ? '#059669' : '#10b981'}; color:white; border-radius:999px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:900; border:1.5px solid #ffffff; box-shadow:0 1px 3px rgba(0,0,0,0.2); z-index:9; box-sizing:border-box;">${count}</div>`
+                    : '');
             const shakeClass = isDeleteMode ? 'shake-avatar' : '';
-            const opacityStyle = (isDeleteMode && !canDelete) ? 'opacity:0.5;' : '';
+            let opacityStyle = '';
+            if (isDeleteMode && !canDelete) opacityStyle = 'opacity:0.5;';
+            else if (!isDeleteMode && selectedMushPlayer && !isSelected) opacityStyle = 'opacity:0.52;';
 
-            return `<div style="display:flex; flex-direction:column; align-items:center; gap:3px; cursor:default; position:relative; ${opacityStyle}" title="${name}" class="${shakeClass}">
+            const safeClickName = escapeHtml(name).replace(/'/g, "\\'");
+            return `<div onclick="toggleMushPlayerFilter('${safeClickName}')" style="display:flex; flex-direction:column; align-items:center; gap:3px; cursor:${isDeleteMode ? 'default' : 'pointer'}; position:relative; transition:all 0.15s; ${isSelected ? 'transform:translateY(-2px);' : ''} ${opacityStyle}" title="${escapeHtml(name)}（目前認領 ${count} 顆，點擊${isSelected ? '取消篩選' : '篩選'}）" class="${shakeClass}">
                 ${deleteOverlay}
-                <div style="width:40px; height:40px; border-radius:50%; ${avatarStyle} ${border} display:flex; align-items:center; justify-content:center; font-size:${theme.fs||'13px'}; font-weight:${theme.fw||'700'}; font-family:${theme.ff||'inherit'}; flex-shrink:0; box-shadow:0 1px 3px rgba(0,0,0,0.1);">${initials}</div>
-                <div style="font-size:10px; font-weight:600; color:var(--text-muted); max-width:44px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center;">${name}</div>
+                <div style="width:40px; height:40px; border-radius:50%; ${avatarStyle} ${border} display:flex; align-items:center; justify-content:center; font-size:${theme.fs||'13px'}; font-weight:${theme.fw||'700'}; font-family:${theme.ff||'inherit'}; flex-shrink:0;">${initials}</div>
+                <div style="font-size:10px; font-weight:${isSelected ? '800' : '600'}; color:${isSelected ? '#059669' : 'var(--text-muted)'}; max-width:48px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center;">${escapeHtml(name)}</div>
             </div>`;
         }).join('');
     }
@@ -329,10 +403,7 @@
             }
         }
         
-        const userAddInput = document.getElementById('user');
-        if (userAddInput && !userAddInput.value && savedName) {
-            userAddInput.value = savedName;
-        }
+        // 新增巨菇的「認領人」預設保持空白，以便區分待認領與 OCR 自動填入「路人」
     }
     
     // 初始化呼叫
@@ -2801,10 +2872,13 @@
                 if (isMushroom) {
                     let autoFilled = [];
                     const nameField = document.getElementById(resultDivId === 'mush-ocr-result' ? 'name' : 'edit-name');
+                    const userField = document.getElementById(resultDivId === 'mush-ocr-result' ? 'user' : 'edit-user');
                     const kindField = resultDivId === 'mush-ocr-result' ? document.getElementById('mushroom-kind') : null;
                     const daysField = document.getElementById(resultDivId === 'mush-ocr-result' ? 'days' : null);
                     const hoursField = document.getElementById(resultDivId === 'mush-ocr-result' ? 'hours' : null);
                     const minutesField = document.getElementById(resultDivId === 'mush-ocr-result' ? 'minutes' : null);
+                    const fullRawText = (data.responses[0].textAnnotations && data.responses[0].textAnnotations[0] && data.responses[0].textAnnotations[0].description) ? data.responses[0].textAnnotations[0].description : text;
+                    const allScanLines = [...lines, ...fullRawText.split('\n').map(s => s.trim()).filter(Boolean)];
                     
                     let nameFound = false;
                     let timeFound = false;
@@ -2819,32 +2893,32 @@
                             }
                         }
                         
-                        if (!timeFound) {
-                            // 支援「剩下 16日0小時44分11秒」和「剩下 2天3小時5分」兩種格式
-                            const timeMatch = l.match(/剩[下餘]?\s*(?:(\d+)\s*[天日])?\s*(?:(\d+)\s*小?時)?\s*(?:(\d+)\s*分)?/);
-                            if (timeMatch && (timeMatch[1] || timeMatch[2] || timeMatch[3])) {
-                                let d = timeMatch[1] ? parseInt(timeMatch[1]) : 0;
-                                let h = timeMatch[2] ? parseInt(timeMatch[2]) : 0;
-                                let m = timeMatch[3] ? parseInt(timeMatch[3]) : 0;
-                                // OCR 修正：若小時數 >= 24 且天數為 0，代表 Vision API 可能把「Xd Yh」中的漢字「日」辨識失敗
-                                // 例如「2日0小時」被讀成「20小時」→ 自動反推成正確天數
-                                if (d === 0 && h >= 24) {
-                                    d = Math.floor(h / 24);
-                                    h = h % 24;
-                                }
-                                if (daysField) daysField.value = d;
-                                if (hoursField) hoursField.value = h;
-                                if (minutesField) minutesField.value = m;
-                                autoFilled.push('時間');
-                                timeFound = true;
-                            }
-                        }
-                        
                         if (l.includes('蘑菇') && kindField) {
                             if (l.includes('巨大')) {
                                 kindField.value = '巨菇';
                                 autoFilled.push('種類(巨菇)');
                             }
+                        }
+                    }
+
+                    for (let i = 0; i < allScanLines.length; i++) {
+                        if (timeFound) break;
+                        const l = allScanLines[i];
+                        // 支援「剩下 16日0小時44分11秒」和「剩下 2天3小時5分」兩種格式
+                        const timeMatch = l.match(/剩[下餘]?\s*(?:(\d+)\s*[天日])?\s*(?:(\d+)\s*小?時)?\s*(?:(\d+)\s*分)?/);
+                        if (timeMatch && (timeMatch[1] || timeMatch[2] || timeMatch[3])) {
+                            let d = timeMatch[1] ? parseInt(timeMatch[1], 10) : 0;
+                            let h = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
+                            let m = timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
+                            if (d === 0 && h >= 24) {
+                                d = Math.floor(h / 24);
+                                h = h % 24;
+                            }
+                            if (daysField) daysField.value = d;
+                            if (hoursField) hoursField.value = h;
+                            if (minutesField) minutesField.value = m;
+                            autoFilled.push('時間');
+                            timeFound = true;
                         }
                     }
                     
@@ -2857,6 +2931,21 @@
                                 break;
                             }
                         }
+                    }
+
+                    // 偵測圖片中是否已經有人加入戰鬥（例如有倒數時間「剩下...」、免費參加名額 < 5、參戰人數 1/5~5/5、或戰鬥中字樣）
+                    const freeSlotMatch = fullRawText.match(/還有\s*(\d+)\s*個免費參加名額/);
+                    const participantFracMatch = fullRawText.match(/(?:^|[^\d\/])([1-5])\s*\/\s*5(?!\d)/);
+                    const someoneJoined = Boolean(
+                        timeFound ||
+                        /剩[下餘]\s*\d+\s*(?:[天日]|小?時|分|秒)/.test(fullRawText) ||
+                        (freeSlotMatch && parseInt(freeSlotMatch[1], 10) < 5) ||
+                        (participantFracMatch && parseInt(participantFracMatch[1], 10) >= 1) ||
+                        /戰鬥中|參加中|大聲公/.test(fullRawText)
+                    );
+                    if (someoneJoined && userField && (!userField.value || userField.value.trim() === '')) {
+                        userField.value = '路人';
+                        autoFilled.push('認領人(路人)');
                     }
                     
                     if (autoFilled.length > 0) {
@@ -4090,9 +4179,20 @@
         const item = dataList.find(i => i.id === id);
         if (!item) return;
         let currentSlots = item.slots ? [...item.slots] : ['', '', '', '', ''];
-        
-        if (currentSlots[index]) currentSlots[index] = '';
-        else currentSlots[index] = '✔️';
+        const isChecked = Boolean(currentSlots[index]);
+        const hasCheckedAfter = currentSlots.slice(index + 1).some(Boolean);
+
+        if (!isChecked || hasCheckedAfter) {
+            // 點擊第 N 個圈圈時，前面 1 ~ N 自動全部打勾，N 之後清空
+            for (let i = 0; i < 5; i++) {
+                currentSlots[i] = i <= index ? '✔️' : '';
+            }
+        } else {
+            // 若點擊的是最後一個已打勾的圈圈，則取消該格勾選（保留前面已勾選）
+            for (let i = 0; i < 5; i++) {
+                currentSlots[i] = i < index ? '✔️' : '';
+            }
+        }
         dbRef('mushrooms_v2/' + id + '/slots').set(currentSlots);
     }
 
@@ -4237,6 +4337,44 @@
         if (d > 0) return `${d}天 ${h%24}時 ${m%60}分`;
         if (h > 0) return `${h}時 ${m%60}分 ${t%60}秒`;
         return `${m}分 ${t%60}秒`;
+    }
+
+    function formatMushTargetClock(targetTime, now) {
+        if (targetTime == null || targetTime - now <= 0) return '';
+        const d = new Date(targetTime);
+        const nowD = new Date(now);
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mm = String(d.getMinutes()).padStart(2, '0');
+        const todayStart = new Date(nowD.getFullYear(), nowD.getMonth(), nowD.getDate()).getTime();
+        const targetStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+        const diffDays = Math.round((targetStart - todayStart) / 86400000);
+        if (diffDays === 0) return `(今日 ${hh}:${mm})`;
+        if (diffDays === 1) return `(明日 ${hh}:${mm})`;
+        if (diffDays === 2) return `(後日 ${hh}:${mm})`;
+        return `(${d.getMonth() + 1}/${d.getDate()} ${hh}:${mm})`;
+    }
+
+    function isMushroomElemental(item) {
+        if (!item) return false;
+        if (item.kind === '元素菇' || item.type === '元素菇') return true;
+        const checkStr = ((item.tag || '') + ' ' + (item.name || '')).toLowerCase();
+        return Boolean(
+            checkStr.includes('水晶') ||
+            checkStr.includes('毒') ||
+            checkStr.includes('大冰藍') ||
+            checkStr.includes('冰') ||
+            (checkStr.includes('水') && !checkStr.includes('水果')) ||
+            checkStr.includes('火') ||
+            checkStr.includes('紅') ||
+            checkStr.includes('電') ||
+            checkStr.includes('大藍') ||
+            checkStr.includes('大白') ||
+            checkStr.includes('大紫') ||
+            checkStr.includes('大黃') ||
+            checkStr.includes('黃') ||
+            checkStr.includes('大灰') ||
+            checkStr.includes('灰')
+        );
     }
 
     function toggleGroup(groupId) {
@@ -4538,11 +4676,10 @@
     function createMushroomCard(item, now, isExpired, timeText, isDup = false) {
         const safeC = toTW(escapeHtml(item.country||'')), safeName = escapeHtml(item.name), safeTag = escapeHtml(item.tag);
         const diffStr = getTimeDiffString(safeC);
-        // 將國家與時差字串，供 Header 右上角使用
+        // 將國家與時差字串，供 Header 第一排使用
         const cHtml = safeC ? `<span style="font-size:12px; color:#6b7280; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${safeC}</span> ${diffStr ? `<span class="tz-badge" style="flex-shrink:0;">${diffStr}</span>` : ''}` : '';
-        const tHtml = safeTag ? `<span class="tag-badge">${safeTag}</span>` : '';
         const dupBadge = isDup ? `<span style="font-size:11px; color:#b45309; font-weight:bold; background:#fef3c7; padding:2px 6px; border-radius:6px; border:1px dashed #f59e0b;">⚠️ 重複收藏</span>` : '';
-        const badgeHtml = [tHtml, dupBadge].filter(Boolean).join(' ');
+        const badgeHtml = dupBadge;
 
         const card = document.createElement('div');
         // 元素菇主題：從標籤偵測元素（優先順序：水晶 > 毒 > 水 > 火 > 電）
@@ -4624,33 +4761,42 @@
         
         const uTheme = getUserColorTheme(item.user);
 
+        const isClaimed = Boolean(item.user && item.user.trim() !== '');
         const currentSlots = item.slots || ['', '', '', '', ''];
         const filledCount = currentSlots.filter(s => s !== '').length;
-        const isFull = filledCount === 5;
+        const emptyCount = 5 - filledCount;
+        const isFull = isClaimed && filledCount === 5;
 
-        // 參戰空位：縮小圓圈 max-width 34px
-        // 參戰空位：5 個圈圈 + 右側 1 個「滿」圈圈
-        let slotsHtml = `<div class="slots-wrapper" style="background:transparent; border:none; padding:4px 0 0 0; margin-top:4px;">`;
-        slotsHtml += `<div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">`;
-        for (let i = 0; i < 5; i++) {
-            if (currentSlots[i]) {
-                slotsHtml += `<button class="slot-btn" style="flex:1; max-width:34px; aspect-ratio:1/1; height:auto; padding:0; border-radius:50%; background:#10b981; border:none; color:white; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.1);" onclick="toggleSlot('${item.id}', ${i})">✓</button>`;
-            } else {
-                slotsHtml += `<button class="slot-btn" style="flex:1; max-width:34px; aspect-ratio:1/1; height:auto; padding:0; border-radius:50%; background:#f1f5f9; border:1px solid #cbd5e1; color:#94a3b8; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-sizing:border-box;" onclick="toggleSlot('${item.id}', ${i})">+</button>`;
+        // 參戰空位：僅在「已認領」時顯示圈圈與空位狀態提示；待認領巨菇隱藏空位圈圈以精簡版面
+        let slotsHtml = '';
+        if (isClaimed) {
+            const slotStatusText = isFull
+                ? `<span style="color:#dc2626; font-weight:800;">🈵 已額滿 (5/5)</span>`
+                : `<span style="color:#059669; font-weight:800;">🟢 參戰 ${filledCount}/5 <span style="color:#0284c7; font-weight:800;">(空 ${emptyCount} 位)</span></span>`;
+            slotsHtml = `<div class="slots-wrapper" style="background:transparent; border:none; padding:4px 0 0 0; margin-top:4px;">`;
+            slotsHtml += `<div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:5px; padding:0 2px;">${slotStatusText}<span style="font-size:10px; color:#94a3b8; font-weight:600;">點第N格自動勾選</span></div>`;
+            slotsHtml += `<div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">`;
+            for (let i = 0; i < 5; i++) {
+                if (currentSlots[i]) {
+                    slotsHtml += `<button class="slot-btn" title="點擊設為 ${i + 1} 人參戰（再點最後一格可取消）" style="flex:1; max-width:34px; aspect-ratio:1/1; height:auto; padding:0; border-radius:50%; background:#10b981; border:none; color:white; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.1);" onclick="toggleSlot('${item.id}', ${i})">✓</button>`;
+                } else {
+                    slotsHtml += `<button class="slot-btn" title="點擊自動勾選前 ${i + 1} 格" style="flex:1; max-width:34px; aspect-ratio:1/1; height:auto; padding:0; border-radius:50%; background:#f1f5f9; border:1px solid #cbd5e1; color:#94a3b8; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-sizing:border-box;" onclick="toggleSlot('${item.id}', ${i})">+</button>`;
+                }
             }
+            if (!isFull) {
+                slotsHtml += `<button onclick="fillAllSlots('${item.id}')" style="flex:1; max-width:34px; aspect-ratio:1/1; height:auto; padding:0; border-radius:50%; background:#ef4444; border:none; color:white; font-size:14px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.1);" title="填滿空位">滿</button>`;
+            } else {
+                slotsHtml += `<div style="flex:1; max-width:34px; visibility:hidden;"></div>`;
+            }
+            slotsHtml += `</div></div>`;
         }
-        if (!isFull) {
-            slotsHtml += `<button onclick="fillAllSlots('${item.id}')" style="flex:1; max-width:34px; aspect-ratio:1/1; height:auto; padding:0; border-radius:50%; background:#ef4444; border:none; color:white; font-size:14px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.1);" title="填滿空位">滿</button>`;
-        } else {
-            slotsHtml += `<div style="flex:1; max-width:34px; visibility:hidden;"></div>`;
-        }
-        slotsHtml += `</div></div>`;
 
-        // 元素圖示
+        // 元素圖示與合併種類標籤（方案 C：直接以標籤取代原本重複的「巨 / 元素」徽章）
         const elemEmoji = elemClass === 'elem-水' ? '💧' : elemClass === 'elem-火' ? '🔥' : elemClass === 'elem-電' ? '⚡' : elemClass === 'elem-毒' ? '☠️' : elemClass === 'elem-水晶' ? '💎' : elemClass === 'elem-灰' ? '🪨' : '';
-        const kindLabel = isElem ? `元素${elemEmoji}` : '巨';
-        const kindBg = isElem ? elemHeaderBg : '#fef3c7';
-        const kindColor = isElem ? elemHeaderColor : '#92400e';
+        const mergedKindLabel = safeTag ? `${elemEmoji}${safeTag}` : (isElem ? `元素${elemEmoji}` : '巨');
+        const kindBg = safeTag ? '#e0e7ff' : (isElem ? elemHeaderBg : '#fef3c7');
+        const kindColor = safeTag ? '#4338ca' : (isElem ? elemHeaderColor : '#92400e');
+        const kindBorder = safeTag ? '#a5b4fc' : `${kindColor}33`;
 
         const locHtml = badgeHtml ? `<div style="display:flex; align-items:center; flex-wrap:wrap; gap:3px; margin-top:3px; font-size:11px;">${badgeHtml}</div>` : '';
 
@@ -4663,19 +4809,21 @@
         actionHtml += item.coords ? `<button class="btn-sm btn-default" style="${copyBtnStyle}" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this, true)" title="複製座標"><span style="font-size:22px; line-height:1;">📋</span><span style="font-size:12px; font-weight:800; letter-spacing:0.3px;">複製</span></button>` : '';
 
         card.innerHTML = `
-            <div style="background: ${elemHeaderBg}; padding: 8px 10px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
-                <div style="display:flex; flex-direction:column; align-items:center; gap:4px; flex-shrink:0; margin-top:2px;">
-                    <span style="font-size: 18px; font-weight: 900; color: var(--text-main); white-space:nowrap; line-height:1;">#${String(item.sn).padStart(2,'0')}</span>
-                    <span style="font-size:11px; font-weight:900; padding:2px 6px; border-radius:6px; white-space:nowrap; background:${kindBg}; color:${kindColor}; line-height:1; border:1px solid ${kindColor}22;">${kindLabel}</span>
+            <div style="background: ${elemHeaderBg}; padding: 8px 10px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; width:100%; min-width:0;">
+                    <div style="display:flex; align-items:center; gap:6px; min-width:0; flex:1;">
+                        <span style="font-size: 18px; font-weight: 900; color: var(--text-main); white-space:nowrap; line-height:1; flex-shrink:0;">#${String(item.sn).padStart(2,'0')}</span>
+                        <div style="display:flex; align-items:center; gap:4px; min-width:0; overflow:hidden;">${cHtml}</div>
+                    </div>
+                    <button class="pin-btn ${isPinned ? 'pinned' : ''}" onclick="toggleMushPin('${item.id}')" title="${isPinned ? '取消重點標記' : '加入重點標記'}" style="flex-shrink:0; font-size:22px; line-height:1; padding:0 2px; background:transparent; border:none; cursor:pointer;">${isPinned ? '★' : '☆'}</button>
                 </div>
-                <div style="display:flex; flex-direction:column; align-items:flex-start; gap:6px; flex:1; min-width:0; justify-content: center; margin-top:2px;">
-                    <div style="display:flex; align-items:center; gap:4px; max-width:100%; min-width:0;">${cHtml}</div>
-                    <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin:0; font-size:13px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; min-width:0; padding-left:2px;">${timeText}</span>
+                <div style="display:flex; align-items:center; gap:6px; width:100%; min-width:0;">
+                    <span title="${mergedKindLabel}" style="font-size:11px; font-weight:800; padding:3px 7px; border-radius:6px; white-space:nowrap; max-width:92px; overflow:hidden; text-overflow:ellipsis; background:${kindBg}; color:${kindColor}; line-height:1.2; border:1px solid ${kindBorder}; flex-shrink:0; box-shadow:0 1px 2px rgba(99,102,241,0.1);">${mergedKindLabel}</span>
+                    <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin:0; font-size:12px; line-height:1.2; display:inline-flex; flex-wrap:nowrap; align-items:baseline; gap:3px; max-width:100%; min-width:0; padding:3px 7px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${timeText}</span>
                 </div>
-                <button class="pin-btn ${isPinned ? 'pinned' : ''}" onclick="toggleMushPin('${item.id}')" title="${isPinned ? '取消重點標記' : '加入重點標記'}" style="flex-shrink:0; font-size:24px; line-height:1; padding:2px; margin-left:auto; background:transparent; border:none; cursor:pointer;">${isPinned ? '★' : '☆'}</button>
             </div>
             <div class="card-body" style="gap: 8px; padding: 12px; display:flex; flex-direction:column; flex:1;">
-                <div style="display:flex; align-items:flex-start; gap:10px;">
+                <div style="display:flex; align-items:center; gap:10px; min-height:52px;">
                     <div style="flex:0 0 52px; display:flex; flex-direction:column; align-items:center; gap:6px;">
                         ${item.user ? `
                         <div style="background:${uTheme.bg}; color:${uTheme.color}; font-weight:${uTheme.fw}; font-family:${uTheme.ff}; border-radius:50%; width:52px; height:52px; display:flex; align-items:center; justify-content:center; line-height:1; text-align:center; overflow:hidden; border: 2px solid ${uTheme.border}; box-shadow: 0 2px 4px rgba(0,0,0,0.05); flex-shrink:0; ${uTheme.bgImg ? `background-image:${uTheme.bgImg}; background-size:${uTheme.bgSize}; background-position:${uTheme.bgPos}; background-repeat:no-repeat;` : ''}">
@@ -4688,8 +4836,8 @@
                         </button>
                         `}
                     </div>
-                    <div style="display:flex; flex-direction:column; gap:4px; flex:1; min-width:0; padding-top:2px;">
-                        <span class="card-title" style="font-size:16px; margin:0; line-height:1.4; font-weight:bold; word-break:break-all;">${safeName}</span>
+                    <div style="display:flex; flex-direction:column; justify-content:center; gap:4px; flex:1; min-width:0;">
+                        <span class="card-title" style="font-size:15.5px; margin:0; line-height:1.35; font-weight:800; word-break:break-word; overflow-wrap:break-word; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${safeName}</span>
                         ${locHtml}
                     </div>
                 </div>
@@ -4859,20 +5007,83 @@
         }
         const mushSearchKw = mushSearchVal.split(/\s+/).filter(Boolean);
 
-        const mushMatchesSearch = (item) => {
+        const mushMatchesKeywordOnly = (item) => {
+            if (selectedMushPlayer) {
+                if ((item.user || '').trim().toLowerCase() !== selectedMushPlayer.toLowerCase()) return false;
+            }
             if (!mushSearchVal) return true;
             if (mushSearchCoords) {
-                // 座標模式：找距離 < 1km 的
                 const ic = (item.coords || '').match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
                 if (!ic) return false;
                 const dist = getDistanceFromLatLonInKm(mushSearchCoords.lat, mushSearchCoords.lng, parseFloat(ic[1]), parseFloat(ic[2]));
                 return dist < 0.1; // 100m 內
             }
-            // 關鍵字模式：名稱、座標、國家、城市、認領人
             const haystack = [item.name, item.coords, item.country, item.city, item.user, item.tag, item.kind]
                 .map(v => (v || '').toLowerCase()).join(' ');
             return mushSearchKw.every(kw => haystack.includes(kw));
         };
+
+        const mushMatchesQuickFilter = (item) => {
+            if (mushQuickFilter === 'all') return true;
+            const isClaimed = Boolean(item.user && item.user.trim() !== '');
+            const isElem = isMushroomElemental(item);
+            if (mushQuickFilter === 'active') return isClaimed;
+            if (mushQuickFilter === 'unclaimed') return !isClaimed;
+            if (mushQuickFilter === '24h') return isClaimed && item.targetTime != null && (item.targetTime - now <= 86400000);
+            if (mushQuickFilter === 'open_slots') {
+                if (!isClaimed) return false;
+                const filled = (item.slots || ['', '', '', '', '']).filter(s => s !== '').length;
+                return filled < 5;
+            }
+            if (mushQuickFilter === 'giant') return !isElem;
+            if (mushQuickFilter === 'elemental') return isElem;
+            return true;
+        };
+
+        const mushMatchesSearch = (item) => mushMatchesKeywordOnly(item) && mushMatchesQuickFilter(item);
+
+        // 計算快篩膠囊統計數量（基於目前關鍵字與玩家過濾結果）
+        const kwMatchedMush = sortedM.filter(mushMatchesKeywordOnly);
+        currentFilteredMushrooms = sortedM.filter(mushMatchesSearch);
+
+        const qfBar = document.getElementById('mushroom-quick-filter-bar');
+        if (qfBar) {
+            const cntAll = kwMatchedMush.length;
+            const cntActive = kwMatchedMush.filter(i => i.user && i.user.trim() !== '').length;
+            const cntUnclaimed = kwMatchedMush.filter(i => !i.user || i.user.trim() === '').length;
+            const cnt24h = kwMatchedMush.filter(i => i.user && i.user.trim() !== '' && i.targetTime != null && (i.targetTime - now <= 86400000)).length;
+            const cntOpenSlots = kwMatchedMush.filter(i => {
+                if (!i.user || i.user.trim() === '') return false;
+                return (i.slots || ['', '', '', '', '']).filter(s => s !== '').length < 5;
+            }).length;
+            const cntGiant = kwMatchedMush.filter(i => !isMushroomElemental(i)).length;
+            const cntElem = kwMatchedMush.filter(i => isMushroomElemental(i)).length;
+
+            const pillStyle = (active, activeBg, activeColor, activeBorder) =>
+                `padding:4px 10px; border-radius:999px; font-size:11.5px; font-weight:800; cursor:pointer; transition:all 0.15s; white-space:nowrap; border:1.5px solid ${active ? activeBorder : '#e2e8f0'}; background:${active ? activeBg : '#f8fafc'}; color:${active ? activeColor : '#475569'};`;
+
+            const playerFilterBadge = selectedMushPlayer
+                ? `<button type="button" onclick="toggleMushPlayerFilter('${escapeHtml(selectedMushPlayer).replace(/'/g, "\\'")}')" style="padding:4px 10px; border-radius:999px; font-size:11.5px; font-weight:800; cursor:pointer; background:#ecfdf5; color:#047857; border:1.5px solid #10b981; display:inline-flex; align-items:center; gap:4px; white-space:nowrap;">👤 ${escapeHtml(selectedMushPlayer)} ✕</button>`
+                : '';
+
+            qfBar.innerHTML = `
+                <div style="display:flex; flex-wrap:wrap; gap:5px; align-items:center;">
+                    ${playerFilterBadge}
+                    <button type="button" onclick="setMushQuickFilter('all')" style="${pillStyle(mushQuickFilter === 'all', '#1e293b', '#ffffff', '#1e293b')}">全部 (${cntAll})</button>
+                    <button type="button" onclick="setMushQuickFilter('active')" style="${pillStyle(mushQuickFilter === 'active', '#dcfce7', '#15803d', '#86efac')}">🟢 追蹤中 (${cntActive})</button>
+                    <button type="button" onclick="setMushQuickFilter('unclaimed')" style="${pillStyle(mushQuickFilter === 'unclaimed', '#fef9c3', '#a16207', '#fde047')}">🟡 待認領 (${cntUnclaimed})</button>
+                    <button type="button" onclick="setMushQuickFilter('24h')" style="${pillStyle(mushQuickFilter === '24h', '#ffedd5', '#c2410c', '#fdba74')}">🔥 24h內 (${cnt24h})</button>
+                    <button type="button" onclick="setMushQuickFilter('open_slots')" style="${pillStyle(mushQuickFilter === 'open_slots', '#e0f2fe', '#0369a1', '#7dd3fc')}">🈳 有空位 (${cntOpenSlots})</button>
+                    <button type="button" onclick="setMushQuickFilter('giant')" style="${pillStyle(mushQuickFilter === 'giant', '#fef3c7', '#92400e', '#fcd34d')}">🍄 巨菇 (${cntGiant})</button>
+                    <button type="button" onclick="setMushQuickFilter('elemental')" style="${pillStyle(mushQuickFilter === 'elemental', '#f3e8ff', '#6b21a8', '#d8b4fe')}">🌿 元素菇 (${cntElem})</button>
+                </div>
+                ${currentFilteredMushrooms.length > 0 ? `
+                    <button type="button" onclick="copyFilteredMushroomCoords(this)" style="background:linear-gradient(135deg,#0ea5e9,#2563eb); color:#fff; border:none; border-radius:999px; padding:5px 12px; font-size:11.5px; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(37,99,235,0.25); display:inline-flex; align-items:center; gap:4px; white-space:nowrap;">
+                        📋 複製篩選座標 (${currentFilteredMushrooms.length} 筆)
+                    </button>
+                ` : ''}
+            `;
+        }
 
         activeEl.innerHTML = ''; unclaimEl.innerHTML = '';
         let actCount = 0, uncCount = 0;
@@ -4881,7 +5092,7 @@
         const unclaimedQueue = [];
 
         sortedM.forEach(item => {
-            if (!mushMatchesSearch(item)) return; // 搜尋篩選
+            if (!mushMatchesSearch(item)) return; // 搜尋與快篩過濾
             let timeText = '<span class="not-set">尚未設定</span>', isExp = false;
 
             if (item.user === "") {
@@ -4897,7 +5108,10 @@
                 if (pinnedMushroomsSet.has(item.id)) return; // 已在重點區塊，不重複出現
                 if (item.targetTime != null) {
                     if (item.targetTime - now <= 0) { timeText = '已過期/可開打！'; isExp = true; }
-                    else { timeText = `<span class="live-timer" data-type="mushroom-claimed" data-target="${item.targetTime}">${getRemainingText(item.targetTime, now)}</span>`; }
+                    else {
+                        const clockStr = formatMushTargetClock(item.targetTime, now);
+                        timeText = `<span class="live-timer" data-type="mushroom-claimed" data-target="${item.targetTime}">${getRemainingText(item.targetTime, now)}</span>${clockStr ? ` <span style="font-size:11px; color:#047857; font-weight:700; opacity:0.9;">${clockStr}</span>` : ''}`;
+                    }
                 }
                 actCount++;
                 const isDup = item.coords && mushCoordCount[normalizeCoords(item.coords).toLowerCase()] > 1;
@@ -4913,8 +5127,8 @@
         // 待認領菇：換日時間少的排前面，已過期的排最後，再依種類分群
         unclaimedQueue.sort((a, b) => a.midnightUTC - b.midnightUTC);
 
-        const unclaimGiant = unclaimedQueue.filter(x => (x.item.kind || '') === '巨菇' || x.item.kind == null);
-        const unclaimNormal = unclaimedQueue.filter(x => x.item.kind === '元素菇');
+        const unclaimGiant = unclaimedQueue.filter(x => !isMushroomElemental(x.item));
+        const unclaimNormal = unclaimedQueue.filter(x => isMushroomElemental(x.item));
 
         // 待認領群組：永遠分群顯示（有資料才顯示該群）
         const unclaimGiantCards = unclaimGiant.map(({ item, timeText, isExp }) => { 
@@ -4949,7 +5163,10 @@
                 else { timeText2 = `<span class="live-timer" data-type="mushroom-unclaimed" data-target="${midnightUTC2}">換日 ${getRemainingText(midnightUTC2, now)}</span>`; }
             } else if (item.targetTime != null) {
                 if (item.targetTime - now <= 0) { timeText2 = '已過期/可開打！'; isExp2 = true; }
-                else { timeText2 = `<span class="live-timer" data-type="mushroom-claimed" data-target="${item.targetTime}">${getRemainingText(item.targetTime, now)}</span>`; }
+                else {
+                    const clockStr2 = formatMushTargetClock(item.targetTime, now);
+                    timeText2 = `<span class="live-timer" data-type="mushroom-claimed" data-target="${item.targetTime}">${getRemainingText(item.targetTime, now)}</span>${clockStr2 ? ` <span style="font-size:11px; color:#047857; font-weight:700; opacity:0.9;">${clockStr2}</span>` : ''}`;
+                }
             }
             const isDup2 = item.coords && mushCoordCount[normalizeCoords(item.coords).toLowerCase()] > 1;
             pinnedMatchedCards.push(createMushroomCard(item, now, isExp2, timeText2, isDup2));
@@ -4965,12 +5182,20 @@
         renderMGroup(activeEl, activeGroup1, 'm-group-1', '⏳ 一天內 (含可開打)', false, groupMode);
         renderMGroup(activeEl, activeGroup2, 'm-group-2', '⏳ 一天後 (或未設定)', true, groupMode);
 
-        document.getElementById('active-empty').style.display = actCount === 0 ? 'block' : 'none';
-        document.getElementById('unclaimed-empty').style.display = uncCount === 0 ? 'block' : 'none';
+        const hideActiveSection = (mushQuickFilter === 'unclaimed');
+        const hideUnclaimedSection = (mushQuickFilter === 'active' || mushQuickFilter === '24h' || mushQuickFilter === 'open_slots' || Boolean(selectedMushPlayer));
+        const uncHeadingEl = document.getElementById('unclaimed-section-heading');
+        if (uncHeadingEl) uncHeadingEl.style.display = hideUnclaimedSection ? 'none' : '';
+        activeEl.style.display = hideActiveSection ? 'none' : '';
+        unclaimEl.style.display = hideUnclaimedSection ? 'none' : '';
+        document.getElementById('active-empty').style.display = (!hideActiveSection && actCount === 0 && pinnedMatchedCards.length === 0) ? 'block' : 'none';
+        document.getElementById('unclaimed-empty').style.display = (!hideUnclaimedSection && uncCount === 0) ? 'block' : 'none';
 
         const summaryEl = document.getElementById('mushroom-summary-badge');
         if (sortedM.length > 0) {
-            summaryEl.innerHTML = `共 ${sortedM.length} 筆`;
+            summaryEl.innerHTML = currentFilteredMushrooms.length !== sortedM.length
+                ? `顯示 ${currentFilteredMushrooms.length} / 共 ${sortedM.length} 筆`
+                : `共 ${sortedM.length} 筆`;
             summaryEl.style.display = 'block';
         } else { summaryEl.style.display = 'none'; }
 
