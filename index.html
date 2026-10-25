@@ -2640,6 +2640,172 @@
             .mush-header-info { flex-basis: 100%; flex-direction: row; justify-content: space-between; align-items: center; margin-top: 6px; }
             .pin-btn-header { margin-left: auto; }
         }
+
+        /* ===== 巨菇分頁手機版雙欄極致優化 (≤ 520px) ===== */
+        .mush-clock-mobile {
+            display: none;
+        }
+        #mushroom-quick-filter-bar::-webkit-scrollbar,
+        #player-roster::-webkit-scrollbar {
+            display: none;
+        }
+        @media (max-width: 640px) {
+            #mushroom-quick-filter-bar {
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                gap: 5px !important;
+                margin: 6px 0 10px 0 !important;
+                padding: 2px 1px 4px 1px;
+                justify-content: flex-start !important;
+            }
+            #mushroom-quick-filter-bar .mush-qf-pills {
+                flex-wrap: nowrap !important;
+                flex-shrink: 0;
+                gap: 5px !important;
+            }
+            #mushroom-quick-filter-bar .mush-qf-copy-btn {
+                flex-shrink: 0;
+                padding: 4px 10px !important;
+                font-size: 11px !important;
+            }
+        }
+        @media (max-width: 520px) {
+            #player-roster-section {
+                margin-bottom: 8px !important;
+            }
+            #player-roster {
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding-bottom: 2px;
+                gap: 6px !important;
+            }
+            .mushroom-search-bar {
+                margin-bottom: 6px !important;
+            }
+            #view-mushroom .mush-card-top {
+                padding: 6px 7px !important;
+                gap: 4px !important;
+            }
+            #view-mushroom .mush-sn {
+                font-size: 15px !important;
+            }
+            #view-mushroom .mush-country-text {
+                font-size: 11px !important;
+            }
+            #view-mushroom .tz-badge {
+                font-size: 9.5px !important;
+                padding: 1px 4px !important;
+            }
+            #view-mushroom .pin-btn {
+                font-size: 18px !important;
+            }
+            #view-mushroom .mush-kind-tag {
+                font-size: 10px !important;
+                padding: 2px 5px !important;
+                max-width: 66px !important;
+                border-radius: 5px !important;
+            }
+            #view-mushroom .mush-timer-pill {
+                font-size: 10.5px !important;
+                padding: 2px 5px !important;
+                border-radius: 5px !important;
+                flex: 1;
+                justify-content: center;
+            }
+            #view-mushroom .mush-clock-desktop {
+                display: none !important;
+            }
+            #view-mushroom .mush-clock-mobile {
+                display: inline-block !important;
+                font-size: 9.5px;
+                color: #047857;
+                font-weight: 700;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+            #view-mushroom .mush-card-body {
+                padding: 7px 8px !important;
+                gap: 5px !important;
+            }
+            #view-mushroom .mush-hero-row {
+                gap: 7px !important;
+                min-height: 38px !important;
+            }
+            #view-mushroom .mush-avatar-col {
+                flex: 0 0 38px !important;
+            }
+            #view-mushroom .mush-avatar-circle,
+            #view-mushroom .mush-claim-btn {
+                width: 38px !important;
+                height: 38px !important;
+            }
+            #view-mushroom .mush-avatar-text {
+                font-size: 11.5px !important;
+            }
+            #view-mushroom .mush-claim-icon {
+                font-size: 13px !important;
+                margin-bottom: 1px !important;
+            }
+            #view-mushroom .mush-claim-label {
+                font-size: 9.5px !important;
+            }
+            #view-mushroom .mush-landmark-title {
+                font-size: 13px !important;
+                line-height: 1.26 !important;
+            }
+            #view-mushroom .mush-slot-header {
+                margin-bottom: 3px !important;
+                padding: 0 !important;
+                font-size: 10px !important;
+                gap: 2px;
+            }
+            #view-mushroom .mush-slot-status {
+                font-size: 10px !important;
+                white-space: nowrap !important;
+            }
+            #view-mushroom .mush-slot-hint {
+                display: none !important;
+            }
+            #view-mushroom .mush-slots-row {
+                gap: 3px !important;
+            }
+            #view-mushroom .mush-slots-row .slot-btn,
+            #view-mushroom .mush-slots-row .mush-fill-btn,
+            #view-mushroom .mush-slots-row .mush-fill-spacer {
+                max-width: 23px !important;
+                font-size: 11.5px !important;
+            }
+            #view-mushroom .mush-actions-wrap {
+                margin-top: 5px !important;
+                padding-top: 5px !important;
+            }
+            #view-mushroom .mush-actions-row {
+                gap: 5px !important;
+            }
+            #view-mushroom .mush-act-btn,
+            #view-mushroom .mush-copy-btn {
+                min-height: 34px !important;
+                padding: 4px 2px !important;
+                border-radius: 8px !important;
+                gap: 2px !important;
+            }
+            #view-mushroom .mush-act-icon {
+                font-size: 14px !important;
+            }
+            #view-mushroom .mush-copy-icon {
+                font-size: 15px !important;
+            }
+            #view-mushroom .mush-act-label {
+                font-size: 10px !important;
+            }
+            #view-mushroom .mush-copy-label {
+                font-size: 10.5px !important;
+            }
+        }
 </style>
     <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
 </head>
@@ -4004,8 +4170,8 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.10.26.0322";</script>
-    <script src="js/main.js?v=202610260322"></script>
+    <script>const APP_VERSION = "2026.10.26.0405";</script>
+    <script src="js/main.js?v=2026.10.26.0405"></script>
     <script src="js/autofill.js?v=202610230026"></script>
 </body>
 </html>

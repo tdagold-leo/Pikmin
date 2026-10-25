@@ -1,5 +1,5 @@
 // JS logic begins
-    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.26.0322";
+    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.26.0405";
 
     // 自動清理網址列上的版本號參數，保持網址乾淨漂亮 (例如保持為 https://tdagold-leo.github.io/Pikmin/)
     if (window.location.search && (window.location.search.includes('v=') || window.location.search.includes('_t='))) {
@@ -4334,9 +4334,9 @@
         const rem = targetTime - now;
         if (rem <= 0) return "已過期/可開打！";
         const t = Math.floor(rem / 1000), m = Math.floor(t / 60), h = Math.floor(m / 60), d = Math.floor(h / 24);
-        if (d > 0) return `${d}天 ${h%24}時 ${m%60}分`;
-        if (h > 0) return `${h}時 ${m%60}分 ${t%60}秒`;
-        return `${m}分 ${t%60}秒`;
+        if (d > 0) return `${d}天${h%24}時${m%60}分`;
+        if (h > 0) return `${h}時${m%60}分${t%60}秒`;
+        return `${m}分${t%60}秒`;
     }
 
     function formatMushTargetClock(targetTime, now) {
@@ -4677,7 +4677,7 @@
         const safeC = toTW(escapeHtml(item.country||'')), safeName = escapeHtml(item.name), safeTag = escapeHtml(item.tag);
         const diffStr = getTimeDiffString(safeC);
         // 將國家與時差字串，供 Header 第一排使用
-        const cHtml = safeC ? `<span style="font-size:12px; color:#6b7280; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${safeC}</span> ${diffStr ? `<span class="tz-badge" style="flex-shrink:0;">${diffStr}</span>` : ''}` : '';
+        const cHtml = safeC ? `<span class="mush-country-text" style="font-size:12px; color:#6b7280; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${safeC}</span> ${diffStr ? `<span class="tz-badge" style="flex-shrink:0;">${diffStr}</span>` : ''}` : '';
         const dupBadge = isDup ? `<span style="font-size:11px; color:#b45309; font-weight:bold; background:#fef3c7; padding:2px 6px; border-radius:6px; border:1px dashed #f59e0b;">⚠️ 重複收藏</span>` : '';
         const badgeHtml = dupBadge;
 
@@ -4692,7 +4692,7 @@
         let elemHeaderColor = isExpired ? '#6b7280' : '#065f46';
         let isElem = (item.kind === '元素菇' || item.type === '元素菇');
 
-                // 如果名稱或標籤含有元素關鍵字，就算沒有設為元素菇也強制升級成元素菇
+        // 如果名稱或標籤含有元素關鍵字，就算沒有設為元素菇也強制升級成元素菇
         if (checkStr.includes('水晶')) isElem = true;
         else if (checkStr.includes('毒')) isElem = true;
         else if (checkStr.includes('大冰藍') || checkStr.includes('冰')) isElem = true;
@@ -4730,7 +4730,7 @@
                 elemClass = 'elem-火';
                 elemHeaderBg = isExpired ? '#f3f4f6' : '#fff1f2';
                 elemHeaderColor = '#991b1b';
-                        } else if (checkStr.includes('電') || checkStr.includes('大黃') || tag.includes('黃')) {
+            } else if (checkStr.includes('電') || checkStr.includes('大黃') || tag.includes('黃')) {
                 elemClass = 'elem-電';
                 elemHeaderBg = isExpired ? '#f3f4f6' : '#fffbeb';
                 elemHeaderColor = '#92400e';
@@ -4766,16 +4766,18 @@
         const filledCount = currentSlots.filter(s => s !== '').length;
         const emptyCount = 5 - filledCount;
         const isFull = isClaimed && filledCount === 5;
+        const mobileClockRaw = (isClaimed && item.targetTime != null && !isExpired) ? formatMushTargetClock(item.targetTime, now).replace(/^\(|\)$/g, '') : '';
 
         // 參戰空位：僅在「已認領」時顯示圈圈與空位狀態提示；待認領巨菇隱藏空位圈圈以精簡版面
         let slotsHtml = '';
         if (isClaimed) {
             const slotStatusText = isFull
-                ? `<span style="color:#dc2626; font-weight:800;">🈵 已額滿 (5/5)</span>`
-                : `<span style="color:#059669; font-weight:800;">🟢 參戰 ${filledCount}/5 <span style="color:#0284c7; font-weight:800;">(空 ${emptyCount} 位)</span></span>`;
+                ? `<span class="mush-slot-status" style="color:#dc2626; font-weight:800;">🈵 已額滿 (5/5)</span>`
+                : `<span class="mush-slot-status" style="color:#059669; font-weight:800;">🟢 參戰 ${filledCount}/5 <span style="color:#0284c7; font-weight:800;">(空${emptyCount}位)</span></span>`;
+            const mobileClockSpan = mobileClockRaw ? `<span class="mush-clock-mobile">🏁${mobileClockRaw}</span>` : '';
             slotsHtml = `<div class="slots-wrapper" style="background:transparent; border:none; padding:4px 0 0 0; margin-top:4px;">`;
-            slotsHtml += `<div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:5px; padding:0 2px;">${slotStatusText}<span style="font-size:10px; color:#94a3b8; font-weight:600;">點第N格自動勾選</span></div>`;
-            slotsHtml += `<div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">`;
+            slotsHtml += `<div class="mush-slot-header" style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:5px; padding:0 2px;">${slotStatusText}<span class="mush-slot-hint" style="font-size:10px; color:#94a3b8; font-weight:600;">點第N格自動勾選</span>${mobileClockSpan}</div>`;
+            slotsHtml += `<div class="mush-slots-row" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">`;
             for (let i = 0; i < 5; i++) {
                 if (currentSlots[i]) {
                     slotsHtml += `<button class="slot-btn" title="點擊設為 ${i + 1} 人參戰（再點最後一格可取消）" style="flex:1; max-width:34px; aspect-ratio:1/1; height:auto; padding:0; border-radius:50%; background:#10b981; border:none; color:white; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.1);" onclick="toggleSlot('${item.id}', ${i})">✓</button>`;
@@ -4784,9 +4786,9 @@
                 }
             }
             if (!isFull) {
-                slotsHtml += `<button onclick="fillAllSlots('${item.id}')" style="flex:1; max-width:34px; aspect-ratio:1/1; height:auto; padding:0; border-radius:50%; background:#ef4444; border:none; color:white; font-size:14px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.1);" title="填滿空位">滿</button>`;
+                slotsHtml += `<button class="mush-fill-btn" onclick="fillAllSlots('${item.id}')" style="flex:1; max-width:34px; aspect-ratio:1/1; height:auto; padding:0; border-radius:50%; background:#ef4444; border:none; color:white; font-size:14px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(0,0,0,0.1);" title="填滿空位">滿</button>`;
             } else {
-                slotsHtml += `<div style="flex:1; max-width:34px; visibility:hidden;"></div>`;
+                slotsHtml += `<div class="mush-fill-spacer" style="flex:1; max-width:34px; visibility:hidden;"></div>`;
             }
             slotsHtml += `</div></div>`;
         }
@@ -4804,47 +4806,47 @@
         const actionBtnStyle = "flex:1; background:#f8fafc; border:1px solid #e2e8f0; color:#475569; padding:8px 4px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:4px; box-shadow:0 1px 2px rgba(0,0,0,0.06); transition:all 0.2s; line-height:1; min-height:52px;";
         const copyBtnStyle  = "flex:1.5; background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; padding:8px 4px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:4px; box-shadow:0 1px 3px rgba(59,130,246,0.2); transition:all 0.2s; line-height:1; min-height:52px;";
         let actionHtml = '';
-        actionHtml += item.coords ? `<button class="btn-sm btn-default" style="${actionBtnStyle}" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}');" title="地圖"><span style="font-size:20px; line-height:1;">🗺️</span><span style="font-size:11px; font-weight:700; letter-spacing:0.3px;">地圖</span></button>` : '';
-        actionHtml += `<button class="btn-sm btn-edit" style="${actionBtnStyle}" onclick="openTimeModalById('${item.id}', 'mushroom')" title="修改"><span style="font-size:18px; line-height:1;">✏️</span><span style="font-size:11px; font-weight:700; letter-spacing:0.3px;">修改</span></button>`;
-        actionHtml += item.coords ? `<button class="btn-sm btn-default" style="${copyBtnStyle}" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this, true)" title="複製座標"><span style="font-size:22px; line-height:1;">📋</span><span style="font-size:12px; font-weight:800; letter-spacing:0.3px;">複製</span></button>` : '';
+        actionHtml += item.coords ? `<button class="btn-sm btn-default mush-act-btn" style="${actionBtnStyle}" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}');" title="地圖"><span class="mush-act-icon" style="font-size:20px; line-height:1;">🗺️</span><span class="mush-act-label" style="font-size:11px; font-weight:700; letter-spacing:0.3px;">地圖</span></button>` : '';
+        actionHtml += `<button class="btn-sm btn-edit mush-act-btn" style="${actionBtnStyle}" onclick="openTimeModalById('${item.id}', 'mushroom')" title="修改"><span class="mush-act-icon" style="font-size:18px; line-height:1;">✏️</span><span class="mush-act-label" style="font-size:11px; font-weight:700; letter-spacing:0.3px;">修改</span></button>`;
+        actionHtml += item.coords ? `<button class="btn-sm btn-default mush-copy-btn" style="${copyBtnStyle}" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this, true)" title="複製座標"><span class="mush-copy-icon" style="font-size:22px; line-height:1;">📋</span><span class="mush-copy-label" style="font-size:12px; font-weight:800; letter-spacing:0.3px;">複製</span></button>` : '';
 
         card.innerHTML = `
-            <div style="background: ${elemHeaderBg}; padding: 8px 10px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
+            <div class="mush-card-top" style="background: ${elemHeaderBg}; padding: 8px 10px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; width:100%; min-width:0;">
-                    <div style="display:flex; align-items:center; gap:6px; min-width:0; flex:1;">
-                        <span style="font-size: 18px; font-weight: 900; color: var(--text-main); white-space:nowrap; line-height:1; flex-shrink:0;">#${String(item.sn).padStart(2,'0')}</span>
+                    <div style="display:flex; align-items:center; gap:5px; min-width:0; flex:1;">
+                        <span class="mush-sn" style="font-size: 18px; font-weight: 900; color: var(--text-main); white-space:nowrap; line-height:1; flex-shrink:0;">#${String(item.sn).padStart(2,'0')}</span>
                         <div style="display:flex; align-items:center; gap:4px; min-width:0; overflow:hidden;">${cHtml}</div>
                     </div>
                     <button class="pin-btn ${isPinned ? 'pinned' : ''}" onclick="toggleMushPin('${item.id}')" title="${isPinned ? '取消重點標記' : '加入重點標記'}" style="flex-shrink:0; font-size:22px; line-height:1; padding:0 2px; background:transparent; border:none; cursor:pointer;">${isPinned ? '★' : '☆'}</button>
                 </div>
-                <div style="display:flex; align-items:center; gap:6px; width:100%; min-width:0;">
-                    <span title="${mergedKindLabel}" style="font-size:11px; font-weight:800; padding:3px 7px; border-radius:6px; white-space:nowrap; max-width:92px; overflow:hidden; text-overflow:ellipsis; background:${kindBg}; color:${kindColor}; line-height:1.2; border:1px solid ${kindBorder}; flex-shrink:0; box-shadow:0 1px 2px rgba(99,102,241,0.1);">${mergedKindLabel}</span>
-                    <span class="lc-time ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin:0; font-size:12px; line-height:1.2; display:inline-flex; flex-wrap:nowrap; align-items:baseline; gap:3px; max-width:100%; min-width:0; padding:3px 7px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${timeText}</span>
+                <div style="display:flex; align-items:center; gap:5px; width:100%; min-width:0;">
+                    <span class="mush-kind-tag" title="${mergedKindLabel}" style="font-size:11px; font-weight:800; padding:3px 7px; border-radius:6px; white-space:nowrap; max-width:92px; overflow:hidden; text-overflow:ellipsis; background:${kindBg}; color:${kindColor}; line-height:1.2; border:1px solid ${kindBorder}; flex-shrink:0; box-shadow:0 1px 2px rgba(99,102,241,0.1);">${mergedKindLabel}</span>
+                    <span class="lc-time mush-timer-pill ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin:0; font-size:12px; line-height:1.2; display:inline-flex; flex-wrap:nowrap; align-items:baseline; gap:3px; max-width:100%; min-width:0; padding:3px 7px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${timeText}</span>
                 </div>
             </div>
-            <div class="card-body" style="gap: 8px; padding: 12px; display:flex; flex-direction:column; flex:1;">
-                <div style="display:flex; align-items:center; gap:10px; min-height:52px;">
-                    <div style="flex:0 0 52px; display:flex; flex-direction:column; align-items:center; gap:6px;">
+            <div class="card-body mush-card-body" style="gap: 8px; padding: 12px; display:flex; flex-direction:column; flex:1;">
+                <div class="mush-hero-row" style="display:flex; align-items:center; gap:10px; min-height:52px;">
+                    <div class="mush-avatar-col" style="flex:0 0 52px; display:flex; flex-direction:column; align-items:center; gap:6px;">
                         ${item.user ? `
-                        <div style="background:${uTheme.bg}; color:${uTheme.color}; font-weight:${uTheme.fw}; font-family:${uTheme.ff}; border-radius:50%; width:52px; height:52px; display:flex; align-items:center; justify-content:center; line-height:1; text-align:center; overflow:hidden; border: 2px solid ${uTheme.border}; box-shadow: 0 2px 4px rgba(0,0,0,0.05); flex-shrink:0; ${uTheme.bgImg ? `background-image:${uTheme.bgImg}; background-size:${uTheme.bgSize}; background-position:${uTheme.bgPos}; background-repeat:no-repeat;` : ''}">
-                            <span style="font-size:14px; word-break:break-all; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; padding:0 2px;">${escapeHtml(item.user)}</span>
+                        <div class="mush-avatar-circle" style="background:${uTheme.bg}; color:${uTheme.color}; font-weight:${uTheme.fw}; font-family:${uTheme.ff}; border-radius:50%; width:52px; height:52px; display:flex; align-items:center; justify-content:center; line-height:1; text-align:center; overflow:hidden; border: 2px solid ${uTheme.border}; box-shadow: 0 2px 4px rgba(0,0,0,0.05); flex-shrink:0; ${uTheme.bgImg ? `background-image:${uTheme.bgImg}; background-size:${uTheme.bgSize}; background-position:${uTheme.bgPos}; background-repeat:no-repeat;` : ''}">
+                            <span class="mush-avatar-text" style="font-size:14px; word-break:break-all; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; padding:0 2px;">${escapeHtml(item.user)}</span>
                         </div>
                         ` : `
-                        <button onclick="openClaimModalById('${item.id}')" style="background:linear-gradient(135deg, #60a5fa, #3b82f6); color:white; border:none; border-radius:50%; width:52px; height:52px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 2px 6px rgba(59,130,246,0.3); transition:all 0.2s; flex-shrink:0; padding:0;">
-                            <span style="font-size:16px; line-height:1; margin-bottom:2px; transform:translateY(1px);">🙋</span>
-                            <span style="font-size:11px; font-weight:bold; line-height:1;">認領</span>
+                        <button class="mush-claim-btn" onclick="openClaimModalById('${item.id}')" style="background:linear-gradient(135deg, #60a5fa, #3b82f6); color:white; border:none; border-radius:50%; width:52px; height:52px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 2px 6px rgba(59,130,246,0.3); transition:all 0.2s; flex-shrink:0; padding:0;">
+                            <span class="mush-claim-icon" style="font-size:16px; line-height:1; margin-bottom:2px; transform:translateY(1px);">🙋</span>
+                            <span class="mush-claim-label" style="font-size:11px; font-weight:bold; line-height:1;">認領</span>
                         </button>
                         `}
                     </div>
                     <div style="display:flex; flex-direction:column; justify-content:center; gap:4px; flex:1; min-width:0;">
-                        <span class="card-title" style="font-size:15.5px; margin:0; line-height:1.35; font-weight:800; word-break:break-word; overflow-wrap:break-word; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${safeName}</span>
+                        <span class="card-title mush-landmark-title" style="font-size:15.5px; margin:0; line-height:1.35; font-weight:800; word-break:break-word; overflow-wrap:break-word; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${safeName}</span>
                         ${locHtml}
                     </div>
                 </div>
                 <div style="display:flex; flex-direction:column; margin-top:auto;">
                     ${slotsHtml}
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; border-top:1px solid #f1f5f9; padding-top:8px;">
-                        <div style="display:flex; gap:8px; flex:1; justify-content:space-between;">${actionHtml}</div>
+                    <div class="mush-actions-wrap" style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; border-top:1px solid #f1f5f9; padding-top:8px;">
+                        <div class="mush-actions-row" style="display:flex; gap:8px; flex:1; justify-content:space-between;">${actionHtml}</div>
                     </div>
                 </div>
             </div>
@@ -4855,8 +4857,7 @@
         return card;
     }
 
-    
-    // ===== 明信片動態常用標籤推薦 =====
+        // ===== 明信片動態常用標籤推薦 =====
     function getTagEmoji(tag) {
         if (!tag) return '';
         const t = tag.toLowerCase();
@@ -5067,7 +5068,7 @@
                 : '';
 
             qfBar.innerHTML = `
-                <div style="display:flex; flex-wrap:wrap; gap:5px; align-items:center;">
+                <div class="mush-qf-pills" style="display:flex; flex-wrap:wrap; gap:5px; align-items:center;">
                     ${playerFilterBadge}
                     <button type="button" onclick="setMushQuickFilter('all')" style="${pillStyle(mushQuickFilter === 'all', '#1e293b', '#ffffff', '#1e293b')}">全部 (${cntAll})</button>
                     <button type="button" onclick="setMushQuickFilter('active')" style="${pillStyle(mushQuickFilter === 'active', '#dcfce7', '#15803d', '#86efac')}">🟢 追蹤中 (${cntActive})</button>
@@ -5078,7 +5079,7 @@
                     <button type="button" onclick="setMushQuickFilter('elemental')" style="${pillStyle(mushQuickFilter === 'elemental', '#f3e8ff', '#6b21a8', '#d8b4fe')}">🌿 元素菇 (${cntElem})</button>
                 </div>
                 ${currentFilteredMushrooms.length > 0 ? `
-                    <button type="button" onclick="copyFilteredMushroomCoords(this)" style="background:linear-gradient(135deg,#0ea5e9,#2563eb); color:#fff; border:none; border-radius:999px; padding:5px 12px; font-size:11.5px; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(37,99,235,0.25); display:inline-flex; align-items:center; gap:4px; white-space:nowrap;">
+                    <button type="button" class="mush-qf-copy-btn" onclick="copyFilteredMushroomCoords(this)" style="background:linear-gradient(135deg,#0ea5e9,#2563eb); color:#fff; border:none; border-radius:999px; padding:5px 12px; font-size:11.5px; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(37,99,235,0.25); display:inline-flex; align-items:center; gap:4px; white-space:nowrap;">
                         📋 複製篩選座標 (${currentFilteredMushrooms.length} 筆)
                     </button>
                 ` : ''}
@@ -5110,7 +5111,7 @@
                     if (item.targetTime - now <= 0) { timeText = '已過期/可開打！'; isExp = true; }
                     else {
                         const clockStr = formatMushTargetClock(item.targetTime, now);
-                        timeText = `<span class="live-timer" data-type="mushroom-claimed" data-target="${item.targetTime}">${getRemainingText(item.targetTime, now)}</span>${clockStr ? ` <span style="font-size:11px; color:#047857; font-weight:700; opacity:0.9;">${clockStr}</span>` : ''}`;
+                        timeText = `<span class="live-timer" data-type="mushroom-claimed" data-target="${item.targetTime}">${getRemainingText(item.targetTime, now)}</span>${clockStr ? ` <span class="mush-clock-desktop" style="font-size:11px; color:#047857; font-weight:700; opacity:0.9;">${clockStr}</span>` : ''}`;
                     }
                 }
                 actCount++;
@@ -5165,7 +5166,7 @@
                 if (item.targetTime - now <= 0) { timeText2 = '已過期/可開打！'; isExp2 = true; }
                 else {
                     const clockStr2 = formatMushTargetClock(item.targetTime, now);
-                    timeText2 = `<span class="live-timer" data-type="mushroom-claimed" data-target="${item.targetTime}">${getRemainingText(item.targetTime, now)}</span>${clockStr2 ? ` <span style="font-size:11px; color:#047857; font-weight:700; opacity:0.9;">${clockStr2}</span>` : ''}`;
+                    timeText2 = `<span class="live-timer" data-type="mushroom-claimed" data-target="${item.targetTime}">${getRemainingText(item.targetTime, now)}</span>${clockStr2 ? ` <span class="mush-clock-desktop" style="font-size:11px; color:#047857; font-weight:700; opacity:0.9;">${clockStr2}</span>` : ''}`;
                 }
             }
             const isDup2 = item.coords && mushCoordCount[normalizeCoords(item.coords).toLowerCase()] > 1;
