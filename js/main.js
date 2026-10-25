@@ -1,5 +1,5 @@
 // JS logic begins
-    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.26.0405";
+    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.26.0413";
 
     // 自動清理網址列上的版本號參數，保持網址乾淨漂亮 (例如保持為 https://tdagold-leo.github.io/Pikmin/)
     if (window.location.search && (window.location.search.includes('v=') || window.location.search.includes('_t='))) {
@@ -4774,9 +4774,8 @@
             const slotStatusText = isFull
                 ? `<span class="mush-slot-status" style="color:#dc2626; font-weight:800;">🈵 已額滿 (5/5)</span>`
                 : `<span class="mush-slot-status" style="color:#059669; font-weight:800;">🟢 參戰 ${filledCount}/5 <span style="color:#0284c7; font-weight:800;">(空${emptyCount}位)</span></span>`;
-            const mobileClockSpan = mobileClockRaw ? `<span class="mush-clock-mobile">🏁${mobileClockRaw}</span>` : '';
             slotsHtml = `<div class="slots-wrapper" style="background:transparent; border:none; padding:4px 0 0 0; margin-top:4px;">`;
-            slotsHtml += `<div class="mush-slot-header" style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:5px; padding:0 2px;">${slotStatusText}<span class="mush-slot-hint" style="font-size:10px; color:#94a3b8; font-weight:600;">點第N格自動勾選</span>${mobileClockSpan}</div>`;
+            slotsHtml += `<div class="mush-slot-header" style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:5px; padding:0 2px;">${slotStatusText}<span class="mush-slot-hint" style="font-size:10px; color:#94a3b8; font-weight:600;">點第N格自動勾選</span></div>`;
             slotsHtml += `<div class="mush-slots-row" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">`;
             for (let i = 0; i < 5; i++) {
                 if (currentSlots[i]) {
@@ -4812,16 +4811,16 @@
 
         card.innerHTML = `
             <div class="mush-card-top" style="background: ${elemHeaderBg}; padding: 8px 10px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; width:100%; min-width:0;">
-                    <div style="display:flex; align-items:center; gap:5px; min-width:0; flex:1;">
-                        <span class="mush-sn" style="font-size: 18px; font-weight: 900; color: var(--text-main); white-space:nowrap; line-height:1; flex-shrink:0;">#${String(item.sn).padStart(2,'0')}</span>
-                        <div style="display:flex; align-items:center; gap:4px; min-width:0; overflow:hidden;">${cHtml}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:4px; width:100%; min-width:0;">
+                    <div style="display:flex; align-items:center; gap:4px; min-width:0; flex:1; overflow:hidden;">
+                        <span class="mush-sn" style="font-size: 17px; font-weight: 900; color: var(--text-main); white-space:nowrap; line-height:1; flex-shrink:0;">#${String(item.sn).padStart(2,'0')}</span>
+                        <div style="display:flex; align-items:center; gap:3px; min-width:0; flex-shrink:0;">${cHtml}</div>
+                        <span class="mush-kind-tag" title="${mergedKindLabel}" style="font-size:11px; font-weight:800; padding:2px 6px; border-radius:6px; white-space:nowrap; max-width:90px; overflow:hidden; text-overflow:ellipsis; background:${kindBg}; color:${kindColor}; line-height:1.2; border:1px solid ${kindBorder}; flex-shrink:1; box-shadow:0 1px 2px rgba(99,102,241,0.1);">${mergedKindLabel}</span>
                     </div>
-                    <button class="pin-btn ${isPinned ? 'pinned' : ''}" onclick="toggleMushPin('${item.id}')" title="${isPinned ? '取消重點標記' : '加入重點標記'}" style="flex-shrink:0; font-size:22px; line-height:1; padding:0 2px; background:transparent; border:none; cursor:pointer;">${isPinned ? '★' : '☆'}</button>
+                    <button class="pin-btn ${isPinned ? 'pinned' : ''}" onclick="toggleMushPin('${item.id}')" title="${isPinned ? '取消重點標記' : '加入重點標記'}" style="flex-shrink:0; font-size:21px; line-height:1; padding:0 2px; background:transparent; border:none; cursor:pointer;">${isPinned ? '★' : '☆'}</button>
                 </div>
-                <div style="display:flex; align-items:center; gap:5px; width:100%; min-width:0;">
-                    <span class="mush-kind-tag" title="${mergedKindLabel}" style="font-size:11px; font-weight:800; padding:3px 7px; border-radius:6px; white-space:nowrap; max-width:92px; overflow:hidden; text-overflow:ellipsis; background:${kindBg}; color:${kindColor}; line-height:1.2; border:1px solid ${kindBorder}; flex-shrink:0; box-shadow:0 1px 2px rgba(99,102,241,0.1);">${mergedKindLabel}</span>
-                    <span class="lc-time mush-timer-pill ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin:0; font-size:12px; line-height:1.2; display:inline-flex; flex-wrap:nowrap; align-items:baseline; gap:3px; max-width:100%; min-width:0; padding:3px 7px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${timeText}</span>
+                <div style="display:flex; align-items:center; width:100%; min-width:0;">
+                    <span class="lc-time mush-timer-pill ${!isExpired && item.targetTime != null ? 'safe' : ''}" style="margin:0; font-size:12px; line-height:1.25; display:inline-flex; flex-wrap:nowrap; align-items:baseline; justify-content:center; gap:4px; width:100%; min-width:0; padding:3px 8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; box-sizing:border-box;">${timeText}</span>
                 </div>
             </div>
             <div class="card-body mush-card-body" style="gap: 8px; padding: 12px; display:flex; flex-direction:column; flex:1;">
