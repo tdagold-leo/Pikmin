@@ -2795,6 +2795,160 @@
                 font-size: 10.5px !important;
             }
         }
+
+        /* ===== 明信片分頁 5 大優化專屬樣式 (#view-postcard) ===== */
+        .pc-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        @media (max-width: 640px) {
+            .pc-stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 6px;
+                margin-bottom: 8px;
+            }
+        }
+        .pc-stat-card {
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 8px 10px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            text-align: left;
+            transition: all 0.16s ease;
+            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+        }
+        .pc-stat-card:hover {
+            transform: translateY(-1px);
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+        }
+        .pc-stat-card.active-all {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            border-color: #0f172a;
+            color: #ffffff;
+        }
+        .pc-stat-card.active-collected {
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+            border-color: #f59e0b;
+        }
+        .pc-stat-card.active-fav {
+            background: linear-gradient(135deg, #fff1f2, #ffe4e6);
+            border-color: #f43f5e;
+        }
+        .pc-stat-card.active-recent {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border-color: #0284c7;
+        }
+        #view-postcard .pc-top-actions-overlay {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            z-index: 6;
+        }
+        #view-postcard .pc-top-actions-overlay .card-star-btn,
+        #view-postcard .pc-top-actions-overlay .card-fav-btn {
+            position: static !important;
+            width: 26px;
+            height: 26px;
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+        }
+        #view-postcard .pc-card-body {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            padding: 10px;
+            flex: 1;
+        }
+        #view-postcard .pc-card-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1.32;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            min-height: 2.64em;
+            margin: 0;
+        }
+        #view-postcard .pc-loc-line {
+            font-size: 11.5px;
+            color: #64748b;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #view-postcard .pc-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+            min-height: 22px;
+        }
+        #view-postcard .pc-clickable-pill {
+            cursor: pointer;
+            transition: transform 0.12s, filter 0.12s;
+        }
+        #view-postcard .pc-clickable-pill:hover {
+            transform: scale(1.04);
+            filter: brightness(0.95);
+        }
+        #postcard-quick-tags::-webkit-scrollbar {
+            display: none;
+        }
+        @media (max-width: 640px) {
+            #postcard-quick-tags {
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding-bottom: 2px;
+            }
+            #postcard-quick-tags > * {
+                flex-shrink: 0;
+            }
+        }
+        @media (max-width: 520px) {
+            #view-postcard .pc-stat-card {
+                padding: 6px 8px;
+            }
+            #view-postcard .pc-card-body {
+                padding: 7px 8px !important;
+                gap: 4px !important;
+            }
+            #view-postcard .pc-card-title {
+                font-size: 12.5px !important;
+                line-height: 1.28 !important;
+                min-height: 2.56em !important;
+            }
+            #view-postcard .pc-loc-line {
+                font-size: 10.5px !important;
+            }
+            #view-postcard .pc-top-actions-overlay .card-star-btn,
+            #view-postcard .pc-top-actions-overlay .card-fav-btn {
+                width: 23px !important;
+                height: 23px !important;
+                font-size: 11.5px !important;
+            }
+            #view-postcard .pc-card-actions .btn-sm {
+                padding: 4px 4px !important;
+                font-size: 10.5px !important;
+            }
+        }
 </style>
     <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
 </head>
@@ -2862,49 +3016,54 @@
         </section>
 
         <section id="view-postcard" class="view-section">
-            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
-                🔗 推薦免費圖床：<a href="https://meee.com.tw/" target="_blank" style="color:var(--primary-dark);">Meee 圖片上傳</a>
-            </div>
-            
-            <!-- 最近新增統計 -->
-            <div id="postcard-stats" style="display:none; gap:8px; margin-bottom:12px; flex-wrap:wrap;"></div>
+            <!-- 頂部 4 格互動統計儀表板 -->
+            <div id="postcard-stats" class="pc-stats-grid" style="display:none;"></div>
 
-            <div style="background:var(--card-bg); padding:8px 12px; border-radius:12px; margin-bottom:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05); display:flex; flex-direction:column; gap:8px;">
-                <!-- 第一排：過濾選單 (三個) -->
+            <div style="background:var(--card-bg); padding:10px 12px; border-radius:14px; margin-bottom:10px; box-shadow:0 2px 6px rgba(15,23,42,0.05); border:1px solid #e2e8f0; display:flex; flex-direction:column; gap:8px;">
+                <!-- 第一排：國家 / 城市 / 收藏狀態 / 時間 / 邏輯 -->
                 <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
-                    <label style="font-size:13px; font-weight:bold; color:var(--text-main); white-space:nowrap; margin-right:-2px;">過濾：</label>
-                    <select id="postcard-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:13px; flex:1; min-width:90px;">
-                        <option value="all">全部明信片</option>
+                    <select id="postcard-country-filter" class="input-base filter-select" onchange="onPostcardCountryChange()" style="padding:5px 8px; font-size:12.5px; flex:1; min-width:105px;">
+                        <option value="">🌍 全部國家</option>
+                    </select>
+                    <select id="postcard-city-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:12.5px; flex:1; min-width:105px;">
+                        <option value="">🏙️ 全部城市</option>
+                    </select>
+                    <select id="postcard-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:12.5px; flex:1; min-width:105px;">
+                        <option value="all">📚 全部明信片</option>
                         <option value="collected">⭐ 我的收藏</option>
                         <option value="uncollected">✰ 尚未收藏</option>
                         <option value="fav">❤️ 我的最愛</option>
                     </select>
-                    <select id="postcard-recent-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:13px; flex:1; min-width:90px;">
-                        <option value="all">時間不限</option>
+                    <select id="postcard-recent-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:12.5px; flex:1; min-width:105px;">
+                        <option value="all">🕒 時間不限</option>
                         <option value="1">最近 1 天新增</option>
                         <option value="3">最近 3 天新增</option>
                         <option value="7">最近 7 天新增</option>
                         <option value="14">最近 14 天新增</option>
                     </select>
-                    <select id="search-logic" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:13px; flex:1; min-width:90px;">
-                        <option value="and">且 (全部符合)</option>
-                        <option value="or">或 (任一符合)</option>
+                    <select id="search-logic" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:12.5px; flex:0 0 auto; width:auto; min-width:82px;">
+                        <option value="and">且 (全符)</option>
+                        <option value="or">或 (任一)</option>
                     </select>
                 </div>
                 
-                <!-- 第三排：搜尋列和按鈕 -->
-                <div style="display:flex; flex-wrap:nowrap; gap:6px; align-items:center;">
-                    <input type="text" id="postcard-search" class="input-base search-input" style="flex:1; min-width:0; padding:5px 8px; font-size:13px;" oninput="updateView()" onchange="updateView()" onkeyup="updateView()" placeholder="🔍 搜尋名稱、發表者、座標、標籤...">
-                    <button type="button" onclick="collapseAllPostcardGroups()" title="全部折疊以節省流量" style="flex-shrink:0; background:transparent; border:1px solid #e5e7eb; border-radius:8px; padding:5px 8px; cursor:pointer; font-size:12px; color:var(--text-muted); white-space:nowrap;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">全部折疊</button>
+                <!-- 第二排：搜尋列 + 清除 + 展開/折疊 + 圖床連結 -->
+                <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
+                    <div style="position:relative; flex:1; min-width:170px; display:flex; align-items:center;">
+                        <input type="text" id="postcard-search" class="input-base search-input" style="width:100%; min-width:0; padding:6px 26px 6px 10px; font-size:13px;" oninput="updateView()" onchange="updateView()" onkeyup="updateView()" placeholder="🔍 搜尋名稱、發表者、座標、標籤...">
+                        <button type="button" id="postcard-search-clear" onclick="document.getElementById('postcard-search').value=''; updateView();" title="清除搜尋" style="display:none; position:absolute; right:6px; background:none; border:none; color:#94a3b8; font-size:13px; cursor:pointer; padding:2px 4px; line-height:1;">✕</button>
+                    </div>
+                    <div style="display:flex; gap:5px; align-items:center; flex-shrink:0;">
+                        <button type="button" onclick="expandAllPostcardGroups()" title="展開所有明信片分類" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:5px 8px; cursor:pointer; font-size:11.5px; font-weight:700; color:#334155; white-space:nowrap;">📂 全展開</button>
+                        <button type="button" onclick="collapseAllPostcardGroups()" title="全部折疊以節省流量" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:5px 8px; cursor:pointer; font-size:11.5px; font-weight:700; color:#64748b; white-space:nowrap;">📁 全折疊</button>
+                        <a href="https://meee.com.tw/" target="_blank" title="前往 Meee 免費圖床上傳圖片" style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:5px 8px; font-size:11.5px; font-weight:700; color:#0284c7; text-decoration:none; white-space:nowrap; display:inline-flex; align-items:center; gap:3px;">🔗 圖床</a>
+                    </div>
                 </div>
-                <!-- 動態常用標籤推薦按鈕 -->
-                <div id="postcard-quick-tags" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:3px; align-items:center;">
-                    <button type="button" onclick="setPostcardSearch('缺')" style="padding:4px 10px; border-radius:12px; border:1px solid #fca5a5; background:#fef2f2; font-size:12px; cursor:pointer; color:#b91c1c; font-weight:bold;">⚠️ 缺</button>
-                    <button type="button" onclick="setPostcardSearch('未授權')" style="padding:4px 10px; border-radius:12px; border:1px solid #ddd6fe; background:#f5f3ff; font-size:12px; cursor:pointer; color:#6d28d9; font-weight:bold;">🔑 未授權</button>
-                </div>
+                <!-- 第三排：動態常用標籤推薦按鈕 & 批次複製座標 -->
+                <div id="postcard-quick-tags" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:1px; align-items:center;"></div>
             </div>
             <div id="postcard-container" class="grid"></div>
-            <div id="postcard-empty" class="empty-message" style="display: none;">目前沒有收藏的明信片項目</div>
+            <div id="postcard-empty" class="empty-message" style="display: none;">目前沒有符合條件的明信片項目</div>
         </section>
 
         <section id="view-goldbasin" class="view-section">
@@ -4159,8 +4318,8 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.10.26.0413";</script>
-    <script src="js/main.js?v=2026.10.26.0413"></script>
+    <script>const APP_VERSION = "2026.10.27.0513";</script>
+    <script src="js/main.js?v=2026.10.27.0513"></script>
     <script src="js/autofill.js?v=202610230026"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 // JS logic begins
-    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.26.0413";
+    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.27.0513";
 
     // 自動清理網址列上的版本號參數，保持網址乾淨漂亮 (例如保持為 https://tdagold-leo.github.io/Pikmin/)
     if (window.location.search && (window.location.search.includes('v=') || window.location.search.includes('_t='))) {
@@ -1606,9 +1606,17 @@
         return toTW(text);
     }
 
+    let _openccConverter = null;
     function toTW(str) {
         if (!str) return str;
-        return str.replace(/広/g, '廣').replace(/県/g, '縣').replace(/処/g, '處').replace(/浜/g, '濱')
+        let s = String(str);
+        if (typeof OpenCC !== 'undefined' && typeof OpenCC.Converter === 'function') {
+            try {
+                if (!_openccConverter) _openccConverter = OpenCC.Converter({ from: 'cn', to: 'tw' });
+                s = _openccConverter(s);
+            } catch (e) {}
+        }
+        return s.replace(/広/g, '廣').replace(/県/g, '縣').replace(/処/g, '處').replace(/浜/g, '濱')
             .replace(/転/g, '轉').replace(/団/g, '團').replace(/応/g, '應').replace(/両/g, '兩')
             .replace(/徳/g, '德').replace(/険/g, '險').replace(/収/g, '收').replace(/帯/g, '帶')
             .replace(/冲/g, '沖').replace(/绳/g, '繩').replace(/国/g, '國').replace(/兰/g, '蘭').replace(/亚/g, '亞')
@@ -1642,7 +1650,90 @@
             .replace(/旧/g, '舊').replace(/师/g, '師').replace(/类/g, '類').replace(/边/g, '邊').replace(/战/g, '戰')
             .replace(/风/g, '風').replace(/飞/g, '飛').replace(/标/g, '標').replace(/权/g, '權').replace(/网/g, '網')
             .replace(/应/g, '應').replace(/极/g, '極').replace(/伤/g, '傷').replace(/觉/g, '覺').replace(/认/g, '認')
-            .replace(/际/g, '際').replace(/击/g, '擊').replace(/没/g, '沒').replace(/尔/g, '爾');
+            .replace(/际/g, '際').replace(/击/g, '擊').replace(/没/g, '沒').replace(/尔/g, '爾')
+            .replace(/历/g, '歷').replace(/费/g, '費').replace(/莱/g, '萊').replace(/纳/g, '納');
+    }
+
+    function normalizeCountryAndCity(rawCountry, rawCity) {
+        let c = toTW(String(rawCountry || '')).trim();
+        let city = toTW(String(rawCity || '')).trim();
+
+        // 1. 處理重複或雙語分號/斜線格式（例如 "法國;法國"、"France/法國"）
+        if (c.includes(';') || c.includes('；') || c.includes('/') || c.includes('／')) {
+            const parts = c.split(/[;；/／]/).map(s => s.trim()).filter(Boolean);
+            const zhPart = parts.find(p => /[\u4e00-\u9fa5]/.test(p));
+            c = zhPart || parts[0] || '';
+        }
+        if (city.includes(';') || city.includes('；') || city.includes('/') || city.includes('／')) {
+            const parts = city.split(/[;；/／]/).map(s => s.trim()).filter(Boolean);
+            const zhPart = parts.find(p => /[\u4e00-\u9fa5]/.test(p));
+            city = zhPart || parts[0] || '';
+        }
+
+        // 2. 處理舊資料將「國家 ‧ 城市」或「國家 · 城市」合併在 country 欄位的情況
+        const dotSepRegex = /\s*(?:[‧·・•｜|－—–]|(?:\s+-\s+))\s*/;
+        if (dotSepRegex.test(c)) {
+            const segs = c.split(dotSepRegex).map(s => s.trim()).filter(Boolean);
+            if (segs.length >= 2) {
+                c = segs[0];
+                if (!city) city = segs.slice(1).join(' · ');
+            } else if (segs.length === 1) {
+                c = segs[0];
+            }
+        }
+
+        // 3. 處理舊資料以空白分隔「國家 城市」（例如 "波多黎各 卡羅利納"、"日本 東京"）
+        if (/^[\u4e00-\u9fa5]+\s+[\u4e00-\u9fa5]+/.test(c)) {
+            const spParts = c.split(/\s+/).map(s => s.trim()).filter(Boolean);
+            if (spParts.length >= 2) {
+                c = spParts[0];
+                if (!city) city = spParts.slice(1).join(' ');
+            }
+        }
+
+        // 4. 清理 city 前後多餘分隔符號
+        city = city.replace(/^[‧·・•｜|\-—–\s]+|[‧·・•｜|\-—–\s]+$/g, '').trim();
+
+        // 5. 統一常見同義國名，避免同一國家出現多種名稱
+        const countryAliases = {
+            '中華民國': '台灣', '臺灣': '台灣', '台灣省': '台灣', '臺灣省': '台灣', 'Taiwan': '台灣',
+            '大韓民國': '南韓', '韓國': '南韓', 'South Korea': '南韓', 'Korea': '南韓',
+            '澳大利亞': '澳洲', 'Australia': '澳洲',
+            '克羅地亞': '克羅埃西亞', 'Croatia': '克羅埃西亞',
+            '阿拉伯聯合大公國': '阿聯酋', '阿拉伯聯合酋長國': '阿聯酋', '阿聯': '阿聯酋', 'UAE': '阿聯酋',
+            '美利堅合眾國': '美國', '美利堅': '美國', 'USA': '美國', 'United States': '美國',
+            '大不列顛': '英國', '聯合王國': '英國', 'UK': '英國', 'United Kingdom': '英國',
+            '日本國': '日本', 'Japan': '日本',
+            '法蘭西': '法國', 'France': '法國',
+            '德意志': '德國', 'Germany': '德國',
+            '意大利': '義大利', 'Italy': '義大利',
+            '新西蘭': '紐西蘭', 'New Zealand': '紐西蘭',
+            '中華人民共和國': '中國', '中國大陸': '中國', 'China': '中國',
+            '香港特別行政區': '香港', '中國香港': '香港', 'Hong Kong': '香港',
+            '澳門特別行政區': '澳門', '中國澳門': '澳門', 'Macau': '澳門', 'Macao': '澳門',
+            '沙特阿拉伯': '沙烏地阿拉伯',
+            '格魯吉亞': '喬治亞',
+            '波斯尼亞和黑塞哥維那': '波士尼亞與赫塞哥維納', '波黑': '波士尼亞與赫塞哥維納',
+            '斯洛文尼亞': '斯洛維尼亞',
+            '塞浦路斯': '賽普勒斯',
+            '馬爾代夫': '馬爾地夫',
+            '毛里求斯': '模里西斯',
+            '肯尼亞': '肯亞',
+            '尼日利亞': '奈及利亞',
+            '坦桑尼亞': '坦尚尼亞',
+            '危地馬拉': '瓜地馬拉',
+            '哥斯達黎加': '哥斯大黎加',
+            '洪都拉斯': '宏都拉斯',
+            '厄瓜多爾': '厄瓜多'
+        };
+        if (countryAliases[c]) c = countryAliases[c];
+        else if (c.includes('中華民國')) c = '台灣';
+        else if (c.includes('大韓民國')) c = '南韓';
+        else if (c.includes('澳大利亞')) c = '澳洲';
+
+        if (city === c) city = '';
+
+        return { country: c, city };
     }
 
     function applySyncId() {
@@ -1831,9 +1922,10 @@
                 if (isAutoDeleteOn && item.targetTime != null && (now - item.targetTime >= 7200000)) {
                     dbRef('mushrooms_v2/' + key).remove();
                 } else {
+                    const locNorm = normalizeCountryAndCity(item.country || "", item.city || "");
                     dataList.push({
                         id: key, sn: item.sn, user: item.user || "",
-                        country: toTW(item.country || ""), name: item.name || "未命名",
+                        country: locNorm.country, city: locNorm.city, name: item.name || "未命名",
                         coords: item.coords || "", tag: item.tag || "", targetTime: item.targetTime != null ? item.targetTime : null,
                         slots: item.slots || ['', '', '', '', ''], kind: item.kind === '普通菇' ? '元素菇' : (item.kind || null) 
                     });
@@ -1856,10 +1948,11 @@
         if (cloudData) {
             Object.keys(cloudData).forEach((key) => {
                 const typeVal = cloudData[key].type;
+                const locNorm = normalizeCountryAndCity(cloudData[key].country || "", cloudData[key].city || "");
                 postcardList.push({
                     id: key, type: toTW(String(typeVal || "菇")), name: cloudData[key].name || "未命名", 
-                    country: toTW(cloudData[key].country || ""), city: cloudData[key].city || "",
-                    district: cloudData[key].district || "",
+                    country: locNorm.country, city: locNorm.city,
+                    district: toTW(cloudData[key].district || ""),
                     coords: cloudData[key].coords || "",
                     tag: cloudData[key].tag || "", image: cloudData[key].image || "無圖片",
                     auth: cloudData[key].auth || "",
@@ -1952,15 +2045,16 @@
                     subtypeVal = '飛機玩具';
                     dbRef('landmarks/' + key).update({ subtype: '飛機玩具' });
                 }
+                const locNorm = normalizeCountryAndCity(cloudData[key].country || '', cloudData[key].city || '');
                 landmarkList.push({
                     id: key,
                     type: typeVal,
                     subtype: subtypeVal,
                     coords: cloudData[key].coords || '',
                     note: cloudData[key].note || '',
-                    country: cloudData[key].country || '',
-                    city: cloudData[key].city || '',
-                    district: cloudData[key].district || '',
+                    country: locNorm.country,
+                    city: locNorm.city,
+                    district: toTW(cloudData[key].district || ''),
                     confirmed: cloudData[key].confirmed || false,
                     timestamp: cloudData[key].timestamp || 0
                 });
@@ -4383,11 +4477,88 @@
         updateView();
     }
 
+    let currentFilteredPostcards = [];
+
     function collapseAllPostcardGroups() {
-        // 把所有已知的明信片群組全部加回折疊狀態，断开不必要的圖片請求
-        knownPostcardGroups.forEach(id => collapsedGroups.add(id));
+        // 把所有已知的明信片群組全部加回折疊狀態，斷開不必要的圖片請求
+        knownPostcardGroups.forEach(id => {
+            if (id.startsWith('post-')) collapsedGroups.add(id);
+        });
         updateView();
     }
+
+    window.expandAllPostcardGroups = function() {
+        knownPostcardGroups.forEach(id => {
+            if (id.startsWith('post-')) collapsedGroups.delete(id);
+        });
+        updateView();
+    };
+
+    window.onPostcardCountryChange = function() {
+        const cityEl = document.getElementById('postcard-city-filter');
+        if (cityEl) cityEl.value = '';
+        updateView();
+    };
+
+    window.setPcStatQuickFilter = function(mode) {
+        const fEl = document.getElementById('postcard-filter');
+        const rEl = document.getElementById('postcard-recent-filter');
+        if (!fEl || !rEl) return;
+        if (mode === 'all') {
+            fEl.value = 'all';
+            rEl.value = 'all';
+        } else if (mode === 'collected') {
+            fEl.value = (fEl.value === 'collected') ? 'all' : 'collected';
+        } else if (mode === 'uncollected') {
+            fEl.value = (fEl.value === 'uncollected') ? 'all' : 'uncollected';
+        } else if (mode === 'fav') {
+            fEl.value = (fEl.value === 'fav') ? 'all' : 'fav';
+        } else if (mode === 'recent3') {
+            rEl.value = (rEl.value === '3') ? '1' : (rEl.value === '1' ? 'all' : '3');
+        }
+        updateView();
+    };
+
+    window.copyPostcardCoordsList = function(items, btn, emptyMsg = '沒有可複製的座標！') {
+        const os = typeof detectOS === 'function' ? detectOS() : 'unknown';
+        const seen = new Set();
+        const lines = [];
+        (items || []).forEach(item => {
+            if (!item || !item.coords) return;
+            const normalized = normalizeCoords(String(item.coords));
+            if (!normalized || seen.has(normalized)) return;
+            seen.add(normalized);
+            lines.push((os === 'ios' || os === 'macos' || os === 'windows') ? normalized.replace(/,/g, ' ') : normalized);
+        });
+        if (lines.length === 0) {
+            alert(emptyMsg);
+            return;
+        }
+        const origHtml = btn ? btn.innerHTML : '';
+        navigator.clipboard.writeText(lines.join('\n')).then(() => {
+            if (btn) {
+                btn.innerHTML = `✅ 已複製 ${lines.length} 筆`;
+                setTimeout(() => { btn.innerHTML = origHtml; }, 1600);
+            }
+        }).catch(() => alert('複製失敗，請手動複製。'));
+    };
+
+    window.copyFilteredPostcardCoords = function(btn) {
+        window.copyPostcardCoordsList(currentFilteredPostcards, btn, '目前篩選條件下沒有可複製的明信片座標！');
+    };
+
+    window.copyPostcardTypeCoords = function(type, e) {
+        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+        const btn = e && (e.currentTarget || e.target);
+        const list = (currentFilteredPostcards || []).filter(i => (i.type ? String(i.type).trim() : '未分類') === type);
+        window.copyPostcardCoordsList(list, btn, '此分類下沒有可複製的座標！');
+    };
+
+    window.copyCountdownPostcardCoords = function(btn) {
+        const nowMs = Date.now();
+        const list = (currentFilteredPostcards || []).filter(i => i.type === '菇' && i.targetTime != null && (i.targetTime - nowMs > -300000));
+        window.copyPostcardCoordsList(list, btn, '目前沒有倒數中的明信片座標！');
+    };
 
     // ===== 特殊金盆冷卻計算與篩選狀態管理 =====
     let gbCategoryTab = 'all'; // 'all' | 'limited' | 'permanent' | 'discontinued'
@@ -5273,7 +5444,48 @@
                 if (offsetA !== offsetB) return offsetB - offsetA;
             }
             
-            return String(a.country).localeCompare(String(b.country), 'zh-TW');
+            // 1. 國家排序（有填國家的排前面）
+            const cA = String(a.country || '').trim();
+            const cB = String(b.country || '').trim();
+            if (cA !== cB) {
+                if (!cA) return 1;
+                if (!cB) return -1;
+                return cA.localeCompare(cB, 'zh-Hant');
+            }
+
+            // 2. 城市排序（同國家內依城市排序，有填城市的排前面）
+            const cityA = String(a.city || '').trim();
+            const cityB = String(b.city || '').trim();
+            if (cityA !== cityB) {
+                if (!cityA) return 1;
+                if (!cityB) return -1;
+                return cityA.localeCompare(cityB, 'zh-Hant');
+            }
+
+            // 3. 行政區排序（若有填寫）
+            const distA = String(a.district || '').trim();
+            const distB = String(b.district || '').trim();
+            if (distA !== distB) {
+                if (!distA) return 1;
+                if (!distB) return -1;
+                return distA.localeCompare(distB, 'zh-Hant');
+            }
+
+            // 4. 座標排序（依緯度由北到南、經度由西到東，讓鄰近地點排在一起）
+            const mA = String(a.coords || '').match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
+            const mB = String(b.coords || '').match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
+            if (mA && mB) {
+                const latDiff = parseFloat(mB[1]) - parseFloat(mA[1]);
+                if (Math.abs(latDiff) > 0.00001) return latDiff;
+                const lonDiff = parseFloat(mA[2]) - parseFloat(mB[2]);
+                if (Math.abs(lonDiff) > 0.00001) return lonDiff;
+            } else if (mA && !mB) {
+                return -1;
+            } else if (!mA && mB) {
+                return 1;
+            }
+
+            return String(a.name || '').localeCompare(String(b.name || ''), 'zh-Hant');
         }).filter(item => {
             if (currentMode === 'postcard' && item.type === '特殊金盆') return false;
             if (currentMode === 'goldbasin' && item.type !== '特殊金盆') return false;
@@ -5317,41 +5529,103 @@
             return true;
         });
 
-        // ===== 明信片最近新增統計 =====
+        // ===== 明信片專屬：國家/城市連動選單、4 格互動統計儀表板、快篩列 =====
+        let selPcCountry = '';
+        let selPcCity = '';
         if (currentMode === 'postcard') {
+            const pcOnly = postcardList.filter(i => i.type !== '特殊金盆');
+            const pcCountryEl = document.getElementById('postcard-country-filter');
+            const pcCityEl = document.getElementById('postcard-city-filter');
+            const pcSearchClearEl = document.getElementById('postcard-search-clear');
+            if (pcSearchClearEl) pcSearchClearEl.style.display = pcSearchVal ? 'block' : 'none';
+
+            selPcCountry = pcCountryEl ? pcCountryEl.value : '';
+            if (pcCountryEl) {
+                const countries = [...new Set(pcOnly.map(i => toTW((i.country || '').trim())).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-Hant'));
+                if (selPcCountry && !countries.includes(selPcCountry)) selPcCountry = '';
+                pcCountryEl.innerHTML = '<option value="">🌍 全部國家</option>' +
+                    countries.map(c => `<option value="${escapeHtml(c)}" ${selPcCountry === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('');
+            }
+            const cityPool = selPcCountry ? pcOnly.filter(i => toTW((i.country || '').trim()) === selPcCountry) : pcOnly;
+            selPcCity = pcCityEl ? pcCityEl.value : '';
+            if (pcCityEl) {
+                const cities = [...new Set(cityPool.map(i => (i.city || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-Hant'));
+                if (selPcCity && !cities.includes(selPcCity)) selPcCity = '';
+                pcCityEl.innerHTML = '<option value="">🏙️ 全部城市</option>' +
+                    cities.map(c => `<option value="${escapeHtml(c)}" ${selPcCity === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('');
+            }
+
+            if (selPcCountry) {
+                for (let idx = filteredPc.length - 1; idx >= 0; idx--) {
+                    if (toTW((filteredPc[idx].country || '').trim()) !== selPcCountry) filteredPc.splice(idx, 1);
+                }
+            }
+            if (selPcCity) {
+                for (let idx = filteredPc.length - 1; idx >= 0; idx--) {
+                    if ((filteredPc[idx].city || '').trim() !== selPcCity) filteredPc.splice(idx, 1);
+                }
+            }
+
+            currentFilteredPostcards = filteredPc;
+
+            // 更新 #postcard-quick-tags 右側的「📋 複製篩選座標」按鈕
+            const qtContainer = document.getElementById('postcard-quick-tags');
+            if (qtContainer && !qtContainer.querySelector('.pc-batch-copy-btn')) {
+                const copyBtnHtml = `<button type="button" class="pc-batch-copy-btn" onclick="copyFilteredPostcardCoords(this)" style="margin-left:auto; padding:4px 11px; border-radius:12px; border:none; background:linear-gradient(135deg,#0ea5e9,#2563eb); color:#fff; font-size:11.5px; font-weight:800; cursor:pointer; box-shadow:0 2px 5px rgba(37,99,235,0.25); display:inline-flex; align-items:center; gap:4px; white-space:nowrap;">📋 複製篩選座標 (${filteredPc.length} 筆)</button>`;
+                qtContainer.insertAdjacentHTML('beforeend', copyBtnHtml);
+            } else if (qtContainer) {
+                const existingBtn = qtContainer.querySelector('.pc-batch-copy-btn');
+                if (existingBtn) existingBtn.innerHTML = `📋 複製篩選座標 (${filteredPc.length} 筆)`;
+            }
+
             const statsEl = document.getElementById('postcard-stats');
             if (statsEl) {
                 const ms1d = 1 * 86400000;
                 const ms3d = 3 * 86400000;
-                // 計算全資料庫的統計（不受過濾影響），以 postcardList 為基準，排除特殊金盆
-                const pcOnly = postcardList.filter(i => i.type !== '特殊金盆');
+                const favSet = new Set(Array.isArray(cloudFavorites) ? cloudFavorites : []);
+                const pcFavSet = new Set(Array.isArray(cloudPcFav) ? cloudPcFav : []);
                 const cnt1d = pcOnly.filter(i => (now - getCreatedAt(i.id)) <= ms1d).length;
                 const cnt3d = pcOnly.filter(i => (now - getCreatedAt(i.id)) <= ms3d).length;
                 const cntAll = pcOnly.length;
+                const cntCollected = pcOnly.filter(i => favSet.has(i.id)).length;
+                const cntUncollected = Math.max(0, cntAll - cntCollected);
+                const collectedPct = cntAll > 0 ? Math.round((cntCollected / cntAll) * 100) : 0;
+                const cntFav = pcOnly.filter(i => pcFavSet.has(i.id)).length;
 
-                                statsEl.style.display = 'flex';
-                statsEl.style.justifyContent = 'space-around';
-                statsEl.style.background = '#f8fafc';
-                statsEl.style.border = '1px solid #e2e8f0';
-                statsEl.style.borderRadius = '12px';
-                statsEl.style.padding = '8px 12px';
-                statsEl.style.marginBottom = '8px';
+                const isAllActive = (filterState === 'all' && recentFilter === 'all');
+                const isColActive = (filterState === 'collected' || filterState === 'uncollected');
+                const isFavActive = (filterState === 'fav');
+                const isRecActive = (recentFilter === '1' || recentFilter === '3');
 
+                statsEl.style.display = 'grid';
                 statsEl.innerHTML = `
-                    <div onclick="document.getElementById('postcard-recent-filter').value='1'; updateView();" style="cursor:pointer; display:flex; align-items:center; gap:6px;" title="過濾：最近 1 天新增">
-                        <span style="color:#64748b; font-size:12px; font-weight:bold;">最新 1 天</span>
-                        <span style="font-weight:900; color:#3b82f6; font-size:16px;">${cnt1d}</span>
-                    </div>
-                    <div style="width:1px; background:#cbd5e1; margin:0 4px;"></div>
-                    <div onclick="document.getElementById('postcard-recent-filter').value='3'; updateView();" style="cursor:pointer; display:flex; align-items:center; gap:6px;" title="過濾：最近 3 天新增">
-                        <span style="color:#64748b; font-size:12px; font-weight:bold;">最近 3 天</span>
-                        <span style="font-weight:900; color:#0ea5e9; font-size:16px;">${cnt3d}</span>
-                    </div>
-                    <div style="width:1px; background:#cbd5e1; margin:0 4px;"></div>
-                    <div onclick="document.getElementById('postcard-recent-filter').value='all'; updateView();" style="cursor:pointer; display:flex; align-items:center; gap:6px;" title="取消時間過濾 (不含金盆)">
-                        <span style="color:#64748b; font-size:12px; font-weight:bold;">總數</span>
-                        <span style="font-weight:900; color:#10b981; font-size:16px;">${cntAll}</span>
-                    </div>
+                    <button type="button" class="pc-stat-card ${isAllActive ? 'active-all' : ''}" onclick="setPcStatQuickFilter('all')" title="點擊顯示全部明信片">
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                            <span style="font-size:11.5px; font-weight:800; opacity:0.85;">📚 全部明信片</span>
+                            ${filteredPc.length !== cntAll ? `<span style="font-size:10px; font-weight:800; padding:1px 5px; border-radius:999px; background:rgba(59,130,246,0.18); color:${isAllActive ? '#93c5fd' : '#2563eb'};">顯示 ${filteredPc.length}</span>` : ''}
+                        </div>
+                        <div style="font-size:19px; font-weight:900; line-height:1.2;">${cntAll} <span style="font-size:11px; font-weight:700; opacity:0.75;">筆</span></div>
+                    </button>
+                    <button type="button" class="pc-stat-card ${isColActive ? 'active-collected' : ''}" onclick="setPcStatQuickFilter('collected')" title="點擊篩選「我的收藏」，點右上角篩選「尚未收藏」">
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:4px;">
+                            <span style="font-size:11.5px; font-weight:800; color:#b45309;">⭐ 已收藏 (${collectedPct}%)</span>
+                            <span onclick="event.stopPropagation(); setPcStatQuickFilter('uncollected');" style="font-size:10px; font-weight:800; padding:1px 6px; border-radius:999px; background:${filterState === 'uncollected' ? '#d97706' : '#fef3c7'}; color:${filterState === 'uncollected' ? '#fff' : '#92400e'}; border:1px solid #fcd34d;" title="點擊篩選：尚未收藏">未收 ${cntUncollected}</span>
+                        </div>
+                        <div style="font-size:19px; font-weight:900; color:#92400e; line-height:1.2;">${cntCollected} <span style="font-size:11px; font-weight:700;">/ ${cntAll}</span></div>
+                    </button>
+                    <button type="button" class="pc-stat-card ${isFavActive ? 'active-fav' : ''}" onclick="setPcStatQuickFilter('fav')" title="點擊篩選「我的最愛」">
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                            <span style="font-size:11.5px; font-weight:800; color:#e11d48;">❤️ 我的最愛</span>
+                        </div>
+                        <div style="font-size:19px; font-weight:900; color:#be123c; line-height:1.2;">${cntFav} <span style="font-size:11px; font-weight:700;">筆</span></div>
+                    </button>
+                    <button type="button" class="pc-stat-card ${isRecActive ? 'active-recent' : ''}" onclick="setPcStatQuickFilter('recent3')" title="點擊切換：近 3 天新增 → 最新 1 天 → 全部">
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:4px;">
+                            <span style="font-size:11.5px; font-weight:800; color:#0369a1;">🆕 ${recentFilter === '1' ? '最新 1 天' : '近 3 天新增'}</span>
+                            <span style="font-size:10px; font-weight:800; padding:1px 6px; border-radius:999px; background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd;">今日 +${cnt1d}</span>
+                        </div>
+                        <div style="font-size:19px; font-weight:900; color:#0c4a6e; line-height:1.2;">${recentFilter === '1' ? cnt1d : cnt3d} <span style="font-size:11px; font-weight:700;">筆</span></div>
+                    </button>
                 `;
             }
         } else {
@@ -5539,84 +5813,146 @@
             pcGroups[type].push(item); 
         });
 
-        // 倒數中明信片：排序後直接渲染，小標題分隔線
+        const createPostcardCardElement = (item, currentType, isCountdownCard = false) => {
+            const safeC = toTW(escapeHtml(item.country)), safeT = escapeHtml(item.tag), safeI = escapeHtml(item.image);
+            const favList = Array.isArray(cloudFavorites) ? cloudFavorites : [];
+            const isFav = favList.includes(item.id);
+            const isPcFav = cloudPcFav.includes(item.id);
+            const isMushType = (item.type === '菇');
+            const hasActiveTimer = isMushType && item.targetTime != null && (item.targetTime - now > -300000);
+            const hasClearBtn = isMushType && item.targetTime && item.targetTime > now;
+            let isReady = false;
+            let timeHtml = '';
+
+            if (isCountdownCard || currentType === '⏳ 倒數中 (菇)' || hasActiveTimer) {
+                if (item.targetTime - now <= 0) {
+                    isReady = true;
+                    timeHtml = `<div style="background:#fef2f2; color:#dc2626; border:1px solid #fca5a5; font-size:11.5px; font-weight:800; padding:3px 7px; border-radius:7px; display:flex; align-items:center; justify-content:space-between; gap:4px;"><span>🔥 [可開打!]</span><span style="font-size:10px; opacity:0.85;">已到期</span></div>`;
+                } else {
+                    const clockStr = formatMushTargetClock(item.targetTime, now);
+                    timeHtml = `<div style="background:#fff1f2; color:#e11d48; border:1px solid #fecdd3; font-size:11.5px; font-weight:800; padding:3px 7px; border-radius:7px; display:flex; align-items:center; justify-content:space-between; gap:4px; white-space:nowrap; overflow:hidden;"><span>⏳ <span class="live-timer" data-type="postcard-timer" data-target="${item.targetTime}">[${getShortRemainingText(item.targetTime, now)}]</span></span>${clockStr ? `<span style="font-size:10px; color:#be123c; font-weight:700;">${clockStr}</span>` : ''}</div>`;
+                }
+            }
+
+            const isDuplicate = checkIsDuplicate(item);
+            const dupBadge = isDuplicate ? `<div style="color:#b45309; font-size:10px; font-weight:bold; background:#fef3c7; padding:2px 6px; border-radius:5px; border:1px dashed #f59e0b; text-align:center;">⚠️ 重複收藏</div>` : '';
+            let distBadge = '';
+            if (searchCoords && item._dist <= 1) {
+                const distText = item._dist < 1 ? (item._dist * 1000).toFixed(0) + ' m' : item._dist.toFixed(1) + ' km';
+                distBadge = `<div style="color:#065f46; font-size:10px; font-weight:bold; background:#d1fae5; padding:2px 6px; border-radius:5px; border:1px dashed #10b981; text-align:center;">📏 距離 ${distText}</div>`;
+            }
+
+            const pTheme = getUserColorTheme(item.provider);
+            let providerHtml = '';
+            if (item.provider) {
+                const safeProvSearch = escapeHtml(item.provider).replace(/'/g, "\\'");
+                if (pTheme.bgImg) {
+                    providerHtml = `<span class="pc-clickable-pill" onclick="setPostcardSearch('${safeProvSearch}')" title="點擊篩選發表者：${escapeHtml(item.provider)}" style="display:inline-flex; align-items:center; gap:3px; background:#f1f5f9; border:1px solid #cbd5e1; padding:1.5px 6px; border-radius:10px; font-size:10.5px; font-weight:bold; color:#334155; line-height:1.2;"><span style="width:13px; height:13px; border-radius:50%; background-image:${pTheme.bgImg}; background-size:cover; background-position:center; display:inline-block; border:1px solid #10b981; flex-shrink:0;"></span>${escapeHtml(item.provider)}</span>`;
+                } else {
+                    providerHtml = `<span class="pc-clickable-pill" onclick="setPostcardSearch('${safeProvSearch}')" title="點擊篩選發表者：${escapeHtml(item.provider)}" style="background:${pTheme.bg}; color:${pTheme.color}; border:1px solid ${pTheme.border}; padding:1.5px 6px; border-radius:10px; font-size:10.5px; font-weight:bold; display:inline-flex; align-items:center; gap:2px; line-height:1.2;">🧑 ${escapeHtml(item.provider)}</span>`;
+                }
+            }
+
+            const tagPillHtml = safeT
+                ? `<span class="tag-badge pc-clickable-pill" onclick="setPostcardSearch('${safeT.replace(/'/g, "\\'")}')" title="點擊篩選標籤：${safeT}" style="padding:1.5px 6px; font-size:10.5px;">${safeT}</span>`
+                : '';
+            const authPillHtml = item.auth
+                ? `<span class="pc-clickable-pill" onclick="setPostcardSearch('授權:${escapeHtml(item.auth).replace(/'/g, "\\'")}')" title="點擊篩選授權：${escapeHtml(item.auth)}" style="background:#f5f3ff; color:#6d28d9; border:1px solid #ddd6fe; padding:1.5px 5px; border-radius:5px; font-size:10px; font-weight:700; display:inline-flex; align-items:center; gap:2px;">🔑 ${escapeHtml(item.auth)}</span>`
+                : '';
+
+            let tzBadge = '';
+            if (currentType === '菇窩' || item.type === '菇窩') {
+                const tzDiff = getOffsetByCountry(item.country) - 8;
+                if (tzDiff !== 0) {
+                    const tzText = tzDiff > 0 ? `+${tzDiff}` : `${tzDiff}`;
+                    tzBadge = `<span style="color:#0284c7; font-weight:900; margin-right:3px;">(${tzText})</span>`;
+                }
+            }
+
+            const remSec = hasClearBtn ? Math.max(0, Math.floor((item.targetTime - now) / 1000)) : 0;
+            const initH = remSec > 0 ? Math.floor(remSec / 3600) : 0;
+            const initM = remSec > 0 ? Math.floor((remSec % 3600) / 60) : 0;
+            const timeSetRow = isMushType ? `
+                <div id="time-setter-${item.id}" style="display:none; margin-top:4px; padding:6px; background:linear-gradient(135deg,rgba(14,165,233,0.08),rgba(99,102,241,0.06)); border-radius:10px; border:1px solid rgba(14,165,233,0.25);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <span style="font-size:10px; font-weight:700; color:#0ea5e9; letter-spacing:0.5px;">⏱ 快速設定剩餘時間</span>
+                        <button type="button" onclick="toggleCardTimeSetter('${item.id}', event)" style="background:transparent; border:none; color:#94a3b8; font-size:11px; cursor:pointer; padding:0 2px;">✕</button>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:4px; flex-wrap:nowrap;">
+                        <div style="display:flex; flex:1; min-width:0; align-items:center; justify-content:center; gap:2px; background:var(--card-bg,#fff); border:1px solid rgba(14,165,233,0.35); border-radius:6px; padding:2px 4px;">
+                            <input type="text" inputmode="numeric" pattern="[0-9]*" value="${initH}" id="pc-h-${item.id}" style="width:24px; padding:0; font-size:13px; font-weight:700; border:none; text-align:right; background:transparent; color:inherit; outline:none;" onfocus="this.select()">
+                            <span style="font-size:10px; font-weight:600; color:#94a3b8; margin-right:2px;">h</span>
+                            <span style="color:#cbd5e1; font-size:12px; font-weight:300;">:</span>
+                            <input type="text" inputmode="numeric" pattern="[0-9]*" value="${initM}" id="pc-m-${item.id}" style="width:24px; padding:0; font-size:13px; font-weight:700; border:none; text-align:right; background:transparent; color:inherit; outline:none;" onfocus="this.select()">
+                            <span style="font-size:10px; font-weight:600; color:#94a3b8;">m</span>
+                        </div>
+                        <button onclick="setPostcardTime('${item.id}','pc-h-${item.id}','pc-m-${item.id}')" style="flex:0 0 auto; background:linear-gradient(135deg,#0ea5e9,#6366f1); color:white; border:none; border-radius:6px; padding:4px 7px; font-size:11.5px; font-weight:700; cursor:pointer; white-space:nowrap;">✓</button>
+                        ${hasClearBtn ? `<button onclick="clearPostcardTime('${item.id}')" title="清除倒數" style="flex:0 0 auto; background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.3); border-radius:6px; padding:4px 6px; font-size:11px; font-weight:600; cursor:pointer;">✕</button>` : ''}
+                    </div>
+                </div>
+            ` : '';
+
+            const discWatermark = item.discontinued
+                ? `<div style="position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; pointer-events:none; z-index:5;">
+                    <div style="transform:rotate(-30deg); font-size:26px; font-weight:900; color:rgba(220,38,38,0.82); border:3.5px solid rgba(220,38,38,0.82); padding:3px 9px; border-radius:6px; letter-spacing:3px; text-shadow:0 1px 4px rgba(0,0,0,0.25); font-family:serif; white-space:nowrap;">絕版</div>
+                   </div>`
+                : '';
+
+            const imgHtml = (safeI && safeI !== "無圖片")
+                ? `<img src="${safeI}" loading="lazy" class="card-img" onclick="openImageLightbox(this.src)">`
+                : `<div class="card-img-placeholder">無圖片</div>`;
+
+            const timerActBtn = isMushType
+                ? `<button class="btn-sm btn-default" style="flex:0 0 auto; padding:5px 6px; background:${hasClearBtn ? '#e0f2fe' : '#f8fafc'}; color:${hasClearBtn ? '#0284c7' : '#475569'}; border:1px solid ${hasClearBtn ? '#7dd3fc' : '#e2e8f0'};" onclick="toggleCardTimeSetter('${item.id}', event)" title="快速設定剩餘時間">⏱️</button>`
+                : '';
+
+            const card = document.createElement('div');
+            card.className = `grid-card ${isReady ? 'alert-pulse' : ''} ${isDuplicate ? 'duplicate-card' : ''}`;
+            card.innerHTML = `
+                <div class="card-img-box" style="position:relative;">
+                    ${imgHtml}
+                    ${discWatermark}
+                    <div class="card-badge-type">${escapeHtml(item.type)}</div>
+                    <div class="pc-top-actions-overlay">
+                        <button class="card-fav-btn ${isPcFav ? 'fav-on' : 'fav-off'}" onclick="togglePcFav('${item.id}')" title="${isPcFav ? '取消我的最愛' : '加入我的最愛'}">${isPcFav ? '❤️' : '🤍'}</button>
+                        <button class="card-star-btn ${isFav ? 'active' : 'inactive'}" onclick="toggleCollectPostcard('${item.id}')" title="${isFav ? '已收藏 (點擊取消)' : '標記為已收藏'}">${isFav ? '⭐' : '✰'}</button>
+                    </div>
+                </div>
+                <div class="card-body pc-card-body">
+                    <div class="card-title pc-card-title" title="${escapeHtml(item.name)}">${tzBadge}${escapeHtml(item.name)}</div>
+                    ${timeHtml}
+                    <div class="pc-loc-line" title="🌍 ${safeC || '未提供'}${item.city ? ' · ' + escapeHtml(item.city) : ''}${item.district ? ' ' + escapeHtml(item.district) : ''}">🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}${item.district ? ` ${escapeHtml(item.district)}` : ''}</div>
+                    ${(providerHtml || tagPillHtml || authPillHtml) ? `<div class="pc-meta-row">${providerHtml}${tagPillHtml}${authPillHtml}</div>` : ''}
+                    ${dupBadge}
+                    ${distBadge}
+                    ${item.missingFields && item.missingFields.length > 0 ? `<div style="color:#ef4444; font-size:10px; font-weight:bold; background:#fee2e2; padding:2px 6px; border-radius:5px; border:1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>` : ''}
+                    ${timeSetRow}
+                    <div class="card-actions pc-card-actions" style="display:flex; gap:4px; margin-top:auto; padding-top:4px;">
+                        <button class="btn-sm btn-default" style="flex:1.3; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:800;" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)" title="複製座標">📍 複製</button>
+                        ${item.coords ? `<button class="btn-sm btn-default" style="flex:0.9; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}')" title="在地圖上查看">🗺️ 地圖</button>` : ''}
+                        ${timerActBtn}
+                        <button class="btn-sm btn-edit" style="flex:0 0 auto; padding:5px 7px;" onclick="openTimeModalById('${item.id}', 'postcard')" title="修改明信片">✏️</button>
+                    </div>
+                </div>
+            `;
+            return card;
+        };
+
+        // 倒數中明信片：排序後直接渲染，小標題分隔線（跨滿整排 Grid）
         if (countdownItems.length > 0) {
             countdownItems.sort((a, b) => (a.targetTime || 0) - (b.targetTime || 0));
             const secDiv = document.createElement('div');
-            secDiv.style.cssText = 'display:flex; align-items:center; gap:8px; padding:6px 4px 2px;';
-            secDiv.innerHTML = `<span style="font-size:13px;font-weight:900;color:#ef4444;">⏳ 倒數中</span><span style="flex:1;height:2px;background:linear-gradient(90deg,#ef4444,transparent);border-radius:2px;"></span><span style="font-size:12px;color:#ef4444;font-weight:700;background:#fee2e2;padding:2px 8px;border-radius:10px;">${countdownItems.length} 筆</span>`;
+            secDiv.style.cssText = 'grid-column: 1 / -1; display:flex; align-items:center; gap:8px; padding:6px 4px 2px;';
+            secDiv.innerHTML = `
+                <span style="font-size:13.5px;font-weight:900;color:#ef4444;">⏳ 倒數中明信片</span>
+                <span style="font-size:11.5px;color:#ef4444;font-weight:800;background:#fee2e2;padding:2px 8px;border-radius:999px;border:1px solid #fca5a5;">${countdownItems.length} 筆</span>
+                <span style="flex:1;height:2px;background:linear-gradient(90deg,#fca5a5,transparent);border-radius:2px;"></span>
+                <button type="button" onclick="copyCountdownPostcardCoords(this)" style="background:#fff1f2; color:#e11d48; border:1px solid #fda4af; border-radius:999px; padding:3px 10px; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap;">📋 複製倒數座標 (${countdownItems.length})</button>
+            `;
             pcEl.appendChild(secDiv);
             countdownItems.forEach(item => {
                 vCount++;
-                const safeC = toTW(escapeHtml(item.country)), safeT = escapeHtml(item.tag), safeI = escapeHtml(item.image);
-                const favList = Array.isArray(cloudFavorites) ? cloudFavorites : [];
-                const isFav = favList.includes(item.id);
-                const isPcFav = cloudPcFav.includes(item.id);
-                let isReady = false;
-                let timeHtml = '';
-                if (item.targetTime - now <= 0) {
-                    isReady = true;
-                    timeHtml = `<div style="color:#ef4444;font-size:13px;font-weight:bold;margin-top:4px;">[${getShortRemainingText(item.targetTime, now)}]</div>`;
-                } else {
-                    timeHtml = `<div class="live-timer" data-type="postcard-timer" data-target="${item.targetTime}" style="color:#ef4444;font-size:13px;font-weight:bold;margin-top:4px;">[${getShortRemainingText(item.targetTime, now)}]</div>`;
-                }
-                const isDuplicate = checkIsDuplicate(item);
-                const dupBadge = isDuplicate ? `<div style="color:#b45309;font-size:10px;font-weight:bold;margin-top:4px;background:#fef3c7;padding:4px 6px;border-radius:4px;border:1px dashed #f59e0b;text-align:center;">⚠️ 重複收藏</div>` : '';
-                let distBadge = '';
-                if (searchCoords && item._dist <= 1) {
-                    const distText = item._dist < 1 ? (item._dist*1000).toFixed(0)+' m' : item._dist.toFixed(1)+' km';
-                    distBadge = `<div style="color:#065f46;font-size:10px;font-weight:bold;margin-top:4px;background:#d1fae5;padding:4px 6px;border-radius:4px;border:1px dashed #10b981;text-align:center;">📏 距離 ${distText}</div>`;
-                }
-                const pTheme2 = getUserColorTheme(item.provider);
-                let providerHtml2 = '';
-                if (item.provider) {
-                    providerHtml2 = pTheme2.bgImg
-                        ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#f1f5f9;border:1px solid #cbd5e1;padding:2px 6px;border-radius:12px;font-size:11px;margin-left:4px;font-weight:bold;color:#334155;vertical-align:middle;line-height:1.2;"><span style="width:14px;height:14px;border-radius:50%;background-image:${pTheme2.bgImg};background-size:cover;background-position:center;display:inline-block;border:1px solid #10b981;flex-shrink:0;"></span>${escapeHtml(item.provider)}</span>`
-                        : `<span style="background:${pTheme2.bg};color:${pTheme2.color};border:1px solid ${pTheme2.border};padding:2px 6px;border-radius:10px;font-size:11px;margin-left:4px;font-weight:bold;display:inline-flex;align-items:center;gap:2px;vertical-align:middle;line-height:1.2;">🧑 ${escapeHtml(item.provider)}</span>`;
-                }
-                const discWatermark2 = item.discontinued ? `<div style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:5;"><div style="transform:rotate(-30deg);font-size:28px;font-weight:900;color:rgba(220,38,38,0.82);border:4px solid rgba(220,38,38,0.82);padding:4px 10px;border-radius:6px;letter-spacing:4px;text-shadow:0 1px 4px rgba(0,0,0,0.25);font-family:serif;white-space:nowrap;">絕版</div></div>` : '';
-                const hasClearBtn2 = item.targetTime && item.targetTime > Date.now();
-                const remSec2 = hasClearBtn2 ? Math.max(0, Math.floor((item.targetTime - Date.now()) / 1000)) : 0;
-                const initH2 = remSec2 > 0 ? Math.floor(remSec2 / 3600) : 0;
-                const initM2 = remSec2 > 0 ? Math.floor((remSec2 % 3600) / 60) : 0;
-                const timeSetRow2 = `
-                    <div id="time-setter-${item.id}" style="display:none;margin-top:6px;padding:6px;background:linear-gradient(135deg,rgba(14,165,233,0.08),rgba(99,102,241,0.06));border-radius:10px;border:1px solid rgba(14,165,233,0.25);">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                            <span style="font-size:10px;font-weight:700;color:#0ea5e9;letter-spacing:0.5px;text-transform:uppercase;">⏱ 快速設定剩餘時間</span>
-                            <button type="button" onclick="toggleCardTimeSetter('${item.id}', event)" style="background:transparent;border:none;color:#94a3b8;font-size:11px;cursor:pointer;padding:0 2px;">✕</button>
-                        </div>
-                        <div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap;">
-                            <div style="display:flex;flex:1;min-width:0;align-items:center;justify-content:center;gap:2px;background:var(--card-bg,#fff);border:1px solid rgba(14,165,233,0.35);border-radius:6px;padding:2px 4px;">
-                                <input type="text" inputmode="numeric" pattern="[0-9]*" value="${initH2}" id="pc-h-${item.id}" style="width:24px;padding:0;font-size:14px;font-weight:700;border:none;text-align:right;background:transparent;color:inherit;outline:none;" onfocus="this.select()">
-                                <span style="font-size:10px;font-weight:600;color:#94a3b8;margin-right:2px;">h</span>
-                                <span style="color:#cbd5e1;font-size:12px;font-weight:300;">:</span>
-                                <input type="text" inputmode="numeric" pattern="[0-9]*" value="${initM2}" id="pc-m-${item.id}" style="width:24px;padding:0;font-size:14px;font-weight:700;border:none;text-align:right;background:transparent;color:inherit;outline:none;" onfocus="this.select()">
-                                <span style="font-size:10px;font-weight:600;color:#94a3b8;">m</span>
-                            </div>
-                            <button onclick="setPostcardTime('${item.id}','pc-h-${item.id}','pc-m-${item.id}')" style="flex:0 0 auto;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:white;border:none;border-radius:6px;padding:4px 8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 4px rgba(14,165,233,0.35);">✓ 確定</button>
-                            ${hasClearBtn2 ? `<button onclick="clearPostcardTime('${item.id}')" title="清除倒數" style="flex:0 0 auto;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:4px 6px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">✕</button>` : ''}
-                        </div>
-                    </div>
-                `;
-                const cdCard = document.createElement('div');
-                cdCard.className = `grid-card ${isReady ? 'alert-pulse' : ''} ${isDuplicate ? 'duplicate-card' : ''}`;
-                const cdImgHtml = (safeI && safeI !== "無圖片") ? `<img src="${safeI}" loading="lazy" class="card-img" onclick="openImageLightbox(this.src)">` : `<div class="card-img-placeholder">無圖片</div>`;
-                cdCard.innerHTML = `
-                    <div class="card-img-box" style="position:relative;">
-                        ${cdImgHtml}
-                        ${discWatermark2}
-                        <div class="card-badge-type">${escapeHtml(item.type)}</div>
-                        <button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button>
-                        <button class="card-fav-btn ${isPcFav?'fav-on':'fav-off'}" onclick="togglePcFav('${item.id}')">${isPcFav?'❤️':'🤍'}</button>
-                        <button class="card-timer-btn ${hasClearBtn2 ? 'has-timer' : ''}" onclick="toggleCardTimeSetter('${item.id}', event)" title="設定剩餘時間">⏱️</button>
-                    </div>
-                    <div class="card-body"><div class="card-title">${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC||'未提供'}${item.city?` · ${escapeHtml(item.city)}`:''}${item.district?` ${escapeHtml(item.district)}`:''}</span><div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">${providerHtml2}${safeT?`<span class="tag-badge">${safeT}</span>`:''}</div></div>
-                    ${dupBadge}${distBadge}
-                    ${item.missingFields&&item.missingFields.length>0?`<div style="color:#ef4444;font-size:10px;font-weight:bold;margin-top:4px;background:#fee2e2;padding:4px 6px;border-radius:4px;border:1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>`:''}
-                    ${timeSetRow2}
-                    <div class="card-actions" style="display:flex;gap:4px;margin-top:auto;padding-top:4px;"><button class="btn-sm btn-default" onclick="duplicatePostcard('${item.id}')" style="flex:0;background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe;">📋</button><button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g,"\\'")}', this)"> 📍 複製</button>${item.coords?`<button class="btn-sm btn-default" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g,"\\'")}')"> 🗺️ 地圖</button>`:''}<button class="btn-sm btn-edit" style="flex:0;" onclick="openTimeModalById('${item.id}','postcard')">✏️</button></div></div>
-                `;
-                pcEl.appendChild(cdCard);
+                pcEl.appendChild(createPostcardCardElement(item, item.type || '菇', true));
             });
         }
         const typeOrder = (a, b) => {
@@ -5628,20 +5964,17 @@
         };
         
         const renderItem = (item, currentType) => {
-            vCount++; const safeC = toTW(escapeHtml(item.country)), safeT = escapeHtml(item.tag), safeI = escapeHtml(item.image);
+            vCount++;
+            if (item.type !== '特殊金盆') {
+                pcEl.appendChild(createPostcardCardElement(item, currentType, false));
+                return;
+            }
+            const safeC = toTW(escapeHtml(item.country)), safeT = escapeHtml(item.tag), safeI = escapeHtml(item.image);
             const favList = Array.isArray(cloudFavorites) ? cloudFavorites : [];
             const isFav = favList.includes(item.id);
             const isPcFav = cloudPcFav.includes(item.id); 
             let isReady = false;
             let timeHtml = '';
-            if (currentType === '⏳ 倒數中 (菇)') {
-                if (item.targetTime - now <= 0) {
-                    isReady = true;
-                    timeHtml = `<div style="color: #ef4444; font-size: 13px; font-weight: bold; margin-top: 4px;">[${getShortRemainingText(item.targetTime, now)}]</div>`;
-                } else {
-                    timeHtml = `<div class="live-timer" data-type="postcard-timer" data-target="${item.targetTime}" style="color: #ef4444; font-size: 13px; font-weight: bold; margin-top: 4px;">[${getShortRemainingText(item.targetTime, now)}]</div>`;
-                }
-            }
 
             const isDuplicate = checkIsDuplicate(item);
             const dupBadge = isDuplicate ? `<div style="color: #b45309; font-size: 10px; font-weight: bold; margin-top: 4px; background: #fef3c7; padding: 4px 6px; border-radius: 4px; border: 1px dashed #f59e0b; text-align: center;">⚠️ 重複收藏</div>` : '';
@@ -5665,44 +5998,7 @@
 
             const card = document.createElement('div'); 
             card.className = `grid-card ${isReady ? 'alert-pulse' : ''} ${isDuplicate ? 'duplicate-card' : ''}`;
-            
             const imgHtml = (safeI && safeI !== "無圖片") ? `<img src="${safeI}" loading="lazy" class="card-img" onclick="openImageLightbox(this.src)">` : `<div class="card-img-placeholder">無圖片</div>`;
-            
-            let tzBadge = '';
-            if (currentType === '菇窩') {
-                const tzDiff = getOffsetByCountry(item.country) - 8;
-                if (tzDiff !== 0) {
-                    const tzText = tzDiff > 0 ? `+${tzDiff}` : `${tzDiff}`;
-                    tzBadge = `<span style="color: #0284c7; font-weight: 900; margin-right: 4px;">(${tzText})</span>`;
-                }
-            }
-
-            const isMushType = (item.type === '菇');
-            const hasClearBtn = isMushType && item.targetTime && item.targetTime > Date.now();
-            const remSec = (item.targetTime && item.targetTime > Date.now()) ? Math.max(0, Math.floor((item.targetTime - Date.now()) / 1000)) : 0;
-            const initH = remSec > 0 ? Math.floor(remSec / 3600) : 0;
-            const initM = remSec > 0 ? Math.floor((remSec % 3600) / 60) : 0;
-            const timerBtnHtml = isMushType ? `<button class="card-timer-btn ${hasClearBtn ? 'has-timer' : ''}" onclick="toggleCardTimeSetter('${item.id}', event)" title="設定剩餘時間">⏱️</button>` : '';
-            const timeSetRow = isMushType ? `
-                <div id="time-setter-${item.id}" style="display:none; margin-top:6px; padding:6px; background:linear-gradient(135deg,rgba(14,165,233,0.08),rgba(99,102,241,0.06)); border-radius:10px; border:1px solid rgba(14,165,233,0.25);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                        <span style="font-size:10px; font-weight:700; color:#0ea5e9; letter-spacing:0.5px; text-transform:uppercase;">⏱ 快速設定剩餘時間</span>
-                        <button type="button" onclick="toggleCardTimeSetter('${item.id}', event)" style="background:transparent; border:none; color:#94a3b8; font-size:11px; cursor:pointer; padding:0 2px;">✕</button>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:4px; flex-wrap:nowrap;">
-                        <div style="display:flex; flex:1; min-width:0; align-items:center; justify-content:center; gap:2px; background:var(--card-bg,#fff); border:1px solid rgba(14,165,233,0.35); border-radius:6px; padding:2px 4px;">
-                            <input type="text" inputmode="numeric" pattern="[0-9]*" value="${initH}" id="pc-h-${item.id}" style="width:24px; padding:0; font-size:14px; font-weight:700; border:none; text-align:right; background:transparent; color:inherit; outline:none;" onfocus="this.select()">
-                            <span style="font-size:10px; font-weight:600; color:#94a3b8; margin-right:2px;">h</span>
-                            <span style="color:#cbd5e1; font-size:12px; font-weight:300;">:</span>
-                            <input type="text" inputmode="numeric" pattern="[0-9]*" value="${initM}" id="pc-m-${item.id}" style="width:24px; padding:0; font-size:14px; font-weight:700; border:none; text-align:right; background:transparent; color:inherit; outline:none;" onfocus="this.select()">
-                            <span style="font-size:10px; font-weight:600; color:#94a3b8;">m</span>
-                        </div>
-                        <button onclick="setPostcardTime('${item.id}','pc-h-${item.id}','pc-m-${item.id}')" style="flex:0 0 auto; background:linear-gradient(135deg,#0ea5e9,#6366f1); color:white; border:none; border-radius:6px; padding:4px 8px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; box-shadow:0 2px 4px rgba(14,165,233,0.35);">✓ 確定</button>
-                        ${hasClearBtn ? `<button onclick="clearPostcardTime('${item.id}')" title="清除倒數" style="flex:0 0 auto; background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.3); border-radius:6px; padding:4px 6px; font-size:11px; font-weight:600; cursor:pointer; white-space:nowrap;">✕</button>` : ''}
-                    </div>
-                </div>
-            ` : '';
-
             const discWatermark = item.discontinued
                 ? `<div style="position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; pointer-events:none; z-index:5;">
                     <div style="transform:rotate(-30deg); font-size:28px; font-weight:900; color:rgba(220,38,38,0.82); border:4px solid rgba(220,38,38,0.82); padding:4px 10px; border-radius:6px; letter-spacing:4px; text-shadow:0 1px 4px rgba(0,0,0,0.25); font-family:serif; white-space:nowrap;">絕版</div>
@@ -5710,33 +6006,31 @@
                 : '';
 
             let sgDateBadge = '';
-            if (item.type === '特殊金盆') {
-                const st = item._sgStatus || getSgItemStatus(item);
-                const s = item.sgStart || '';
-                const e = item.sgEnd || '';
-                if (item.sgType === '期間' && (s || e)) {
-                    const cdBadge = !st.isDisc ? getSgCountdownBadgeHtml(st.daysLeft, false, st.daysUntilStart) : '';
-                    sgDateBadge += `<div style="color: #6d28d9; font-size: 10px; font-weight: bold; margin-top: 4px; background: #f5f3ff; padding: 4px 6px; border-radius: 6px; border: 1px dashed #8b5cf6; display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap;"><span>📅 ${s || '未定'} ~ ${e || '未定'}</span>${cdBadge}</div>`;
-                }
+            const st = item._sgStatus || getSgItemStatus(item);
+            const s = item.sgStart || '';
+            const e = item.sgEnd || '';
+            if (item.sgType === '期間' && (s || e)) {
+                const cdBadge = !st.isDisc ? getSgCountdownBadgeHtml(st.daysLeft, false, st.daysUntilStart) : '';
+                sgDateBadge += `<div style="color: #6d28d9; font-size: 10px; font-weight: bold; margin-top: 4px; background: #f5f3ff; padding: 4px 6px; border-radius: 6px; border: 1px dashed #8b5cf6; display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap;"><span>📅 ${s || '未定'} ~ ${e || '未定'}</span>${cdBadge}</div>`;
+            }
 
-                if (st.cdVal && !st.isDisc) {
-                    if (!st.hasStarted) {
-                        sgDateBadge += `<div style="color: #b45309; font-size: 11px; font-weight: bold; margin-top: 6px; background: #fef3c7; padding: 4px 8px; border-radius: 6px; border: 1px solid #fde68a; text-align: center; letter-spacing:0.5px;">⏳ 尚未開始</div>`;
-                    } else if (st.isClaimable) {
-                        sgDateBadge += `<div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
-                            <div style="flex:1; color: #15803d; font-size: 11px; font-weight: bold; background: #dcfce7; padding: 5px 6px; border-radius: 6px; border: 1px solid #86efac; text-align: center;">✅ 可領取！</div>
-                            <button type="button" onclick="markPostcardClaimedToday('${item.id}', event)" style="background: linear-gradient(135deg, #22c55e, #16a34a); color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 3px; white-space: nowrap;">🎁 今日領取</button>
-                        </div>`;
-                    } else if (st.cdVal === 'once') {
-                        sgDateBadge += `<div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
-                            <div style="flex:1; color: #64748b; font-size: 11px; font-weight: bold; background: #f1f5f9; padding: 5px 6px; border-radius: 6px; border: 1px solid #cbd5e1; text-align: center;">✓ 已領取（限領一次）</div>
-                        </div>`;
-                    } else {
-                        sgDateBadge += `<div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
-                            <div style="flex:1; color: #0369a1; font-size: 11px; font-weight: bold; background: #e0f2fe; padding: 5px 6px; border-radius: 6px; border: 1px solid #bae6fd; text-align: center;">⏳ 下次：${st.nextStr}</div>
-                            <button type="button" onclick="markPostcardClaimedToday('${item.id}', event)" title="重新設定為今日已領" style="background: #f8fafc; color: #64748b; border: 1px solid #cbd5e1; padding: 5px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 3px; white-space: nowrap;">✓ 今日已領</button>
-                        </div>`;
-                    }
+            if (st.cdVal && !st.isDisc) {
+                if (!st.hasStarted) {
+                    sgDateBadge += `<div style="color: #b45309; font-size: 11px; font-weight: bold; margin-top: 6px; background: #fef3c7; padding: 4px 8px; border-radius: 6px; border: 1px solid #fde68a; text-align: center; letter-spacing:0.5px;">⏳ 尚未開始</div>`;
+                } else if (st.isClaimable) {
+                    sgDateBadge += `<div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
+                        <div style="flex:1; color: #15803d; font-size: 11px; font-weight: bold; background: #dcfce7; padding: 5px 6px; border-radius: 6px; border: 1px solid #86efac; text-align: center;">✅ 可領取！</div>
+                        <button type="button" onclick="markPostcardClaimedToday('${item.id}', event)" style="background: linear-gradient(135deg, #22c55e, #16a34a); color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 3px; white-space: nowrap;">🎁 今日領取</button>
+                    </div>`;
+                } else if (st.cdVal === 'once') {
+                    sgDateBadge += `<div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
+                        <div style="flex:1; color: #64748b; font-size: 11px; font-weight: bold; background: #f1f5f9; padding: 5px 6px; border-radius: 6px; border: 1px solid #cbd5e1; text-align: center;">✓ 已領取（限領一次）</div>
+                    </div>`;
+                } else {
+                    sgDateBadge += `<div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
+                        <div style="flex:1; color: #0369a1; font-size: 11px; font-weight: bold; background: #e0f2fe; padding: 5px 6px; border-radius: 6px; border: 1px solid #bae6fd; text-align: center;">⏳ 下次：${st.nextStr}</div>
+                        <button type="button" onclick="markPostcardClaimedToday('${item.id}', event)" title="重新設定為今日已領" style="background: #f8fafc; color: #64748b; border: 1px solid #cbd5e1; padding: 5px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 3px; white-space: nowrap;">✓ 今日已領</button>
+                    </div>`;
                 }
             }
             card.innerHTML = `
@@ -5746,19 +6040,20 @@
                     <div class="card-badge-type">${escapeHtml(item.type)}</div>
                     <button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button>
                     <button class="card-fav-btn ${isPcFav?'fav-on':'fav-off'}" onclick="togglePcFav('${item.id}')">${isPcFav?'❤️':'🤍'}</button>
-                    ${timerBtnHtml}
                 </div>
-                <div class="card-body"><div class="card-title">${tzBadge}${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}${item.district ? ` ${escapeHtml(item.district)}` : ''}</span><div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">${providerHtml}${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}${item.auth ? `<span title="${escapeHtml(item.auth)}" style="background:#f5f3ff; color:#6d28d9; border:1px solid #ddd6fe; padding:1px 5px; border-radius:5px; font-size:10px; font-weight:700; display:inline-flex; align-items:center; gap:2px; cursor:default;">🔑 ${escapeHtml(item.auth)}</span>` : ''}</div></div>
+                <div class="card-body"><div class="card-title">${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}${item.district ? ` ${escapeHtml(item.district)}` : ''}</span><div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">${providerHtml}${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}${item.auth ? `<span title="${escapeHtml(item.auth)}" style="background:#f5f3ff; color:#6d28d9; border:1px solid #ddd6fe; padding:1px 5px; border-radius:5px; font-size:10px; font-weight:700; display:inline-flex; align-items:center; gap:2px; cursor:default;">🔑 ${escapeHtml(item.auth)}</span>` : ''}</div></div>
                 ${dupBadge}
                 ${distBadge}
                 ${sgDateBadge}
                 ${item.missingFields && item.missingFields.length > 0 ? `<div style="color: #ef4444; font-size: 10px; font-weight: bold; margin-top: 4px; background: #fee2e2; padding: 4px 6px; border-radius: 4px; border: 1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>` : ''}
-                ${timeSetRow}
                 <div class="card-actions" style="display:flex; gap:4px; margin-top:auto; padding-top:4px;"><button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button>${item.coords ? `<button class="btn-sm btn-default" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}')">🗺️ 地圖</button>` : ''}<button class="btn-sm btn-edit" style="flex:1;" onclick="openTimeModalById('${item.id}', 'postcard')">✏️ 修改</button></div></div>
             `;
             pcEl.appendChild(card);
         };
         
+        const hasActivePcFilter = currentMode === 'postcard' && Boolean(isSearching || filterState !== 'all' || recentFilter !== 'all' || selPcCountry || selPcCity);
+        const favSetForGroup = new Set(Array.isArray(cloudFavorites) ? cloudFavorites : []);
+
         Object.keys(pcGroups).sort(typeOrder).forEach(type => {
             const groupId = 'post-' + type;
             let isCol = false;
@@ -5767,15 +6062,16 @@
 
             if (!hideTopLevelGroup) {
                 if (!knownPostcardGroups.has(groupId)) { collapsedGroups.add(groupId); knownPostcardGroups.add(groupId); }
-                isCol = collapsedGroups.has(groupId);
+                // 若使用者正在搜尋或已套用篩選條件，自動展開有符合資料的明信片群組！
+                isCol = collapsedGroups.has(groupId) && !hasActivePcFilter;
                 const arrow = isCol ? '▶' : '▼';
-                                const gHead = document.createElement('div');
+                const gHead = document.createElement('div');
                 gHead.className = 'group-header';
                 gHead.style.background = 'transparent';
                 gHead.style.boxShadow = 'none';
                 gHead.style.justifyContent = 'flex-start';
                 gHead.style.padding = '4px 0';
-                gHead.style.marginTop = '16px';
+                gHead.style.marginTop = '12px';
 
                 let hash = 0;
                 for (let i = 0; i < type.length; i++) hash = type.charCodeAt(i) + ((hash << 5) - hash);
@@ -5786,8 +6082,12 @@
                 
                 let hasMissingGroup = false;
                 let hasClaimableGroup = false;
+                let groupCollectedCount = 0;
+                let groupCoordCount = 0;
                 pcGroups[type].forEach(item => {
-                    if ((item.tag || '').includes('缺') || (item.name || '').includes('缺') || (item.note || '').includes('缺') || (item.user || '').includes('缺')) {
+                    if (favSetForGroup.has(item.id)) groupCollectedCount++;
+                    if (item.coords && String(item.coords).trim()) groupCoordCount++;
+                    if ((item.tag || '').includes('缺') || (item.name || '').includes('缺') || (item.note || '').includes('缺') || (item.user || '').includes('缺') || (item.missingFields && item.missingFields.length > 0)) {
                         hasMissingGroup = true;
                     }
                     if (item.type === '特殊金盆') {
@@ -5797,14 +6097,28 @@
                 });
 
                 let groupReminders = '';
-                if (hasMissingGroup) groupReminders += ' <span style="color:#dc2626; font-size:12px; font-weight:bold; background:#fef2f2; border:1px solid #fca5a5; padding:2px 8px; border-radius:12px; margin-left:8px;">⚠️ 缺</span>';
-                if (hasClaimableGroup) groupReminders += ' <span style="color:#d97706; font-size:12px; font-weight:bold; background:#fffbeb; border:1px solid #fcd34d; padding:2px 8px; border-radius:12px; margin-left:8px;">🎁 可拿</span>';
+                if (!isGoldbasinMode) {
+                    const allCol = groupCollectedCount === pcGroups[type].length && pcGroups[type].length > 0;
+                    groupReminders += ` <span style="background:${allCol ? '#dcfce7' : '#fef3c7'}; color:${allCol ? '#15803d' : '#92400e'}; border:1px solid ${allCol ? '#86efac' : '#fde68a'}; font-size:11.5px; font-weight:800; padding:2px 8px; border-radius:999px;">⭐ 已收 ${groupCollectedCount}/${pcGroups[type].length}</span>`;
+                }
+                if (hasMissingGroup) groupReminders += ' <span style="color:#dc2626; font-size:11.5px; font-weight:bold; background:#fef2f2; border:1px solid #fca5a5; padding:2px 8px; border-radius:999px;">⚠️ 缺</span>';
+                if (hasClaimableGroup) groupReminders += ' <span style="color:#d97706; font-size:11.5px; font-weight:bold; background:#fffbeb; border:1px solid #fcd34d; padding:2px 8px; border-radius:999px;">🎁 可拿</span>';
+
+                const groupCopyBtn = (!isGoldbasinMode && groupCoordCount > 0)
+                    ? `<button type="button" onclick="copyPostcardTypeCoords('${escapeHtml(type).replace(/'/g, "\\'")}', event)" style="margin-left:auto; background:#ffffff; color:#334155; border:1px solid #cbd5e1; border-radius:999px; padding:4px 10px; font-size:11.5px; font-weight:800; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.05); white-space:nowrap;" title="複製此分類所有明信片座標">📋 座標 (${groupCoordCount})</button>`
+                    : '';
 
                 gHead.innerHTML = `
-                    <div style="background:${pastelBg}; border:1px solid ${borderColor}; color:${darkText}; padding:6px 14px; border-radius:16px; display:inline-flex; align-items:center; gap:10px; font-size:16px; font-weight:bold; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition:all 0.2s;">
-                        <span>${arrow} 📂 ${escapeHtml(type)}</span>
-                        <span style="background:rgba(255,255,255,0.7); padding:2px 8px; border-radius:12px; font-size:13px; font-weight:900;">${pcGroups[type].length} 筆</span>
-                    </div>${groupReminders}
+                    <div style="width:100%; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                        <div style="display:flex; align-items:center; flex-wrap:wrap; gap:6px;">
+                            <div style="background:${pastelBg}; border:1px solid ${borderColor}; color:${darkText}; padding:5px 13px; border-radius:14px; display:inline-flex; align-items:center; gap:8px; font-size:15px; font-weight:bold; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition:all 0.2s;">
+                                <span>${arrow} 📂 ${escapeHtml(type)}</span>
+                                <span style="background:rgba(255,255,255,0.75); padding:1.5px 8px; border-radius:10px; font-size:12.5px; font-weight:900;">${pcGroups[type].length} 筆</span>
+                            </div>
+                            ${groupReminders}
+                        </div>
+                        ${groupCopyBtn}
+                    </div>
                 `;
 
                 gHead.addEventListener('click', () => toggleGroup(groupId));
