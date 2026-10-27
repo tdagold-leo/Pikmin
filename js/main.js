@@ -1,5 +1,5 @@
 // JS logic begins
-    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.27.1812";
+    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.27.1823";
 
     // 自動清理網址列上的版本號參數，保持網址乾淨漂亮 (例如保持為 https://tdagold-leo.github.io/Pikmin/)
     if (window.location.search && (window.location.search.includes('v=') || window.location.search.includes('_t='))) {
@@ -5125,6 +5125,7 @@
         else collapsedGroups.add(groupId);
         updateView();
     }
+    window.toggleGroup = toggleGroup;
 
     let currentFilteredPostcards = [];
 
@@ -5133,10 +5134,21 @@
         knownPostcardGroups.forEach(id => {
             if (id.startsWith('post-')) collapsedGroups.add(id);
         });
+        postcardList.forEach(item => {
+            const t = item && item.type ? String(item.type).trim() : '未分類';
+            const gid = 'post-' + t;
+            knownPostcardGroups.add(gid);
+            collapsedGroups.add(gid);
+        });
         updateView();
     }
+    window.collapseAllPostcardGroups = collapseAllPostcardGroups;
 
     window.expandAllPostcardGroups = function() {
+        postcardList.forEach(item => {
+            const t = item && item.type ? String(item.type).trim() : '未分類';
+            knownPostcardGroups.add('post-' + t);
+        });
         knownPostcardGroups.forEach(id => {
             if (id.startsWith('post-')) collapsedGroups.delete(id);
         });
@@ -6695,7 +6707,28 @@
             pcEl.appendChild(card);
         };
         
-        const hasActivePcFilter = currentMode === 'postcard' && Boolean(isSearching || filterState !== 'all' || recentFilter !== 'all' || selPcCountry || selPcCity);
+        Object.keys(pcGroups).forEach(type => {
+            const gid = 'post-' + type;
+            if (!knownPostcardGroups.has(gid)) {
+                collapsedGroups.add(gid);
+                knownPostcardGroups.add(gid);
+            }
+        });
+        // 僅當「搜尋框關鍵字」改變時自動展開/折疊一次，其餘任何時候皆允許使用者點擊群組標題或「全折疊」收合！
+        if (currentMode === 'postcard' && window._lastPcSearchSig !== pcSearchVal) {
+            if (typeof window._lastPcSearchSig !== 'undefined') {
+                if (pcSearchVal) {
+                    knownPostcardGroups.forEach(id => {
+                        if (id.startsWith('post-')) collapsedGroups.delete(id);
+                    });
+                } else {
+                    knownPostcardGroups.forEach(id => {
+                        if (id.startsWith('post-')) collapsedGroups.add(id);
+                    });
+                }
+            }
+            window._lastPcSearchSig = pcSearchVal;
+        }
         const favSetForGroup = new Set(Array.isArray(cloudFavorites) ? cloudFavorites : []);
 
         Object.keys(pcGroups).sort(typeOrder).forEach(type => {
@@ -6706,8 +6739,7 @@
 
             if (!hideTopLevelGroup) {
                 if (!knownPostcardGroups.has(groupId)) { collapsedGroups.add(groupId); knownPostcardGroups.add(groupId); }
-                // 若使用者正在搜尋或已套用篩選條件，自動展開有符合資料的明信片群組！
-                isCol = collapsedGroups.has(groupId) && !hasActivePcFilter;
+                isCol = collapsedGroups.has(groupId);
                 const arrow = isCol ? '▶' : '▼';
                 const gHead = document.createElement('div');
                 gHead.className = 'group-header';
