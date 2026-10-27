@@ -1,5 +1,5 @@
 // JS logic begins
-    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.27.1648";
+    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.27.1812";
 
     // 自動清理網址列上的版本號參數，保持網址乾淨漂亮 (例如保持為 https://tdagold-leo.github.io/Pikmin/)
     if (window.location.search && (window.location.search.includes('v=') || window.location.search.includes('_t='))) {
@@ -2407,6 +2407,7 @@
                 const locNorm = normalizeCountryAndCity(cloudData[key].country || "", cloudData[key].city || "");
                 postcardList.push({
                     id: key, type: toTW(String(typeVal || "菇")), name: cloudData[key].name || "未命名", 
+                    subname: cloudData[key].subname || "",
                     country: locNorm.country, city: locNorm.city,
                     district: toTW(cloudData[key].district || ""),
                     coords: cloudData[key].coords || "",
@@ -3285,6 +3286,7 @@
                 
                 if (isPostcard) {
                     nameField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-name' : 'edit-post-name');
+                    const subnameField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-subname' : 'edit-post-subname');
                     coordsField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-coords' : 'edit-post-coords');
                     tagField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-tag' : 'edit-post-tag');
                     
@@ -3294,7 +3296,7 @@
                             autoFilled.push('名稱');
                         }
                         
-                                                if (lines.length > 1) {
+                        if (lines.length > 1) {
                             const secondLine = lines[1];
                             const coordRegex = /[-+]?\d{1,3}\.\d+,\s*[-+]?\d{1,3}\.\d+/;
                             if (coordRegex.test(secondLine)) {
@@ -3304,9 +3306,9 @@
                                     coordsField.dispatchEvent(new Event('blur')); // 觸發自動抓國家
                                 }
                             } else {
-                                if (tagField && (!tagField.value || tagField.value.trim() === '')) {
-                                    tagField.value = secondLine;
-                                    autoFilled.push('標籤');
+                                if (subnameField && (!subnameField.value || subnameField.value.trim() === '')) {
+                                    subnameField.value = secondLine;
+                                    autoFilled.push('下行名稱');
                                 }
                             }
                         }
@@ -3620,12 +3622,45 @@
         }
     }
 
+    function moveTagToSubname(prefix) {
+        const tagEl = document.getElementById(prefix + '-tag');
+        const subEl = document.getElementById(prefix + '-subname');
+        if (!tagEl || !subEl) return;
+        const rawTag = tagEl.value || '';
+        if (!rawTag.trim()) return;
+
+        // 若使用者在標籤欄位有反白選取文字，優先將反白文字移入下行名稱
+        if (typeof tagEl.selectionStart === 'number' && typeof tagEl.selectionEnd === 'number' && tagEl.selectionEnd > tagEl.selectionStart) {
+            const selected = rawTag.slice(tagEl.selectionStart, tagEl.selectionEnd).trim();
+            if (selected) {
+                const remain = (rawTag.slice(0, tagEl.selectionStart) + ' ' + rawTag.slice(tagEl.selectionEnd)).replace(/\s+/g, ' ').trim();
+                subEl.value = (subEl.value.trim() ? subEl.value.trim() + ' ' : '') + selected;
+                tagEl.value = remain;
+                return;
+            }
+        }
+
+        // 否則每次點擊將標籤最前面的第一個詞移入下行名稱（例如點兩次即可把「仙台市 松陵2」移入，留下「中秋節 月亮」）
+        const trimmed = rawTag.trim();
+        const firstSpaceIdx = trimmed.search(/\s+/);
+        if (firstSpaceIdx === -1) {
+            subEl.value = (subEl.value.trim() ? subEl.value.trim() + ' ' : '') + trimmed;
+            tagEl.value = '';
+        } else {
+            const firstWord = trimmed.slice(0, firstSpaceIdx).trim();
+            const rest = trimmed.slice(firstSpaceIdx).trim();
+            subEl.value = (subEl.value.trim() ? subEl.value.trim() + ' ' : '') + firstWord;
+            tagEl.value = rest;
+        }
+    }
+
     function applyMatchedPostcardToForm(pcId, prefix) {
         if (typeof postcardList === 'undefined') return;
         const match = postcardList.find(pc => pc && pc.id === pcId);
         if (!match) return;
         const coordsEl = document.getElementById(prefix + '-coords');
         const nameEl = document.getElementById(prefix + '-name');
+        const subnameEl = document.getElementById(prefix + '-subname');
         const cityEl = document.getElementById(prefix + '-city');
         const countryEl = document.getElementById(prefix + '-country');
         const distEl = document.getElementById(prefix + '-district');
@@ -3633,6 +3668,7 @@
 
         if (coordsEl && match.coords) coordsEl.value = match.coords;
         if (nameEl && (!nameEl.value.trim() || nameEl.value.trim() === '未命名') && match.name) nameEl.value = match.name;
+        if (subnameEl && !subnameEl.value.trim() && match.subname) subnameEl.value = match.subname;
         if (cityEl && match.city) cityEl.value = match.city;
         if (countryEl && match.country) countryEl.value = match.country;
         if (distEl && match.district) distEl.value = match.district;
@@ -4306,6 +4342,7 @@
                 type: toTW(document.getElementById('post-type').value), country: processedCountry, city: processedCity,
                 district: (document.getElementById('post-district')?.value || '').trim(),
                 name: nameEl.value.trim(),
+                subname: (document.getElementById('post-subname')?.value || '').trim(),
                 coords: normalizeCoords(coordsEl.value), tag: tagEl.value.trim() || "", image: imageEl.value.trim() || "無圖片",
                 auth: (document.getElementById('post-auth')?.value || '').trim(),
                 provider: currentSyncId || ""
@@ -4342,6 +4379,7 @@
             }
             if (postLastEl) postLastEl.value = '';
             countryEl.value = ''; if(cityEl) cityEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = ''; imageEl.value = '';
+            const subnameEl = document.getElementById('post-subname'); if (subnameEl) subnameEl.value = '';
             const authEl = document.getElementById('post-auth'); if(authEl) authEl.value = '';
             document.getElementById('post-tz-hint').innerText = '';
             closeModal('add-modal');
@@ -4412,7 +4450,9 @@
             type: item.type,
             country: item.country || '',
             city: item.city || '',
+            district: item.district || '',
             name: item.name || '',
+            subname: item.subname || '',
             coords: item.coords || '',
             tag: item.tag || '',
             image: item.image || '無圖片',
@@ -4568,6 +4608,8 @@
             const editPostDistEl = document.getElementById('edit-post-district');
             if (editPostDistEl) editPostDistEl.value = item.district || '';
             document.getElementById('edit-post-name').value = item.name || ''; 
+            const editPostSubnameEl = document.getElementById('edit-post-subname');
+            if (editPostSubnameEl) editPostSubnameEl.value = item.subname || '';
             document.getElementById('edit-post-tag').value = item.tag || '';
             const editAuthEl = document.getElementById('edit-post-auth'); if(editAuthEl) editAuthEl.value = item.auth || '';
             document.getElementById('edit-post-coords').value = item.coords || ''; 
@@ -4719,7 +4761,9 @@
                 type: pType, country: processedCountry,
                 city: document.getElementById('edit-post-city').value.trim(),
                 district: (document.getElementById('edit-post-district')?.value || '').trim(),
-                name: document.getElementById('edit-post-name').value.trim(), tag: document.getElementById('edit-post-tag').value.trim(),
+                name: document.getElementById('edit-post-name').value.trim(),
+                subname: (document.getElementById('edit-post-subname')?.value || '').trim(),
+                tag: document.getElementById('edit-post-tag').value.trim(),
                 auth: (document.getElementById('edit-post-auth')?.value || '').trim(),
                 coords: normalizeCoords(document.getElementById('edit-post-coords').value), image: document.getElementById('edit-post-image').value.trim() || "無圖片",
                 targetTime: targetTime,
@@ -6105,7 +6149,7 @@
                 const providerStr = (item.provider || '').trim();
                 const providerText = providerStr ? `發表者:${providerStr} 提供者:${providerStr} 作者:${providerStr} 發表者 提供者 上傳者 作者 發表人 分享者 ${providerStr}` : '';
                 const authStr = (item.auth || '').trim();
-                const text = `${item.type} ${item.country} ${item.city || ''} ${item.name} ${item.tag} ${providerText} ${authStr} ${item.coords} ${item.discontinued ? '絕版' : ''} ${favText} ${missingText} ${dupText}`.toLowerCase();
+                const text = `${item.type} ${item.country} ${item.city || ''} ${item.district || ''} ${item.name} ${item.subname || ''} ${item.tag} ${providerText} ${authStr} ${item.coords} ${item.discontinued ? '絕版' : ''} ${favText} ${missingText} ${dupText}`.toLowerCase();
                 
                 const checkKw = (kw) => {
                     if (kw === '未授權' || kw === '無授權') return !authStr;
@@ -6447,9 +6491,14 @@
                 }
             }
 
-            const tagPillHtml = safeT
-                ? `<span class="tag-badge pc-clickable-pill" onclick="setPostcardSearch('${safeT.replace(/'/g, "\\'")}')" title="點擊篩選標籤：${safeT}" style="padding:1.5px 6px; font-size:10.5px;">${safeT}</span>`
+            const tagTokens = String(item.tag || '').split(/[\s,，、]+/).map(s => s.trim()).filter(Boolean);
+            const tagPillHtml = tagTokens.length > 0
+                ? tagTokens.map(tk => {
+                    const safeTk = escapeHtml(tk);
+                    return `<span class="tag-badge pc-clickable-pill" onclick="setPostcardSearch('${safeTk.replace(/'/g, "\\'")}')" title="點擊篩選標籤：${safeTk}" style="padding:1.5px 6px; font-size:10.5px;">${safeTk}</span>`;
+                }).join('')
                 : '';
+            const safeSubname = item.subname ? escapeHtml(item.subname) : '';
             const authPillHtml = item.auth
                 ? `<span class="pc-clickable-pill" onclick="setPostcardSearch('授權:${escapeHtml(item.auth).replace(/'/g, "\\'")}')" title="點擊篩選授權：${escapeHtml(item.auth)}" style="background:#f5f3ff; color:#6d28d9; border:1px solid #ddd6fe; padding:1.5px 5px; border-radius:5px; font-size:10px; font-weight:700; display:inline-flex; align-items:center; gap:2px;">🔑 ${escapeHtml(item.auth)}</span>`
                 : '';
@@ -6514,6 +6563,7 @@
                 </div>
                 <div class="card-body pc-card-body">
                     <div class="card-title pc-card-title" title="${escapeHtml(item.name)}">${tzBadge}${escapeHtml(item.name)}</div>
+                    ${safeSubname ? `<div class="pc-card-subname" title="${safeSubname}" style="font-size:11px; color:#64748b; font-weight:600; margin-top:-2px; line-height:1.25; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${safeSubname}</div>` : ''}
                     ${timeHtml}
                     <div class="pc-loc-line" title="🌍 ${safeC || '未提供'}${item.city ? ' · ' + escapeHtml(item.city) : ''}${item.district ? ' ' + escapeHtml(item.district) : ''}">🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}${item.district ? ` ${escapeHtml(item.district)}` : ''}</div>
                     ${(providerHtml || tagPillHtml || authPillHtml) ? `<div class="pc-meta-row">${providerHtml}${tagPillHtml}${authPillHtml}</div>` : ''}
@@ -6635,7 +6685,7 @@
                     <button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button>
                     <button class="card-fav-btn ${isPcFav?'fav-on':'fav-off'}" onclick="togglePcFav('${item.id}')">${isPcFav?'❤️':'🤍'}</button>
                 </div>
-                <div class="card-body"><div class="card-title">${escapeHtml(item.name)}</div>${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}${item.district ? ` ${escapeHtml(item.district)}` : ''}</span><div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">${providerHtml}${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}${item.auth ? `<span title="${escapeHtml(item.auth)}" style="background:#f5f3ff; color:#6d28d9; border:1px solid #ddd6fe; padding:1px 5px; border-radius:5px; font-size:10px; font-weight:700; display:inline-flex; align-items:center; gap:2px; cursor:default;">🔑 ${escapeHtml(item.auth)}</span>` : ''}</div></div>
+                <div class="card-body"><div class="card-title">${escapeHtml(item.name)}</div>${item.subname ? `<div style="font-size:11px; color:#64748b; font-weight:600; margin-top:-2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(item.subname)}</div>` : ''}${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}${item.district ? ` ${escapeHtml(item.district)}` : ''}</span><div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">${providerHtml}${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}${item.auth ? `<span title="${escapeHtml(item.auth)}" style="background:#f5f3ff; color:#6d28d9; border:1px solid #ddd6fe; padding:1px 5px; border-radius:5px; font-size:10px; font-weight:700; display:inline-flex; align-items:center; gap:2px; cursor:default;">🔑 ${escapeHtml(item.auth)}</span>` : ''}</div></div>
                 ${dupBadge}
                 ${distBadge}
                 ${sgDateBadge}
