@@ -1,5 +1,5 @@
 // JS logic begins
-    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.27.1823";
+    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.27.1902";
 
     // 自動清理網址列上的版本號參數，保持網址乾淨漂亮 (例如保持為 https://tdagold-leo.github.io/Pikmin/)
     if (window.location.search && (window.location.search.includes('v=') || window.location.search.includes('_t='))) {
@@ -6218,14 +6218,10 @@
 
             currentFilteredPostcards = filteredPc;
 
-            // 更新 #postcard-quick-tags 右側的「📋 複製篩選座標」按鈕
-            const qtContainer = document.getElementById('postcard-quick-tags');
-            if (qtContainer && !qtContainer.querySelector('.pc-batch-copy-btn')) {
-                const copyBtnHtml = `<button type="button" class="pc-batch-copy-btn" onclick="copyFilteredPostcardCoords(this)" style="margin-left:auto; padding:4px 11px; border-radius:12px; border:none; background:linear-gradient(135deg,#0ea5e9,#2563eb); color:#fff; font-size:11.5px; font-weight:800; cursor:pointer; box-shadow:0 2px 5px rgba(37,99,235,0.25); display:inline-flex; align-items:center; gap:4px; white-space:nowrap;">📋 複製篩選座標 (${filteredPc.length} 筆)</button>`;
-                qtContainer.insertAdjacentHTML('beforeend', copyBtnHtml);
-            } else if (qtContainer) {
-                const existingBtn = qtContainer.querySelector('.pc-batch-copy-btn');
-                if (existingBtn) existingBtn.innerHTML = `📋 複製篩選座標 (${filteredPc.length} 筆)`;
+            // 更新工具列上的「📋 座標」按鈕筆數
+            const topCopyBtn = document.getElementById('pc-batch-copy-top-btn');
+            if (topCopyBtn) {
+                topCopyBtn.innerHTML = `📋 <span class="pc-only-desktop">複製</span>座標 (${filteredPc.length})`;
             }
 
             const statsEl = document.getElementById('postcard-stats');
@@ -6254,27 +6250,27 @@
                             <span style="font-size:11.5px; font-weight:800; opacity:0.85;">📚 全部明信片</span>
                             ${filteredPc.length !== cntAll ? `<span style="font-size:10px; font-weight:800; padding:1px 5px; border-radius:999px; background:rgba(59,130,246,0.18); color:${isAllActive ? '#93c5fd' : '#2563eb'};">顯示 ${filteredPc.length}</span>` : ''}
                         </div>
-                        <div style="font-size:19px; font-weight:900; line-height:1.2;">${cntAll} <span style="font-size:11px; font-weight:700; opacity:0.75;">筆</span></div>
+                        <div class="pc-stat-num" style="font-size:19px; font-weight:900; line-height:1.2;">${cntAll} <span style="font-size:11px; font-weight:700; opacity:0.75;">筆</span></div>
                     </button>
                     <button type="button" class="pc-stat-card ${isColActive ? 'active-collected' : ''}" onclick="setPcStatQuickFilter('collected')" title="點擊篩選「我的收藏」，點右上角篩選「尚未收藏」">
                         <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:4px;">
                             <span style="font-size:11.5px; font-weight:800; color:#b45309;">⭐ 已收藏 (${collectedPct}%)</span>
                             <span onclick="event.stopPropagation(); setPcStatQuickFilter('uncollected');" style="font-size:10px; font-weight:800; padding:1px 6px; border-radius:999px; background:${filterState === 'uncollected' ? '#d97706' : '#fef3c7'}; color:${filterState === 'uncollected' ? '#fff' : '#92400e'}; border:1px solid #fcd34d;" title="點擊篩選：尚未收藏">未收 ${cntUncollected}</span>
                         </div>
-                        <div style="font-size:19px; font-weight:900; color:#92400e; line-height:1.2;">${cntCollected} <span style="font-size:11px; font-weight:700;">/ ${cntAll}</span></div>
+                        <div class="pc-stat-num" style="font-size:19px; font-weight:900; color:#92400e; line-height:1.2;">${cntCollected} <span style="font-size:11px; font-weight:700;">/ ${cntAll}</span></div>
                     </button>
                     <button type="button" class="pc-stat-card ${isFavActive ? 'active-fav' : ''}" onclick="setPcStatQuickFilter('fav')" title="點擊篩選「我的最愛」">
                         <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
                             <span style="font-size:11.5px; font-weight:800; color:#e11d48;">❤️ 我的最愛</span>
                         </div>
-                        <div style="font-size:19px; font-weight:900; color:#be123c; line-height:1.2;">${cntFav} <span style="font-size:11px; font-weight:700;">筆</span></div>
+                        <div class="pc-stat-num" style="font-size:19px; font-weight:900; color:#be123c; line-height:1.2;">${cntFav} <span style="font-size:11px; font-weight:700;">筆</span></div>
                     </button>
                     <button type="button" class="pc-stat-card ${isRecActive ? 'active-recent' : ''}" onclick="setPcStatQuickFilter('recent3')" title="點擊切換：近 3 天新增 → 最新 1 天 → 全部">
                         <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:4px;">
                             <span style="font-size:11.5px; font-weight:800; color:#0369a1;">🆕 ${recentFilter === '1' ? '最新 1 天' : '近 3 天新增'}</span>
                             <span style="font-size:10px; font-weight:800; padding:1px 6px; border-radius:999px; background:#e0f2fe; color:#0284c7; border:1px solid #bae6fd;">今日 +${cnt1d}</span>
                         </div>
-                        <div style="font-size:19px; font-weight:900; color:#0c4a6e; line-height:1.2;">${recentFilter === '1' ? cnt1d : cnt3d} <span style="font-size:11px; font-weight:700;">筆</span></div>
+                        <div class="pc-stat-num" style="font-size:19px; font-weight:900; color:#0c4a6e; line-height:1.2;">${recentFilter === '1' ? cnt1d : cnt3d} <span style="font-size:11px; font-weight:700;">筆</span></div>
                     </button>
                 `;
             }
@@ -6584,8 +6580,8 @@
                     ${item.missingFields && item.missingFields.length > 0 ? `<div style="color:#ef4444; font-size:10px; font-weight:bold; background:#fee2e2; padding:2px 6px; border-radius:5px; border:1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>` : ''}
                     ${timeSetRow}
                     <div class="card-actions pc-card-actions" style="display:flex; gap:4px; margin-top:auto; padding-top:4px;">
-                        <button class="btn-sm btn-default" style="flex:1.3; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:800;" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)" title="複製座標">📍 複製</button>
-                        ${item.coords ? `<button class="btn-sm btn-default" style="flex:0.9; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}')" title="在地圖上查看">🗺️ 地圖</button>` : ''}
+                        <button class="btn-sm btn-default" style="flex:1.2; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:800;" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)" title="複製座標">📍 複製</button>
+                        ${item.coords ? `<button class="btn-sm btn-default" style="flex:0.8; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}')" title="在地圖上查看">🗺️<span class="pc-only-desktop"> 地圖</span></button>` : ''}
                         ${timerActBtn}
                         <button class="btn-sm btn-edit" style="flex:0 0 auto; padding:5px 7px;" onclick="openTimeModalById('${item.id}', 'postcard')" title="修改明信片">✏️</button>
                     </div>
@@ -6742,19 +6738,16 @@
                 isCol = collapsedGroups.has(groupId);
                 const arrow = isCol ? '▶' : '▼';
                 const gHead = document.createElement('div');
-                gHead.className = 'group-header';
-                gHead.style.background = 'transparent';
-                gHead.style.boxShadow = 'none';
-                gHead.style.justifyContent = 'flex-start';
-                gHead.style.padding = '4px 0';
-                gHead.style.marginTop = '12px';
+                gHead.className = 'pc-group-banner';
 
                 let hash = 0;
                 for (let i = 0; i < type.length; i++) hash = type.charCodeAt(i) + ((hash << 5) - hash);
                 const hue = Math.abs(hash) % 360;
                 const pastelBg = `hsl(${hue}, 85%, 94%)`;
                 const darkText = `hsl(${hue}, 85%, 30%)`;
-                const borderColor = `hsl(${hue}, 85%, 85%)`;
+                const borderColor = `hsl(${hue}, 80%, 82%)`;
+                const accentLeft = `hsl(${hue}, 75%, 58%)`;
+                gHead.style.borderLeft = `4px solid ${accentLeft}`;
                 
                 let hasMissingGroup = false;
                 let hasClaimableGroup = false;
@@ -6777,27 +6770,25 @@
                 let groupReminders = '';
                 if (!isGoldbasinMode) {
                     const allCol = groupCollectedCount === pcGroups[type].length && pcGroups[type].length > 0;
-                    groupReminders += ` <span style="background:${allCol ? '#dcfce7' : '#fef3c7'}; color:${allCol ? '#15803d' : '#92400e'}; border:1px solid ${allCol ? '#86efac' : '#fde68a'}; font-size:11.5px; font-weight:800; padding:2px 8px; border-radius:999px;">⭐ 已收 ${groupCollectedCount}/${pcGroups[type].length}</span>`;
+                    groupReminders += `<span style="background:${allCol ? '#dcfce7' : '#fef3c7'}; color:${allCol ? '#15803d' : '#92400e'}; border:1px solid ${allCol ? '#86efac' : '#fde68a'}; font-size:11px; font-weight:800; padding:2px 6px; border-radius:999px; white-space:nowrap; flex-shrink:0;" title="已收藏 ${groupCollectedCount} / 共 ${pcGroups[type].length} 筆">⭐ <span class="pc-only-desktop">已收 </span>${groupCollectedCount}/${pcGroups[type].length}</span>`;
                 }
-                if (hasMissingGroup) groupReminders += ' <span style="color:#dc2626; font-size:11.5px; font-weight:bold; background:#fef2f2; border:1px solid #fca5a5; padding:2px 8px; border-radius:999px;">⚠️ 缺</span>';
-                if (groupDupCount > 0) groupReminders += ` <span style="color:#b45309; font-size:11.5px; font-weight:bold; background:#fffbeb; border:1px solid #fcd34d; padding:2px 8px; border-radius:999px;">🔄 重複 ${groupDupCount}</span>`;
-                if (hasClaimableGroup) groupReminders += ' <span style="color:#d97706; font-size:11.5px; font-weight:bold; background:#fffbeb; border:1px solid #fcd34d; padding:2px 8px; border-radius:999px;">🎁 可拿</span>';
+                if (hasMissingGroup) groupReminders += `<span style="color:#dc2626; font-size:11px; font-weight:800; background:#fef2f2; border:1px solid #fca5a5; padding:2px 6px; border-radius:999px; white-space:nowrap; flex-shrink:0;" title="含有缺漏資料">⚠️缺</span>`;
+                if (groupDupCount > 0) groupReminders += `<span style="color:#b45309; font-size:11px; font-weight:800; background:#fffbeb; border:1px solid #fcd34d; padding:2px 6px; border-radius:999px; white-space:nowrap; flex-shrink:0;" title="含有 ${groupDupCount} 筆重複收藏">🔄<span class="pc-only-desktop"> 重複</span> ${groupDupCount}</span>`;
+                if (hasClaimableGroup) groupReminders += `<span style="color:#d97706; font-size:11px; font-weight:800; background:#fffbeb; border:1px solid #fcd34d; padding:2px 6px; border-radius:999px; white-space:nowrap; flex-shrink:0;">🎁可拿</span>`;
 
                 const groupCopyBtn = (!isGoldbasinMode && groupCoordCount > 0)
-                    ? `<button type="button" onclick="copyPostcardTypeCoords('${escapeHtml(type).replace(/'/g, "\\'")}', event)" style="margin-left:auto; background:#ffffff; color:#334155; border:1px solid #cbd5e1; border-radius:999px; padding:4px 10px; font-size:11.5px; font-weight:800; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.05); white-space:nowrap;" title="複製此分類所有明信片座標">📋 座標 (${groupCoordCount})</button>`
+                    ? `<button type="button" onclick="copyPostcardTypeCoords('${escapeHtml(type).replace(/'/g, "\\'")}', event)" style="flex-shrink:0; background:#f8fafc; color:#334155; border:1px solid #cbd5e1; border-radius:999px; padding:3.5px 8px; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap;" title="複製此分類所有明信片座標 (${groupCoordCount} 筆)">📋 <span class="pc-only-desktop">座標 </span>(${groupCoordCount})</button>`
                     : '';
 
                 gHead.innerHTML = `
-                    <div style="width:100%; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
-                        <div style="display:flex; align-items:center; flex-wrap:wrap; gap:6px;">
-                            <div style="background:${pastelBg}; border:1px solid ${borderColor}; color:${darkText}; padding:5px 13px; border-radius:14px; display:inline-flex; align-items:center; gap:8px; font-size:15px; font-weight:bold; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition:all 0.2s;">
-                                <span>${arrow} 📂 ${escapeHtml(type)}</span>
-                                <span style="background:rgba(255,255,255,0.75); padding:1.5px 8px; border-radius:10px; font-size:12.5px; font-weight:900;">${pcGroups[type].length} 筆</span>
-                            </div>
-                            ${groupReminders}
+                    <div class="pc-group-badges-scroll" style="display:flex; align-items:center; gap:5px; min-width:0; flex:1; overflow-x:auto; scrollbar-width:none;">
+                        <div style="background:${pastelBg}; border:1px solid ${borderColor}; color:${darkText}; padding:3.5px 9px; border-radius:9px; display:inline-flex; align-items:center; gap:5px; font-size:13.5px; font-weight:800; white-space:nowrap; flex-shrink:0;">
+                            <span>${arrow} 📂 ${escapeHtml(type)}</span>
+                            <span style="background:rgba(255,255,255,0.82); padding:1px 6px; border-radius:7px; font-size:11.5px; font-weight:900;">${pcGroups[type].length}<span class="pc-only-desktop"> 筆</span></span>
                         </div>
-                        ${groupCopyBtn}
+                        ${groupReminders}
                     </div>
+                    ${groupCopyBtn}
                 `;
 
                 gHead.addEventListener('click', () => toggleGroup(groupId));

@@ -2907,24 +2907,122 @@
             transform: scale(1.04);
             filter: brightness(0.95);
         }
-        #postcard-quick-tags::-webkit-scrollbar {
+        #postcard-quick-tags::-webkit-scrollbar,
+        .pc-group-badges-scroll::-webkit-scrollbar {
             display: none;
         }
+        #view-postcard {
+            padding-bottom: 92px;
+        }
+        .pc-filter-selects-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+        .pc-search-toolbar-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+        .pc-toolbar-btns {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+        .pc-group-banner {
+            grid-column: 1 / -1;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 7px 10px;
+            margin-top: 8px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s, box-shadow 0.15s;
+        }
+        .pc-group-banner:hover {
+            background: #f8fafc;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.07);
+        }
         @media (max-width: 640px) {
-            #postcard-quick-tags {
-                flex-wrap: nowrap !important;
-                overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none;
-                padding-bottom: 2px;
+            .pc-filter-selects-row {
+                display: grid !important;
+                grid-template-columns: repeat(6, minmax(0, 1fr));
+                gap: 6px;
             }
-            #postcard-quick-tags > * {
-                flex-shrink: 0;
+            .pc-filter-selects-row #postcard-country-filter,
+            .pc-filter-selects-row #postcard-city-filter {
+                grid-column: span 3;
+                min-width: 0 !important;
+                width: 100%;
+                padding: 6px 6px !important;
+                font-size: 12px !important;
+            }
+            .pc-filter-selects-row #postcard-filter,
+            .pc-filter-selects-row #postcard-recent-filter,
+            .pc-filter-selects-row #search-logic {
+                grid-column: span 2;
+                min-width: 0 !important;
+                width: 100% !important;
+                padding: 6px 5px !important;
+                font-size: 12px !important;
+            }
+            .pc-search-toolbar-row {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 6px;
+            }
+            .pc-toolbar-btns {
+                display: grid !important;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 5px;
+                width: 100%;
+            }
+            .pc-toolbar-btns > * {
+                width: 100%;
+                justify-content: center !important;
+                text-align: center;
+                padding: 6px 4px !important;
+                font-size: 11.5px !important;
+                border-radius: 8px !important;
+                box-sizing: border-box;
+            }
+            #postcard-quick-tags {
+                flex-wrap: wrap !important;
+                gap: 5px !important;
+                padding-bottom: 1px;
+            }
+            #postcard-quick-tags > button {
+                padding: 3.5px 8.5px !important;
+                font-size: 11.5px !important;
+                border-radius: 10px !important;
+            }
+            .pc-group-banner {
+                padding: 6px 8px;
+                margin-top: 6px;
+                border-radius: 11px;
+                gap: 5px;
+            }
+            .pc-only-desktop {
+                display: none !important;
             }
         }
         @media (max-width: 520px) {
             #view-postcard .pc-stat-card {
                 padding: 6px 8px;
+                border-radius: 10px;
+            }
+            #view-postcard .pc-stat-num {
+                font-size: 17px !important;
             }
             #view-postcard .pc-card-body {
                 padding: 7px 8px !important;
@@ -2947,6 +3045,7 @@
             #view-postcard .pc-card-actions .btn-sm {
                 padding: 4px 4px !important;
                 font-size: 10.5px !important;
+                white-space: nowrap !important;
             }
         }
 </style>
@@ -3021,7 +3120,7 @@
 
             <div style="background:var(--card-bg); padding:10px 12px; border-radius:14px; margin-bottom:10px; box-shadow:0 2px 6px rgba(15,23,42,0.05); border:1px solid #e2e8f0; display:flex; flex-direction:column; gap:8px;">
                 <!-- 第一排：國家 / 城市 / 收藏狀態 / 時間 / 邏輯 -->
-                <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
+                <div class="pc-filter-selects-row">
                     <select id="postcard-country-filter" class="input-base filter-select" onchange="onPostcardCountryChange()" style="padding:5px 8px; font-size:12.5px; flex:1; min-width:105px;">
                         <option value="">🌍 全部國家</option>
                     </select>
@@ -3047,19 +3146,20 @@
                     </select>
                 </div>
                 
-                <!-- 第二排：搜尋列 + 清除 + 展開/折疊 + 圖床連結 -->
-                <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
+                <!-- 第二排：搜尋列 + 清除 + 展開/折疊/複製座標/圖床連結 -->
+                <div class="pc-search-toolbar-row">
                     <div style="position:relative; flex:1; min-width:170px; display:flex; align-items:center;">
                         <input type="text" id="postcard-search" class="input-base search-input" style="width:100%; min-width:0; padding:6px 26px 6px 10px; font-size:13px;" oninput="updateView()" onchange="updateView()" onkeyup="updateView()" placeholder="🔍 搜尋名稱、發表者、座標、標籤...">
                         <button type="button" id="postcard-search-clear" onclick="document.getElementById('postcard-search').value=''; updateView();" title="清除搜尋" style="display:none; position:absolute; right:6px; background:none; border:none; color:#94a3b8; font-size:13px; cursor:pointer; padding:2px 4px; line-height:1;">✕</button>
                     </div>
-                    <div style="display:flex; gap:5px; align-items:center; flex-shrink:0;">
-                        <button type="button" onclick="expandAllPostcardGroups()" title="展開所有明信片分類" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:5px 8px; cursor:pointer; font-size:11.5px; font-weight:700; color:#334155; white-space:nowrap;">📂 全展開</button>
-                        <button type="button" onclick="collapseAllPostcardGroups()" title="全部折疊以節省流量" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:5px 8px; cursor:pointer; font-size:11.5px; font-weight:700; color:#64748b; white-space:nowrap;">📁 全折疊</button>
-                        <a href="https://meee.com.tw/" target="_blank" title="前往 Meee 免費圖床上傳明信片圖片" style="background:linear-gradient(135deg,#0ea5e9,#2563eb); border:none; border-radius:9px; padding:6px 12px; font-size:12px; font-weight:800; color:#ffffff; text-decoration:none; white-space:nowrap; display:inline-flex; align-items:center; gap:4px; box-shadow:0 2px 8px rgba(37,99,235,0.32);">🖼️ 前往圖床 ↗</a>
+                    <div class="pc-toolbar-btns">
+                        <button type="button" onclick="expandAllPostcardGroups()" title="展開所有明信片分類" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:5px 8px; cursor:pointer; font-size:11.5px; font-weight:700; color:#334155; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center;">📂 全展開</button>
+                        <button type="button" onclick="collapseAllPostcardGroups()" title="全部折疊以節省流量" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:5px 8px; cursor:pointer; font-size:11.5px; font-weight:700; color:#64748b; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center;">📁 全折疊</button>
+                        <button type="button" id="pc-batch-copy-top-btn" onclick="copyFilteredPostcardCoords(this)" title="複製目前篩選出的所有明信片座標" style="background:#eff6ff; border:1px solid #93c5fd; border-radius:8px; padding:5px 8px; cursor:pointer; font-size:11.5px; font-weight:800; color:#1d4ed8; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center; gap:2px;">📋 座標</button>
+                        <a href="https://meee.com.tw/" target="_blank" title="前往 Meee 免費圖床上傳明信片圖片" style="background:linear-gradient(135deg,#0ea5e9,#2563eb); border:none; border-radius:9px; padding:6px 10px; font-size:12px; font-weight:800; color:#ffffff; text-decoration:none; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center; gap:3px; box-shadow:0 2px 8px rgba(37,99,235,0.28);">🖼️ 圖床 ↗</a>
                     </div>
                 </div>
-                <!-- 第三排：動態常用標籤推薦按鈕 & 批次複製座標 -->
+                <!-- 第三排：動態常用標籤推薦按鈕 -->
                 <div id="postcard-quick-tags" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:1px; align-items:center;"></div>
             </div>
             <div id="postcard-container" class="grid"></div>
@@ -4338,8 +4438,8 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.10.27.1823";</script>
-    <script src="js/main.js?v=2026.10.27.1823"></script>
+    <script>const APP_VERSION = "2026.10.27.1902";</script>
+    <script src="js/main.js?v=2026.10.27.1902"></script>
     <script src="js/autofill.js?v=202610230026"></script>
 </body>
 </html>
