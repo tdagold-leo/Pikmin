@@ -1,5 +1,5 @@
 // JS logic begins
-    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.27.0513";
+    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.27.1648";
 
     // 自動清理網址列上的版本號參數，保持網址乾淨漂亮 (例如保持為 https://tdagold-leo.github.io/Pikmin/)
     if (window.location.search && (window.location.search.includes('v=') || window.location.search.includes('_t='))) {
@@ -1315,6 +1315,30 @@
         if(match) {
             const lat = match[1];
             const lon = match[2];
+            // 新增明信片時：貼上或輸入座標即刻檢查是否已有 30m 內重複明信片
+            if (countryInputId === 'post-country' && Array.isArray(postcardList)) {
+                const candEl = document.getElementById('post-coords-candidates');
+                const latNum = parseFloat(lat), lonNum = parseFloat(lon);
+                const nearDups = postcardList.filter(pc => {
+                    if (!pc || pc.discontinued || !pc.coords) return false;
+                    const cObj = parseLatLonObj(pc.coords);
+                    if (!cObj) return false;
+                    return getDistanceFromLatLonInKm(latNum, lonNum, cObj.lat, cObj.lon) <= 0.03;
+                });
+                if (candEl) {
+                    if (nearDups.length > 0) {
+                        candEl.style.display = 'flex';
+                        candEl.innerHTML = nearDups.map(d => {
+                            const loc = [d.country, d.city].filter(Boolean).join(' · ');
+                            const prov = d.provider ? ` (發表者：${escapeHtml(d.provider)})` : '';
+                            return `<div style="background:#fef2f2; border:1.5px solid #f87171; color:#b91c1c; padding:6px 8px; border-radius:8px; font-size:11.5px; font-weight:800; line-height:1.4;">⚠️ 此座標 (30m內) 已存在明信片：【${escapeHtml(d.type || '菇')}】${escapeHtml(d.name || '未命名')}${prov} — 🌍 ${escapeHtml(loc || '未知')}</div>`;
+                        }).join('');
+                    } else if (candEl.innerHTML.includes('此座標 (30m內) 已存在明信片')) {
+                        candEl.style.display = 'none';
+                        candEl.innerHTML = '';
+                    }
+                }
+            }
             try {
                 let countryName = "";
                 let offsetHours = null;
@@ -1734,6 +1758,438 @@
         if (city === c) city = '';
 
         return { country: c, city };
+    }
+
+    // 名稱去重正規化：簡轉繁 + Unicode NFD 去除歐語重音符號 (如 Ç->C, ö->o, ü->u) + 忽略大小寫與標點空白
+    function normalizeNameForDup(nameStr) {
+        if (!nameStr) return '';
+        let s = toTW(String(nameStr)).trim();
+        if (!s || s === '未命名') return '';
+        if (typeof s.normalize === 'function') {
+            s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+        s = s.replace(/[łŁ]/g, 'l').replace(/[øØ]/g, 'o').replace(/[ß]/g, 'ss')
+             .replace(/[æÆ]/g, 'ae').replace(/[œŒ]/g, 'oe').replace(/[đĐ]/g, 'd').replace(/[ı]/g, 'i');
+        s = s.toLowerCase().replace(/[\s\-_.,，、。·‧・•'"`~!@#$%^&*()[\]{}:;<>?/\\|]+/g, '');
+        return s;
+    }
+
+    function parseLatLonObj(coordsStr) {
+        if (!coordsStr) return null;
+        const m = String(coordsStr).match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
+        if (!m) return null;
+        const lat = parseFloat(m[1]), lon = parseFloat(m[2]);
+        if (isNaN(lat) || isNaN(lon)) return null;
+        return { lat, lon, norm: normalizeCoords(String(coordsStr)).toLowerCase() };
+    }
+
+    // ===== 明信片「左上角地標照片區」視覺指紋 (128-bit Dual dHash + 3-Zone RGB) =====
+    const PC_IMG_HASH_STORAGE_KEY = 'pikmin_pc_img_hash_v2';
+    let _pcImgHashCache = null;
+    let _pcImgHashSaveTimer = null;
+    const _pcImgHashInflight = new Map();
+    let _pcBgScanRunning = false;
+
+    function getPcImgHashCache() {
+        if (_pcImgHashCache) return _pcImgHashCache;
+        try {
+            _pcImgHashCache = JSON.parse(localStorage.getItem(PC_IMG_HASH_STORAGE_KEY) || '{}') || {};
+        } catch (e) {
+            _pcImgHashCache = {};
+        }
+        return _pcImgHashCache;
+    }
+
+    function savePcImgHashCacheDebounced() {
+        if (_pcImgHashSaveTimer) clearTimeout(_pcImgHashSaveTimer);
+        _pcImgHashSaveTimer = setTimeout(() => {
+            try {
+                if (_pcImgHashCache) {
+                    localStorage.setItem(PC_IMG_HASH_STORAGE_KEY, JSON.stringify(_pcImgHashCache));
+                }
+            } catch (e) {}
+        }, 800);
+    }
+
+    function loadImageElementWithCors(src, timeoutMs = 7000) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            let timer = setTimeout(() => {
+                img.src = '';
+                reject(new Error('Image load timeout'));
+            }, timeoutMs);
+            if (!src.startsWith('data:') && !src.startsWith('blob:')) {
+                img.crossOrigin = 'anonymous';
+            }
+            img.onload = () => {
+                clearTimeout(timer);
+                resolve(img);
+            };
+            img.onerror = (err) => {
+                clearTimeout(timer);
+                reject(err);
+            };
+            img.src = src;
+        });
+    }
+
+    // 裁切皮克敏明信片「左上角地標照片核心區」（避開右半邊郵票、上方白色標題列、下方皮克敏隊伍）並計算 128-bit 雙向梯度雜湊 + 三段色彩特徵
+    function computePoiFingerprintFromImg(img) {
+        try {
+            const w = img.naturalWidth || img.width;
+            const h = img.naturalHeight || img.height;
+            if (!w || !h || w < 32 || h < 32) return null;
+
+            const aspect = w / h;
+            let sx, sy, sw, sh;
+            if (aspect >= 0.95) {
+                // 橫式明信片裁切圖：左半邊 (X: 6%~56%)、中間偏上 (Y: 18%~64%) 為純地標照片區
+                sx = Math.round(w * 0.06);
+                sy = Math.round(h * 0.18);
+                sw = Math.max(16, Math.round(w * 0.50));
+                sh = Math.max(16, Math.round(h * 0.46));
+            } else {
+                // 直式手機完整截圖：明信片位於畫面中上段，地標照片位於左側 (X: 8%~56%, Y: 28%~52%)
+                sx = Math.round(w * 0.08);
+                sy = Math.round(h * 0.28);
+                sw = Math.max(16, Math.round(w * 0.48));
+                sh = Math.max(16, Math.round(h * 0.24));
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 9;
+            canvas.height = 9;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 9, 9);
+            const data = ctx.getImageData(0, 0, 9, 9).data;
+
+            const gray = [];
+            const bandsRgb = [
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0]
+            ];
+            let sumY = 0;
+            let sumSqY = 0;
+
+            for (let r = 0; r < 9; r++) {
+                const row = [];
+                const bIdx = r < 3 ? 0 : (r < 6 ? 1 : 2);
+                for (let c = 0; c < 9; c++) {
+                    const idx = (r * 9 + c) * 4;
+                    const R = data[idx], G = data[idx + 1], B = data[idx + 2];
+                    const Y = 0.299 * R + 0.587 * G + 0.114 * B;
+                    row.push(Y);
+                    sumY += Y;
+                    sumSqY += Y * Y;
+                    bandsRgb[bIdx][0] += R;
+                    bandsRgb[bIdx][1] += G;
+                    bandsRgb[bIdx][2] += B;
+                    bandsRgb[bIdx][3] += 1;
+                }
+                gray.push(row);
+            }
+
+            const meanY = sumY / 81;
+            const varianceY = (sumSqY / 81) - (meanY * meanY);
+            if (varianceY < 36) return null; // 排除純色或空白佔位圖
+
+            // 計算 64-bit 水平梯度 dHash (h) 與 64-bit 垂直梯度 dHash (v)
+            let hBits = '';
+            let vBits = '';
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    hBits += (gray[r][c] > gray[r][c + 1]) ? '1' : '0';
+                    vBits += (gray[r][c] > gray[r + 1][c]) ? '1' : '0';
+                }
+            }
+            const bitsToHex = (bits) => {
+                let hex = '';
+                for (let i = 0; i < 64; i += 4) {
+                    hex += parseInt(bits.slice(i, i + 4), 2).toString(16);
+                }
+                return hex;
+            };
+
+            const rgbArr = [];
+            for (let b = 0; b < 3; b++) {
+                const cnt = bandsRgb[b][3] || 1;
+                rgbArr.push(
+                    Math.round(bandsRgb[b][0] / cnt),
+                    Math.round(bandsRgb[b][1] / cnt),
+                    Math.round(bandsRgb[b][2] / cnt)
+                );
+            }
+
+            return { h: bitsToHex(hBits), v: bitsToHex(vBits), c: rgbArr };
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async function getOrComputePoiFingerprint(imgSrc) {
+        if (!imgSrc || imgSrc === '無圖片') return null;
+        const isHttp = imgSrc.startsWith('http');
+        const isData = imgSrc.startsWith('data:') || imgSrc.startsWith('blob:');
+        if (!isHttp && !isData) return null;
+
+        const cache = getPcImgHashCache();
+        if (isHttp && cache[imgSrc]) {
+            return cache[imgSrc].invalid ? null : cache[imgSrc];
+        }
+        if (_pcImgHashInflight.has(imgSrc)) {
+            return _pcImgHashInflight.get(imgSrc);
+        }
+
+        const promise = (async () => {
+            let fp = null;
+            if (isData) {
+                try {
+                    const img = await loadImageElementWithCors(imgSrc, 6000);
+                    fp = computePoiFingerprintFromImg(img);
+                } catch (e) {}
+            } else {
+                // 1. 先嘗試直接以匿名 CORS 載入原圖
+                try {
+                    const img = await loadImageElementWithCors(imgSrc, 4500);
+                    fp = computePoiFingerprintFromImg(img);
+                } catch (e) {}
+                // 2. 若圖床未開放 CORS (如 meee.com.tw 等)，自動透過 wsrv.nl 代理縮圖計算雜湊
+                if (!fp) {
+                    try {
+                        const proxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(imgSrc)}&w=240&output=jpg`;
+                        const img2 = await loadImageElementWithCors(proxyUrl, 6500);
+                        fp = computePoiFingerprintFromImg(img2);
+                    } catch (e) {}
+                }
+                if (fp) {
+                    cache[imgSrc] = fp;
+                    savePcImgHashCacheDebounced();
+                } else {
+                    cache[imgSrc] = { invalid: 1 };
+                    savePcImgHashCacheDebounced();
+                }
+            }
+            _pcImgHashInflight.delete(imgSrc);
+            return fp;
+        })();
+
+        _pcImgHashInflight.set(imgSrc, promise);
+        return promise;
+    }
+
+    const _HEX_POPCOUNT = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4];
+    function hammingDistanceHex(hexA, hexB) {
+        if (!hexA || !hexB || hexA.length !== 16 || hexB.length !== 16) return 64;
+        let dist = 0;
+        for (let i = 0; i < 16; i++) {
+            const xor = parseInt(hexA[i], 16) ^ parseInt(hexB[i], 16);
+            dist += _HEX_POPCOUNT[xor] || 0;
+        }
+        return dist;
+    }
+
+    function comparePoiFingerprints(fpA, fpB, isNearbyCoords = false) {
+        if (!fpA || !fpB || !fpA.h || !fpB.h || !fpA.v || !fpB.v) {
+            return { isMatch: false, similarity: 0, hamTotal: 128, rgbDiff: 255 };
+        }
+        const hamH = hammingDistanceHex(fpA.h, fpB.h);
+        const hamV = hammingDistanceHex(fpA.v, fpB.v);
+        const hamTotal = hamH + hamV; // 0 ~ 128
+
+        let rgbDiff = 0;
+        if (Array.isArray(fpA.c) && Array.isArray(fpB.c) && fpA.c.length === 9 && fpB.c.length === 9) {
+            let sumDiff = 0;
+            for (let i = 0; i < 9; i++) {
+                sumDiff += Math.abs((fpA.c[i] || 0) - (fpB.c[i] || 0));
+            }
+            rgbDiff = sumDiff / 9;
+        }
+
+        const structSim = Math.max(0, 1 - (hamTotal / 64)); // 64 bit 隨機期望距離為 64/128
+        const colorSim = Math.max(0, 1 - (rgbDiff / 110));
+        const similarity = Math.round((structSim * 0.78 + colorSim * 0.22) * 100);
+
+        // 若兩點座標在 50m 內，容許微幅裁切偏移 (hamTotal <= 20, rgbDiff <= 38)；否則採用嚴格門檻 (hamTotal <= 15, rgbDiff <= 30)
+        const maxHam = isNearbyCoords ? 20 : 15;
+        const maxRgb = isNearbyCoords ? 38 : 30;
+        const minSim = isNearbyCoords ? 84 : 88;
+
+        const isMatch = (hamTotal <= maxHam && rgbDiff <= maxRgb && similarity >= minSim);
+        return { isMatch, similarity, hamTotal, rgbDiff };
+    }
+
+    // 背景批次計算候選明信片左上角地標指紋（優先計算鄰近座標或同名候選，避免阻塞畫面）
+    async function schedulePostcardHashScan(list) {
+        if (_pcBgScanRunning || !Array.isArray(list) || list.length === 0) return;
+        const cache = getPcImgHashCache();
+
+        // 找出優先需要視覺驗證的候選卡片（例如同座標/100m內但不同名、或同名但座標較遠）
+        const priorityUrls = new Set();
+        const otherUrls = [];
+        const validItems = list.filter(it => it && !it.discontinued && it.image && it.image.startsWith('http'));
+
+        for (let i = 0; i < validItems.length; i++) {
+            const a = validItems[i];
+            const cA = parseLatLonObj(a.coords);
+            const nA = normalizeNameForDup(a.name);
+            for (let j = i + 1; j < validItems.length; j++) {
+                const b = validItems[j];
+                if (String(a.type || '菇').trim() !== String(b.type || '菇').trim()) continue;
+                const cB = parseLatLonObj(b.coords);
+                const nB = normalizeNameForDup(b.name);
+                let isCandidate = false;
+                if (cA && cB) {
+                    const d = getDistanceFromLatLonInKm(cA.lat, cA.lon, cB.lat, cB.lon);
+                    if (d <= 0.15) isCandidate = true;
+                }
+                if (!isCandidate && nA && nB && nA === nB) isCandidate = true;
+                if (isCandidate) {
+                    if (!cache[a.image]) priorityUrls.add(a.image);
+                    if (!cache[b.image]) priorityUrls.add(b.image);
+                }
+            }
+        }
+
+        validItems.forEach(it => {
+            if (!cache[it.image] && !priorityUrls.has(it.image)) {
+                otherUrls.push(it.image);
+            }
+        });
+
+        const queue = [...priorityUrls, ...otherUrls.slice(0, 60)];
+        if (queue.length === 0) return;
+
+        _pcBgScanRunning = true;
+        let newlyHashedCount = 0;
+        try {
+            for (let i = 0; i < queue.length; i += 3) {
+                const batch = queue.slice(i, i + 3);
+                const results = await Promise.all(batch.map(u => getOrComputePoiFingerprint(u)));
+                results.forEach(r => { if (r) newlyHashedCount++; });
+                // 若優先候選算完且有新指紋，先觸發一次畫面更新
+                if (i < priorityUrls.size && newlyHashedCount > 0 && (i + 3 >= priorityUrls.size)) {
+                    newlyHashedCount = 0;
+                    if (currentMode === 'postcard' || currentMode === 'goldbasin') updateView();
+                }
+                await new Promise(r => setTimeout(r, 120));
+            }
+        } finally {
+            _pcBgScanRunning = false;
+            if (newlyHashedCount > 0 && (currentMode === 'postcard' || currentMode === 'goldbasin')) {
+                updateView();
+            }
+        }
+    }
+
+    function buildPostcardDupPartners(list) {
+        const partnersMap = new Map();
+        if (!Array.isArray(list) || list.length === 0) return partnersMap;
+        const cache = getPcImgHashCache();
+        const prepared = [];
+        list.forEach(item => {
+            if (!item || item.discontinued) return;
+            const typeKey = String(item.type || '菇').trim().toLowerCase();
+            const nameNorm = normalizeNameForDup(item.name);
+            const locNorm = normalizeCountryAndCity(item.country, item.city);
+            const countryNorm = String(locNorm.country || '').trim().toLowerCase();
+            const cityNorm = String(locNorm.city || '').trim().toLowerCase();
+            const distNorm = toTW(String(item.district || '')).trim().toLowerCase();
+            const coordObj = parseLatLonObj(item.coords);
+            const actNorm = String(item.sgActivity || '').trim().toLowerCase();
+            const imgUrl = (item.image && item.image !== '無圖片' && item.image.startsWith('http')) ? item.image.trim() : '';
+            const fp = (imgUrl && cache[imgUrl] && !cache[imgUrl].invalid) ? cache[imgUrl] : null;
+            prepared.push({ item, typeKey, nameNorm, countryNorm, cityNorm, distNorm, coordObj, actNorm, imgUrl, fp });
+        });
+
+        for (let i = 0; i < prepared.length; i++) {
+            const a = prepared[i];
+            for (let j = i + 1; j < prepared.length; j++) {
+                const b = prepared[j];
+                if (a.typeKey !== b.typeKey) continue;
+
+                // 特殊金盆若不同活動名稱，且名稱也不同，不視為重複
+                if (a.typeKey === '特殊金盆' && a.actNorm && b.actNorm && a.actNorm !== b.actNorm && a.nameNorm !== b.nameNorm) {
+                    continue;
+                }
+
+                let distKm = null;
+                let distM = null;
+                if (a.coordObj && b.coordObj) {
+                    if (a.coordObj.norm && a.coordObj.norm === b.coordObj.norm) {
+                        distKm = 0;
+                        distM = 0;
+                    } else {
+                        distKm = getDistanceFromLatLonInKm(a.coordObj.lat, a.coordObj.lon, b.coordObj.lat, b.coordObj.lon);
+                        distM = Math.round(distKm * 1000);
+                    }
+                }
+
+                let reason = null;
+
+                // 規則 1：圖片網址完全相同
+                if (a.imgUrl && b.imgUrl && a.imgUrl === b.imgUrl) {
+                    reason = '同圖片網址';
+                }
+
+                // 規則 2：去重音名稱相同「且 (AND)」位於同一地點（徹底消除同座標不同名、或同名但不同座標的誤判！）
+                if (!reason && a.nameNorm && b.nameNorm && a.nameNorm === b.nameNorm) {
+                    if (distKm !== null) {
+                        // 兩張都有座標：必須距離在 100m 內；若名稱較長(>=6字，非通用短名)且同國同城同行政區，放寬至 1km 內
+                        if (distKm <= 0.1) {
+                            reason = distM === 0 ? '同名+同座標' : `同名+座標差${distM}m`;
+                        } else if (
+                            distKm <= 1.0 &&
+                            a.nameNorm.length >= 6 &&
+                            a.countryNorm && a.countryNorm === b.countryNorm &&
+                            a.cityNorm && a.cityNorm === b.cityNorm &&
+                            (!a.distNorm || !b.distNorm || a.distNorm === b.distNorm)
+                        ) {
+                            reason = '同名+同行政區';
+                        }
+                    } else {
+                        // 其中一張尚未填寫座標：需同國家且同城市（若皆無城市則名稱需 >= 4 字）
+                        const sameCountry = a.countryNorm && b.countryNorm && a.countryNorm === b.countryNorm;
+                        if (sameCountry) {
+                            if (a.cityNorm && b.cityNorm) {
+                                if (a.cityNorm === b.cityNorm && (!a.distNorm || !b.distNorm || a.distNorm === b.distNorm)) {
+                                    reason = '同名+同城市';
+                                }
+                            } else if (a.nameNorm.length >= 4) {
+                                reason = '同名+同國(缺座標)';
+                            }
+                        }
+                    }
+                }
+
+                // 規則 3：明信片「左上角地標照片區」視覺比對 (dHash + 色彩特徵)
+                // 針對座標相近 (50m 內) 但名稱不同（如不同語言/錯字），或同國家內同照片的明信片進行視覺判定
+                if (!reason && a.fp && b.fp) {
+                    const isNearby = (distKm !== null && distKm <= 0.05);
+                    const canCompareVisual = isNearby ||
+                        (distKm === null && (!a.countryNorm || !b.countryNorm || a.countryNorm === b.countryNorm)) ||
+                        (distKm !== null && distKm <= 2.0 && (!a.countryNorm || !b.countryNorm || a.countryNorm === b.countryNorm));
+                    if (canCompareVisual) {
+                        const cmp = comparePoiFingerprints(a.fp, b.fp, isNearby);
+                        if (cmp.isMatch) {
+                            reason = `圖片相似${cmp.similarity}%`;
+                        }
+                    }
+                }
+
+                if (reason) {
+                    if (!partnersMap.has(a.item.id)) partnersMap.set(a.item.id, []);
+                    if (!partnersMap.has(b.item.id)) partnersMap.set(b.item.id, []);
+                    partnersMap.get(a.item.id).push({ id: b.item.id, name: b.item.name || '未命名', provider: b.item.provider || '', reason });
+                    partnersMap.get(b.item.id).push({ id: a.item.id, name: a.item.name || '未命名', provider: a.item.provider || '', reason });
+                }
+            }
+        }
+
+        // 觸發背景指紋掃描（非阻塞）
+        setTimeout(() => schedulePostcardHashScan(list), 60);
+
+        return partnersMap;
     }
 
     function applySyncId() {
@@ -2953,6 +3409,20 @@
                         displayHtml = `<div style="color:#0f766e; font-weight:bold; margin-bottom:5px; font-size:12px;">✨ 已自動填寫：${autoFilled.join('、')}</div>` + displayHtml;
                     }
 
+                    // 3. 同時以「左上角地標照片區 dHash」比對現有明信片資料庫，提醒是否已有重複收藏
+                    try {
+                        const ocrImgSrc = imagePayload.content
+                            ? `data:image/jpeg;base64,${imagePayload.content}`
+                            : (imagePayload.source && imagePayload.source.imageUri ? imagePayload.source.imageUri : '');
+                        const ocrPrefix = resultDivId === 'post-ocr-result' ? 'post' : 'edit-post';
+                        if (ocrImgSrc) {
+                            const simHtml = await buildVisualMatchBannerHtml(ocrImgSrc, ocrPrefix);
+                            if (simHtml) {
+                                displayHtml = simHtml + displayHtml;
+                            }
+                        }
+                    } catch (e) {}
+
                     // 展示配對到的相關網頁連結，讓玩家可以手動點擊比對
                     if (webAnn && webAnn.pagesWithMatchingImages && webAnn.pagesWithMatchingImages.length > 0) {
                         const matchingUrls = webAnn.pagesWithMatchingImages.slice(0, 3).map(p => {
@@ -3150,34 +3620,130 @@
         }
     }
 
+    function applyMatchedPostcardToForm(pcId, prefix) {
+        if (typeof postcardList === 'undefined') return;
+        const match = postcardList.find(pc => pc && pc.id === pcId);
+        if (!match) return;
+        const coordsEl = document.getElementById(prefix + '-coords');
+        const nameEl = document.getElementById(prefix + '-name');
+        const cityEl = document.getElementById(prefix + '-city');
+        const countryEl = document.getElementById(prefix + '-country');
+        const distEl = document.getElementById(prefix + '-district');
+        const tagEl = document.getElementById(prefix + '-tag');
+
+        if (coordsEl && match.coords) coordsEl.value = match.coords;
+        if (nameEl && (!nameEl.value.trim() || nameEl.value.trim() === '未命名') && match.name) nameEl.value = match.name;
+        if (cityEl && match.city) cityEl.value = match.city;
+        if (countryEl && match.country) countryEl.value = match.country;
+        if (distEl && match.district) distEl.value = match.district;
+        if (tagEl && !tagEl.value.trim() && match.tag) tagEl.value = match.tag;
+
+        if (match.coords) {
+            autoDetectCountry(match.coords, prefix + '-country', prefix + '-tz-hint', prefix + '-city', prefix + '-district');
+        }
+    }
+
+    async function findVisuallySimilarPostcards(imgSrc, prefix) {
+        if (!imgSrc || imgSrc === '無圖片' || typeof postcardList === 'undefined' || postcardList.length === 0) return [];
+        const targetFp = await getOrComputePoiFingerprint(imgSrc);
+        if (!targetFp) return [];
+
+        const excludeId = (prefix === 'edit-post' && typeof currentEditingTimeId !== 'undefined') ? currentEditingTimeId : null;
+        const countryVal = toTW(document.getElementById(prefix + '-country')?.value || '').trim().toLowerCase();
+        const coordsVal = document.getElementById(prefix + '-coords')?.value || '';
+        const inputCoordObj = parseLatLonObj(coordsVal);
+
+        // 若有填國家或座標，優先為同國家的未快取明信片計算指紋（最多補算前 18 筆，確保即時回饋）
+        const cache = getPcImgHashCache();
+        const uncachedSameRegion = postcardList.filter(pc => {
+            if (!pc || pc.discontinued || pc.id === excludeId) return false;
+            if (!pc.image || !pc.image.startsWith('http') || cache[pc.image]) return false;
+            if (countryVal) {
+                const pcC = toTW(String(pc.country || '')).trim().toLowerCase();
+                return pcC === countryVal;
+            }
+            return false;
+        }).slice(0, 18);
+
+        if (uncachedSameRegion.length > 0) {
+            await Promise.all(uncachedSameRegion.map(pc => getOrComputePoiFingerprint(pc.image)));
+        }
+
+        const matches = [];
+        for (const pc of postcardList) {
+            if (!pc || pc.discontinued || pc.id === excludeId) continue;
+            if (!pc.image || !pc.image.startsWith('http')) continue;
+            const pcFp = cache[pc.image];
+            if (!pcFp || pcFp.invalid) continue;
+
+            let isNearby = false;
+            if (inputCoordObj) {
+                const pcCoord = parseLatLonObj(pc.coords);
+                if (pcCoord && getDistanceFromLatLonInKm(inputCoordObj.lat, inputCoordObj.lon, pcCoord.lat, pcCoord.lon) <= 0.1) {
+                    isNearby = true;
+                }
+            }
+            const cmp = comparePoiFingerprints(targetFp, pcFp, isNearby);
+            if (cmp.isMatch) {
+                matches.push({ pc, similarity: cmp.similarity, hamTotal: cmp.hamTotal });
+            }
+        }
+        matches.sort((a, b) => b.similarity - a.similarity || a.hamTotal - b.hamTotal);
+        return matches.slice(0, 3);
+    }
+
+    async function buildVisualMatchBannerHtml(imgSrc, prefix) {
+        const matches = await findVisuallySimilarPostcards(imgSrc, prefix);
+        if (!matches || matches.length === 0) return '';
+        const top = matches[0];
+        const pc = top.pc;
+        const locText = [toTW(pc.country || ''), toTW(pc.city || ''), toTW(pc.district || '')].filter(Boolean).join(' · ') || '未填地區';
+        const provText = pc.provider ? `（發表者：${escapeHtml(pc.provider)}）` : '';
+        const safeImg = (pc.image && pc.image.startsWith('http')) ? escapeHtml(pc.image) : '';
+        return `<div style="background:#fffbeb; border:1.5px solid #f59e0b; border-radius:8px; padding:7px 9px; margin-bottom:6px; color:#92400e; font-size:11.5px; line-height:1.45;">
+            <div style="font-weight:800; color:#b45309; margin-bottom:4px;">🖼️ 左上角地標視覺比對：發現高度相似明信片（相似度 ${top.similarity}%）！</div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                ${safeImg ? `<img src="${safeImg}" style="width:52px; height:40px; object-fit:cover; border-radius:6px; border:1px solid #fcd34d; flex-shrink:0;" onclick="openImageLightbox(this.src)">` : ''}
+                <div style="flex:1; min-width:0;">
+                    <div style="font-weight:800; color:#78350f; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(pc.name || '未命名')} ${provText}</div>
+                    <div style="font-size:10.5px; color:#92400e;">📍 ${escapeHtml(locText)} ${pc.coords ? `(${escapeHtml(pc.coords)})` : ''}</div>
+                </div>
+                ${pc.coords ? `<button type="button" onclick="applyMatchedPostcardToForm('${pc.id}', '${prefix}')" style="background:#f59e0b; color:#fff; border:none; border-radius:6px; padding:4px 8px; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap; flex-shrink:0;">📥 套用資料</button>` : ''}
+            </div>
+        </div>`;
+    }
+
+    let _visualInputCheckTimer = null;
     function checkDatabaseForImage(imageUrl, prefix) {
-        if (!imageUrl || imageUrl === '無圖片' || !imageUrl.startsWith('http')) return false;
+        const cleanUrl = (imageUrl || '').trim();
+        if (!cleanUrl || cleanUrl === '無圖片' || !cleanUrl.startsWith('http')) return false;
         if (typeof postcardList === 'undefined' || postcardList.length === 0) return false;
         
-        // 找到相同圖片且有座標的明信片
-        const match = postcardList.find(pc => pc.image && pc.image === imageUrl && pc.coords);
+        const excludeId = (prefix === 'edit-post' && typeof currentEditingTimeId !== 'undefined') ? currentEditingTimeId : null;
+        // 1. 先找完全相同圖片網址且有座標的明信片
+        const match = postcardList.find(pc => pc && pc.id !== excludeId && pc.image && pc.image.trim() === cleanUrl && pc.coords);
         if (match) {
-            document.getElementById(prefix + '-coords').value = match.coords;
-            document.getElementById(prefix + '-name').value = match.name;
-            document.getElementById(prefix + '-city').value = match.city || '';
-            document.getElementById(prefix + '-country').value = match.country || '';
-            const distEl = document.getElementById(prefix + '-district');
-            if (distEl) distEl.value = match.district || '';
-            
-            const tagEl = document.getElementById(prefix + '-tag');
-            if (tagEl) tagEl.value = match.tag || '';
-            
-            // 直接呼叫 autoDetectCountry 以確保國家與城市正確帶入（dispatchEvent('blur') 不觸發 inline onblur）
-            autoDetectCountry(match.coords, prefix + '-country', prefix + '-tz-hint', prefix + '-city', prefix + '-district');
-            
-            // 顯示提示
+            applyMatchedPostcardToForm(match.id, prefix);
             const resDiv = document.getElementById(prefix + '-ocr-result');
             if (resDiv) {
                 resDiv.style.display = 'block';
-                resDiv.innerHTML = `<div style="color:#0f766e; font-weight:bold; padding:8px; border:1px solid #10b981; background:#f0fdf4; border-radius:8px; font-size:12px; line-height:1.4;">✨ 歷史資料庫比對成功！已自動填入座標與名稱。</div>`;
+                resDiv.innerHTML = `<div style="color:#0f766e; font-weight:bold; padding:8px; border:1px solid #10b981; background:#f0fdf4; border-radius:8px; font-size:12px; line-height:1.4;">✨ 歷史資料庫比對成功（相同圖片網址）！已自動填入座標與名稱。</div>`;
             }
             return true;
         }
+
+        // 2. 若圖片網址不同，延遲 450ms 啟動「左上角地標照片區 dHash」視覺比對
+        if (_visualInputCheckTimer) clearTimeout(_visualInputCheckTimer);
+        _visualInputCheckTimer = setTimeout(async () => {
+            const bannerHtml = await buildVisualMatchBannerHtml(cleanUrl, prefix);
+            if (bannerHtml) {
+                const resDiv = document.getElementById(prefix + '-ocr-result');
+                if (resDiv) {
+                    resDiv.style.display = 'block';
+                    resDiv.innerHTML = bannerHtml;
+                }
+            }
+        }, 450);
         return false;
     }
 
@@ -3651,54 +4217,93 @@
             const tagEl = document.getElementById('post-tag'), imageEl = document.getElementById('post-image');
             const cityEl = document.getElementById('post-city');
 
-            let processedCountry = countryEl ? toTW(countryEl.value.trim()) : "";
-            if (processedCountry.includes("中華民國")) {
-                processedCountry = "台灣";
+            const addLocNorm = normalizeCountryAndCity(countryEl ? countryEl.value : "", cityEl ? cityEl.value : "");
+            let processedCountry = addLocNorm.country;
+            let processedCity = addLocNorm.city;
+
+            const nNorm = normalizeNameForDup(nameEl.value);
+            const cStr = processedCountry.toLowerCase();
+            const cityStr = processedCity.toLowerCase();
+            const distStr = toTW(document.getElementById('post-district')?.value || '').trim().toLowerCase();
+            const newCoordObj = parseLatLonObj(coordsEl.value);
+            const newImgUrl = (imageEl.value || '').trim();
+            const newTypeKey = toTW(typeEl ? typeEl.value : '菇').trim().toLowerCase();
+
+            let matchedDup = null;
+            let dupReasonText = '';
+
+            // 1. 檢查圖片網址完全相同
+            if (newImgUrl && newImgUrl !== '無圖片' && newImgUrl.startsWith('http')) {
+                matchedDup = postcardList.find(item => item && !item.discontinued && item.image && item.image.trim() === newImgUrl);
+                if (matchedDup) dupReasonText = '圖片網址與已收藏的明信片完全相同';
             }
 
-            const nStr = nameEl.value.trim().toLowerCase();
-            const cStr = processedCountry.toLowerCase();
-            const coordsStr = coordsEl.value.trim().toLowerCase();
-            
-            if (nStr || cStr || coordsStr) {
-                let dupItems = [];
-                if (coordsStr) {
-                    dupItems = postcardList.filter(item => (item.coords || '').trim().toLowerCase() === coordsStr);
-                }
-                if (dupItems.length === 0 && (nStr || cStr)) {
-                    dupItems = postcardList.filter(item => {
-                        const inStr = (item.name || '').trim().toLowerCase();
-                        const icStr = (item.country || '').trim().toLowerCase();
-                        return (nStr || cStr) && (nStr === inStr && cStr === icStr);
-                    });
-                }
+            // 2. 檢查「去重音名稱相同」且「同地點（座標 100m 內，或同國家+同城市）」
+            if (!matchedDup && nNorm) {
+                matchedDup = postcardList.find(item => {
+                    if (!item || item.discontinued) return false;
+                    if (String(item.type || '菇').trim().toLowerCase() !== newTypeKey) return false;
+                    const inNorm = normalizeNameForDup(item.name);
+                    if (!inNorm || inNorm !== nNorm) return false;
+
+                    const icObj = parseLatLonObj(item.coords);
+                    if (newCoordObj && icObj) {
+                        const distKm = getDistanceFromLatLonInKm(newCoordObj.lat, newCoordObj.lon, icObj.lat, icObj.lon);
+                        if (distKm <= 0.1) return true;
+                        const itemLoc = normalizeCountryAndCity(item.country, item.city);
+                        const icStr = String(itemLoc.country || '').toLowerCase();
+                        const iCityStr = String(itemLoc.city || '').toLowerCase();
+                        const iDistStr = toTW(String(item.district || '')).trim().toLowerCase();
+                        if (distKm <= 1.0 && nNorm.length >= 6 && cStr && cStr === icStr && cityStr && cityStr === iCityStr && (!distStr || !iDistStr || distStr === iDistStr)) {
+                            return true;
+                        }
+                        return false;
+                    } else {
+                        const itemLoc = normalizeCountryAndCity(item.country, item.city);
+                        const icStr = String(itemLoc.country || '').toLowerCase();
+                        const iCityStr = String(itemLoc.city || '').toLowerCase();
+                        if (!cStr || !icStr || cStr !== icStr) return false;
+                        if (cityStr && iCityStr) return cityStr === iCityStr;
+                        return nNorm.length >= 4;
+                    }
+                });
+                if (matchedDup) dupReasonText = '名稱（含去重音比對）與地點座標 與已收藏的明信片相同';
+            }
+
+            // 3. 檢查「左上角地標照片區 dHash」視覺相似度
+            if (!matchedDup && newImgUrl && newImgUrl !== '無圖片' && newImgUrl.startsWith('http')) {
+                try {
+                    const visualMatches = await findVisuallySimilarPostcards(newImgUrl, 'post');
+                    if (visualMatches && visualMatches.length > 0) {
+                        matchedDup = visualMatches[0].pc;
+                        dupReasonText = `明信片左上角地標照片視覺高度相似（相似度 ${visualMatches[0].similarity}%）`;
+                    }
+                } catch (e) {}
+            }
+
+            if (matchedDup) {
+                const dup = matchedDup;
+                const newImg = newImgUrl;
+                const newText = (nameEl.value.trim() || '未命名') + ' - ' + ([processedCountry, processedCity].filter(Boolean).join(' · ') || '未知');
+                const oldImg = dup.image;
+                const oldProv = dup.provider ? ` [${dup.provider}]` : '';
+                const oldText = (dup.name || '未命名') + ' - ' + ([dup.country, dup.city].filter(Boolean).join(' · ') || '未知') + oldProv;
                 
-                if (dupItems.length > 0) {
-                    const dup = dupItems[0];
-                    const isDupCoords = coordsStr && dupItems.some(i => (i.coords || '').trim().toLowerCase() === coordsStr);
-                    const reason = isDupCoords ? '此座標已有其他明信片紀錄' : '名稱＋國家 與已收藏的明信片相同';
-                    
-                    const newImg = imageEl.value.trim();
-                    const newText = (nameEl.value.trim() || '未命名') + ' - ' + (processedCountry || '未知');
-                    const oldImg = dup.image;
-                    const oldText = (dup.name || '未命名') + ' - ' + (dup.country || '未知');
-                    
-                    const proceed = await new Promise(resolve => {
-                        document.getElementById('dup-reason').innerText = reason;
-                        document.getElementById('dup-new-img').src = newImg && newImg !== "無圖片" ? newImg : 'https://placehold.co/400x300?text=No+Image';
-                        document.getElementById('dup-old-img').src = oldImg && oldImg !== "無圖片" ? oldImg : 'https://placehold.co/400x300?text=No+Image';
-                        document.getElementById('dup-new-text').innerText = newText;
-                        document.getElementById('dup-old-text').innerText = oldText;
-                        window._dupResolve = resolve;
-                        document.getElementById('dup-modal').style.display = 'flex';
-                    });
-                    
-                    if (!proceed) return;
-                }
+                const proceed = await new Promise(resolve => {
+                    document.getElementById('dup-reason').innerText = dupReasonText;
+                    document.getElementById('dup-new-img').src = newImg && newImg !== "無圖片" ? newImg : 'https://placehold.co/400x300?text=No+Image';
+                    document.getElementById('dup-old-img').src = oldImg && oldImg !== "無圖片" ? oldImg : 'https://placehold.co/400x300?text=No+Image';
+                    document.getElementById('dup-new-text').innerText = newText;
+                    document.getElementById('dup-old-text').innerText = oldText;
+                    window._dupResolve = resolve;
+                    document.getElementById('dup-modal').style.display = 'flex';
+                });
+                
+                if (!proceed) return;
             }
 
             let pushData = {
-                type: toTW(document.getElementById('post-type').value), country: processedCountry, city: cityEl ? cityEl.value.trim() : "",
+                type: toTW(document.getElementById('post-type').value), country: processedCountry, city: processedCity,
                 district: (document.getElementById('post-district')?.value || '').trim(),
                 name: nameEl.value.trim(),
                 coords: normalizeCoords(coordsEl.value), tag: tagEl.value.trim() || "", image: imageEl.value.trim() || "無圖片",
@@ -5107,10 +5712,18 @@
 
         const isMissingActive = currentSearch === '缺';
         const isNoAuthActive = currentSearch === '未授權';
+        const isDupActive = currentSearch === '重複';
+        const pcOnlyForDup = Array.isArray(postcardList) ? postcardList.filter(i => i.type !== '特殊金盆') : [];
+        const dupMapForQuick = buildPostcardDupPartners(pcOnlyForDup);
+        const dupTotalCount = dupMapForQuick.size;
         let html = `
             <button type="button" onclick="setPostcardSearch('缺')" style="padding:4px 10px; border-radius:12px; border:1px solid ${isMissingActive ? '#dc2626' : '#fca5a5'}; background:${isMissingActive ? '#dc2626' : '#fef2f2'}; font-size:12px; cursor:pointer; color:${isMissingActive ? '#ffffff' : '#b91c1c'}; font-weight:bold; transition:all 0.15s; display:inline-flex; align-items:center; gap:3px;">
                 ⚠️ 缺
             </button>
+            ${dupTotalCount > 0 ? `
+            <button type="button" onclick="setPostcardSearch('重複')" style="padding:4px 10px; border-radius:12px; border:1px solid ${isDupActive ? '#d97706' : '#fcd34d'}; background:${isDupActive ? '#d97706' : '#fffbeb'}; font-size:12px; cursor:pointer; color:${isDupActive ? '#ffffff' : '#b45309'}; font-weight:bold; transition:all 0.15s; display:inline-flex; align-items:center; gap:3px;" title="點擊篩選所有重複收藏的明信片">
+                🔄 重複 (${dupTotalCount})
+            </button>` : ''}
             <button type="button" onclick="setPostcardSearch('未授權')" style="padding:4px 10px; border-radius:12px; border:1px solid ${isNoAuthActive ? '#6d28d9' : '#ddd6fe'}; background:${isNoAuthActive ? '#6d28d9' : '#f5f3ff'}; font-size:12px; cursor:pointer; color:${isNoAuthActive ? '#ffffff' : '#6d28d9'}; font-weight:bold; transition:all 0.15s; display:inline-flex; align-items:center; gap:3px;">
                 🔑 未授權
             </button>
@@ -5392,39 +6005,20 @@
         const searchLogicInput = document.getElementById('search-logic');
         const searchLogic = searchLogicInput ? searchLogicInput.value : 'and';
 
-        // 建立重複判斷 Maps（絕版明信片不納入重複計算）
-        const nameCountryCount = {};
-        const coordNameCount = {};
-        
-        postcardList.forEach(item => {
-            if (item.discontinued) return; // 絕版不參與重複判斷
-            const t = (item.type || '').trim().toLowerCase();
-            const n = (item.name || '').trim().toLowerCase();
-            const c = (item.country || '').trim().toLowerCase();
-            const coords = (item.coords || '').trim().toLowerCase();
-            
-            if (n || c) {
-                const ncKey = t + '||' + n + '||' + c;
-                nameCountryCount[ncKey] = (nameCountryCount[ncKey] || 0) + 1;
-            }
-            if (coords) {
-                const cnKey = t + '||' + coords + '||' + n;
-                coordNameCount[cnKey] = (coordNameCount[cnKey] || 0) + 1;
-            }
-        });
-        
+        // 建立重複判斷 Map（支援歐語重音符號正規化、座標 30m 內容錯、並記錄重複對象）
+        const pcDupPartners = buildPostcardDupPartners(postcardList);
         const checkIsDuplicate = (item) => {
-            if (item.discontinued) return false; // 絕版明信片不顯示重複標記
-            const t = (item.type || '').trim().toLowerCase();
-            const n = (item.name || '').trim().toLowerCase();
-            const c = (item.country || '').trim().toLowerCase();
-            const coords = (item.coords || '').trim().toLowerCase();
-            
-            const ncKey = t + '||' + n + '||' + c;
-            const isNcDuplicate = (n || c) && nameCountryCount[ncKey] > 1;
-            const isCoordNameDuplicate = coords && coordNameCount[t + '||' + coords + '||' + n] > 1;
-            
-            return isNcDuplicate || isCoordNameDuplicate;
+            if (!item || item.discontinued) return false;
+            return pcDupPartners.has(item.id);
+        };
+        const getPcDupBadgeHtml = (item) => {
+            if (!checkIsDuplicate(item)) return '';
+            const partners = pcDupPartners.get(item.id) || [];
+            const detail = partners.slice(0, 2).map(p => {
+                const prov = p.provider ? `(${escapeHtml(p.provider)})` : '';
+                return `「${escapeHtml(p.name)}」${prov} [${p.reason}]`;
+            }).join('、');
+            return `<div style="color:#b45309; font-size:10px; font-weight:bold; background:#fef3c7; padding:3px 6px; border-radius:5px; border:1px dashed #f59e0b; line-height:1.35;">⚠️ 重複收藏${detail ? `：與 ${detail}` : ''}</div>`;
         };
 
         const filteredPc = [...postcardList].map(item => {
@@ -5835,7 +6429,7 @@
             }
 
             const isDuplicate = checkIsDuplicate(item);
-            const dupBadge = isDuplicate ? `<div style="color:#b45309; font-size:10px; font-weight:bold; background:#fef3c7; padding:2px 6px; border-radius:5px; border:1px dashed #f59e0b; text-align:center;">⚠️ 重複收藏</div>` : '';
+            const dupBadge = getPcDupBadgeHtml(item);
             let distBadge = '';
             if (searchCoords && item._dist <= 1) {
                 const distText = item._dist < 1 ? (item._dist * 1000).toFixed(0) + ' m' : item._dist.toFixed(1) + ' km';
@@ -5977,7 +6571,7 @@
             let timeHtml = '';
 
             const isDuplicate = checkIsDuplicate(item);
-            const dupBadge = isDuplicate ? `<div style="color: #b45309; font-size: 10px; font-weight: bold; margin-top: 4px; background: #fef3c7; padding: 4px 6px; border-radius: 4px; border: 1px dashed #f59e0b; text-align: center;">⚠️ 重複收藏</div>` : '';
+            const dupBadge = getPcDupBadgeHtml(item);
             let distBadge = '';
             if (searchCoords && item._dist <= 1) {
                 const distText = item._dist < 1 ? (item._dist * 1000).toFixed(0) + ' m' : item._dist.toFixed(1) + ' km';
@@ -6084,9 +6678,11 @@
                 let hasClaimableGroup = false;
                 let groupCollectedCount = 0;
                 let groupCoordCount = 0;
+                let groupDupCount = 0;
                 pcGroups[type].forEach(item => {
                     if (favSetForGroup.has(item.id)) groupCollectedCount++;
                     if (item.coords && String(item.coords).trim()) groupCoordCount++;
+                    if (checkIsDuplicate(item)) groupDupCount++;
                     if ((item.tag || '').includes('缺') || (item.name || '').includes('缺') || (item.note || '').includes('缺') || (item.user || '').includes('缺') || (item.missingFields && item.missingFields.length > 0)) {
                         hasMissingGroup = true;
                     }
@@ -6102,6 +6698,7 @@
                     groupReminders += ` <span style="background:${allCol ? '#dcfce7' : '#fef3c7'}; color:${allCol ? '#15803d' : '#92400e'}; border:1px solid ${allCol ? '#86efac' : '#fde68a'}; font-size:11.5px; font-weight:800; padding:2px 8px; border-radius:999px;">⭐ 已收 ${groupCollectedCount}/${pcGroups[type].length}</span>`;
                 }
                 if (hasMissingGroup) groupReminders += ' <span style="color:#dc2626; font-size:11.5px; font-weight:bold; background:#fef2f2; border:1px solid #fca5a5; padding:2px 8px; border-radius:999px;">⚠️ 缺</span>';
+                if (groupDupCount > 0) groupReminders += ` <span style="color:#b45309; font-size:11.5px; font-weight:bold; background:#fffbeb; border:1px solid #fcd34d; padding:2px 8px; border-radius:999px;">🔄 重複 ${groupDupCount}</span>`;
                 if (hasClaimableGroup) groupReminders += ' <span style="color:#d97706; font-size:11.5px; font-weight:bold; background:#fffbeb; border:1px solid #fcd34d; padding:2px 8px; border-radius:999px;">🎁 可拿</span>';
 
                 const groupCopyBtn = (!isGoldbasinMode && groupCoordCount > 0)
