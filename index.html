@@ -30,7 +30,7 @@
     <script src="https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js"></script>
     <style>
         html {
-            overflow-x: hidden;
+            overflow-x: clip;
         }
         :root {
             --primary: #10b981; 
@@ -50,7 +50,7 @@
             padding: 0;
             padding-bottom: 70px;
             width: 100%;
-            overflow-x: hidden;
+            overflow-x: clip;
             box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
         }
@@ -88,7 +88,7 @@
             width: 100%;
             margin: 0 auto;
             box-sizing: border-box;
-            overflow-x: hidden;
+            overflow-x: clip;
         }
         .view-section {
             display: none;
@@ -2938,7 +2938,7 @@
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 12px;
-            padding: 7px 10px;
+            padding: 7px 10px 9px 10px;
             margin-top: 8px;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
             display: flex;
@@ -2947,39 +2947,115 @@
             gap: 6px;
             cursor: pointer;
             user-select: none;
+            position: relative;
+            overflow: hidden;
             transition: background 0.15s, box-shadow 0.15s;
         }
         .pc-group-banner:hover {
             background: #f8fafc;
             box-shadow: 0 2px 6px rgba(15, 23, 42, 0.07);
         }
+        .pc-group-banner.is-expanded {
+            position: sticky;
+            top: 46px;
+            z-index: 25;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 3px 10px rgba(15, 23, 42, 0.09);
+        }
+        .pc-filter-drawer {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+        .pc-filter-drawer.collapsed {
+            display: none !important;
+        }
+        /* 三欄圖牆模式 (Gallery / Wall Mode) */
+        #postcard-container.pc-wall-mode {
+            grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+            gap: 8px;
+        }
+        #postcard-container.pc-wall-mode .card-img-box {
+            padding-bottom: 82%;
+        }
+        #postcard-container.pc-wall-mode .card-badge-type,
+        #postcard-container.pc-wall-mode .pc-card-subname,
+        #postcard-container.pc-wall-mode .pc-loc-line,
+        #postcard-container.pc-wall-mode .pc-meta-row,
+        #postcard-container.pc-wall-mode .pc-dup-detail-box,
+        #postcard-container.pc-wall-mode .pc-missing-box,
+        #postcard-container.pc-wall-mode .pc-wall-hide {
+            display: none !important;
+        }
+        #postcard-container.pc-wall-mode .pc-card-body {
+            padding: 5px 6px !important;
+            gap: 3px !important;
+        }
+        #postcard-container.pc-wall-mode .pc-card-title {
+            font-size: 11px !important;
+            line-height: 1.25 !important;
+            min-height: 1.25em !important;
+            -webkit-line-clamp: 1 !important;
+            white-space: nowrap !important;
+            text-overflow: ellipsis !important;
+        }
+        #postcard-container.pc-wall-mode .pc-top-actions-overlay {
+            top: 4px;
+            right: 4px;
+            gap: 2px;
+        }
+        #postcard-container.pc-wall-mode .pc-top-actions-overlay .card-star-btn,
+        #postcard-container.pc-wall-mode .pc-top-actions-overlay .card-fav-btn {
+            width: 20px !important;
+            height: 20px !important;
+            font-size: 10px !important;
+        }
+        #postcard-container.pc-wall-mode .pc-card-actions {
+            gap: 3px !important;
+            padding-top: 2px !important;
+        }
+        #postcard-container.pc-wall-mode .pc-card-actions .btn-sm {
+            padding: 3px 2px !important;
+            font-size: 10px !important;
+            flex: 1 !important;
+        }
         @media (max-width: 640px) {
+            .fab {
+                width: 46px;
+                height: 46px;
+                font-size: 24px;
+                bottom: 72px;
+                right: 14px;
+                opacity: 0.92;
+            }
+            #postcard-container.pc-wall-mode {
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+                gap: 6px !important;
+            }
             .pc-filter-selects-row {
                 display: grid !important;
-                grid-template-columns: repeat(6, minmax(0, 1fr));
-                gap: 6px;
+                grid-template-columns: 1.15fr 1.15fr 1.15fr 0.9fr;
+                gap: 5px;
+            }
+            .pc-filter-selects-row #postcard-filter {
+                display: none !important;
             }
             .pc-filter-selects-row #postcard-country-filter,
-            .pc-filter-selects-row #postcard-city-filter {
-                grid-column: span 3;
-                min-width: 0 !important;
-                width: 100%;
-                padding: 6px 6px !important;
-                font-size: 12px !important;
-            }
-            .pc-filter-selects-row #postcard-filter,
+            .pc-filter-selects-row #postcard-city-filter,
             .pc-filter-selects-row #postcard-recent-filter,
             .pc-filter-selects-row #search-logic {
-                grid-column: span 2;
                 min-width: 0 !important;
                 width: 100% !important;
-                padding: 6px 5px !important;
-                font-size: 12px !important;
+                padding: 5px 4px !important;
+                font-size: 11.5px !important;
             }
-            .pc-search-toolbar-row {
-                flex-direction: column;
-                align-items: stretch !important;
-                gap: 6px;
+            .pc- toolbar-btns {
+                display: grid !important;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 5px;
+                width: 100%;
             }
             .pc-toolbar-btns {
                 display: grid !important;
@@ -2991,26 +3067,26 @@
                 width: 100%;
                 justify-content: center !important;
                 text-align: center;
-                padding: 6px 4px !important;
+                padding: 5px 4px !important;
                 font-size: 11.5px !important;
                 border-radius: 8px !important;
                 box-sizing: border-box;
             }
             #postcard-quick-tags {
                 flex-wrap: wrap !important;
-                gap: 5px !important;
+                gap: 4px !important;
                 padding-bottom: 1px;
             }
             #postcard-quick-tags > button {
-                padding: 3.5px 8.5px !important;
-                font-size: 11.5px !important;
+                padding: 3px 8px !important;
+                font-size: 11px !important;
                 border-radius: 10px !important;
             }
             .pc-group-banner {
-                padding: 6px 8px;
+                padding: 5.5px 7px 7.5px 7px;
                 margin-top: 6px;
                 border-radius: 11px;
-                gap: 5px;
+                gap: 4px;
             }
             .pc-only-desktop {
                 display: none !important;
@@ -3118,49 +3194,57 @@
             <!-- 頂部 4 格互動統計儀表板 -->
             <div id="postcard-stats" class="pc-stats-grid" style="display:none;"></div>
 
-            <div style="background:var(--card-bg); padding:10px 12px; border-radius:14px; margin-bottom:10px; box-shadow:0 2px 6px rgba(15,23,42,0.05); border:1px solid #e2e8f0; display:flex; flex-direction:column; gap:8px;">
-                <!-- 第一排：國家 / 城市 / 收藏狀態 / 時間 / 邏輯 -->
-                <div class="pc-filter-selects-row">
-                    <select id="postcard-country-filter" class="input-base filter-select" onchange="onPostcardCountryChange()" style="padding:5px 8px; font-size:12.5px; flex:1; min-width:105px;">
-                        <option value="">🌍 全部國家</option>
-                    </select>
-                    <select id="postcard-city-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:12.5px; flex:1; min-width:105px;">
-                        <option value="">🏙️ 全部城市</option>
-                    </select>
-                    <select id="postcard-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:12.5px; flex:1; min-width:105px;">
-                        <option value="all">📚 全部明信片</option>
-                        <option value="collected">⭐ 我的收藏</option>
-                        <option value="uncollected">✰ 尚未收藏</option>
-                        <option value="fav">❤️ 我的最愛</option>
-                    </select>
-                    <select id="postcard-recent-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:12.5px; flex:1; min-width:105px;">
-                        <option value="all">🕒 時間不限</option>
-                        <option value="1">最近 1 天新增</option>
-                        <option value="3">最近 3 天新增</option>
-                        <option value="7">最近 7 天新增</option>
-                        <option value="14">最近 14 天新增</option>
-                    </select>
-                    <select id="search-logic" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:12.5px; flex:0 0 auto; width:auto; min-width:82px;">
-                        <option value="and">且 (全符)</option>
-                        <option value="or">或 (任一)</option>
-                    </select>
-                </div>
-                
-                <!-- 第二排：搜尋列 + 清除 + 展開/折疊/複製座標/圖床連結 -->
-                <div class="pc-search-toolbar-row">
-                    <div style="position:relative; flex:1; min-width:170px; display:flex; align-items:center;">
+            <div style="background:var(--card-bg); padding:9px 11px; border-radius:14px; margin-bottom:9px; box-shadow:0 2px 6px rgba(15,23,42,0.05); border:1px solid #e2e8f0; display:flex; flex-direction:column; gap:7px;">
+                <!-- 常駐頂列：搜尋框 + 檢視模式切換 (雙欄/三欄圖牆) + 篩選面板收合鈕 -->
+                <div style="display:flex; gap:5px; align-items:center;">
+                    <div style="position:relative; flex:1; min-width:0; display:flex; align-items:center;">
                         <input type="text" id="postcard-search" class="input-base search-input" style="width:100%; min-width:0; padding:6px 26px 6px 10px; font-size:13px;" oninput="updateView()" onchange="updateView()" onkeyup="updateView()" placeholder="🔍 搜尋名稱、發表者、座標、標籤...">
                         <button type="button" id="postcard-search-clear" onclick="document.getElementById('postcard-search').value=''; updateView();" title="清除搜尋" style="display:none; position:absolute; right:6px; background:none; border:none; color:#94a3b8; font-size:13px; cursor:pointer; padding:2px 4px; line-height:1;">✕</button>
                     </div>
+                    <button type="button" id="pc-layout-toggle-btn" onclick="togglePcViewLayout()" title="切換雙欄標準卡片 / 三欄純圖牆模式" style="flex-shrink:0; background:#f0f9ff; border:1px solid #bae6fd; border-radius:9px; padding:6px 8px; cursor:pointer; font-size:11.5px; font-weight:800; color:#0369a1; white-space:nowrap; display:inline-flex; align-items:center; gap:3px;">▦ 圖牆</button>
+                    <button type="button" id="pc-drawer-toggle-btn" onclick="togglePcFilterDrawer()" title="收合或展開進階篩選與工具列" style="flex-shrink:0; background:#f8fafc; border:1px solid #cbd5e1; border-radius:9px; padding:6px 8px; cursor:pointer; font-size:11.5px; font-weight:800; color:#475569; white-space:nowrap; display:inline-flex; align-items:center; gap:2px;">🔼 收合</button>
+                </div>
+
+                <!-- 可收合的進階篩選與工具抽屜 -->
+                <div id="pc-filter-drawer" class="pc-filter-drawer">
+                    <!-- 國家 / 城市 / 時間 / 邏輯 (手機版單排 4 格，自動隱藏與上方統計卡重複的收藏下拉) -->
+                    <div class="pc-filter-selects-row">
+                        <select id="postcard-country-filter" class="input-base filter-select" onchange="onPostcardCountryChange()" style="padding:5px 8px; font-size:12.5px; flex:1; min-width:105px;">
+                            <option value="">🌍 全部國家</option>
+                        </select>
+                        <select id="postcard-city-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:12.5px; flex:1; min-width:105px;">
+                            <option value="">🏙️ 全部城市</option>
+                        </select>
+                        <select id="postcard-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:12.5px; flex:1; min-width:105px;">
+                            <option value="all">📚 全部明信片</option>
+                            <option value="collected">⭐ 我的收藏</option>
+                            <option value="uncollected">✰ 尚未收藏</option>
+                            <option value="fav">❤️ 我的最愛</option>
+                        </select>
+                        <select id="postcard-recent-filter" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:12.5px; flex:1; min-width:105px;">
+                            <option value="all">🕒 時間不限</option>
+                            <option value="1">最近 1 天</option>
+                            <option value="3">最近 3 天</option>
+                            <option value="7">最近 7 天</option>
+                            <option value="14">最近 14 天</option>
+                        </select>
+                        <select id="search-logic" class="input-base filter-select" onchange="updateView()" style="padding:5px 8px; font-size:12.5px; flex:0 0 auto; width:auto; min-width:82px;">
+                            <option value="and">且 (全符)</option>
+                            <option value="or">或 (任一)</option>
+                        </select>
+                    </div>
+
+                    <!-- 工具列：全展開 / 全折疊 / 複製座標 / 前往圖床 -->
                     <div class="pc-toolbar-btns">
                         <button type="button" onclick="expandAllPostcardGroups()" title="展開所有明信片分類" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:5px 8px; cursor:pointer; font-size:11.5px; font-weight:700; color:#334155; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center;">📂 全展開</button>
                         <button type="button" onclick="collapseAllPostcardGroups()" title="全部折疊以節省流量" style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:5px 8px; cursor:pointer; font-size:11.5px; font-weight:700; color:#64748b; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center;">📁 全折疊</button>
                         <button type="button" id="pc-batch-copy-top-btn" onclick="copyFilteredPostcardCoords(this)" title="複製目前篩選出的所有明信片座標" style="background:#eff6ff; border:1px solid #93c5fd; border-radius:8px; padding:5px 8px; cursor:pointer; font-size:11.5px; font-weight:800; color:#1d4ed8; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center; gap:2px;">📋 座標</button>
                         <a href="https://meee.com.tw/" target="_blank" title="前往 Meee 免費圖床上傳明信片圖片" style="background:linear-gradient(135deg,#0ea5e9,#2563eb); border:none; border-radius:9px; padding:6px 10px; font-size:12px; font-weight:800; color:#ffffff; text-decoration:none; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center; gap:3px; box-shadow:0 2px 8px rgba(37,99,235,0.28);">🖼️ 圖床 ↗</a>
                     </div>
+
+                    <!-- 動態常用標籤推薦按鈕 -->
+                    <div id="postcard-quick-tags" style="display:flex; flex-wrap:wrap; gap:5px; margin-top:1px; align-items:center;"></div>
                 </div>
-                <!-- 第三排：動態常用標籤推薦按鈕 -->
-                <div id="postcard-quick-tags" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:1px; align-items:center;"></div>
             </div>
             <div id="postcard-container" class="grid"></div>
             <div id="postcard-empty" class="empty-message" style="display: none;">目前沒有符合條件的明信片項目</div>
@@ -4438,8 +4522,8 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.10.27.1902";</script>
-    <script src="js/main.js?v=2026.10.27.1902"></script>
+    <script>const APP_VERSION = "2026.10.27.1914";</script>
+    <script src="js/main.js?v=2026.10.27.1914"></script>
     <script src="js/autofill.js?v=202610230026"></script>
 </body>
 </html>

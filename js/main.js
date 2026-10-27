@@ -1,5 +1,5 @@
 // JS logic begins
-    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.27.1902";
+    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.27.1914";
 
     // 自動清理網址列上的版本號參數，保持網址乾淨漂亮 (例如保持為 https://tdagold-leo.github.io/Pikmin/)
     if (window.location.search && (window.location.search.includes('v=') || window.location.search.includes('_t='))) {
@@ -5121,11 +5121,58 @@
     }
 
     function toggleGroup(groupId) {
-        if (collapsedGroups.has(groupId)) collapsedGroups.delete(groupId);
-        else collapsedGroups.add(groupId);
+        const isFolding = !collapsedGroups.has(groupId);
+        if (isFolding) collapsedGroups.add(groupId);
+        else collapsedGroups.delete(groupId);
         updateView();
+        if (isFolding && String(groupId).startsWith('post-')) {
+            setTimeout(() => {
+                const el = document.querySelector(`[data-group-id="${CSS.escape(groupId)}"]`);
+                if (el) {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.top < 52 || rect.bottom > window.innerHeight) {
+                        window.scrollTo({ top: Math.max(0, window.scrollY + rect.top - 58), behavior: 'smooth' });
+                    }
+                }
+            }, 65);
+        }
     }
     window.toggleGroup = toggleGroup;
+
+    function syncPcLayoutAndDrawerUI() {
+        const isWall = localStorage.getItem('pikmin_pc_layout') === 'wall';
+        const isDrawerCol = localStorage.getItem('pikmin_pc_drawer_collapsed') === '1';
+        const pcContainer = document.getElementById('postcard-container');
+        const layoutBtn = document.getElementById('pc-layout-toggle-btn');
+        const drawerEl = document.getElementById('pc-filter-drawer');
+        const drawerBtn = document.getElementById('pc-drawer-toggle-btn');
+        if (pcContainer) pcContainer.classList.toggle('pc-wall-mode', isWall);
+        if (layoutBtn) {
+            layoutBtn.innerHTML = isWall ? '⊞ 雙欄' : '▦ 圖牆';
+            layoutBtn.style.background = isWall ? 'linear-gradient(135deg,#0284c7,#2563eb)' : '#f0f9ff';
+            layoutBtn.style.color = isWall ? '#ffffff' : '#0369a1';
+            layoutBtn.style.borderColor = isWall ? '#0284c7' : '#bae6fd';
+        }
+        if (drawerEl) drawerEl.classList.toggle('collapsed', isDrawerCol);
+        if (drawerBtn) {
+            drawerBtn.innerHTML = isDrawerCol ? '🔽 篩選' : '🔼 收合';
+            drawerBtn.style.background = isDrawerCol ? '#eff6ff' : '#f8fafc';
+            drawerBtn.style.color = isDrawerCol ? '#1d4ed8' : '#475569';
+            drawerBtn.style.borderColor = isDrawerCol ? '#93c5fd' : '#cbd5e1';
+        }
+    }
+
+    window.togglePcViewLayout = function() {
+        const cur = localStorage.getItem('pikmin_pc_layout') === 'wall';
+        localStorage.setItem('pikmin_pc_layout', cur ? 'card' : 'wall');
+        syncPcLayoutAndDrawerUI();
+    };
+
+    window.togglePcFilterDrawer = function() {
+        const cur = localStorage.getItem('pikmin_pc_drawer_collapsed') === '1';
+        localStorage.setItem('pikmin_pc_drawer_collapsed', cur ? '0' : '1');
+        syncPcLayoutAndDrawerUI();
+    };
 
     let currentFilteredPostcards = [];
 
@@ -6074,7 +6121,7 @@
                 const prov = p.provider ? `(${escapeHtml(p.provider)})` : '';
                 return `「${escapeHtml(p.name)}」${prov} [${p.reason}]`;
             }).join('、');
-            return `<div style="color:#b45309; font-size:10px; font-weight:bold; background:#fef3c7; padding:3px 6px; border-radius:5px; border:1px dashed #f59e0b; line-height:1.35;">⚠️ 重複收藏${detail ? `：與 ${detail}` : ''}</div>`;
+            return `<div class="pc-dup-detail-box" style="color:#b45309; font-size:10px; font-weight:bold; background:#fef3c7; padding:3px 6px; border-radius:5px; border:1px dashed #f59e0b; line-height:1.35;">⚠️ 重複收藏${detail ? `：與 ${detail}` : ''}</div>`;
         };
 
         const filteredPc = [...postcardList].map(item => {
@@ -6217,6 +6264,7 @@
             }
 
             currentFilteredPostcards = filteredPc;
+            syncPcLayoutAndDrawerUI();
 
             // 更新工具列上的「📋 座標」按鈕筆數
             const topCopyBtn = document.getElementById('pc-batch-copy-top-btn');
@@ -6577,10 +6625,10 @@
                     ${(providerHtml || tagPillHtml || authPillHtml) ? `<div class="pc-meta-row">${providerHtml}${tagPillHtml}${authPillHtml}</div>` : ''}
                     ${dupBadge}
                     ${distBadge}
-                    ${item.missingFields && item.missingFields.length > 0 ? `<div style="color:#ef4444; font-size:10px; font-weight:bold; background:#fee2e2; padding:2px 6px; border-radius:5px; border:1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>` : ''}
+                    ${item.missingFields && item.missingFields.length > 0 ? `<div class="pc-missing-box" style="color:#ef4444; font-size:10px; font-weight:bold; background:#fee2e2; padding:2px 6px; border-radius:5px; border:1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>` : ''}
                     ${timeSetRow}
                     <div class="card-actions pc-card-actions" style="display:flex; gap:4px; margin-top:auto; padding-top:4px;">
-                        <button class="btn-sm btn-default" style="flex:1.2; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:800;" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)" title="複製座標">📍 複製</button>
+                        <button class="btn-sm btn-default" style="flex:1.2; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:800;" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)" title="複製座標">📍<span class="pc-wall-hide"> 複製</span></button>
                         ${item.coords ? `<button class="btn-sm btn-default" style="flex:0.8; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}')" title="在地圖上查看">🗺️<span class="pc-only-desktop"> 地圖</span></button>` : ''}
                         ${timerActBtn}
                         <button class="btn-sm btn-edit" style="flex:0 0 auto; padding:5px 7px;" onclick="openTimeModalById('${item.id}', 'postcard')" title="修改明信片">✏️</button>
@@ -6738,7 +6786,8 @@
                 isCol = collapsedGroups.has(groupId);
                 const arrow = isCol ? '▶' : '▼';
                 const gHead = document.createElement('div');
-                gHead.className = 'pc-group-banner';
+                gHead.className = `pc-group-banner${!isCol ? ' is-expanded' : ''}`;
+                gHead.setAttribute('data-group-id', groupId);
 
                 let hash = 0;
                 for (let i = 0; i < type.length; i++) hash = type.charCodeAt(i) + ((hash << 5) - hash);
@@ -6767,28 +6816,36 @@
                     }
                 });
 
+                const totalInGroup = pcGroups[type].length;
+                const allCol = groupCollectedCount === totalInGroup && totalInGroup > 0;
+                const colPct = totalInGroup > 0 ? Math.min(100, Math.round((groupCollectedCount / totalInGroup) * 100)) : 0;
+
                 let groupReminders = '';
                 if (!isGoldbasinMode) {
-                    const allCol = groupCollectedCount === pcGroups[type].length && pcGroups[type].length > 0;
-                    groupReminders += `<span style="background:${allCol ? '#dcfce7' : '#fef3c7'}; color:${allCol ? '#15803d' : '#92400e'}; border:1px solid ${allCol ? '#86efac' : '#fde68a'}; font-size:11px; font-weight:800; padding:2px 6px; border-radius:999px; white-space:nowrap; flex-shrink:0;" title="已收藏 ${groupCollectedCount} / 共 ${pcGroups[type].length} 筆">⭐ <span class="pc-only-desktop">已收 </span>${groupCollectedCount}/${pcGroups[type].length}</span>`;
+                    groupReminders += `<span style="background:${allCol ? '#dcfce7' : '#fef3c7'}; color:${allCol ? '#15803d' : '#92400e'}; border:1px solid ${allCol ? '#86efac' : '#fde68a'}; font-size:10.5px; font-weight:800; padding:1.5px 5.5px; border-radius:999px; white-space:nowrap; flex-shrink:0;" title="已收藏 ${groupCollectedCount} / 共 ${totalInGroup} 筆 (${colPct}%)">⭐<span class="pc-only-desktop"> 已收</span> ${groupCollectedCount}/${totalInGroup}</span>`;
                 }
-                if (hasMissingGroup) groupReminders += `<span style="color:#dc2626; font-size:11px; font-weight:800; background:#fef2f2; border:1px solid #fca5a5; padding:2px 6px; border-radius:999px; white-space:nowrap; flex-shrink:0;" title="含有缺漏資料">⚠️缺</span>`;
-                if (groupDupCount > 0) groupReminders += `<span style="color:#b45309; font-size:11px; font-weight:800; background:#fffbeb; border:1px solid #fcd34d; padding:2px 6px; border-radius:999px; white-space:nowrap; flex-shrink:0;" title="含有 ${groupDupCount} 筆重複收藏">🔄<span class="pc-only-desktop"> 重複</span> ${groupDupCount}</span>`;
-                if (hasClaimableGroup) groupReminders += `<span style="color:#d97706; font-size:11px; font-weight:800; background:#fffbeb; border:1px solid #fcd34d; padding:2px 6px; border-radius:999px; white-space:nowrap; flex-shrink:0;">🎁可拿</span>`;
+                if (hasMissingGroup) groupReminders += `<span style="color:#dc2626; font-size:10.5px; font-weight:800; background:#fef2f2; border:1px solid #fca5a5; padding:1.5px 5px; border-radius:999px; white-space:nowrap; flex-shrink:0;" title="含有缺漏資料">⚠️缺</span>`;
+                if (groupDupCount > 0) groupReminders += `<span style="color:#b45309; font-size:10.5px; font-weight:800; background:#fffbeb; border:1px solid #fcd34d; padding:1.5px 5px; border-radius:999px; white-space:nowrap; flex-shrink:0;" title="含有 ${groupDupCount} 筆重複收藏">🔄<span class="pc-only-desktop"> 重複</span>${groupDupCount}</span>`;
+                if (hasClaimableGroup) groupReminders += `<span style="color:#d97706; font-size:10.5px; font-weight:800; background:#fffbeb; border:1px solid #fcd34d; padding:1.5px 5px; border-radius:999px; white-space:nowrap; flex-shrink:0;">🎁可拿</span>`;
 
                 const groupCopyBtn = (!isGoldbasinMode && groupCoordCount > 0)
-                    ? `<button type="button" onclick="copyPostcardTypeCoords('${escapeHtml(type).replace(/'/g, "\\'")}', event)" style="flex-shrink:0; background:#f8fafc; color:#334155; border:1px solid #cbd5e1; border-radius:999px; padding:3.5px 8px; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap;" title="複製此分類所有明信片座標 (${groupCoordCount} 筆)">📋 <span class="pc-only-desktop">座標 </span>(${groupCoordCount})</button>`
+                    ? `<button type="button" onclick="copyPostcardTypeCoords('${escapeHtml(type).replace(/'/g, "\\'")}', event)" style="flex-shrink:0; background:#f8fafc; color:#334155; border:1px solid #cbd5e1; border-radius:999px; padding:3px 7px; font-size:10.5px; font-weight:800; cursor:pointer; white-space:nowrap;" title="複製此分類所有明信片座標 (${groupCoordCount} 筆)">📋<span class="pc-only-desktop"> 座標 </span>(${groupCoordCount})</button>`
+                    : '';
+
+                const progressBarHtml = (!isGoldbasinMode && totalInGroup > 0)
+                    ? `<div style="position:absolute; left:0; bottom:0; width:100%; height:2.5px; background:#f1f5f9; pointer-events:none;"><div style="height:100%; width:${colPct}%; background:${allCol ? '#22c55e' : '#f59e0b'}; transition:width 0.25s;"></div></div>`
                     : '';
 
                 gHead.innerHTML = `
-                    <div class="pc-group-badges-scroll" style="display:flex; align-items:center; gap:5px; min-width:0; flex:1; overflow-x:auto; scrollbar-width:none;">
-                        <div style="background:${pastelBg}; border:1px solid ${borderColor}; color:${darkText}; padding:3.5px 9px; border-radius:9px; display:inline-flex; align-items:center; gap:5px; font-size:13.5px; font-weight:800; white-space:nowrap; flex-shrink:0;">
-                            <span>${arrow} 📂 ${escapeHtml(type)}</span>
-                            <span style="background:rgba(255,255,255,0.82); padding:1px 6px; border-radius:7px; font-size:11.5px; font-weight:900;">${pcGroups[type].length}<span class="pc-only-desktop"> 筆</span></span>
+                    <div class="pc-group-badges-scroll" style="display:flex; align-items:center; gap:4px; min-width:0; flex:1; overflow-x:auto; scrollbar-width:none;">
+                        <div style="background:${pastelBg}; border:1px solid ${borderColor}; color:${darkText}; padding:3px 8px; border-radius:9px; display:inline-flex; align-items:center; gap:4px; font-size:13px; font-weight:800; white-space:nowrap; flex-shrink:0;">
+                            <span>${arrow} ${escapeHtml(type)}</span>
+                            <span style="background:rgba(255,255,255,0.85); padding:0.5px 5.5px; border-radius:7px; font-size:11px; font-weight:900;">${totalInGroup}<span class="pc-only-desktop"> 筆</span></span>
                         </div>
                         ${groupReminders}
                     </div>
                     ${groupCopyBtn}
+                    ${progressBarHtml}
                 `;
 
                 gHead.addEventListener('click', () => toggleGroup(groupId));
