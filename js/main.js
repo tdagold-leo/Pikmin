@@ -1,5 +1,5 @@
 // JS logic begins
-    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.28.2102";
+    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.28.2212";
 
     // 自動清理網址列上的版本號參數，保持網址乾淨漂亮 (例如保持為 https://tdagold-leo.github.io/Pikmin/)
     if (window.location.search && (window.location.search.includes('v=') || window.location.search.includes('_t='))) {
@@ -3258,46 +3258,148 @@
             incrementVisionUsage();
 
             if (data.responses && data.responses[0] && data.responses[0].textAnnotations && data.responses[0].textAnnotations.length > 0) {
+                const isPostcard = resultDivId.includes('post-ocr-result');
+                const isMushroom = resultDivId.includes('mush-ocr-result');
+
+                const page = data.responses[0].fullTextAnnotation && data.responses[0].fullTextAnnotation.pages ? data.responses[0].fullTextAnnotation.pages[0] : null;
                 const allXs = data.responses[0].textAnnotations.slice(1).flatMap(ann => ann.boundingPoly && ann.boundingPoly.vertices ? ann.boundingPoly.vertices.map(v => v.x || 0) : []);
+                const allYs = data.responses[0].textAnnotations.slice(1).flatMap(ann => ann.boundingPoly && ann.boundingPoly.vertices ? ann.boundingPoly.vertices.map(v => v.y || 0) : []);
                 const maxX = Math.max(...allXs, 1);
-                
+                const maxY = Math.max(...allYs, 1);
+                let imgW = (page && page.width) ? page.width : maxX;
+                let imgH = (page && page.height) ? page.height : maxY;
+                if (imgH < imgW * 0.5) imgH = Math.max(imgH, Math.round(imgW * 0.67));
+
                 let extractedLines = [];
-                if (data.responses[0].fullTextAnnotation && data.responses[0].fullTextAnnotation.pages) {
-                    for (const block of data.responses[0].fullTextAnnotation.pages[0].blocks) {
-                        const box = block.boundingBox;
-                        if (box && box.vertices) {
-                            const minX = Math.min(...box.vertices.map(v => v.x || 0));
-                            if (minX < maxX * 0.6) { 
-                                let blockText = "";
-                                for (const paragraph of block.paragraphs) {
+
+                if (isPostcard) {
+                    // ===== 明信片專屬：嚴格只辨識「左上角」地標照片標題區，徹底排除右側郵票、Pikmin Bloom 商標與下方皮克敏 =====
+                    // 皮克敏明信片版型：左側地標照片約佔 0~60% 寬度，標題與下行名稱必定座落於左上角 (X <= 58% 寬度、Y <= 45% 高度)
+                    const isJunkPostcardText = (str) => {
+                        const clean = (str || '').replace(/[\s\-_]+/g, '').toLowerCase();
+                        return clean.includes('pikmin') || clean.includes('bloom') || clean.includes('niantic');
+                    };
+
+                    const candidateLines = [];
+
+                    if (page && page.blocks) {
+                        for (const block of page.blocks) {
+                            for (const paragraph of block.paragraphs) {
+                                const box = paragraph.boundingBox;
+                                if (!box || !box.vertices) continue;
+                                const pMinX = Math.min(...box.vertices.map(v => v.x || 0));
+                                const pMaxX = Math.max(...box.vertices.map(v => v.x || 0));
+                                const pMinY = Math.min(...box.vertices.map(v => v.y || 0));
+                                const pMaxY = Math.max(...box.vertices.map(v => v.y || 0));
+                                const pCenterX = (pMinX + pMaxX) / 2;
+                                const pCenterY = (pMinY + pMaxY) / 2;
+
+                                // 嚴格限定左上角區塊：X 中心點 <= 58% 且 Y 中心點 <= 45%，且不得跨入右側 60%
+                                if (pCenterX <= imgW * 0.58 && pCenterY <= imgH * 0.45 && pMinX <= imgW * 0.55 && pMinY <= imgH * 0.40) {
+                                    let paraText = "";
                                     for (const word of paragraph.words) {
                                         for (const symbol of word.symbols) {
-                                            blockText += symbol.text;
+                                            paraText += symbol.text;
                                             if (symbol.property && symbol.property.detectedBreak) {
                                                 const bType = symbol.property.detectedBreak.type;
-                                                if (bType === "SPACE" || bType === "SURE_SPACE") blockText += " ";
-                                                if (bType === "LINE_BREAK" || bType === "EOL_SURE_SPACE") blockText += "\n";
+                                                if (bType === "SPACE" || bType === "SURE_SPACE") paraText += " ";
+                                                if (bType === "LINE_BREAK" || bType === "EOL_SURE_SPACE") paraText += "\n";
                                             }
                                         }
                                     }
-                                    blockText += "\n";
+                                    paraText.split('\n').forEach(l => {
+                                        const cleanL = l.trim();
+                                        if (cleanL && !isJunkPostcardText(cleanL)) {
+                                            candidateLines.push({ text: cleanL, y: pMinY });
+                                        }
+                                    });
                                 }
-                                blockText.split('\n').forEach(l => {
-                                    if(l.trim()) extractedLines.push(l.trim());
-                                });
                             }
                         }
                     }
+
+                    // 若 paragraph 層級未取得，退回由個別單詞 (textAnnotations) 精確由左上角拼合
+                    if (candidateLines.length === 0) {
+                        const wordAnnotations = data.responses[0].textAnnotations.slice(1).filter(ann => {
+                            const v = ann.boundingPoly && ann.boundingPoly.vertices ? ann.boundingPoly.vertices : [];
+                            if (v.length === 0) return false;
+                            const minX = Math.min(...v.map(pt => pt.x || 0));
+                            const minY = Math.min(...v.map(pt => pt.y || 0));
+                            const maxX = Math.max(...v.map(pt => pt.x || 0));
+                            const maxY = Math.max(...v.map(pt => pt.y || 0));
+                            const cX = (minX + maxX) / 2;
+                            const cY = (minY + maxY) / 2;
+                            const desc = ann.description || '';
+                            if (isJunkPostcardText(desc)) return false;
+                            return (cX <= imgW * 0.58 && cY <= imgH * 0.45 && minX <= imgW * 0.55 && minY <= imgH * 0.40);
+                        });
+
+                        const lineGroups = [];
+                        wordAnnotations.forEach(wAnn => {
+                            const y = Math.min(...wAnn.boundingPoly.vertices.map(pt => pt.y || 0));
+                            const x = Math.min(...wAnn.boundingPoly.vertices.map(pt => pt.x || 0));
+                            let targetGroup = lineGroups.find(g => Math.abs(g.y - y) <= 20);
+                            if (!targetGroup) {
+                                targetGroup = { y, words: [] };
+                                lineGroups.push(targetGroup);
+                            }
+                            targetGroup.words.push({ x, text: wAnn.description });
+                        });
+
+                        lineGroups.sort((a, b) => a.y - b.y);
+                        lineGroups.forEach(g => {
+                            g.words.sort((a, b) => a.x - b.x);
+                            const lStr = g.words.map(w => w.text).join(' ').trim();
+                            if (lStr && !isJunkPostcardText(lStr)) {
+                                candidateLines.push({ text: lStr, y: g.y });
+                            }
+                        });
+                    }
+
+                    // 依垂直 Y 座標由上至下排序，第一行＝主名稱，第二行＝下行名稱
+                    candidateLines.sort((a, b) => a.y - b.y);
+                    const seen = new Set();
+                    candidateLines.forEach(item => {
+                        if (!seen.has(item.text)) {
+                            seen.add(item.text);
+                            extractedLines.push(item.text);
+                        }
+                    });
                 } else {
-                    const text = data.responses[0].textAnnotations[0].description;
-                    extractedLines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    if (data.responses[0].fullTextAnnotation && data.responses[0].fullTextAnnotation.pages) {
+                        for (const block of data.responses[0].fullTextAnnotation.pages[0].blocks) {
+                            const box = block.boundingBox;
+                            if (box && box.vertices) {
+                                const minX = Math.min(...box.vertices.map(v => v.x || 0));
+                                if (minX < maxX * 0.6) { 
+                                    let blockText = "";
+                                    for (const paragraph of block.paragraphs) {
+                                        for (const word of paragraph.words) {
+                                            for (const symbol of word.symbols) {
+                                                blockText += symbol.text;
+                                                if (symbol.property && symbol.property.detectedBreak) {
+                                                    const bType = symbol.property.detectedBreak.type;
+                                                    if (bType === "SPACE" || bType === "SURE_SPACE") blockText += " ";
+                                                    if (bType === "LINE_BREAK" || bType === "EOL_SURE_SPACE") blockText += "\n";
+                                                }
+                                            }
+                                        }
+                                        blockText += "\n";
+                                    }
+                                    blockText.split('\n').forEach(l => {
+                                        if(l.trim()) extractedLines.push(l.trim());
+                                    });
+                                }
+                            }
+                        }
+                    } else {
+                        const text = data.responses[0].textAnnotations[0].description;
+                        extractedLines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    }
                 }
                 
                 const lines = extractedLines;
                 const text = lines.join('\n');
-                
-                let isPostcard = resultDivId.includes('post-ocr-result');
-                let isMushroom = resultDivId.includes('mush-ocr-result');
                 let limitedText = text;
                 
                 if (isPostcard) {
@@ -3433,11 +3535,7 @@
                         }
                     }
 
-                    // 如果沒標籤，就用網頁偵測的實體特徵填補
-                    if (webGeoContext && tagField && (!tagField.value || tagField.value.trim() === '')) {
-                        tagField.value = webGeoContext;
-                        autoFilled.push('圖片地緣標籤');
-                    }
+                    // 標籤欄位保持獨立由使用者填寫，不再由網頁辨識特徵(如遊戲實體名稱)干擾填入
 
                     if (autoFilled.length > 0) {
                         displayHtml = `<div style="color:#0f766e; font-weight:bold; margin-bottom:5px; font-size:12px;">✨ 已自動填寫：${autoFilled.join('、')}</div>` + displayHtml;
