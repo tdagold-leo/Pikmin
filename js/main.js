@@ -1,5 +1,5 @@
 // JS logic begins
-    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.27.1914";
+    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.28.2102";
 
     // 自動清理網址列上的版本號參數，保持網址乾淨漂亮 (例如保持為 https://tdagold-leo.github.io/Pikmin/)
     if (window.location.search && (window.location.search.includes('v=') || window.location.search.includes('_t='))) {
@@ -545,6 +545,10 @@
             if (typeof checkAndLoadMap === 'function') {
                 checkAndLoadMap();
             } else if (mapInstance && (postcardList.length > 0 || dataList.length > 0 || landmarkList.length > 0)) {
+                updateMapMarkers();
+            }
+            if (window._mapMarkersDirty && mapInstance && typeof updateMapMarkers === 'function') {
+                window._mapMarkersDirty = false;
                 updateMapMarkers();
             }
         } else {
@@ -2029,15 +2033,21 @@
         const otherUrls = [];
         const validItems = list.filter(it => it && !it.discontinued && it.image && it.image.startsWith('http'));
 
+        // 預先計算座標/正規化名稱/類型，避免在 O(n²) 內圈重複運算
+        const preInfo = validItems.map(it => ({
+            c: parseLatLonObj(it.coords),
+            n: normalizeNameForDup(it.name),
+            t: String(it.type || '菇').trim()
+        }));
         for (let i = 0; i < validItems.length; i++) {
             const a = validItems[i];
-            const cA = parseLatLonObj(a.coords);
-            const nA = normalizeNameForDup(a.name);
+            const cA = preInfo[i].c;
+            const nA = preInfo[i].n;
             for (let j = i + 1; j < validItems.length; j++) {
                 const b = validItems[j];
-                if (String(a.type || '菇').trim() !== String(b.type || '菇').trim()) continue;
-                const cB = parseLatLonObj(b.coords);
-                const nB = normalizeNameForDup(b.name);
+                if (preInfo[i].t !== preInfo[j].t) continue;
+                const cB = preInfo[j].c;
+                const nB = preInfo[j].n;
                 let isCandidate = false;
                 if (cA && cB) {
                     const d = getDistanceFromLatLonInKm(cA.lat, cA.lon, cB.lat, cB.lon);
@@ -2082,7 +2092,29 @@
         }
     }
 
+    // 重複偵測結果快取：點擊群組展開/折疊時資料並未改變，避免每次重跑 O(n²) 比對造成卡頓
+    const _pcDupMemo = new Map();
+    function _pcDupSignature(list, cache) {
+        let sig = list.length + '#' + Object.keys(cache).length + '#';
+        for (let i = 0; i < list.length; i++) {
+            const it = list[i];
+            if (!it) continue;
+            sig += it.id + '|' + (it.name || '') + '|' + (it.coords || '') + '|' + (it.image || '') + '|' + (it.type || '') + '|' + (it.country || '') + '|' + (it.city || '') + '|' + (it.district || '') + '|' + (it.sgActivity || '') + '|' + (it.discontinued ? 1 : 0) + ';';
+        }
+        return sig;
+    }
+
     function buildPostcardDupPartners(list) {
+        if (!Array.isArray(list) || list.length === 0) return new Map();
+        const memoSig = _pcDupSignature(list, getPcImgHashCache());
+        if (_pcDupMemo.has(memoSig)) return _pcDupMemo.get(memoSig);
+        const result = _buildPostcardDupPartnersRaw(list);
+        if (_pcDupMemo.size >= 3) _pcDupMemo.delete(_pcDupMemo.keys().next().value);
+        _pcDupMemo.set(memoSig, result);
+        return result;
+    }
+
+    function _buildPostcardDupPartnersRaw(list) {
         const partnersMap = new Map();
         if (!Array.isArray(list) || list.length === 0) return partnersMap;
         const cache = getPcImgHashCache();
@@ -7155,7 +7187,12 @@
                 emptyEl.style.display = (filteredPc.length === 0 || (vCount === 0 && !collapsedGroups.size)) ? 'block' : 'none';
             }
         }
-        if (typeof updateMapMarkers === 'function') updateMapMarkers();
+        // 僅在地圖分頁顯示時才重建標記；其他分頁(如點群組展開/折疊)標記為待更新，避免卡頓
+        if (currentMode === 'map') {
+            if (typeof updateMapMarkers === 'function') updateMapMarkers();
+        } else {
+            window._mapMarkersDirty = true;
+        }
     }
 
     function toggleCardTimeSetter(id, e) {
