@@ -1,5 +1,5 @@
 // JS logic begins
-    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.28.2212";
+    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.28.2310";
 
     // 自動清理網址列上的版本號參數，保持網址乾淨漂亮 (例如保持為 https://tdagold-leo.github.io/Pikmin/)
     if (window.location.search && (window.location.search.includes('v=') || window.location.search.includes('_t='))) {
@@ -3209,6 +3209,111 @@
         return null;
     }
 
+    // 自動分析明信片右半部：1. 出現大花朵為「花」、2. 出現幾顆星或蘑菇結算為「菇」、3. 什麼都沒有為「隱藏」
+    async function detectPostcardTypeFromRightSide(imgSrc, rightSideOcrText) {
+        // 1. 先檢驗右半部 OCR 文字訊號 (蘑菇結算資訊：蘑菇種類、CLEARED!、星號或分數)
+        const cleanOcr = (rightSideOcrText || '').toLowerCase().replace(/[\s\-_]+/g, '');
+        const hasMushroomText = cleanOcr.includes('蘑菇') ||
+                                cleanOcr.includes('mushroom') ||
+                                cleanOcr.includes('cleared') ||
+                                (cleanOcr.includes('菇') && (cleanOcr.includes('點') || cleanOcr.includes('pts'))) ||
+                                cleanOcr.includes('★') ||
+                                cleanOcr.includes('⭐');
+
+        // 2. 透過 Canvas 取樣分析明信片右半部 (X: 64%~98%, Y: 32%~88%)
+        let starYellowPct = 0;
+        let stickerWhitePct = 0;
+        let vibrantPetalPct = 0;
+        let stickerWhiteCount = 0;
+
+        if (imgSrc) {
+            try {
+                const img = await loadImageElementWithCors(imgSrc, 4000);
+                if (img) {
+                    const w = img.naturalWidth || img.width || 0;
+                    const h = img.naturalHeight || img.height || 0;
+                    if (w > 20 && h > 20) {
+                        const sx = Math.round(w * 0.64);
+                        const sy = Math.round(h * 0.32);
+                        const sw = Math.max(10, Math.round(w * 0.34));
+                        const sh = Math.max(10, Math.round(h * 0.56));
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = sw;
+                        canvas.height = sh;
+                        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+                        const imgData = ctx.getImageData(0, 0, sw, sh);
+                        const data = imgData.data;
+                        const totalPixels = sw * sh;
+
+                        let starYellowCount = 0;
+                        let vibrantPetalCount = 0;
+
+                        for (let i = 0; i < data.length; i += 4) {
+                            const r = data[i];
+                            const g = data[i + 1];
+                            const b = data[i + 2];
+
+                            // 蘑菇星星金色/黃色特徵 (高 R、高 G、低 B)
+                            if (r > 215 && g > 165 && b < 105 && (r - b > 115) && (g - b > 75)) {
+                                starYellowCount++;
+                            }
+
+                            // 大花貼紙的純白刀模外框 (靠近 255 的實心純白)
+                            if (r >= 248 && g >= 248 && b >= 248) {
+                                stickerWhiteCount++;
+                            }
+
+                            // 花朵鮮豔花瓣色彩 (粉紅、洋紅、緋紅、紫、明亮橙花瓣)
+                            const max = Math.max(r, g, b);
+                            const min = Math.min(r, g, b);
+                            const diff = max - min;
+                            if (diff > 55) {
+                                // 粉紅 / 櫻花 / 洋紅
+                                if (r > 185 && b > 125 && r > g + 30) {
+                                    vibrantPetalCount++;
+                                }
+                                // 鮮紅 / 橘紅
+                                else if (r > 205 && g < 130 && b < 130) {
+                                    vibrantPetalCount++;
+                                }
+                                // 紫花 / 藍花
+                                else if (b > 180 && r > 120 && g < 160 && b > g + 35) {
+                                    vibrantPetalCount++;
+                                }
+                                // 亮黃/金黃花瓣
+                                else if (r > 225 && g > 195 && b < 80 && (r - b <= 115 || g - b <= 75)) {
+                                    vibrantPetalCount++;
+                                }
+                            }
+                        }
+
+                        starYellowPct = (starYellowCount / totalPixels) * 100;
+                        stickerWhitePct = (stickerWhiteCount / totalPixels) * 100;
+                        vibrantPetalPct = (vibrantPetalCount / totalPixels) * 100;
+                    }
+                }
+            } catch (e) {
+                // 影像取樣失敗時降級依靠 OCR 檢驗
+            }
+        }
+
+        // 規則判定：
+        // 1. 出現幾顆星或蘑菇結算文字就是菇
+        if (hasMushroomText || starYellowPct >= 0.35) {
+            return '菇';
+        }
+
+        // 2. 出現大花朵 (純白貼紙外框 + 鮮豔花瓣) 就是花
+        if ((stickerWhitePct >= 0.8 && (vibrantPetalPct >= 1.5 || stickerWhiteCount >= 400)) || vibrantPetalPct >= 4.5) {
+            return '花';
+        }
+
+        // 3. 什麼都沒有就是隱藏
+        return '隱藏';
+    }
+
     async function processVisionOcr(resultDivId, imagePayload) {
         const apiKey = localStorage.getItem('pikmin_vision_api_key');
         const resDiv = document.getElementById(resultDivId);
@@ -3423,6 +3528,45 @@
                     const subnameField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-subname' : 'edit-post-subname');
                     coordsField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-coords' : 'edit-post-coords');
                     tagField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-tag' : 'edit-post-tag');
+                    const typeField = document.getElementById(resultDivId === 'post-ocr-result' ? 'post-type' : 'edit-post-type');
+
+                    let ocrImgSrc = '';
+                    if (imagePayload.content) {
+                        let mime = 'image/jpeg';
+                        if (imagePayload.content.startsWith('iVBORw0KGgo')) mime = 'image/png';
+                        else if (imagePayload.content.startsWith('R0lGOD')) mime = 'image/gif';
+                        else if (imagePayload.content.startsWith('UklGR')) mime = 'image/webp';
+                        ocrImgSrc = `data:${mime};base64,${imagePayload.content}`;
+                    } else if (imagePayload.source && imagePayload.source.imageUri) {
+                        ocrImgSrc = imagePayload.source.imageUri;
+                    }
+
+                    // 收集右半邊 OCR 文字以輔助種類判斷
+                    let rightSideOcrText = "";
+                    if (data.responses[0].textAnnotations && data.responses[0].textAnnotations.length > 1) {
+                        const rightWords = [];
+                        for (let i = 1; i < data.responses[0].textAnnotations.length; i++) {
+                            const ann = data.responses[0].textAnnotations[i];
+                            const v = ann.boundingPoly && ann.boundingPoly.vertices ? ann.boundingPoly.vertices : [];
+                            if (v.length > 0) {
+                                const minX = Math.min(...v.map(pt => pt.x || 0));
+                                const minY = Math.min(...v.map(pt => pt.y || 0));
+                                if (minX > imgW * 0.55 && minY > imgH * 0.25) {
+                                    if (ann.description) rightWords.push(ann.description);
+                                }
+                            }
+                        }
+                        rightSideOcrText = rightWords.join(' ');
+                    }
+
+                    if (typeField) {
+                        const detectedType = await detectPostcardTypeFromRightSide(ocrImgSrc, rightSideOcrText);
+                        if (detectedType) {
+                            typeField.value = detectedType;
+                            typeField.dispatchEvent(new Event('change'));
+                            autoFilled.push(`種類(${detectedType})`);
+                        }
+                    }
                     
                     if (lines.length > 0) {
                         if (nameField && (!nameField.value || nameField.value.trim() === '')) {
@@ -3543,9 +3687,6 @@
 
                     // 3. 同時以「左上角地標照片區 dHash」比對現有明信片資料庫，提醒是否已有重複收藏
                     try {
-                        const ocrImgSrc = imagePayload.content
-                            ? `data:image/jpeg;base64,${imagePayload.content}`
-                            : (imagePayload.source && imagePayload.source.imageUri ? imagePayload.source.imageUri : '');
                         const ocrPrefix = resultDivId === 'post-ocr-result' ? 'post' : 'edit-post';
                         if (ocrImgSrc) {
                             const simHtml = await buildVisualMatchBannerHtml(ocrImgSrc, ocrPrefix);
