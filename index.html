@@ -1564,15 +1564,12 @@
             position: relative;
         }
         .gb-calendar-body {
-            min-width: 640px;
+            width: 100%;
+            min-width: 100%;
             display: flex;
             flex-direction: column;
             user-select: none;
-        }
-        @media (min-width: 768px) {
-            .gb-calendar-body {
-                min-width: 100%;
-            }
+            box-sizing: border-box;
         }
         .gb-cal-weekdays-row {
             display: grid;
@@ -1974,6 +1971,176 @@
         @media (min-width: 681px) {
             .gb-cal-mobile-hint {
                 display: none !important;
+            }
+        }
+        /* ===== 行事曆手機版最佳化（黃金組合：垂直空間瘦身 + 一屏看滿 7 天免左右滑動） ===== */
+        @media (max-width: 768px) {
+            /* 1. 頂部 Bento 統計卡片在行事曆模式下收合成單行高質感膠囊列 (高度從 180px 壓縮到 34px) */
+            .gb-bento-grid.gb-bento-cal-mode {
+                display: flex !important;
+                grid-template-columns: none !important;
+                gap: 6px !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                padding: 2px 0 6px !important;
+                margin-bottom: 2px !important;
+                scrollbar-width: none !important;
+            }
+            .gb-bento-grid.gb-bento-cal-mode::-webkit-scrollbar {
+                display: none !important;
+            }
+            .gb-bento-grid.gb-bento-cal-mode .gb-bento-card {
+                padding: 4px 10px !important;
+                min-height: unset !important;
+                flex: 0 0 auto !important;
+                border-radius: 999px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                gap: 6px !important;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+            }
+            .gb-bento-grid.gb-bento-cal-mode .gb-bento-card div:first-child {
+                width: auto !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                gap: 4px !important;
+            }
+            .gb-bento-grid.gb-bento-cal-mode .gb-bento-card div:last-child {
+                margin-top: 0 !important;
+                font-size: 13px !important;
+                line-height: 1 !important;
+                display: inline-flex !important;
+                align-items: baseline !important;
+            }
+            .gb-bento-grid.gb-bento-cal-mode .gb-bento-card span[style*="font-size:10.5px"] {
+                display: none !important;
+            }
+
+            /* 2. 本月全期活動改為單行橫向滾動膠囊列 (高度從 140px 壓縮到 34px) */
+            .gb-cal-ongoing-bar {
+                padding: 5px 8px !important;
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                scrollbar-width: none !important;
+                gap: 6px !important;
+            }
+            .gb-cal-ongoing-bar::-webkit-scrollbar {
+                display: none !important;
+            }
+            .gb-cal-ongoing-title {
+                font-size: 11px !important;
+                flex-shrink: 0 !important;
+            }
+            .gb-cal-ongoing-list {
+                flex-wrap: nowrap !important;
+                gap: 6px !important;
+            }
+            .gb-cal-ongoing-chip {
+                flex-shrink: 0 !important;
+                padding: 2.5px 7px !important;
+                font-size: 10.5px !important;
+                border-radius: 6px !important;
+            }
+
+            /* 3. 活動類別篩選列改為單行橫向滾動 */
+            .gb-cal-filter-bar {
+                padding: 5px 8px !important;
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                scrollbar-width: none !important;
+                gap: 5px !important;
+            }
+            .gb-cal-filter-bar::-webkit-scrollbar {
+                display: none !important;
+            }
+            .gb-cal-filter-chip {
+                flex-shrink: 0 !important;
+                padding: 2.5px 7px !important;
+                font-size: 10.5px !important;
+            }
+
+            /* 4. 手機版月曆 100% 全寬自適應 (免左右滑動，週一至週日一屏看滿) */
+            .gb-cal-scroll-wrap {
+                overflow-x: hidden !important;
+            }
+            .gb-calendar-body {
+                width: 100% !important;
+                min-width: 100% !important;
+            }
+            .gb-cal-weekday {
+                font-size: 11px !important;
+                padding: 5px 1px !important;
+            }
+            .gb-cal-week-row {
+                height: 98px !important;
+                min-height: 98px !important;
+                max-height: 98px !important;
+            }
+            .gb-cal-dates-row {
+                height: 22px !important;
+                padding: 2px 2px 1px !important;
+            }
+            .gb-cal-normal-date {
+                font-size: 11px !important;
+                padding: 1px 2px !important;
+            }
+            .gb-cal-today-badge {
+                padding: 1.5px 4px !important;
+                font-size: 10px !important;
+                gap: 2px !important;
+            }
+            .gb-cal-today-badge .today-tag {
+                font-size: 8px !important;
+                padding: 0 2px !important;
+            }
+            .gb-cal-shroom-chip {
+                padding: 0 3px !important;
+                font-size: 9px !important;
+            }
+            .gb-cal-selected-badge {
+                min-width: 19px !important;
+                height: 19px !important;
+                font-size: 10.5px !important;
+                padding: 0 4px !important;
+            }
+            .gb-cal-lines-track-grid {
+                padding: 1px 1px 1px !important;
+                row-gap: 1.5px !important;
+            }
+            .gb-cal-span-line {
+                height: 3px !important;
+            }
+            .gb-cal-events-track-grid {
+                height: 66px !important;
+                margin-top: 1px !important;
+                padding: 1px 1px 2px !important;
+                row-gap: 2px !important;
+            }
+            .gb-cal-event-bar {
+                height: 18px !important;
+                line-height: 17px !important;
+                font-size: 9.5px !important;
+                padding: 0 3px !important;
+                border-radius: 3.5px !important;
+            }
+            .gb-cal-more-badge {
+                height: 16px !important;
+                line-height: 15px !important;
+                font-size: 9px !important;
+                padding: 0 2px !important;
+            }
+            .gb-cal-col-frame {
+                border-radius: 6px !important;
+                margin: 1px !important;
+            }
+            .gb-cal-mobile-hint {
+                display: none !important;
+            }
+            /* 底部保留安全間距避免被 FAB 遮擋 */
+            #gb-calendar-wrapper {
+                padding-bottom: 70px !important;
             }
         }
         /* 特殊金盆子分類正方形按鈕樣式 */

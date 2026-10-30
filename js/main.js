@@ -5693,7 +5693,11 @@
         } else if (tab === 'permanent') {
             collapsedGroups.delete('pc-sg-top-常駐');
         }
-        updateView();
+        if (gbViewMode === 'calendar') {
+            setGbViewMode('list');
+        } else {
+            updateView();
+        }
     };
 
     window.setGbStatusFilter = function(status) {
@@ -5822,9 +5826,11 @@
         const container = document.getElementById('goldbasin-container');
         const emptyEl = document.getElementById('goldbasin-empty');
 
+        const bentoDashboard = document.getElementById('gb-bento-dashboard');
         if (mode === 'calendar') {
             if (listBtn) { listBtn.style.background = 'transparent'; listBtn.style.color = '#64748b'; listBtn.style.fontWeight = '700'; listBtn.style.boxShadow = 'none'; }
             if (calBtn) { calBtn.style.background = '#fff'; calBtn.style.color = '#0f172a'; calBtn.style.fontWeight = '800'; calBtn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }
+            if (bentoDashboard) bentoDashboard.classList.add('gb-bento-cal-mode');
             if (calWrapper) calWrapper.style.display = 'block';
             if (calTools) calTools.style.display = 'flex';
             if (container) container.style.display = 'none';
@@ -5833,6 +5839,7 @@
         } else {
             if (listBtn) { listBtn.style.background = '#fff'; listBtn.style.color = '#0f172a'; listBtn.style.fontWeight = '800'; listBtn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }
             if (calBtn) { calBtn.style.background = 'transparent'; calBtn.style.color = '#64748b'; calBtn.style.fontWeight = '700'; calBtn.style.boxShadow = 'none'; }
+            if (bentoDashboard) bentoDashboard.classList.remove('gb-bento-cal-mode');
             if (calWrapper) calWrapper.style.display = 'none';
             if (calTools) calTools.style.display = 'none';
             if (container) container.style.display = 'grid';
@@ -7570,6 +7577,7 @@ function layoutWeekEvents(weekEvents) {
 
             const bentoEl = document.getElementById('gb-bento-dashboard');
             if (bentoEl) {
+                bentoEl.classList.toggle('gb-bento-cal-mode', gbViewMode === 'calendar');
                 const activeTotal = limTotal + permTotal;
                 const activeClaimable = limClaimable + permClaimable;
                 bentoEl.innerHTML = `
