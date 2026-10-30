@@ -5756,11 +5756,46 @@
         }).catch(() => alert('複製失敗，請手動複製。'));
     };
 
-    // ===== 特殊金盆 月行事曆管理與渲染 =====
+// ===== 特殊金盆 月行事曆管理與渲染 =====
     let gbViewMode = 'list'; // 'list' | 'calendar'
     let gbCalCurrentYear = new Date().getFullYear();
     let gbCalCurrentMonth = new Date().getMonth(); // 0 ~ 11
     let gbCalSelectedDateStr = null;
+
+    let gbCalFilters = {
+        goldbasin: true,
+        giant: true,
+        custom: true
+    };
+
+    function loadGbCalFilters() {
+        try {
+            const saved = localStorage.getItem('pikmin_cal_filters');
+            if (saved) gbCalFilters = Object.assign(gbCalFilters, JSON.parse(saved));
+        } catch(e) {}
+    }
+
+    function saveGbCalFilters() {
+        localStorage.setItem('pikmin_cal_filters', JSON.stringify(gbCalFilters));
+    }
+
+    window.toggleGbCalFilter = function(type) {
+        if (gbCalFilters[type] !== undefined) {
+            gbCalFilters[type] = !gbCalFilters[type];
+            saveGbCalFilters();
+            updateGbCalFilterUI();
+            renderGbCalendar();
+        }
+    };
+
+    function updateGbCalFilterUI() {
+        ['goldbasin', 'giant', 'custom'].forEach(t => {
+            const chip = document.getElementById(`chip-filter-${t}`);
+            const chk = document.getElementById(`cal-filter-${t}`);
+            if (chip) chip.classList.toggle('active', !!gbCalFilters[t]);
+            if (chk) chk.checked = !!gbCalFilters[t];
+        });
+    }
 
     function getCustomCalendarEvents() {
         try {
@@ -5832,9 +5867,48 @@
         const drawer = document.getElementById('gb-cal-day-drawer');
         if (drawer) drawer.style.display = 'none';
         gbCalSelectedDateStr = null;
-        document.querySelectorAll('.gb-cal-cell.selected-day').forEach(el => el.classList.remove('selected-day'));
+        document.querySelectorAll('.gb-cal-day-bg').forEach(el => el.classList.remove('selected-day'));
+        document.querySelectorAll('.gb-cal-col-frame').forEach(el => el.classList.remove('selected-day'));
+        document.querySelectorAll('.gb-cal-date-cell').forEach(el => {
+            el.classList.remove('selected-day');
+            const isToday = el.dataset.isToday === '1';
+            const isWeekend = el.dataset.isWeekend === '1';
+            const dayNum = el.dataset.dayNum || '';
+            const shroomHtml = (isWeekend && gbCalFilters.giant) ? '<span class="gb-cal-shroom-chip" title="週末巨菇日">🍄</span>' : '';
+            let badgeHtml = '';
+            if (isToday) {
+                badgeHtml = `
+                    <span class="gb-cal-today-badge">
+                        <span>${dayNum}</span>
+                        <span class="today-tag">今日</span>
+                    </span>
+                `;
+            } else {
+                badgeHtml = `<span class="gb-cal-normal-date">${dayNum}</span>`;
+            }
+            el.innerHTML = `${badgeHtml}${shroomHtml}`;
+        });
     };
 
+    const GB_EVENT_PALETTES = [
+        { bg: '#fef3c7', text: '#92400e', border: '#fcd34d', bar: '#f59e0b' }, // 琥珀金
+        { bg: '#ccfbf1', text: '#115e59', border: '#5eead4', bar: '#0d9488' }, // 湖水綠 (海洋博)
+        { bg: '#e0e7ff', text: '#3730a3', border: '#a5b4fc', bar: '#6366f1' }, // 靚藍
+        { bg: '#fce7f3', text: '#9d174d', border: '#fbcfe8', bar: '#ec4899' }, // 櫻花粉
+        { bg: '#f3e8ff', text: '#6b21a8', border: '#d8b4fe', bar: '#a855f7' }, // 薰衣草紫
+        { bg: '#dcfce7', text: '#166534', border: '#86efac', bar: '#22c55e' }, // 翡翠綠
+        { bg: '#ffedd5', text: '#9a3412', border: '#fdba74', bar: '#f97316' }, // 暖陽橙
+        { bg: '#e0e7fe', text: '#075985', border: '#7dd3fc', bar: '#0284c7' }  // 天空藍
+    ];
+
+    function getEventPalette(name) {
+        let hash = 0;
+        for (let i = 0; i < (name || '').length; i++) {
+            hash = (hash << 5) - hash + (name || '').charCodeAt(i);
+            hash |= 0;
+        }
+        return GB_EVENT_PALETTES[Math.abs(hash) % GB_EVENT_PALETTES.length];
+    }
     function getEventsForDate(dateStr, dateObj) {
         const events = [];
         // 1. 六日自動設定為巨菇日
@@ -5897,7 +5971,8 @@
                     desc: `活動期間：${start || '未定'} ～ ${end || '未定'}，此活動共有 ${act.count} 筆特殊金盆點位。`,
                     actName: act.actName,
                     count: act.count,
-                    isGoldBasin: true
+                    isGoldBasin: true,
+                    palette: getEventPalette(act.actName)
                 });
             }
         });
@@ -5935,12 +6010,41 @@
 
     window.selectGbCalDate = function(dateStr) {
         gbCalSelectedDateStr = dateStr;
-        document.querySelectorAll('.gb-cal-cell').forEach(el => {
-            if (el.dataset.date === dateStr) {
-                el.classList.add('selected-day');
+        // 即時切換底層天數背景選取狀態
+        document.querySelectorAll('.gb-cal-day-bg').forEach(el => {
+            el.classList.toggle('selected-day', el.dataset.date === dateStr);
+        });
+
+        // 即時切換頂層突出框線 (選取框覆蓋在最上層，絕不被色條阻擋)
+        document.querySelectorAll('.gb-cal-col-frame').forEach(el => {
+            el.classList.toggle('selected-day', el.dataset.date === dateStr);
+        });
+
+        // 即時切換頂層日期數字選取徽章
+        document.querySelectorAll('.gb-cal-date-cell').forEach(el => {
+            const isMatch = (el.dataset.date === dateStr);
+            const isToday = el.dataset.isToday === '1';
+            const isWeekend = el.dataset.isWeekend === '1';
+            const dayNum = el.dataset.dayNum || '';
+            el.classList.toggle('selected-day', isMatch);
+
+            const shroomHtml = (isWeekend && gbCalFilters.giant) ? `<span class="gb-cal-shroom-chip" title="週末巨菇日">🍄</span>` : '';
+
+            let badgeHtml = '';
+            if (isToday) {
+                badgeHtml = `
+                    <span class="gb-cal-today-badge">
+                        <span>${dayNum}</span>
+                        <span class="today-tag">今日</span>
+                    </span>
+                `;
+            } else if (isMatch) {
+                badgeHtml = `<span class="gb-cal-selected-badge">${dayNum}</span>`;
             } else {
-                el.classList.remove('selected-day');
+                badgeHtml = `<span class="gb-cal-normal-date">${dayNum}</span>`;
             }
+
+            el.innerHTML = `${badgeHtml}${shroomHtml}`;
         });
 
         const drawer = document.getElementById('gb-cal-day-drawer');
@@ -5953,7 +6057,7 @@
         const weekNames = ['日', '一', '二', '三', '四', '五', '六'];
         const dayOfWeek = weekNames[dateObj.getDay()];
 
-        drawerTitle.innerHTML = `📅 ${parts[0]}年${parts[1]}月${parts[2]}日 (週${dayOfWeek}) 活動一覽`;
+        drawerTitle.innerHTML = `📅 ${parts[0]}年${parts[1]}月${parts[2]}日 (週${dayOfWeek}) 當日活動詳情`;
         drawer.style.display = 'block';
 
         const events = getEventsForDate(dateStr, dateObj);
@@ -5969,24 +6073,36 @@
 
         let html = '';
         events.forEach(ev => {
+            const pal = ev.palette || (ev.type === 'mushroom'
+                ? { bg: '#fef2f2', text: '#991b1b', border: '#fca5a5', bar: '#ef4444' }
+                : (ev.type === 'goldbasin' ? getEventPalette(ev.actName || ev.title) : getEventPalette(ev.title)));
+
             let actionBtns = '';
             if (ev.isGoldBasin) {
-                actionBtns = `<button type="button" onclick="viewGoldbasinActList('${escapeHtml(ev.actName).replace(/'/g, "\\'")}')" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; border-radius:6px; padding:3px 8px; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap;">🔍 查看金盆 (${ev.count}處)</button>`;
+                actionBtns = `
+                    <button type="button" onclick="viewGoldbasinActList('${escapeHtml(ev.actName).replace(/'/g, "\\'")}')"
+                            style="background:${pal.bg}; color:${pal.text}; border:1.5px solid ${pal.border}; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:800; cursor:pointer; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition:transform 0.12s;">
+                        🔍 查看金盆 (${ev.count}處)
+                    </button>
+                `;
             } else if (ev.isCustom) {
                 const safeId = escapeHtml(ev.id).replace(/'/g, "\\'");
                 actionBtns = `
                     <div style="display:flex; gap:4px;">
-                        <button type="button" onclick="editCustomEvent('${safeId}')" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:6px; padding:3px 7px; font-size:11px; font-weight:700; cursor:pointer;">✏️ 編輯</button>
+                        <button type="button" onclick="editCustomEvent('${safeId}')" style="background:${pal.bg}; color:${pal.text}; border:1px solid ${pal.border}; border-radius:6px; padding:3px 7px; font-size:11px; font-weight:700; cursor:pointer;">✏️ 編輯</button>
                         <button type="button" onclick="deleteCustomEventById('${safeId}')" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:6px; padding:3px 7px; font-size:11px; font-weight:700; cursor:pointer;">🗑️</button>
                     </div>
                 `;
             }
 
             html += `
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; padding:8px 10px; background:#f8fafc; border-radius:8px; border-left:4px solid ${ev.type === 'mushroom' ? '#ef4444' : (ev.type === 'goldbasin' ? '#f59e0b' : '#10b981')}; gap:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; padding:9px 12px; background:#ffffff; border-radius:8px; border:1px solid ${pal.border}; border-left:5px solid ${pal.bar}; gap:10px; box-shadow:0 1px 3px rgba(0,0,0,0.04); transition:background 0.15s;">
                     <div style="flex:1; min-width:0;">
-                        <div style="font-size:13px; font-weight:800; color:#1e293b;">${escapeHtml(ev.title)}</div>
-                        ${ev.desc ? `<div style="font-size:11.5px; color:#64748b; margin-top:2px; line-height:1.35;">${escapeHtml(ev.desc)}</div>` : ''}
+                        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                            <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${pal.bar}; flex-shrink:0;"></span>
+                            <span style="font-size:13px; font-weight:800; color:#1e293b;">${escapeHtml(ev.title)}</span>
+                        </div>
+                        ${ev.desc ? `<div style="font-size:11.5px; color:#64748b; margin-top:3px; line-height:1.4;">${escapeHtml(ev.desc)}</div>` : ''}
                     </div>
                     <div style="flex-shrink:0;">${actionBtns}</div>
                 </div>
@@ -6010,10 +6126,63 @@
         }
     };
 
+function layoutWeekEvents(weekEvents) {
+        weekEvents.sort((a, b) => {
+            const spanA = a.endCol - a.startCol;
+            const spanB = b.endCol - b.startCol;
+            if (spanB !== spanA) return spanB - spanA; // 跨度較長者優先佔上層
+            return a.startCol - b.startCol;
+        });
+
+        const tracks = [];
+        weekEvents.forEach(item => {
+            let row = 0;
+            while (true) {
+                if (!tracks[row]) {
+                    tracks[row] = [false, false, false, false, false, false, false];
+                }
+                let collision = false;
+                for (let c = item.startCol - 1; c <= item.endCol - 1; c++) {
+                    if (tracks[row][c]) {
+                        collision = true;
+                        break;
+                    }
+                }
+                if (!collision) {
+                    for (let c = item.startCol - 1; c <= item.endCol - 1; c++) {
+                        tracks[row][c] = true;
+                    }
+                    item.gridRow = row + 1;
+                    break;
+                }
+                row++;
+            }
+        });
+        return weekEvents;
+    }
+
+    function getDaysSpan(startStr, endStr) {
+        if (!startStr || !endStr) return 1;
+        const d1 = new Date(startStr);
+        const d2 = new Date(endStr);
+        const diffTime = d2.getTime() - d1.getTime();
+        return Math.round(diffTime / (1000 * 3600 * 24)) + 1;
+    }
+
+    function formatShortDate(dateStr) {
+        if (!dateStr) return '';
+        const parts = dateStr.split('-');
+        if (parts.length >= 3) {
+            return `${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}`;
+        }
+        return dateStr;
+    }
     function renderGbCalendar() {
+        loadGbCalFilters();
+        updateGbCalFilterUI();
         const titleEl = document.getElementById('gb-cal-month-title');
-        const gridEl = document.getElementById('gb-calendar-grid');
-        if (!gridEl) return;
+        const weeksContainer = document.getElementById('gb-calendar-weeks');
+        if (!weeksContainer) return;
 
         if (titleEl) {
             titleEl.textContent = `${gbCalCurrentYear} 年 ${gbCalCurrentMonth + 1} 月`;
@@ -6025,19 +6194,6 @@
         const curD = String(now.getDate()).padStart(2, '0');
         const todayStr = `${curY}-${curM}-${curD}`;
 
-        // 星期標題 (週一至週日)
-        const weekdays = [
-            { name: '週一', isWeekend: false },
-            { name: '週二', isWeekend: false },
-            { name: '週三', isWeekend: false },
-            { name: '週四', isWeekend: false },
-            { name: '週五', isWeekend: false },
-            { name: '週六', isWeekend: true },
-            { name: '週日', isWeekend: true }
-        ];
-
-        let gridHtml = weekdays.map(w => `<div class="gb-cal-weekday ${w.isWeekend ? 'weekend' : ''}">${w.name}</div>`).join('');
-
         const firstDayOfMonth = new Date(gbCalCurrentYear, gbCalCurrentMonth, 1);
         let startDayIndex = firstDayOfMonth.getDay() - 1; // 0 for Mon, 6 for Sun
         if (startDayIndex < 0) startDayIndex = 6;
@@ -6045,58 +6201,347 @@
         const daysInCurrentMonth = new Date(gbCalCurrentYear, gbCalCurrentMonth + 1, 0).getDate();
         const daysInPrevMonth = new Date(gbCalCurrentYear, gbCalCurrentMonth, 0).getDate();
 
-        // 1. 上個月的補齊格
+        // 建立當月完整日曆格陣列 (包含前後月補齊)
+        const allDays = [];
+        // 1. 上月補齊
         for (let i = startDayIndex - 1; i >= 0; i--) {
             const pDay = daysInPrevMonth - i;
-            gridHtml += `<div class="gb-cal-cell other-month"><div class="gb-cal-date-num">${pDay}</div></div>`;
+            const prevM = gbCalCurrentMonth === 0 ? 12 : gbCalCurrentMonth;
+            const prevY = gbCalCurrentMonth === 0 ? gbCalCurrentYear - 1 : gbCalCurrentYear;
+            const dateStr = `${prevY}-${String(prevM).padStart(2, '0')}-${String(pDay).padStart(2, '0')}`;
+            allDays.push({ dateStr, dayNum: pDay, isCurrentMonth: false, dateObj: new Date(prevY, prevM - 1, pDay) });
         }
-
-        // 2. 本月的天數格
+        // 2. 本月
         for (let day = 1; day <= daysInCurrentMonth; day++) {
             const mStr = String(gbCalCurrentMonth + 1).padStart(2, '0');
             const dStr = String(day).padStart(2, '0');
             const dateStr = `${gbCalCurrentYear}-${mStr}-${dStr}`;
-            const dateObj = new Date(gbCalCurrentYear, gbCalCurrentMonth, day);
-            const dayOfWeek = dateObj.getDay();
-            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
-            const isToday = (dateStr === todayStr);
-            const isSelected = (dateStr === gbCalSelectedDateStr);
-
-            const events = getEventsForDate(dateStr, dateObj);
-
-            let tagsHtml = '';
-            const maxVisible = 2;
-            const visibleEvents = events.slice(0, maxVisible);
-            visibleEvents.forEach(ev => {
-                tagsHtml += `<div class="gb-cal-tag ${ev.tagClass}" title="${escapeHtml(ev.title)}">${escapeHtml(ev.badgeText)}</div>`;
-            });
-
-            if (events.length > maxVisible) {
-                tagsHtml += `<div class="gb-cal-more">+${events.length - maxVisible} 個活動</div>`;
-            }
-
-            gridHtml += `
-                <div class="gb-cal-cell ${isWeekend ? 'weekend-cell' : ''} ${isToday ? 'is-today' : ''} ${isSelected ? 'selected-day' : ''}" data-date="${dateStr}" onclick="selectGbCalDate('${dateStr}')">
-                    <div class="gb-cal-date-num">
-                        <span>${day}</span>
-                        ${isToday ? '<span class="gb-cal-today-dot">今日</span>' : ''}
-                    </div>
-                    ${tagsHtml}
-                </div>
-            `;
+            allDays.push({ dateStr, dayNum: day, isCurrentMonth: true, dateObj: new Date(gbCalCurrentYear, gbCalCurrentMonth, day) });
         }
-
-        // 3. 下個月的補齊格 (確保填滿 7 的倍數)
-        const totalRendered = startDayIndex + daysInCurrentMonth;
-        const remainder = totalRendered % 7;
+        // 3. 下月補齊
+        const remainder = allDays.length % 7;
         if (remainder > 0) {
             const nextMonthDays = 7 - remainder;
             for (let n = 1; n <= nextMonthDays; n++) {
-                gridHtml += `<div class="gb-cal-cell other-month"><div class="gb-cal-date-num">${n}</div></div>`;
+                const nextM = gbCalCurrentMonth === 11 ? 1 : gbCalCurrentMonth + 2;
+                const nextY = gbCalCurrentMonth === 11 ? gbCalCurrentYear + 1 : gbCalCurrentYear;
+                const dateStr = `${nextY}-${String(nextM).padStart(2, '0')}-${String(n).padStart(2, '0')}`;
+                allDays.push({ dateStr, dayNum: n, isCurrentMonth: false, dateObj: new Date(nextY, nextM - 1, n) });
             }
         }
 
-        gridEl.innerHTML = gridHtml;
+        // 切分為週陣列 (每週 7 天)
+        const weeks = [];
+        for (let i = 0; i < allDays.length; i += 7) {
+            weeks.push(allDays.slice(i, i + 7));
+        }
+
+        // 收集所有跨日事件（期間金盆 + 自訂活動）
+        const allSpanEvents = [];
+
+        // 1. 期間特殊金盆 (若有開啟篩選)
+        if (gbCalFilters.goldbasin) {
+            const actMap = {};
+            (postcardList || []).forEach(item => {
+                if (item.type !== '特殊金盆' || item.sgType !== '期間') return;
+                const actName = (item.sgActivity || item.name || '特殊金盆活動').trim();
+                if (!actMap[actName]) {
+                    actMap[actName] = {
+                        actName,
+                        startDate: item.sgStart || null,
+                        endDate: item.sgEnd || null,
+                        count: 0
+                    };
+                }
+                actMap[actName].count++;
+                if (item.sgStart && (!actMap[actName].startDate || item.sgStart < actMap[actName].startDate)) {
+                    actMap[actName].startDate = item.sgStart;
+                }
+                if (item.sgEnd && (!actMap[actName].endDate || item.sgEnd > actMap[actName].endDate)) {
+                    actMap[actName].endDate = item.sgEnd;
+                }
+            });
+
+            Object.values(actMap).forEach(act => {
+                if (!act.startDate && !act.endDate) return;
+                const s = act.startDate || act.endDate;
+                const e = act.endDate || act.startDate;
+                const palette = getEventPalette(act.actName);
+                allSpanEvents.push({
+                    id: `gb_${act.actName}`,
+                    title: `🌟 ${act.actName}`,
+                    startDate: s,
+                    endDate: e,
+                    palette,
+                    isGoldBasin: true,
+                    actName: act.actName,
+                    count: act.count
+                });
+            });
+        }
+
+        // 2. 自訂特殊活動 (若有開啟篩選)
+        if (gbCalFilters.custom) {
+            const customList = getCustomCalendarEvents();
+            customList.forEach(ce => {
+                if (!ce.startDate) return;
+                const s = ce.startDate;
+                const e = ce.endDate || ce.startDate;
+                let icon = '📌';
+                if (ce.type === 'community') icon = '🟢';
+                else if (ce.type === 'giant') icon = '🍄';
+                else if (ce.type === 'special') icon = '🟣';
+                else if (ce.type === 'reminder') icon = '🟡';
+                const palette = getEventPalette(ce.title);
+                allSpanEvents.push({
+                    id: ce.id,
+                    title: `${icon} ${ce.title}`,
+                    startDate: s,
+                    endDate: e,
+                    palette,
+                    isCustom: true,
+                    rawEvent: ce
+                });
+            });
+        }
+
+        // 長短期活動分流：跨期 >= 14 天為「本月全期常駐活動」，放頂部橫幅；< 14 天為「短期特殊活動」，進入月曆格
+        const curMonthStartStr = `${gbCalCurrentYear}-${String(gbCalCurrentMonth + 1).padStart(2, '0')}-01`;
+        const curMonthEndStr = `${gbCalCurrentYear}-${String(gbCalCurrentMonth + 1).padStart(2, '0')}-${String(daysInCurrentMonth).padStart(2, '0')}`;
+
+        const monthlyLongEvents = [];
+        const gridSpanEvents = [];
+
+        allSpanEvents.forEach(ev => {
+            // 確認是否涵蓋當前檢視的月份
+            if (ev.startDate <= curMonthEndStr && ev.endDate >= curMonthStartStr) {
+                const spanDays = getDaysSpan(ev.startDate, ev.endDate);
+                if (spanDays >= 14) {
+                    monthlyLongEvents.push(ev);
+                } else {
+                    gridSpanEvents.push(ev);
+                }
+            }
+        });
+
+        // 渲染本月全期活動橫幅
+        const ongoingBar = document.getElementById('gb-cal-ongoing-bar');
+        if (ongoingBar) {
+            if (monthlyLongEvents.length > 0) {
+                let chipsHtml = '';
+                monthlyLongEvents.forEach(ev => {
+                    const pal = ev.palette;
+                    const dateDesc = `${formatShortDate(ev.startDate)} ~ ${formatShortDate(ev.endDate)}`;
+                    const countBadge = ev.count ? `<span class="chip-count">${ev.count} 處</span>` : '';
+                    const clickAction = ev.isGoldBasin
+                        ? `viewGoldbasinActList('${escapeHtml(ev.actName).replace(/'/g, "\\'")}')`
+                        : `editCustomEvent('${escapeHtml(ev.id).replace(/'/g, "\\'")}')`;
+
+                    chipsHtml += `
+                        <div class="gb-cal-ongoing-chip" style="background:${pal.bg}; color:${pal.text}; border:1px solid ${pal.border}; border-left:3.5px solid ${pal.bar};"
+                             onclick="${clickAction}" title="${escapeHtml(ev.title)} (${dateDesc}) 點擊查看明細">
+                            <span class="chip-name">${escapeHtml(ev.title)}</span>
+                            <span class="chip-date">${dateDesc}</span>
+                            ${countBadge}
+                        </div>
+                    `;
+                });
+                ongoingBar.innerHTML = `
+                    <div class="gb-cal-ongoing-title">
+                        <span>🌟 本月全期活動：</span>
+                    </div>
+                    <div class="gb-cal-ongoing-list">${chipsHtml}</div>
+                `;
+                ongoingBar.style.display = 'flex';
+            } else {
+                ongoingBar.style.display = 'none';
+                ongoingBar.innerHTML = '';
+            }
+        }
+
+        let weeksHtml = '';
+
+        weeks.forEach((wDays) => {
+            const wStart = wDays[0].dateStr;
+            const wEnd = wDays[6].dateStr;
+
+            // 1. 底層天數背景網格 (負責底色與點擊)
+            let bgCellsHtml = '';
+            // 2. 前景獨立日期數字列 (排在事件橫條之上，絕不被色條覆蓋)
+            let datesRowHtml = '';
+            // 3. 最頂層強調框線層 (今日框與選取框置於最上層，永遠完整顯示)
+            let framesHtml = '';
+
+            wDays.forEach((d) => {
+                const dayOfWeek = d.dateObj.getDay();
+                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                const isToday = (d.dateStr === todayStr);
+                const isSelected = (d.dateStr === gbCalSelectedDateStr);
+
+                let dateNumHtml = `<span class="gb-cal-normal-date">${d.dayNum}</span>`;
+                if (isToday) {
+                    dateNumHtml = `
+                        <span class="gb-cal-today-badge">
+                            <span>${d.dayNum}</span>
+                            <span class="today-tag">今日</span>
+                        </span>
+                    `;
+                } else if (isSelected) {
+                    dateNumHtml = `<span class="gb-cal-selected-badge">${d.dayNum}</span>`;
+                }
+
+                bgCellsHtml += `
+                    <div class="gb-cal-day-bg ${d.isCurrentMonth ? '' : 'other-month'} ${isWeekend ? 'weekend-cell' : ''} ${isToday ? 'is-today' : ''} ${isSelected ? 'selected-day' : ''}" data-date="${d.dateStr}" onclick="selectGbCalDate('${d.dateStr}')"></div>
+                `;
+
+                let shroomBadgeHtml = '';
+                if (isWeekend && gbCalFilters.giant) {
+                    shroomBadgeHtml = `<span class="gb-cal-shroom-chip" title="週末巨菇日">🍄</span>`;
+                }
+
+                datesRowHtml += `
+                    <div class="gb-cal-date-cell ${isSelected ? 'selected-day' : ''}" data-date="${d.dateStr}" data-day-num="${d.dayNum}" data-is-today="${isToday ? '1' : '0'}" data-is-weekend="${isWeekend ? '1' : '0'}" onclick="selectGbCalDate('${d.dateStr}')">
+                        ${dateNumHtml}
+                        ${shroomBadgeHtml}
+                    </div>
+                `;
+
+                framesHtml += `
+                    <div class="gb-cal-col-frame ${isToday ? 'is-today' : ''} ${isSelected ? 'selected-day' : ''}" data-date="${d.dateStr}"></div>
+                `;
+            });
+
+            // 2. 長期全期活動：以 3.5px 彩色細線跨日呈現 (貫穿日期格，清楚標明活動起訖又不佔文字空間)
+            let linesHtml = '';
+            monthlyLongEvents.forEach((ev, evIdx) => {
+                if (ev.startDate <= wEnd && ev.endDate >= wStart) {
+                    let startCol = 1;
+                    let endCol = 7;
+                    if (ev.startDate <= wStart) {
+                        startCol = 1;
+                    } else {
+                        const idx = wDays.findIndex(d => d.dateStr === ev.startDate);
+                        startCol = idx !== -1 ? idx + 1 : 1;
+                    }
+
+                    if (ev.endDate >= wEnd) {
+                        endCol = 7;
+                    } else {
+                        const idx = wDays.findIndex(d => d.dateStr === ev.endDate);
+                        endCol = idx !== -1 ? idx + 1 : 7;
+                    }
+
+                    const pal = ev.palette;
+                    const dateDesc = `${formatShortDate(ev.startDate)} ~ ${formatShortDate(ev.endDate)}`;
+                    const clickAction = ev.isGoldBasin
+                        ? `viewGoldbasinActList('${escapeHtml(ev.actName).replace(/'/g, "\\'")}')`
+                        : `editCustomEvent('${escapeHtml(ev.id).replace(/'/g, "\\'")}')`;
+
+                    linesHtml += `
+                        <div class="gb-cal-span-line"
+                             style="grid-column:${startCol} / ${endCol + 1}; grid-row:${evIdx + 1}; background:${pal.bar || pal.border};"
+                             onclick="${clickAction}"
+                             title="${escapeHtml(ev.title)} (${dateDesc}) · 點擊查看明細"></div>
+                    `;
+                }
+            });
+
+            // 3. 本週內的跨日事件條分配 (僅處理短期特殊活動)
+            const weekSegments = [];
+
+            gridSpanEvents.forEach(ev => {
+                if (ev.startDate <= wEnd && ev.endDate >= wStart) {
+                    let startCol = 1, contLeft = false;
+                    let endCol = 7, contRight = false;
+                    if (ev.startDate <= wStart) {
+                        startCol = 1;
+                        contLeft = (ev.startDate < wStart);
+                    } else {
+                        const idx = wDays.findIndex(d => d.dateStr === ev.startDate);
+                        startCol = idx !== -1 ? idx + 1 : 1;
+                    }
+
+                    if (ev.endDate >= wEnd) {
+                        endCol = 7;
+                        contRight = (ev.endDate > wEnd);
+                    } else {
+                        const idx = wDays.findIndex(d => d.dateStr === ev.endDate);
+                        endCol = idx !== -1 ? idx + 1 : 7;
+                    }
+
+                    weekSegments.push({
+                        ...ev,
+                        startCol,
+                        endCol,
+                        contLeft,
+                        contRight
+                    });
+                }
+            });
+
+            // 安排無碰撞的 Track 樓層
+            layoutWeekEvents(weekSegments);
+
+            // 限制最多顯示 2 列橫條，超出第 3 列以上的活動自動統計為「+N 更多」
+            const MAX_VISIBLE_ROWS = 2;
+            const visibleSegments = [];
+            const overflowCounts = [0, 0, 0, 0, 0, 0, 0, 0]; // 1-indexed (col 1 ~ 7)
+
+            weekSegments.forEach(seg => {
+                if (seg.gridRow <= MAX_VISIBLE_ROWS) {
+                    visibleSegments.push(seg);
+                } else {
+                    for (let c = seg.startCol; c <= seg.endCol; c++) {
+                        overflowCounts[c]++;
+                    }
+                }
+            });
+
+            // 產生橫條 HTML
+            let barsHtml = '';
+            visibleSegments.forEach(seg => {
+                const pal = seg.palette;
+                const isSingleCol = (seg.startCol === seg.endCol);
+                const clickAction = seg.isGoldBasin
+                    ? `viewGoldbasinActList('${escapeHtml(seg.actName).replace(/'/g, "\\'")}')`
+                    : `editCustomEvent('${escapeHtml(seg.id).replace(/'/g, "\\'")}')`;
+
+                barsHtml += `
+                    <div class="gb-cal-event-bar ${seg.contLeft ? 'cont-left' : ''} ${seg.contRight ? 'cont-right' : ''} ${isSingleCol ? 'is-single-col' : ''}"
+                         style="grid-column:${seg.startCol} / ${seg.endCol + 1}; grid-row:${seg.gridRow}; background:${pal.bg}; color:${pal.text}; border:1px solid ${pal.border}; border-left:3px solid ${pal.bar};"
+                         onclick="${clickAction}"
+                         title="${escapeHtml(seg.title)} (${seg.startDate || ''} ~ ${seg.endDate || ''})">
+                        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(seg.title)}</span>
+                    </div>
+                `;
+            });
+
+            // 產生各欄超量「+N 更多」標籤 (固定排在 row 3，高度完全在行高內)
+            for (let c = 1; c <= 7; c++) {
+                if (overflowCounts[c] > 0) {
+                    const targetDateStr = wDays[c - 1].dateStr;
+                    barsHtml += `
+                        <div class="gb-cal-more-badge" style="grid-column:${c}; grid-row:3;"
+                             onclick="selectGbCalDate('${targetDateStr}')"
+                             title="當日尚有 ${overflowCounts[c]} 個活動，點擊查看完整清單">
+                            +${overflowCounts[c]} 更多...
+                        </div>
+                    `;
+                }
+            }
+
+            weeksHtml += `
+                <div class="gb-cal-week-row">
+                    <div class="gb-cal-day-bg-grid">${bgCellsHtml}</div>
+                    <div class="gb-cal-dates-row">${datesRowHtml}</div>
+                    <div class="gb-cal-lines-track-grid">${linesHtml}</div>
+                    <div class="gb-cal-events-track-grid">${barsHtml}</div>
+                    <div class="gb-cal-frames-grid">${framesHtml}</div>
+                </div>
+            `;
+        });
+
+        weeksContainer.innerHTML = weeksHtml;
 
         // 若先前有選取日期，自動重新渲染該日抽屜
         if (gbCalSelectedDateStr) {
@@ -9690,3 +10135,4 @@ window.jumpGbCalendarToday = jumpGbCalendarToday;
 window.closeGbCalDayDrawer = closeGbCalDayDrawer;
 window.selectGbCalDate = selectGbCalDate;
 window.viewGoldbasinActList = viewGoldbasinActList;
+window.toggleGbCalFilter = toggleGbCalFilter;
