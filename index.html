@@ -1438,6 +1438,10 @@
             gap: 10px;
             margin-bottom: 12px;
         }
+        /* 行事曆模式下全平台隱藏清單專屬的 Bento 卡片 */
+        .gb-bento-grid.gb-bento-cal-mode {
+            display: none !important;
+        }
         @media (max-width: 680px) {
             .gb-bento-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -1975,44 +1979,8 @@
         }
         /* ===== 行事曆手機版最佳化（黃金組合：垂直空間瘦身 + 一屏看滿 7 天免左右滑動） ===== */
         @media (max-width: 768px) {
-            /* 1. 頂部 Bento 統計卡片在行事曆模式下收合成單行高質感膠囊列 (高度從 180px 壓縮到 34px) */
+            /* 1. 行事曆模式下隱藏清單專屬的 Bento 統計卡片（視野最大化，回到清單模式才正常展示） */
             .gb-bento-grid.gb-bento-cal-mode {
-                display: flex !important;
-                grid-template-columns: none !important;
-                gap: 6px !important;
-                overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch !important;
-                padding: 2px 0 6px !important;
-                margin-bottom: 2px !important;
-                scrollbar-width: none !important;
-            }
-            .gb-bento-grid.gb-bento-cal-mode::-webkit-scrollbar {
-                display: none !important;
-            }
-            .gb-bento-grid.gb-bento-cal-mode .gb-bento-card {
-                padding: 4px 10px !important;
-                min-height: unset !important;
-                flex: 0 0 auto !important;
-                border-radius: 999px !important;
-                display: inline-flex !important;
-                align-items: center !important;
-                gap: 6px !important;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
-            }
-            .gb-bento-grid.gb-bento-cal-mode .gb-bento-card div:first-child {
-                width: auto !important;
-                display: inline-flex !important;
-                align-items: center !important;
-                gap: 4px !important;
-            }
-            .gb-bento-grid.gb-bento-cal-mode .gb-bento-card div:last-child {
-                margin-top: 0 !important;
-                font-size: 13px !important;
-                line-height: 1 !important;
-                display: inline-flex !important;
-                align-items: baseline !important;
-            }
-            .gb-bento-grid.gb-bento-cal-mode .gb-bento-card span[style*="font-size:10.5px"] {
                 display: none !important;
             }
 

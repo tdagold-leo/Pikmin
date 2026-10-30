@@ -5830,7 +5830,10 @@
         if (mode === 'calendar') {
             if (listBtn) { listBtn.style.background = 'transparent'; listBtn.style.color = '#64748b'; listBtn.style.fontWeight = '700'; listBtn.style.boxShadow = 'none'; }
             if (calBtn) { calBtn.style.background = '#fff'; calBtn.style.color = '#0f172a'; calBtn.style.fontWeight = '800'; calBtn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }
-            if (bentoDashboard) bentoDashboard.classList.add('gb-bento-cal-mode');
+            if (bentoDashboard) {
+                bentoDashboard.classList.add('gb-bento-cal-mode');
+                bentoDashboard.style.display = 'none';
+            }
             if (calWrapper) calWrapper.style.display = 'block';
             if (calTools) calTools.style.display = 'flex';
             if (container) container.style.display = 'none';
@@ -5839,7 +5842,10 @@
         } else {
             if (listBtn) { listBtn.style.background = '#fff'; listBtn.style.color = '#0f172a'; listBtn.style.fontWeight = '800'; listBtn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }
             if (calBtn) { calBtn.style.background = 'transparent'; calBtn.style.color = '#64748b'; calBtn.style.fontWeight = '700'; calBtn.style.boxShadow = 'none'; }
-            if (bentoDashboard) bentoDashboard.classList.remove('gb-bento-cal-mode');
+            if (bentoDashboard) {
+                bentoDashboard.classList.remove('gb-bento-cal-mode');
+                bentoDashboard.style.display = '';
+            }
             if (calWrapper) calWrapper.style.display = 'none';
             if (calTools) calTools.style.display = 'none';
             if (container) container.style.display = 'grid';
