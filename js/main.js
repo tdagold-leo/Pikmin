@@ -1,5 +1,5 @@
 // JS logic begins
-    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.28.2310";
+    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.31.0225";
 
     // 自動清理網址列上的版本號參數，保持網址乾淨漂亮 (例如保持為 https://tdagold-leo.github.io/Pikmin/)
     if (window.location.search && (window.location.search.includes('v=') || window.location.search.includes('_t='))) {
@@ -509,6 +509,7 @@
     let favoritesListenerRef = null;
     let favPcListenerRef = null;
     let sgLastListenerRef = null;
+    let calEventsListenerRef = null;
     
     let collapsedGroups = new Set();
     let knownPostcardGroups = new Set(); 
@@ -2233,6 +2234,7 @@
         if (favoritesListenerRef) { favoritesListenerRef.off(); favoritesListenerRef = null; }
         if (favPcListenerRef) { favPcListenerRef.off(); favPcListenerRef = null; }
         if (sgLastListenerRef) { sgLastListenerRef.off(); sgLastListenerRef = null; }
+        if (calEventsListenerRef) { calEventsListenerRef.off(); calEventsListenerRef = null; }
         if (inputId) {
             statusEl.innerText = '已連線🟢'; statusEl.classList.add('active');
             if(indicator) indicator.innerText = '🟢 已連線';
@@ -2247,6 +2249,18 @@
                 const data = snapshot.val();
                 cloudPcFav = Array.isArray(data) ? data : (data ? Object.values(data) : []);
                 updateView();
+            });
+            // 監聽雲端自訂活動同步
+            calEventsListenerRef = dbRef('user_calendar_events/' + inputId);
+            calEventsListenerRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && typeof data === 'object') {
+                    const events = Array.isArray(data) ? data : Object.values(data);
+                    localStorage.setItem('pikmin_custom_calendar_events', JSON.stringify(events));
+                    if (currentMode === 'goldbasin' && gbViewMode === 'calendar') {
+                        renderGbCalendar();
+                    }
+                }
             });
             // 即時監聽雲端個人特殊金盆領取記錄，合併到 localStorage 與目前列表（跨裝置同步）
             sgLastListenerRef = dbRef('user_sg_last/' + inputId);
@@ -5742,6 +5756,453 @@
         }).catch(() => alert('複製失敗，請手動複製。'));
     };
 
+    // ===== 特殊金盆 月行事曆管理與渲染 =====
+    let gbViewMode = 'list'; // 'list' | 'calendar'
+    let gbCalCurrentYear = new Date().getFullYear();
+    let gbCalCurrentMonth = new Date().getMonth(); // 0 ~ 11
+    let gbCalSelectedDateStr = null;
+
+    function getCustomCalendarEvents() {
+        try {
+            const raw = localStorage.getItem('pikmin_custom_calendar_events');
+            return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function saveCustomCalendarEvents(events) {
+        localStorage.setItem('pikmin_custom_calendar_events', JSON.stringify(events));
+        if (typeof currentSyncId !== 'undefined' && currentSyncId && typeof dbRef === 'function') {
+            dbRef('user_calendar_events/' + currentSyncId).set(events);
+        }
+    }
+
+    window.setGbViewMode = function(mode) {
+        gbViewMode = mode;
+        const listBtn = document.getElementById('gb-view-list-btn');
+        const calBtn = document.getElementById('gb-view-cal-btn');
+        const calWrapper = document.getElementById('gb-calendar-wrapper');
+        const calTools = document.getElementById('gb-cal-tools');
+        const container = document.getElementById('goldbasin-container');
+        const emptyEl = document.getElementById('goldbasin-empty');
+
+        if (mode === 'calendar') {
+            if (listBtn) { listBtn.style.background = 'transparent'; listBtn.style.color = '#64748b'; listBtn.style.fontWeight = '700'; listBtn.style.boxShadow = 'none'; }
+            if (calBtn) { calBtn.style.background = '#fff'; calBtn.style.color = '#0f172a'; calBtn.style.fontWeight = '800'; calBtn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }
+            if (calWrapper) calWrapper.style.display = 'block';
+            if (calTools) calTools.style.display = 'flex';
+            if (container) container.style.display = 'none';
+            if (emptyEl) emptyEl.style.display = 'none';
+            renderGbCalendar();
+        } else {
+            if (listBtn) { listBtn.style.background = '#fff'; listBtn.style.color = '#0f172a'; listBtn.style.fontWeight = '800'; listBtn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }
+            if (calBtn) { calBtn.style.background = 'transparent'; calBtn.style.color = '#64748b'; calBtn.style.fontWeight = '700'; calBtn.style.boxShadow = 'none'; }
+            if (calWrapper) calWrapper.style.display = 'none';
+            if (calTools) calTools.style.display = 'none';
+            if (container) container.style.display = 'grid';
+            updateView();
+        }
+    };
+
+    window.changeGbCalendarMonth = function(delta) {
+        gbCalCurrentMonth += delta;
+        if (gbCalCurrentMonth < 0) {
+            gbCalCurrentMonth = 11;
+            gbCalCurrentYear--;
+        } else if (gbCalCurrentMonth > 11) {
+            gbCalCurrentMonth = 0;
+            gbCalCurrentYear++;
+        }
+        renderGbCalendar();
+    };
+
+    window.jumpGbCalendarToday = function() {
+        const now = new Date();
+        gbCalCurrentYear = now.getFullYear();
+        gbCalCurrentMonth = now.getMonth();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        gbCalSelectedDateStr = `${gbCalCurrentYear}-${m}-${d}`;
+        renderGbCalendar();
+        selectGbCalDate(gbCalSelectedDateStr);
+    };
+
+    window.closeGbCalDayDrawer = function() {
+        const drawer = document.getElementById('gb-cal-day-drawer');
+        if (drawer) drawer.style.display = 'none';
+        gbCalSelectedDateStr = null;
+        document.querySelectorAll('.gb-cal-cell.selected-day').forEach(el => el.classList.remove('selected-day'));
+    };
+
+    function getEventsForDate(dateStr, dateObj) {
+        const events = [];
+        // 1. 六日自動設定為巨菇日
+        const dayOfWeek = dateObj.getDay(); // 0: Sun, 6: Sat
+        if (dayOfWeek === 0 || dayOfWeek === 6) {
+            events.push({
+                id: `giant_mush_${dateStr}`,
+                type: 'mushroom',
+                tagClass: 'mushroom',
+                badgeText: '🍄 巨菇日',
+                title: '🍄 週末常規巨菇日',
+                desc: '每週六、週日全天巨大蘑菇現身，擊倒可獲得更多精華、水果與明信片！',
+                isSystem: true
+            });
+        }
+
+        // 2. 自動把期間特殊金盆的活動日加進去 (以活動名稱彙整)
+        const actMap = {};
+        (postcardList || []).forEach(item => {
+            if (item.type !== '特殊金盆' || item.sgType !== '期間') return;
+            const actName = (item.sgActivity || item.name || '特殊金盆活動').trim();
+            if (!actMap[actName]) {
+                actMap[actName] = {
+                    actName: actName,
+                    startDate: item.sgStart || null,
+                    endDate: item.sgEnd || null,
+                    count: 0,
+                    items: []
+                };
+            }
+            actMap[actName].count++;
+            actMap[actName].items.push(item);
+            if (item.sgStart && (!actMap[actName].startDate || item.sgStart < actMap[actName].startDate)) {
+                actMap[actName].startDate = item.sgStart;
+            }
+            if (item.sgEnd && (!actMap[actName].endDate || item.sgEnd > actMap[actName].endDate)) {
+                actMap[actName].endDate = item.sgEnd;
+            }
+        });
+
+        Object.values(actMap).forEach(act => {
+            const start = act.startDate;
+            const end = act.endDate;
+            if (!start && !end) return;
+            let inRange = false;
+            if (start && end) {
+                inRange = (dateStr >= start && dateStr <= end);
+            } else if (start && !end) {
+                inRange = (dateStr >= start);
+            } else if (!start && end) {
+                inRange = (dateStr <= end);
+            }
+            if (inRange) {
+                events.push({
+                    id: `gb_act_${act.actName}`,
+                    type: 'goldbasin',
+                    tagClass: 'goldbasin',
+                    badgeText: `🌟 ${act.actName}`,
+                    title: `🌟 期間金盆：${act.actName} (${act.count}處)`,
+                    desc: `活動期間：${start || '未定'} ～ ${end || '未定'}，此活動共有 ${act.count} 筆特殊金盆點位。`,
+                    actName: act.actName,
+                    count: act.count,
+                    isGoldBasin: true
+                });
+            }
+        });
+
+        // 3. 自訂特殊活動
+        const customList = getCustomCalendarEvents();
+        customList.forEach(ce => {
+            if (!ce.startDate) return;
+            const start = ce.startDate;
+            const end = ce.endDate || ce.startDate;
+            if (dateStr >= start && dateStr <= end) {
+                let icon = '📌';
+                let tagClass = 'custom';
+                if (ce.type === 'community') { icon = '🟢'; tagClass = 'community'; }
+                else if (ce.type === 'giant') { icon = '🍄'; tagClass = 'giant'; }
+                else if (ce.type === 'special') { icon = '🟣'; tagClass = 'special'; }
+                else if (ce.type === 'reminder') { icon = '🟡'; tagClass = 'goldbasin'; }
+                events.push({
+                    id: ce.id,
+                    type: ce.type || 'custom',
+                    tagClass: tagClass,
+                    badgeText: `${icon} ${ce.title}`,
+                    title: `${icon} ${ce.title}`,
+                    desc: ce.note || '',
+                    startDate: start,
+                    endDate: end,
+                    isCustom: true,
+                    rawEvent: ce
+                });
+            }
+        });
+
+        return events;
+    }
+
+    window.selectGbCalDate = function(dateStr) {
+        gbCalSelectedDateStr = dateStr;
+        document.querySelectorAll('.gb-cal-cell').forEach(el => {
+            if (el.dataset.date === dateStr) {
+                el.classList.add('selected-day');
+            } else {
+                el.classList.remove('selected-day');
+            }
+        });
+
+        const drawer = document.getElementById('gb-cal-day-drawer');
+        const drawerTitle = document.getElementById('gb-cal-drawer-title');
+        const drawerContent = document.getElementById('gb-cal-drawer-content');
+        if (!drawer || !drawerTitle || !drawerContent) return;
+
+        const parts = dateStr.split('-');
+        const dateObj = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        const weekNames = ['日', '一', '二', '三', '四', '五', '六'];
+        const dayOfWeek = weekNames[dateObj.getDay()];
+
+        drawerTitle.innerHTML = `📅 ${parts[0]}年${parts[1]}月${parts[2]}日 (週${dayOfWeek}) 活動一覽`;
+        drawer.style.display = 'block';
+
+        const events = getEventsForDate(dateStr, dateObj);
+        if (events.length === 0) {
+            drawerContent.innerHTML = `
+                <div style="font-size:12px; color:#64748b; padding:8px 0; text-align:center;">此日目前無特殊活動。</div>
+                <div style="text-align:center; margin-top:4px;">
+                    <button type="button" onclick="openCustomEventModal('${dateStr}')" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; border-radius:8px; padding:5px 12px; font-size:11.5px; font-weight:800; cursor:pointer;">➕ 為此日新增自訂活動</button>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '';
+        events.forEach(ev => {
+            let actionBtns = '';
+            if (ev.isGoldBasin) {
+                actionBtns = `<button type="button" onclick="viewGoldbasinActList('${escapeHtml(ev.actName).replace(/'/g, "\\'")}')" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; border-radius:6px; padding:3px 8px; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap;">🔍 查看金盆 (${ev.count}處)</button>`;
+            } else if (ev.isCustom) {
+                const safeId = escapeHtml(ev.id).replace(/'/g, "\\'");
+                actionBtns = `
+                    <div style="display:flex; gap:4px;">
+                        <button type="button" onclick="editCustomEvent('${safeId}')" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:6px; padding:3px 7px; font-size:11px; font-weight:700; cursor:pointer;">✏️ 編輯</button>
+                        <button type="button" onclick="deleteCustomEventById('${safeId}')" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:6px; padding:3px 7px; font-size:11px; font-weight:700; cursor:pointer;">🗑️</button>
+                    </div>
+                `;
+            }
+
+            html += `
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; padding:8px 10px; background:#f8fafc; border-radius:8px; border-left:4px solid ${ev.type === 'mushroom' ? '#ef4444' : (ev.type === 'goldbasin' ? '#f59e0b' : '#10b981')}; gap:8px;">
+                    <div style="flex:1; min-width:0;">
+                        <div style="font-size:13px; font-weight:800; color:#1e293b;">${escapeHtml(ev.title)}</div>
+                        ${ev.desc ? `<div style="font-size:11.5px; color:#64748b; margin-top:2px; line-height:1.35;">${escapeHtml(ev.desc)}</div>` : ''}
+                    </div>
+                    <div style="flex-shrink:0;">${actionBtns}</div>
+                </div>
+            `;
+        });
+
+        html += `
+            <div style="display:flex; justify-content:flex-end; margin-top:6px;">
+                <button type="button" onclick="openCustomEventModal('${dateStr}')" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; border-radius:8px; padding:4px 10px; font-size:11px; font-weight:800; cursor:pointer;">➕ 為此日新增自訂活動</button>
+            </div>
+        `;
+        drawerContent.innerHTML = html;
+    };
+
+    window.viewGoldbasinActList = function(actName) {
+        setGbViewMode('list');
+        const searchInput = document.getElementById('postcard-search');
+        if (searchInput) {
+            searchInput.value = actName;
+            updateView();
+        }
+    };
+
+    function renderGbCalendar() {
+        const titleEl = document.getElementById('gb-cal-month-title');
+        const gridEl = document.getElementById('gb-calendar-grid');
+        if (!gridEl) return;
+
+        if (titleEl) {
+            titleEl.textContent = `${gbCalCurrentYear} 年 ${gbCalCurrentMonth + 1} 月`;
+        }
+
+        const now = new Date();
+        const curY = now.getFullYear();
+        const curM = String(now.getMonth() + 1).padStart(2, '0');
+        const curD = String(now.getDate()).padStart(2, '0');
+        const todayStr = `${curY}-${curM}-${curD}`;
+
+        // 星期標題 (週一至週日)
+        const weekdays = [
+            { name: '週一', isWeekend: false },
+            { name: '週二', isWeekend: false },
+            { name: '週三', isWeekend: false },
+            { name: '週四', isWeekend: false },
+            { name: '週五', isWeekend: false },
+            { name: '週六', isWeekend: true },
+            { name: '週日', isWeekend: true }
+        ];
+
+        let gridHtml = weekdays.map(w => `<div class="gb-cal-weekday ${w.isWeekend ? 'weekend' : ''}">${w.name}</div>`).join('');
+
+        const firstDayOfMonth = new Date(gbCalCurrentYear, gbCalCurrentMonth, 1);
+        let startDayIndex = firstDayOfMonth.getDay() - 1; // 0 for Mon, 6 for Sun
+        if (startDayIndex < 0) startDayIndex = 6;
+
+        const daysInCurrentMonth = new Date(gbCalCurrentYear, gbCalCurrentMonth + 1, 0).getDate();
+        const daysInPrevMonth = new Date(gbCalCurrentYear, gbCalCurrentMonth, 0).getDate();
+
+        // 1. 上個月的補齊格
+        for (let i = startDayIndex - 1; i >= 0; i--) {
+            const pDay = daysInPrevMonth - i;
+            gridHtml += `<div class="gb-cal-cell other-month"><div class="gb-cal-date-num">${pDay}</div></div>`;
+        }
+
+        // 2. 本月的天數格
+        for (let day = 1; day <= daysInCurrentMonth; day++) {
+            const mStr = String(gbCalCurrentMonth + 1).padStart(2, '0');
+            const dStr = String(day).padStart(2, '0');
+            const dateStr = `${gbCalCurrentYear}-${mStr}-${dStr}`;
+            const dateObj = new Date(gbCalCurrentYear, gbCalCurrentMonth, day);
+            const dayOfWeek = dateObj.getDay();
+            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+            const isToday = (dateStr === todayStr);
+            const isSelected = (dateStr === gbCalSelectedDateStr);
+
+            const events = getEventsForDate(dateStr, dateObj);
+
+            let tagsHtml = '';
+            const maxVisible = 2;
+            const visibleEvents = events.slice(0, maxVisible);
+            visibleEvents.forEach(ev => {
+                tagsHtml += `<div class="gb-cal-tag ${ev.tagClass}" title="${escapeHtml(ev.title)}">${escapeHtml(ev.badgeText)}</div>`;
+            });
+
+            if (events.length > maxVisible) {
+                tagsHtml += `<div class="gb-cal-more">+${events.length - maxVisible} 個活動</div>`;
+            }
+
+            gridHtml += `
+                <div class="gb-cal-cell ${isWeekend ? 'weekend-cell' : ''} ${isToday ? 'is-today' : ''} ${isSelected ? 'selected-day' : ''}" data-date="${dateStr}" onclick="selectGbCalDate('${dateStr}')">
+                    <div class="gb-cal-date-num">
+                        <span>${day}</span>
+                        ${isToday ? '<span class="gb-cal-today-dot">今日</span>' : ''}
+                    </div>
+                    ${tagsHtml}
+                </div>
+            `;
+        }
+
+        // 3. 下個月的補齊格 (確保填滿 7 的倍數)
+        const totalRendered = startDayIndex + daysInCurrentMonth;
+        const remainder = totalRendered % 7;
+        if (remainder > 0) {
+            const nextMonthDays = 7 - remainder;
+            for (let n = 1; n <= nextMonthDays; n++) {
+                gridHtml += `<div class="gb-cal-cell other-month"><div class="gb-cal-date-num">${n}</div></div>`;
+            }
+        }
+
+        gridEl.innerHTML = gridHtml;
+
+        // 若先前有選取日期，自動重新渲染該日抽屜
+        if (gbCalSelectedDateStr) {
+            selectGbCalDate(gbCalSelectedDateStr);
+        }
+    }
+
+    window.openCustomEventModal = function(defaultDate = '', eventObj = null) {
+        const modal = document.getElementById('custom-event-modal');
+        const modalTitle = document.getElementById('custom-event-modal-title');
+        const delBtn = document.getElementById('ce-delete-btn');
+        if (!modal) return;
+
+        if (eventObj) {
+            if (modalTitle) modalTitle.textContent = '✏️ 編輯自訂特殊活動';
+            document.getElementById('ce-edit-id').value = eventObj.id || '';
+            document.getElementById('ce-title').value = eventObj.title || '';
+            document.getElementById('ce-start').value = eventObj.startDate || '';
+            document.getElementById('ce-end').value = eventObj.endDate || eventObj.startDate || '';
+            document.getElementById('ce-type').value = eventObj.type || 'community';
+            document.getElementById('ce-note').value = eventObj.note || '';
+            if (delBtn) delBtn.style.display = 'block';
+        } else {
+            if (modalTitle) modalTitle.textContent = '➕ 新增自訂特殊活動';
+            document.getElementById('ce-edit-id').value = '';
+            document.getElementById('ce-title').value = '';
+            const todayStr = defaultDate || new Date().toISOString().split('T')[0];
+            document.getElementById('ce-start').value = todayStr;
+            document.getElementById('ce-end').value = todayStr;
+            document.getElementById('ce-type').value = 'community';
+            document.getElementById('ce-note').value = '';
+            if (delBtn) delBtn.style.display = 'none';
+        }
+        modal.style.display = 'flex';
+    };
+
+    window.saveCustomEvent = function(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        const editId = document.getElementById('ce-edit-id').value;
+        const title = document.getElementById('ce-title').value.trim();
+        const startDate = document.getElementById('ce-start').value;
+        let endDate = document.getElementById('ce-end').value || startDate;
+        const type = document.getElementById('ce-type').value;
+        const note = document.getElementById('ce-note').value.trim();
+
+        if (!title || !startDate) {
+            alert('請填寫活動名稱與開始日期！');
+            return;
+        }
+
+        if (startDate > endDate) {
+            const temp = startDate;
+            document.getElementById('ce-start').value = endDate;
+            document.getElementById('ce-end').value = temp;
+            endDate = temp;
+        }
+
+        const events = getCustomCalendarEvents();
+        if (editId) {
+            const idx = events.findIndex(x => x.id === editId);
+            if (idx !== -1) {
+                events[idx] = { id: editId, title, startDate, endDate, type, note, updatedAt: Date.now() };
+            }
+        } else {
+            events.push({
+                id: 'ce_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                title,
+                startDate,
+                endDate,
+                type,
+                note,
+                createdAt: Date.now()
+            });
+        }
+
+        saveCustomCalendarEvents(events);
+        closeModal('custom-event-modal');
+        renderGbCalendar();
+    };
+
+    window.editCustomEvent = function(id) {
+        const events = getCustomCalendarEvents();
+        const ev = events.find(x => x.id === id);
+        if (ev) {
+            openCustomEventModal('', ev);
+        }
+    };
+
+    window.deleteCustomEventById = function(id) {
+        if (!confirm('確定要刪除這筆自訂特殊活動嗎？')) return;
+        let events = getCustomCalendarEvents();
+        events = events.filter(x => x.id !== id);
+        saveCustomCalendarEvents(events);
+        renderGbCalendar();
+        if (gbCalSelectedDateStr) {
+            selectGbCalDate(gbCalSelectedDateStr);
+        }
+    };
+
+    window.deleteCurrentCustomEvent = function() {
+        const editId = document.getElementById('ce-edit-id').value;
+        if (!editId) return;
+        deleteCustomEventById(editId);
+        closeModal('custom-event-modal');
+    };
+
     function saveMushroomViewPref() {
         if (document.getElementById('mushroom-group-logic')) {
             localStorage.setItem('pikmin_mushroom_group', document.getElementById('mushroom-group-logic').value);
@@ -6750,6 +7211,20 @@
                     else if (gbStatusFilter === 'cooling' && !st.isCooling) filteredPc.splice(idx, 1);
                     else if (gbStatusFilter === 'missing' && !st.hasMissing) filteredPc.splice(idx, 1);
                 }
+            }
+
+            // 特殊金盆視圖切換：金盆清單 vs 活動月行事曆
+            const calWrapper = document.getElementById('gb-calendar-wrapper');
+            const calTools = document.getElementById('gb-cal-tools');
+            if (gbViewMode === 'calendar') {
+                if (calWrapper) calWrapper.style.display = 'block';
+                if (calTools) calTools.style.display = 'flex';
+                if (pcEl) pcEl.style.display = 'none';
+                renderGbCalendar();
+            } else {
+                if (calWrapper) calWrapper.style.display = 'none';
+                if (calTools) calTools.style.display = 'none';
+                if (pcEl) pcEl.style.display = 'grid';
             }
         }
         const gbNavBtn = document.getElementById('nav-goldbasin');
@@ -9203,3 +9678,15 @@ window.updateView = updateView;
 
 window.setPostcardSearch = setPostcardSearch;
 window.renderPostcardQuickSearch = renderPostcardQuickSearch;
+window.setGbViewMode = setGbViewMode;
+window.renderGbCalendar = renderGbCalendar;
+window.openCustomEventModal = openCustomEventModal;
+window.saveCustomEvent = saveCustomEvent;
+window.editCustomEvent = editCustomEvent;
+window.deleteCustomEventById = deleteCustomEventById;
+window.deleteCurrentCustomEvent = deleteCurrentCustomEvent;
+window.changeGbCalendarMonth = changeGbCalendarMonth;
+window.jumpGbCalendarToday = jumpGbCalendarToday;
+window.closeGbCalDayDrawer = closeGbCalDayDrawer;
+window.selectGbCalDate = selectGbCalDate;
+window.viewGoldbasinActList = viewGoldbasinActList;
