@@ -7497,31 +7497,67 @@
             }
         }
 
+        let prewarmedGmToken = null;
+        let prewarmedGmDomain = 'guerrillamailblock.com';
+
+        async function prewarmGmSession() {
+            for (let attempt = 0; attempt < 2; attempt++) {
+                try {
+                    const ctrl = new AbortController();
+                    const timer = setTimeout(() => ctrl.abort(), 8000);
+                    const res = await fetch('https://api.guerrillamail.com/ajax.php?f=get_email_address', {
+                        method: 'GET',
+                        signal: ctrl.signal
+                    });
+                    clearTimeout(timer);
+                    if (res.ok) {
+                        try {
+                            const data = await res.json();
+                            if (data && data.sid_token) {
+                                prewarmedGmToken = data.sid_token;
+                                if (data.email_addr && data.email_addr.includes('@')) {
+                                    prewarmedGmDomain = data.email_addr.split('@')[1];
+                                }
+                            }
+                        } catch(jsonErr) {}
+                        return true;
+                    }
+                } catch(e) {
+                    if (attempt === 0) await new Promise(r => setTimeout(r, 1000));
+                }
+            }
+            return false;
+        }
+
         async function probeAndUpdateServerBar() {
             updateServerBar('checking');
-            try {
-                const res = await fetch('https://api.guerrillamail.com/ajax.php?f=get_email_address', {
-                    method: 'GET',
-                    signal: AbortSignal.timeout(5000)
-                });
-                if (res.ok) {
-                    updateServerBar('ok');
-                } else {
-                    updateServerBar('error');
-                }
-            } catch(e) {
-                updateServerBar('error');
+            const ok = await prewarmGmSession();
+            updateServerBar(ok ? 'ok' : 'error');
+            if (!ok) {
+                // 若初次探測失敗，5 秒後自動背景重試一次
+                setTimeout(async () => {
+                    const retryOk = await prewarmGmSession();
+                    if (retryOk) updateServerBar('ok');
+                }, 5000);
             }
         }
 
-        // 頁面載入後立即探測並顯示狀態
+        // 頁面載入後立即探測並預熱 Token，點擊狀態膠囊也可手動重測
         setTimeout(probeAndUpdateServerBar, 800);
+        const serverBarEl = document.getElementById('cloud-server-bar');
+        if (serverBarEl) {
+            serverBarEl.style.cursor = 'pointer';
+            serverBarEl.title = '點擊重新偵測郵件伺服器狀態';
+            serverBarEl.addEventListener('click', probeAndUpdateServerBar);
+        }
 
         const logContainer = document.getElementById('cloud-logContainer');
         const dynamicActionBtn = document.getElementById('cloud-dynamicActionBtn');
         const dynamicBtnIcon = document.getElementById('cloud-dynamicBtnIcon');
         const dynamicBtnText = document.getElementById('cloud-dynamicBtnText');
         const dynamicBtnSub = document.getElementById('cloud-dynamicBtnSub');
+        const resetFlowWrap = document.getElementById('cloud-resetFlowWrap');
+        const resetFlowBtn = document.getElementById('cloud-resetFlowBtn');
         const activeInviterName = document.getElementById('cloud-activeInviterName');
         const activeInviterCount = document.getElementById('cloud-activeInviterCount');
 
@@ -7551,6 +7587,10 @@
         const codeReminder = document.getElementById('cloud-codeReminder');
 
         let currentActiveInvite = null;
+        let activeSessionInvite = null;
+        let activeSessionLink = '';
+        let activeSessionCounted = false;
+        let currentRunId = 0;
         let latestReceivedCode = null;
         let currentGeneratedEmail = null;
         let currentState = 'ready'; // 'ready' | 'generating' | 'waiting' | 'code_ready' | 'completed'
@@ -7561,6 +7601,9 @@
             if (!dynamicActionBtn) return;
 
             dynamicActionBtn.className = 'dynamic-action-btn state-' + state;
+            if (resetFlowWrap) {
+                resetFlowWrap.style.display = (state === 'ready' || state === 'completed') ? 'none' : 'flex';
+            }
 
             if (state === 'ready') {
                 if (dynamicBtnIcon) dynamicBtnIcon.textContent = '🚀';
@@ -7907,6 +7950,9 @@
 
         function selectInvite(item, flash = true) {
             currentActiveInvite = item;
+            try {
+                if (item && item.id) localStorage.setItem('pikmin_last_active_invite_id', item.id);
+            } catch(e) {}
             updateInviterBadge();
 
             if (inviteNameInput) {
@@ -8176,7 +8222,29 @@
                 publicEntries.forEach(item => savedPublicLinksList.appendChild(createListElement(item)));
             }
 
-            // 不再自動選取預設目標，改由使用者手動點擊「設為目標」
+            // 同步更新當前選取目標的最新次數，或自動選取上次記憶/第一位目標
+            const allEntries = localEntries.concat(publicEntries);
+            if (currentActiveInvite) {
+                const updated = allEntries.find(i => i.id === currentActiveInvite.id);
+                if (updated) {
+                    currentActiveInvite = updated;
+                    if (openPikminBtn) openPikminBtn.href = updated.link;
+                } else {
+                    currentActiveInvite = null;
+                }
+            }
+            if (!currentActiveInvite && allEntries.length > 0) {
+                let candidate = null;
+                try {
+                    const savedId = localStorage.getItem('pikmin_last_active_invite_id');
+                    if (savedId) candidate = allEntries.find(i => i.id === savedId);
+                } catch(e) {}
+                if (!candidate && autoRotateCheckbox && autoRotateCheckbox.checked) {
+                    candidate = allEntries.find(i => i.enabled === true && (i.count || 0) < (i.target || 4));
+                }
+                if (!candidate) candidate = allEntries[0];
+                if (candidate) selectInvite(candidate, false);
+            }
             updateInviterBadge();
         }
 
@@ -8192,14 +8260,29 @@
             });
         }
 
-        // 監聽自動輪替開關
+        // 監聽自動輪替開關 (含記憶狀態)
         if (autoRotateCheckbox) {
+            try {
+                const savedRotate = localStorage.getItem('pikmin_auto_rotate');
+                if (savedRotate === '1') {
+                    autoRotateCheckbox.checked = true;
+                    const details = document.getElementById('cloud-inviteListDetails');
+                    if (details) {
+                        details.classList.remove('auto-rotate-off');
+                        details.classList.add('auto-rotate-on');
+                    }
+                }
+            } catch(e) {}
             autoRotateCheckbox.addEventListener('change', (e) => {
+                try { localStorage.setItem('pikmin_auto_rotate', e.target.checked ? '1' : '0'); } catch(err) {}
                 const details = document.getElementById('cloud-inviteListDetails');
                 if (details) {
                     if (e.target.checked) {
                         details.classList.remove('auto-rotate-off');
                         details.classList.add('auto-rotate-on');
+                        const all = getAllInviteEntries();
+                        const nextPending = all.find(i => i.enabled === true && (i.count || 0) < (i.target || 4));
+                        if (nextPending) selectInvite(nextPending, true);
                     } else {
                         details.classList.remove('auto-rotate-on');
                         details.classList.add('auto-rotate-off');
@@ -8433,6 +8516,55 @@
             } catch(e) {}
         }
 
+        // 從信件 HTML 與主旨精準提取 4 位數驗證碼（排除版權年份與 HTML 屬性）
+        function extractVerificationCode(htmlContent, subject = '') {
+            const subjMatch = String(subject).match(/(?:驗證碼|認證碼|認証コード|code)[:：\s]*(\d{4})\b/i);
+            if (subjMatch) return subjMatch[1];
+
+            const plainText = String(htmlContent || '')
+                .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+                .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<\/(?:p|div|tr|td|li|h[1-6])>/gi, '\n')
+                .replace(/<[^>]+>/g, ' ')
+                .replace(/&nbsp;/gi, ' ')
+                .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)));
+
+            // 1. 優先匹配「驗證碼 / Verification code」關鍵字後方的 4 位數
+            const kwMatch = plainText.match(/(?:驗證碼|認證碼|認証コード|verification\s*code|passcode)[:：\s\r\n]*(\d{4})\b/i);
+            if (kwMatch) return kwMatch[1];
+
+            // 2. 匹配獨立成行的 4 位數字（任天堂驗證信標準排版）
+            const lineMatches = plainText.match(/^\s*(\d{4})\s*$/gm);
+            if (lineMatches) {
+                for (const m of lineMatches) {
+                    const num = m.trim();
+                    const yr = parseInt(num, 10);
+                    if (yr < 2020 || yr > 2035) return num;
+                }
+            }
+
+            // 3. 退回一般 4 位數匹配，但排除 2020~2035 年份
+            const allFour = plainText.match(/\b(\d{4})\b/g) || [];
+            for (const num of allFour) {
+                const yr = parseInt(num, 10);
+                if (yr < 2020 || yr > 2035) return num;
+            }
+            return allFour[0] || null;
+        }
+
+        // 完成當前階段的計數 +1 與自動輪替（確保每階段只執行一次，且不影響當前跳轉連結）
+        function finalizeActiveSessionInvite() {
+            if (activeSessionCounted) return;
+            activeSessionCounted = true;
+            if (autoRotateCheckbox && autoRotateCheckbox.checked && typeof window.rotateToNextInvite === 'function') {
+                window.rotateToNextInvite();
+            } else if (activeSessionInvite) {
+                updateItemCount(activeSessionInvite, 1);
+                updateInviterBadge();
+            }
+        }
+
         // 獨立收信檢查函式
         async function checkInboxNow() {
             const session = getMailSession();
@@ -8458,9 +8590,8 @@
                     const mailRes = await fetchWithRetry(`https://api.guerrillamail.com/ajax.php?f=fetch_email&email_id=${mailId}&sid_token=${sidToken}`, { method: 'GET' }, 2, 1000);
 
                     const htmlContent = mailRes.mail_body || '';
-                    const match = htmlContent.match(/\b(\d{4})\b/);
-                    if (match) {
-                        const verificationCode = match[1];
+                    const verificationCode = extractVerificationCode(htmlContent, mailSubject);
+                    if (verificationCode) {
                         handleCodeReceived(verificationCode);
                         return verificationCode;
                     }
@@ -8471,7 +8602,7 @@
             return null;
         }
 
-        // 處理成功取得驗證碼後的 UI、音效、複製與輪替
+        // 處理成功取得驗證碼後的 UI、音效與複製（輪替延後至點擊複製驗證碼後執行，避免跳轉錯人）
         function handleCodeReceived(verificationCode) {
             if (latestReceivedCode === verificationCode) return; // 避免重複觸發
             latestReceivedCode = verificationCode;
@@ -8486,12 +8617,15 @@
             if (codeReminder) codeReminder.style.display = 'flex';
             if (codeDisplay) codeDisplay.textContent = verificationCode;
             
+            const targetGameLink = activeSessionLink || (openPikminBtn ? openPikminBtn.href : '');
             if (copyCodeBtn) {
                 copyCodeBtn.disabled = false;
                 copyCodeBtn.classList.add('code-ready');
                 copyCodeBtn.onclick = () => {
                     copyToClipboard(verificationCode, copyCodeBtn);
-                    if (openPikminBtn) window.location.href = openPikminBtn.href;
+                    finalizeActiveSessionInvite();
+                    setActionState('completed');
+                    if (targetGameLink) window.location.href = targetGameLink;
                 };
             }
 
@@ -8506,17 +8640,10 @@
             // 3. 系統通知推播
             pushCodeNotification(verificationCode);
 
-            // 4. 更新計數與自動輪替
-            if (autoRotateCheckbox && autoRotateCheckbox.checked && typeof window.rotateToNextInvite === 'function') {
-                window.rotateToNextInvite();
-            } else if (currentActiveInvite) {
-                updateItemCount(currentActiveInvite, 1);
-            }
-
-            // 5. 更新動態按鈕
+            // 4. 更新動態按鈕（保留當前邀請人連結，等點擊複製時才 +1 與輪替）
             setActionState('code_ready', { code: verificationCode });
 
-            // 6. 自動寫入剪貼簿
+            // 5. 自動寫入剪貼簿
             try {
                 navigator.clipboard.writeText(verificationCode);
                 log('📋 驗證碼已自動複製到剪貼簿！回遊戲直接貼上即可！', 'log-success');
@@ -8528,6 +8655,11 @@
         
         // ===== 執行自動化核心函式 =====
         async function runAutomation() {
+            // 若上一輪已收到驗證碼但尚未透過按鈕觸發結算，於開始新一輪前補結算
+            if (latestReceivedCode && !activeSessionCounted) {
+                finalizeActiveSessionInvite();
+            }
+
             if (!currentActiveInvite) {
                 alert('請先在下方「邀請人清單」中選取一位目標邀請人！');
                 const details = document.getElementById('cloud-inviteListDetails');
@@ -8538,10 +8670,12 @@
                 return;
             }
 
+            const myRunId = ++currentRunId;
+            activeSessionInvite = currentActiveInvite;
+            activeSessionLink = currentActiveInvite.link || (openPikminBtn ? openPikminBtn.href : '');
+            activeSessionCounted = false;
+
             getAudioContext(); // 預先解鎖音效
-            // 注意：不在此處呼叫 requestNotificationPermission()，
-            // 因為通知權限對話框會暫停頁面，導致後續 fetch 失敗。
-            // 通知權限應由使用者手動點擊「啟用通知」按鈕來申請。
             setActionState('generating');
 
             if (emailBox) emailBox.classList.remove('active');
@@ -8550,49 +8684,60 @@
             if (logContainer) logContainer.innerHTML = '<div class="log-entry">準備就緒。正在建立信箱...</div>';
             
             const randomString = Date.now().toString();
+            const username = `nintendo${randomString}`;
+            // 0 延遲同步產生並寫入剪貼簿，確保 iOS Safari 手勢不失效
+            let address = `${username}@${prewarmedGmDomain}`;
+            currentGeneratedEmail = address;
+            copyToClipboard(address);
+            log(`📋 已同步複製信箱到剪貼簿：${address}`, 'log-success');
+            if (emailDisplay) emailDisplay.textContent = address;
+            if (emailBox) emailBox.classList.add('active');
             
             if ('Notification' in window && Notification.permission !== 'granted') {
                 log('💡 提示：建議先點「🔔 啟用推播通知」按鈕，再開始流程，以確保收到驗證碼提醒。');
             }
 
             try {
-                log('🚀 正在向郵件伺服器註冊信箱...');
+                log('🚀 正在向郵件伺服器綁定信箱...');
                 
-                // 使用 GuerrillaMail 替代 mail.tm (因 mail.tm 不支援瀏覽器 POST CORS)
-                // 1. 取得 token
-                const initRes = await fetchWithRetry('https://api.guerrillamail.com/ajax.php?f=get_email_address', { method: 'GET' }, 2, 1000);
-                if (!initRes || !initRes.sid_token) throw new Error('無法取得信箱 token');
+                // 優先使用預熱的 sid_token，省去一次網路來回
+                let sidToken = prewarmedGmToken;
+                prewarmedGmToken = null; // 消耗掉預熱 token
+                if (!sidToken) {
+                    const initRes = await fetchWithRetry('https://api.guerrillamail.com/ajax.php?f=get_email_address', { method: 'GET' }, 2, 1000);
+                    if (!initRes || !initRes.sid_token) throw new Error('無法取得信箱 token');
+                    sidToken = initRes.sid_token;
+                }
                 
-                const sidToken = initRes.sid_token;
-                const username = `nintendo${randomString}`;
-                
-                // 2. 設定自訂帳號名稱
+                if (myRunId !== currentRunId) return; // 已被手動重置
+
+                // 設定自訂帳號名稱
                 const setRes = await fetchWithRetry(`https://api.guerrillamail.com/ajax.php?f=set_email_user&email_user=${username}&lang=en&sid_token=${sidToken}`, { method: 'GET' }, 2, 1000);
-                
-                let address = '';
+                if (myRunId !== currentRunId) return;
+
                 if (setRes && setRes.email_addr) {
-                    address = setRes.email_addr;
-                    currentGeneratedEmail = address;
-                    // 同步複製
-                    copyToClipboard(address);
-                    log(`📋 已將信箱複製到剪貼簿：${address}`, 'log-success');
+                    if (setRes.email_addr !== address) {
+                        address = setRes.email_addr;
+                        currentGeneratedEmail = address;
+                        copyToClipboard(address);
+                        if (emailDisplay) emailDisplay.textContent = address;
+                    }
                     addMailHistory(address);
-                    if (emailDisplay) emailDisplay.textContent = address;
-                    if (emailBox) emailBox.classList.add('active');
                 } else {
                     throw new Error('設定信箱名稱失敗');
                 }
 
-                const token = sidToken; // GuerrillaMail 的 token 就是 sid_token
-                
+                // 背景預熱下一輪的 Token
+                setTimeout(prewarmGmSession, 1500);
+
+                const token = sidToken;
                 saveMailSession(address, token); // 持久化儲存
                 log(`✅ 成功建立並確認信箱：${address}`, 'log-success');
-
 
                 if (copyEmailBtn) {
                     copyEmailBtn.onclick = () => {
                         copyToClipboard(address, copyEmailBtn);
-                        if (openPikminBtn) window.location.href = openPikminBtn.href;
+                        if (activeSessionLink) window.location.href = activeSessionLink;
                     };
                 }
 
@@ -8600,18 +8745,18 @@
                 setActionState('pwd_ready');
                 
                 // 自動跳轉至遊戲 (第一步：複製信箱後跳轉)
-                if (openPikminBtn && openPikminBtn.href) {
+                if (activeSessionLink) {
                     log('🍄 已複製信箱，自動跳轉至遊戲...', 'log-info');
                     try {
                         const dummyA = document.createElement('a');
-                        dummyA.href = openPikminBtn.href;
+                        dummyA.href = activeSessionLink;
                         dummyA.target = '_blank';
                         dummyA.rel = 'noopener noreferrer';
                         document.body.appendChild(dummyA);
                         dummyA.click();
                         setTimeout(() => dummyA.remove(), 500);
                     } catch(e) {
-                        window.location.href = openPikminBtn.href;
+                        window.location.href = activeSessionLink;
                     }
                 }
                 
@@ -8633,6 +8778,7 @@
                 const maxAttempts = 50; // 每 2.5 秒檢查一次，共 125 秒
                 
                 for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                    if (myRunId !== currentRunId) return; // 已被手動中斷
                     if (latestReceivedCode) {
                         verificationCode = latestReceivedCode;
                         break;
@@ -8648,21 +8794,21 @@
                     await sleep(2500);
                 }
                 
+                if (myRunId !== currentRunId) return;
                 if (!verificationCode && !latestReceivedCode) {
                     log('⚠️ 等待超時，您可隨時切換回網頁點擊主按鈕手動檢查最新信件。', 'log-error');
                     if (loadingBar) loadingBar.style.display = 'none';
                     if (codeTitle) codeTitle.textContent = '等待超時 (點主按鈕重新整理)';
                 }
             } catch (err) {
+                if (myRunId !== currentRunId) return;
                 let errMsg = err.message || String(err);
                 if (errMsg === 'Failed to fetch' || errMsg.includes('NetworkError') || errMsg.includes('network')) {
                     errMsg = '網路連線失敗（郵件伺服器可能暫時無法連線）';
-                    
-                    // 自動切換 API 並提示
-                    const newApi = switchMailApi();
-                    log(`⚠️ ${errMsg}，已自動切換備援伺服器 (${newApi})。請點擊按鈕重新嘗試。`, 'log-error');
+                    probeAndUpdateServerBar();
+                    log(`⚠️ ${errMsg}，請點擊按鈕重新嘗試。`, 'log-error');
                 } else if (errMsg.includes('422') || errMsg.includes('Unprocessable')) {
-                    errMsg = '信箱格式或帳號已存在，系統將自動重試新帳號';
+                    errMsg = '信箱格式或帳號已存在，請重新點擊按鈕再試一次';
                     log(`❌ 發生錯誤：${errMsg}`, 'log-error');
                 } else if (errMsg.includes('401') || errMsg.includes('Unauthorized')) {
                     errMsg = '驗證失敗，請重新點擊按鈕再試一次';
@@ -8675,30 +8821,49 @@
             }
         }
 
+        // ===== 綁定中斷/重新開始按鈕點擊事件 =====
+        if (resetFlowBtn) {
+            resetFlowBtn.addEventListener('click', () => {
+                currentRunId++;
+                clearMailSession();
+                latestReceivedCode = null;
+                activeSessionInvite = null;
+                activeSessionLink = '';
+                activeSessionCounted = false;
+                if (loadingBar) loadingBar.style.display = 'none';
+                setActionState('ready');
+                log('🔄 已放棄當前流程並重置為初始狀態。', 'log-info');
+                prewarmGmSession();
+            });
+        }
+
         // ===== 綁定動態引導按鈕點擊事件 =====
         if (dynamicActionBtn) {
             dynamicActionBtn.addEventListener('click', () => {
                 if (currentState === 'ready' || currentState === 'completed') {
                     runAutomation();
                 } else if (currentState === 'pwd_ready') {
-                    // 複製密碼並跳轉至遊戲
+                    // 複製密碼並跳轉至當前邀請人的遊戲連結
                     const password = (pwdInput && pwdInput.value) ? pwdInput.value.trim() : 'Pikmin123!@';
-                    navigator.clipboard.writeText(password);
+                    copyToClipboard(password);
                     log('📋 已將預設密碼複製到剪貼簿！', 'log-success');
-                    if (openPikminBtn) window.location.href = openPikminBtn.href;
+                    const targetLink = activeSessionLink || (openPikminBtn ? openPikminBtn.href : '');
+                    if (targetLink) window.location.href = targetLink;
                     setActionState('waiting');
                 } else if (currentState === 'waiting') {
                     // 如果在等待中點擊：手動強制檢查一次信件
                     log('🔄 手動立即檢查收件匣...', 'log-info');
                     checkInboxNow();
                 } else if (currentState === 'code_ready') {
-                    // 複製驗證碼並開啟遊戲，切換到 completed
+                    // 複製驗證碼並開啟當前邀請人的遊戲連結，完成後才執行 +1 與自動輪替
                     if (latestReceivedCode) {
-                        navigator.clipboard.writeText(latestReceivedCode);
+                        copyToClipboard(latestReceivedCode);
                         log(`📋 已複製驗證碼 ${latestReceivedCode}！`, 'log-success');
                     }
-                    if (openPikminBtn) window.location.href = openPikminBtn.href;
+                    const targetLink = activeSessionLink || (openPikminBtn ? openPikminBtn.href : '');
+                    finalizeActiveSessionInvite();
                     setActionState('completed');
+                    if (targetLink) window.location.href = targetLink;
                 }
             });
         }

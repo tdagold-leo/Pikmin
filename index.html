@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -3564,6 +3564,13 @@
                             </div>
                         </button>
 
+                        <!-- 中斷/重新開始當前流程按鈕 (僅在流程進行中顯示) -->
+                        <div id="cloud-resetFlowWrap" style="display: none; justify-content: center; margin-top: 8px;">
+                            <button id="cloud-resetFlowBtn" type="button" style="background: rgba(148, 163, 184, 0.12); border: 1px solid rgba(148, 163, 184, 0.3); color: #cbd5e1; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                                🔄 放棄並重新開始
+                            </button>
+                        </div>
+
                         <!-- 流程說明 (預設收起) -->
                         <details style="margin-top: 10px; text-align: left;">
                             <summary style="cursor: pointer; font-size: 11px; color: #94a3b8; text-align: center; outline: none; user-select: none;">💡 產生信箱 → 複製密碼 → 複製驗證碼 <span style="color:#38bdf8;">(詳細說明)</span></summary>
@@ -4522,11 +4529,12 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.10.28.2310";</script>
-    <script src="js/main.js?v=2026.10.28.2310"></script>
-    <script src="js/autofill.js?v=202610230026"></script>
+    <script>const APP_VERSION = "2026.10.30.1436";</script>
+    <script src="js/main.js?v=1793342199295.10.28.2310"></script>
+    <script src="js/autofill.js?v=1793342199311"></script>
 </body>
 </html>
+
 
 
 
