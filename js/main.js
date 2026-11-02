@@ -8530,8 +8530,44 @@ function layoutWeekEvents(weekEvents) {
         let currentState = 'ready'; // 'ready' | 'generating' | 'waiting' | 'code_ready' | 'completed'
 
         // ===== 動態引導單一按鈕狀態管理 =====
+        function updateManualPanelUI() {
+            const manualEmailEl = document.getElementById('cloud-manualEmailDisplay');
+            const manualCodeEl = document.getElementById('cloud-manualCodeDisplay');
+            const manualStatusEl = document.getElementById('cloud-manualCodeStatus');
+            const manualGenBtn = document.getElementById('cloud-manualGenEmailBtn');
+
+            if (manualEmailEl) {
+                manualEmailEl.textContent = currentGeneratedEmail || '尚未產生信箱';
+                manualEmailEl.style.color = currentGeneratedEmail ? '#38bdf8' : '#64748b';
+            }
+            if (manualCodeEl) {
+                manualCodeEl.textContent = latestReceivedCode || '----';
+                manualCodeEl.style.color = latestReceivedCode ? '#34d399' : '#64748b';
+            }
+            if (manualStatusEl) {
+                if (latestReceivedCode) {
+                    manualStatusEl.textContent = '✅ 已送達 (已自動複製)';
+                    manualStatusEl.style.color = '#34d399';
+                } else if (currentState === 'generating') {
+                    manualStatusEl.textContent = '⏳ 正在註冊信箱...';
+                    manualStatusEl.style.color = '#fcd34d';
+                } else if (currentGeneratedEmail) {
+                    manualStatusEl.textContent = '📡 背景監聽信件中...';
+                    manualStatusEl.style.color = '#38bdf8';
+                } else {
+                    manualStatusEl.textContent = '待命';
+                    manualStatusEl.style.color = '#94a3b8';
+                }
+            }
+            if (manualGenBtn) {
+                manualGenBtn.disabled = (currentState === 'generating');
+                manualGenBtn.style.opacity = (currentState === 'generating') ? '0.6' : '1';
+            }
+        }
+
         function setActionState(state, data = {}) {
             currentState = state;
+            updateManualPanelUI();
             if (!dynamicActionBtn) return;
 
             dynamicActionBtn.className = 'dynamic-action-btn state-' + state;
@@ -9760,6 +9796,7 @@ function layoutWeekEvents(weekEvents) {
             resetFlowBtn.addEventListener('click', () => {
                 currentRunId++;
                 clearMailSession();
+                currentGeneratedEmail = null;
                 latestReceivedCode = null;
                 activeSessionInvite = null;
                 activeSessionLink = '';
@@ -9768,6 +9805,216 @@ function layoutWeekEvents(weekEvents) {
                 setActionState('ready');
                 log('🔄 已放棄當前流程並重置為初始狀態。', 'log-info');
                 prewarmGmSession();
+            });
+        }
+
+        // ===== 純手動模式：獨立產生信箱與背景收信（不強制選邀請人、不自動跳轉遊戲） =====
+        async function runManualGenerateEmail() {
+            const myRunId = ++currentRunId;
+            activeSessionInvite = currentActiveInvite || null;
+            activeSessionLink = currentActiveInvite ? currentActiveInvite.link : (openPikminBtn ? openPikminBtn.href : '');
+            activeSessionCounted = false;
+
+            getAudioContext();
+            latestReceivedCode = null;
+            setActionState('generating');
+            if (logContainer) logContainer.innerHTML = '<div class="log-entry">🛠️ [純手動模式] 正在建立新免洗信箱...</div>';
+
+            const randomString = Date.now().toString();
+            const username = `nintendo${randomString}`;
+            let address = `${username}@${prewarmedGmDomain}`;
+            currentGeneratedEmail = address;
+            copyToClipboard(address);
+            updateManualPanelUI();
+            log(`📋 已產生並複製信箱：${address}`, 'log-success');
+
+            try {
+                let sidToken = prewarmedGmToken;
+                prewarmedGmToken = null;
+                if (!sidToken) {
+                    const initRes = await fetchWithRetry('https://api.guerrillamail.com/ajax.php?f=get_email_address', { method: 'GET' }, 2, 1000);
+                    if (!initRes || !initRes.sid_token) throw new Error('無法取得信箱 token');
+                    sidToken = initRes.sid_token;
+                }
+                if (myRunId !== currentRunId) return;
+
+                const setRes = await fetchWithRetry(`https://api.guerrillamail.com/ajax.php?f=set_email_user&email_user=${username}&lang=en&sid_token=${sidToken}`, { method: 'GET' }, 2, 1000);
+                if (myRunId !== currentRunId) return;
+
+                if (setRes && setRes.email_addr) {
+                    if (setRes.email_addr !== address) {
+                        address = setRes.email_addr;
+                        currentGeneratedEmail = address;
+                        copyToClipboard(address);
+                    }
+                    addMailHistory(address);
+                } else {
+                    throw new Error('設定信箱名稱失敗');
+                }
+
+                setTimeout(prewarmGmSession, 1500);
+                saveMailSession(address, sidToken);
+                log(`✅ 信箱已就緒：${address}（背景開始自動收信，不自動跳轉）`, 'log-success');
+                setActionState('waiting');
+
+                const maxAttempts = 50;
+                for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                    if (myRunId !== currentRunId) return;
+                    if (latestReceivedCode) break;
+                    if (attempt === 1 || attempt % 4 === 0) {
+                        log(`⏳ 等待信件中... (${attempt}/${maxAttempts})`);
+                    }
+                    const code = await checkInboxNow();
+                    if (code) break;
+                    await sleep(2500);
+                }
+                if (myRunId !== currentRunId) return;
+                if (!latestReceivedCode) {
+                    log('⚠️ 自動收信等待超時，可隨時點擊「🔄 手動檢查信件」拉取驗證碼。', 'log-error');
+                }
+            } catch (err) {
+                if (myRunId !== currentRunId) return;
+                log(`❌ 建立信箱失敗：${err.message || err}`, 'log-error');
+                setActionState('ready');
+            }
+        }
+
+        // ===== 模式切換與純手動面板按鈕綁定 =====
+        const modeAutoBtn = document.getElementById('cloud-modeAutoBtn');
+        const modeManualBtn = document.getElementById('cloud-modeManualBtn');
+        const autoPanel = document.getElementById('cloud-autoPanel');
+        const manualPanel = document.getElementById('cloud-manualPanel');
+        const manualPasswordInput = document.getElementById('cloud-manualPassword');
+        const manualGenEmailBtn = document.getElementById('cloud-manualGenEmailBtn');
+        const manualCopyEmailBtn = document.getElementById('cloud-manualCopyEmailBtn');
+        const manualCopyPwdBtn = document.getElementById('cloud-manualCopyPwdBtn');
+        const manualCheckInboxBtn = document.getElementById('cloud-manualCheckInboxBtn');
+        const manualCopyCodeBtn = document.getElementById('cloud-manualCopyCodeBtn');
+        const manualOpenGameBtn = document.getElementById('cloud-manualOpenGameBtn');
+        const manualCompleteCountBtn = document.getElementById('cloud-manualCompleteCountBtn');
+
+        function setCloudMode(mode) {
+            const isManual = (mode === 'manual');
+            if (autoPanel) autoPanel.style.display = isManual ? 'none' : 'block';
+            if (manualPanel) manualPanel.style.display = isManual ? 'flex' : 'none';
+            if (modeAutoBtn) {
+                modeAutoBtn.style.background = isManual ? 'transparent' : 'linear-gradient(135deg, #0284c7, #2563eb)';
+                modeAutoBtn.style.color = isManual ? '#94a3b8' : '#ffffff';
+                modeAutoBtn.style.boxShadow = isManual ? 'none' : '0 2px 8px rgba(37, 99, 235, 0.35)';
+            }
+            if (modeManualBtn) {
+                modeManualBtn.style.background = isManual ? 'linear-gradient(135deg, #0284c7, #2563eb)' : 'transparent';
+                modeManualBtn.style.color = isManual ? '#ffffff' : '#94a3b8';
+                modeManualBtn.style.boxShadow = isManual ? '0 2px 8px rgba(37, 99, 235, 0.35)' : 'none';
+            }
+            try { localStorage.setItem('pikmin_cloud_mode', isManual ? 'manual' : 'auto'); } catch(e) {}
+            updateManualPanelUI();
+        }
+
+        if (modeAutoBtn) modeAutoBtn.addEventListener('click', () => setCloudMode('auto'));
+        if (modeManualBtn) modeManualBtn.addEventListener('click', () => setCloudMode('manual'));
+
+        // 雙向同步自動模式與純手動模式的密碼輸入框
+        if (pwdInput && manualPasswordInput) {
+            pwdInput.addEventListener('input', () => { manualPasswordInput.value = pwdInput.value; });
+            manualPasswordInput.addEventListener('input', () => { pwdInput.value = manualPasswordInput.value; });
+        }
+
+        // 若 localStorage 有未過期的信箱 Session，載入時自動帶入顯示
+        (function restoreRecentSessionDisplay() {
+            const existingSession = getMailSession();
+            if (existingSession && existingSession.address && !currentGeneratedEmail) {
+                currentGeneratedEmail = existingSession.address;
+            }
+            try {
+                const savedMode = localStorage.getItem('pikmin_cloud_mode');
+                if (savedMode === 'manual') setCloudMode('manual');
+                else updateManualPanelUI();
+            } catch(e) {
+                updateManualPanelUI();
+            }
+        })();
+
+        if (manualGenEmailBtn) {
+            manualGenEmailBtn.addEventListener('click', runManualGenerateEmail);
+        }
+        if (manualCopyEmailBtn) {
+            manualCopyEmailBtn.addEventListener('click', function() {
+                if (!currentGeneratedEmail) {
+                    alert('尚未產生信箱！請先點擊左側「🎲 產生新信箱」。');
+                    return;
+                }
+                copyToClipboard(currentGeneratedEmail, this);
+                log(`📋 已手動複製信箱：${currentGeneratedEmail}`, 'log-success');
+            });
+        }
+        if (manualCopyPwdBtn) {
+            manualCopyPwdBtn.addEventListener('click', function() {
+                const pwd = (manualPasswordInput && manualPasswordInput.value) ? manualPasswordInput.value.trim() : ((pwdInput && pwdInput.value) ? pwdInput.value.trim() : 'Pikmin123!@');
+                copyToClipboard(pwd, this);
+                log('📋 已手動複製密碼！', 'log-success');
+            });
+        }
+        if (manualCheckInboxBtn) {
+            manualCheckInboxBtn.addEventListener('click', async function() {
+                log('🔄 [純手動] 立即檢查收件匣...', 'log-info');
+                const origHtml = this.innerHTML;
+                this.textContent = '⏳ 檢查中...';
+                this.disabled = true;
+                const code = await checkInboxNow();
+                this.innerHTML = origHtml;
+                this.disabled = false;
+                if (!code && !latestReceivedCode) {
+                    log('📭 目前尚未收到驗證信，請確認遊戲內已發送後再試。', 'log-info');
+                }
+            });
+        }
+        if (manualCopyCodeBtn) {
+            manualCopyCodeBtn.addEventListener('click', function() {
+                if (!latestReceivedCode) {
+                    alert('目前尚未收到驗證碼！可先點「🔄 手動檢查信件」。');
+                    return;
+                }
+                copyToClipboard(latestReceivedCode, this);
+                log(`📋 已手動複製驗證碼：${latestReceivedCode}`, 'log-success');
+            });
+        }
+        if (manualOpenGameBtn) {
+            manualOpenGameBtn.addEventListener('click', () => {
+                if (!currentActiveInvite) {
+                    alert('請先在下方「邀請人清單」中選取一位目標邀請人！');
+                    const details = document.getElementById('cloud-inviteListDetails');
+                    if (details) {
+                        details.open = true;
+                        details.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    return;
+                }
+                const link = currentActiveInvite.link || (openPikminBtn ? openPikminBtn.href : '');
+                if (link) {
+                    log(`🍄 手動開啟「${currentActiveInvite.name}」的邀請連結...`, 'log-info');
+                    window.open(link, '_blank', 'noopener,noreferrer');
+                }
+            });
+        }
+        if (manualCompleteCountBtn) {
+            manualCompleteCountBtn.addEventListener('click', function() {
+                if (!currentActiveInvite) {
+                    alert('目前尚未選取目標邀請人，無法記次！');
+                    return;
+                }
+                const targetName = currentActiveInvite.name;
+                if (autoRotateCheckbox && autoRotateCheckbox.checked && typeof window.rotateToNextInvite === 'function') {
+                    window.rotateToNextInvite();
+                } else {
+                    updateItemCount(currentActiveInvite, 1);
+                    updateInviterBadge();
+                    log(`✅ 已手動為「${targetName}」次數 +1！`, 'log-success');
+                }
+                activeSessionCounted = true;
+                const origHtml = this.innerHTML;
+                this.innerHTML = '🎉 已記次 +1！';
+                setTimeout(() => { this.innerHTML = origHtml; }, 1500);
             });
         }
 
