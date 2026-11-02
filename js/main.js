@@ -535,10 +535,17 @@
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         document.getElementById('view-' + tab).classList.add('active');
 
-        if(tab === 'settings' || tab === 'cloud' || tab === 'map') {
+        if(tab === 'settings' || tab === 'cloud' || tab === 'ocr' || tab === 'map') {
             document.getElementById('main-fab').style.display = 'none';
         } else {
             document.getElementById('main-fab').style.display = 'flex';
+        }
+        if ((tab === 'cloud' || tab === 'ocr') && !navEl) {
+            const setNav = document.getElementById('nav-settings');
+            if (setNav) setNav.classList.add('active');
+        }
+        if (tab === 'ocr' && typeof window.initOcrToolIfNeeded === 'function') {
+            window.initOcrToolIfNeeded();
         }
         
         if (tab === 'map') {
@@ -10048,6 +10055,413 @@ function layoutWeekEvents(weekEvents) {
                 }
             });
         }
+    })();
+
+    // ===== 內嵌圖片座標擷取工具 (按需載入 Tesseract.js + 共用 Firebase 暫存區) =====
+    (function() {
+        const resultText = document.getElementById('ocrtool-result-text');
+        const sharedResultText = document.getElementById('ocrtool-shared-result-text');
+        const cloudSyncStatus = document.getElementById('ocrtool-cloud-sync-status');
+        const statusEl = document.getElementById('ocrtool-status');
+        const loader = document.getElementById('ocrtool-loader');
+        const sortSelect = document.getElementById('ocrtool-sort-select');
+        const dedupeCheck = document.getElementById('ocrtool-dedupe-check');
+        const autoSyncCheck = document.getElementById('ocrtool-auto-sync-check');
+
+        let tesseractPromise = null;
+        let ocrScratchpadInitialized = false;
+        let scratchpadRef = null;
+        let isLocalUpdatingCloud = false;
+        let sharedInputTimer = null;
+
+        function ensureTesseractLoaded() {
+            if (typeof window.Tesseract !== 'undefined') return Promise.resolve(window.Tesseract);
+            if (tesseractPromise) return tesseractPromise;
+            tesseractPromise = new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+                script.onload = () => resolve(window.Tesseract);
+                script.onerror = () => {
+                    tesseractPromise = null;
+                    reject(new Error('載入 OCR 引擎失敗，請檢查網路連線'));
+                };
+                document.head.appendChild(script);
+            });
+            return tesseractPromise;
+        }
+
+        function setLoading(isLoading) {
+            if (loader) loader.style.display = isLoading ? 'block' : 'none';
+        }
+
+        window.initOcrToolIfNeeded = function() {
+            // 預先在背景載入 Tesseract.js，並啟動 Firebase 暫存區監聽
+            ensureTesseractLoaded().catch(() => {});
+            if (ocrScratchpadInitialized) return;
+            ocrScratchpadInitialized = true;
+
+            try {
+                const savedMode = localStorage.getItem('pikmin_ocr_sort_mode');
+                if (savedMode && sortSelect) sortSelect.value = savedMode;
+                const savedDedupe = localStorage.getItem('pikmin_ocr_dedupe');
+                if (savedDedupe !== null && dedupeCheck) dedupeCheck.checked = (savedDedupe === '1');
+                const savedAutoSync = localStorage.getItem('pikmin_ocr_auto_sync');
+                if (savedAutoSync !== null && autoSyncCheck) autoSyncCheck.checked = (savedAutoSync === '1');
+            } catch(e) {}
+
+            if (typeof database !== 'undefined' && sharedResultText && cloudSyncStatus) {
+                scratchpadRef = database.ref('ocrScratchpad');
+                scratchpadRef.on('value', (snap) => {
+                    const data = snap.val();
+                    const remoteText = (data && typeof data.text === 'string') ? data.text : '';
+                    if (!isLocalUpdatingCloud || document.activeElement !== sharedResultText) {
+                        if (sharedResultText.value !== remoteText) {
+                            sharedResultText.value = remoteText;
+                        }
+                    }
+                    isLocalUpdatingCloud = false;
+                    if (data && data.updatedAt) {
+                        const d = new Date(data.updatedAt);
+                        const timeStr = [d.getHours(), d.getMinutes(), d.getSeconds()]
+                            .map(n => String(n).padStart(2, '0')).join(':');
+                        cloudSyncStatus.innerText = '🟢 已同步 (' + timeStr + ')';
+                        cloudSyncStatus.style.color = '#059669';
+                    } else {
+                        cloudSyncStatus.innerText = '🟢 已連線 (尚無資料)';
+                        cloudSyncStatus.style.color = '#059669';
+                    }
+                }, () => {
+                    cloudSyncStatus.innerText = '⚠️ 雲端連線異常';
+                    cloudSyncStatus.style.color = '#dc2626';
+                });
+            }
+        };
+
+        // 若重整時剛好停留在 ocr 分頁，立即初始化
+        if (localStorage.getItem('pikmin_active_tab') === 'ocr') {
+            setTimeout(() => window.initOcrToolIfNeeded(), 300);
+        }
+
+        window.ocrToolUpdateSelectedCount = function() {
+            const fileInput = document.getElementById('ocrtool-file-input');
+            if (!statusEl) return;
+            if (fileInput && fileInput.files && fileInput.files.length > 0) {
+                statusEl.innerText = `✅ 已選擇 ${fileInput.files.length} 張圖片，請點擊上方「2️⃣ 開始辨識」`;
+                statusEl.style.color = '#059669';
+            } else {
+                statusEl.innerText = '尚未選擇圖片';
+                statusEl.style.color = '#64748b';
+            }
+        };
+
+        window.ocrToolStartRecognition = async function() {
+            window.initOcrToolIfNeeded();
+            const fileInput = document.getElementById('ocrtool-file-input');
+            if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                alert('請先完成第 1 步：選擇圖片！');
+                return;
+            }
+            const files = fileInput.files;
+            setLoading(true);
+            statusEl.innerText = '正在載入 OCR 辨識引擎...';
+            statusEl.style.color = '#059669';
+
+            try {
+                await ensureTesseractLoaded();
+                for (let i = 0; i < files.length; i++) {
+                    statusEl.innerText = `處理中 (${i + 1}/${files.length})...`;
+                    try {
+                        await processImage(files[i]);
+                    } catch (err) {
+                        console.error(err);
+                        statusEl.innerText = `第 ${i + 1} 張處理失敗！`;
+                    }
+                }
+                window.ocrToolSortCoordinates(false);
+                if (autoSyncCheck && autoSyncCheck.checked) {
+                    window.ocrToolAppendToShared(true);
+                    statusEl.innerText = '✅ 全部處理完成！已自動排序並同步至通用暫存區。';
+                } else {
+                    statusEl.innerText = '✅ 全部處理完成！已自動按座標排序。';
+                }
+            } catch (err) {
+                statusEl.innerText = '❌ ' + (err.message || '辨識失敗');
+                statusEl.style.color = '#dc2626';
+            } finally {
+                setLoading(false);
+                fileInput.value = '';
+            }
+        };
+
+        function processImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = async () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        const cropRatio = 0.50;
+                        const cropHeight = Math.floor(img.height * cropRatio);
+                        const startY = img.height - cropHeight;
+                        canvas.width = img.width;
+                        canvas.height = cropHeight;
+                        ctx.drawImage(img, 0, startY, img.width, cropHeight, 0, 0, canvas.width, canvas.height);
+                        const croppedDataUrl = canvas.toDataURL('image/png');
+                        try {
+                            const result = await window.Tesseract.recognize(croppedDataUrl, 'eng');
+                            const coords = extractCoordinates(result.data.text);
+                            if (coords) {
+                                appendResult(coords);
+                            } else {
+                                appendResult(`[未找到座標] ${file.name}`);
+                            }
+                            resolve();
+                        } catch (err) {
+                            reject(err);
+                        }
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function recoverMissingDot(numStr) {
+            if (!numStr || numStr.includes('.')) return numStr;
+            const isNegative = numStr.startsWith('-');
+            const digits = isNegative ? numStr.slice(1) : numStr;
+            if (digits.length >= 8 && digits.length <= 10) {
+                const intLen = digits.length - 7;
+                return (isNegative ? '-' : '') + digits.slice(0, intLen) + '.' + digits.slice(intLen);
+            }
+            return numStr;
+        }
+
+        function extractCoordinates(text) {
+            if (!text) return null;
+            const stdRegex = /(-?\d{1,3}\.\d{3,})\s*[,，\s]\s*(-?\d{1,3}\.\d{3,})/;
+            const match = stdRegex.exec(text);
+            if (match) {
+                const lat = parseFloat(match[1]);
+                const lng = parseFloat(match[2]);
+                if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                    return `${lat}, ${lng}`;
+                }
+            }
+            const parenRegex = /[(（\[]\s*(-?\d+(?:\.\d+)?)\s*[,，\s]+\s*(-?\d+(?:\.\d+)?)\s*[)）\]]/g;
+            let pMatch;
+            while ((pMatch = parenRegex.exec(text)) !== null) {
+                const lat = parseFloat(recoverMissingDot(pMatch[1]));
+                const lng = parseFloat(recoverMissingDot(pMatch[2]));
+                if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                    return `${lat}, ${lng}`;
+                }
+            }
+            return null;
+        }
+
+        function appendResult(text) {
+            if (!resultText) return;
+            const val = resultText.value.trim();
+            resultText.value = val ? (val + '\n' + text) : text;
+            resultText.scrollTop = resultText.scrollHeight;
+        }
+
+        function parseCoordLine(line) {
+            const trimmed = line.trim();
+            if (!trimmed) return null;
+            const match = trimmed.match(/[(（\[]?\s*(-?\d{1,3}(?:\.\d+)?)\s*[,，\s]+\s*(-?\d{1,3}(?:\.\d+)?)\s*[)）\]]?/);
+            if (match) {
+                const lat = parseFloat(match[1]);
+                const lng = parseFloat(match[2]);
+                if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                    return { raw: `${match[1]}, ${match[2]}`, lat, lng, isCoord: true };
+                }
+            }
+            return { raw: trimmed, isCoord: false };
+        }
+
+        function formatCoordText(rawText) {
+            const mode = sortSelect ? sortSelect.value : 'lat-asc';
+            const dedupe = dedupeCheck ? dedupeCheck.checked : true;
+            const lines = (rawText || '').trim().split('\n');
+            let coords = [];
+            const nonCoords = [];
+
+            lines.forEach(line => {
+                const parsed = parseCoordLine(line);
+                if (!parsed) return;
+                if (parsed.isCoord) coords.push(parsed);
+                else nonCoords.push(parsed.raw);
+            });
+
+            if (dedupe) {
+                const seen = new Set();
+                coords = coords.filter(c => {
+                    const key = `${c.lat},${c.lng}`;
+                    if (seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                });
+            }
+
+            coords.sort((a, b) => {
+                if (mode === 'lat-asc') return a.lat !== b.lat ? a.lat - b.lat : a.lng - b.lng;
+                if (mode === 'lat-desc') return a.lat !== b.lat ? b.lat - a.lat : a.lng - b.lng;
+                if (mode === 'lng-asc') return a.lng !== b.lng ? a.lng - b.lng : a.lat - b.lat;
+                if (mode === 'lng-desc') return a.lng !== b.lng ? b.lng - a.lng : a.lat - b.lat;
+                return 0;
+            });
+
+            const outputLines = coords.map(c => c.raw);
+            if (nonCoords.length > 0) outputLines.push(...nonCoords);
+            return { text: outputLines.join('\n'), count: coords.length };
+        }
+
+        window.ocrToolSortCoordinates = function(showFeedback = false) {
+            if (!resultText) return;
+            const mode = sortSelect ? sortSelect.value : 'lat-asc';
+            const dedupe = dedupeCheck ? dedupeCheck.checked : true;
+            try {
+                localStorage.setItem('pikmin_ocr_sort_mode', mode);
+                localStorage.setItem('pikmin_ocr_dedupe', dedupe ? '1' : '0');
+            } catch(e) {}
+
+            if (!resultText.value.trim()) return;
+            const formatted = formatCoordText(resultText.value);
+            resultText.value = formatted.text;
+            if (showFeedback && formatted.count > 0 && statusEl) {
+                const orig = statusEl.innerText;
+                statusEl.innerText = `✅ 已按座標排序 (${formatted.count} 筆)！`;
+                statusEl.style.color = '#059669';
+                setTimeout(() => { statusEl.innerText = orig; }, 2000);
+            }
+        };
+
+        window.ocrToolSaveAutoSyncPref = function() {
+            try {
+                if (autoSyncCheck) localStorage.setItem('pikmin_ocr_auto_sync', autoSyncCheck.checked ? '1' : '0');
+            } catch(e) {}
+        };
+
+        function saveToCloud(text, statusMsg) {
+            window.initOcrToolIfNeeded();
+            if (!scratchpadRef) return;
+            isLocalUpdatingCloud = true;
+            if (cloudSyncStatus) {
+                cloudSyncStatus.innerText = '⏳ 同步中...';
+                cloudSyncStatus.style.color = '#0284c7';
+            }
+            scratchpadRef.set({
+                text: text || '',
+                updatedAt: Date.now()
+            }).then(() => {
+                if (statusMsg && statusEl) {
+                    const orig = statusEl.innerText;
+                    statusEl.innerText = statusMsg;
+                    statusEl.style.color = '#059669';
+                    setTimeout(() => { statusEl.innerText = orig; }, 2000);
+                }
+            }).catch(() => {
+                if (cloudSyncStatus) {
+                    cloudSyncStatus.innerText = '❌ 同步失敗';
+                    cloudSyncStatus.style.color = '#dc2626';
+                }
+            });
+        }
+
+        window.ocrToolOnSharedInput = function() {
+            if (cloudSyncStatus) {
+                cloudSyncStatus.innerText = '✏️ 編輯中...';
+                cloudSyncStatus.style.color = '#d97706';
+            }
+            if (sharedInputTimer) clearTimeout(sharedInputTimer);
+            sharedInputTimer = setTimeout(() => {
+                if (sharedResultText) saveToCloud(sharedResultText.value);
+            }, 450);
+        };
+
+        function extractOnlyValidCoords(rawText) {
+            const lines = (rawText || '').trim().split('\n');
+            const valid = [];
+            lines.forEach(line => {
+                const parsed = parseCoordLine(line);
+                if (parsed && parsed.isCoord) valid.push(parsed.raw);
+            });
+            return valid.join('\n');
+        }
+
+        window.ocrToolAppendToShared = function(silent = false) {
+            if (!resultText || !sharedResultText) return;
+            const newCoords = extractOnlyValidCoords(resultText.value);
+            if (!newCoords) {
+                if (!silent) alert('上方擷取結果中沒有有效的座標可供追加！');
+                return;
+            }
+            const combined = sharedResultText.value.trim()
+                ? (sharedResultText.value.trim() + '\n' + newCoords)
+                : newCoords;
+            const formatted = formatCoordText(combined);
+            sharedResultText.value = formatted.text;
+            saveToCloud(formatted.text, silent ? null : `☁️ 已追加並同步至通用暫存區 (共 ${formatted.count} 筆)！`);
+        };
+
+        window.ocrToolOverwriteShared = function() {
+            if (!resultText || !sharedResultText) return;
+            const newCoords = extractOnlyValidCoords(resultText.value);
+            if (!newCoords) {
+                alert('上方擷取結果中沒有有效的座標可供覆蓋！');
+                return;
+            }
+            const formatted = formatCoordText(newCoords);
+            sharedResultText.value = formatted.text;
+            saveToCloud(formatted.text, `☁️ 已覆蓋同步至通用暫存區 (共 ${formatted.count} 筆)！`);
+        };
+
+        window.ocrToolSortShared = function() {
+            if (!sharedResultText || !sharedResultText.value.trim()) return;
+            const formatted = formatCoordText(sharedResultText.value);
+            sharedResultText.value = formatted.text;
+            saveToCloud(formatted.text, `✅ 通用暫存區已排序並同步 (${formatted.count} 筆)！`);
+        };
+
+        window.ocrToolClearShared = function() {
+            if (!sharedResultText || !sharedResultText.value.trim()) return;
+            sharedResultText.value = '';
+            saveToCloud('', '🗑️ 已清空通用暫存區！');
+        };
+
+        function showCopySuccess(msg) {
+            if (!statusEl) return;
+            const orig = statusEl.innerText;
+            statusEl.innerText = msg || '✅ 複製成功！';
+            statusEl.style.color = '#059669';
+            setTimeout(() => { statusEl.innerText = orig; }, 2000);
+        }
+
+        window.ocrToolCopyShared = function() {
+            if (!sharedResultText || !sharedResultText.value) return;
+            navigator.clipboard.writeText(sharedResultText.value).then(() => {
+                showCopySuccess('✅ 暫存區複製成功！');
+            }).catch(() => {});
+        };
+
+        window.ocrToolCopyText = function() {
+            if (!resultText || !resultText.value) return;
+            navigator.clipboard.writeText(resultText.value).then(() => {
+                showCopySuccess('✅ 複製成功！');
+            }).catch(() => {});
+        };
+
+        window.ocrToolClearText = function() {
+            if (!resultText || !statusEl) return;
+            resultText.value = '';
+            statusEl.innerText = '🗑️ 已清空';
+            setTimeout(() => { statusEl.innerText = '尚未選擇圖片'; statusEl.style.color = '#64748b'; }, 2000);
+        };
     })();
     
 // ===== Google Maps 邏輯 =====

@@ -4153,7 +4153,7 @@
                     </div>
                 </div>
                 <div class="settings-card-body">
-                    <a href="ocr.html?v=202610230026" target="_blank" class="btn-sm btn-primary btn-block" style="padding:10px; font-size:14px; border-radius:10px; width:100%; display:block; text-align:center; text-decoration:none; box-sizing:border-box;">🔗 開啟擷取工具</a>
+                    <button class="btn-sm btn-primary btn-block" onclick="switchTab('ocr')" style="padding:10px; font-size:14px; border-radius:10px; width:100%;">🔗 前往擷取工具</button>
                 </div>
             </div>
 
@@ -4369,6 +4369,94 @@
                     <div id="cloud-mailHistoryList" style="display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto;"></div>
                 </details>
 
+            </div>
+        </section>
+
+        <section id="view-ocr" class="view-section" style="padding: 12px 10px 80px;">
+            <div style="width: 100%; max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06); padding: 18px; display: flex; flex-direction: column; gap: 14px; box-sizing: border-box;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <button type="button" onclick="switchTab('settings')" style="background: #f1f5f9; border: 1px solid #e2e8f0; color: #475569; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 8px; cursor: pointer;">← 返回設定</button>
+                    <h2 style="margin: 0; font-size: 19px; color: #1e293b; font-weight: 800;">🖼️ 圖片座標擷取工具</h2>
+                    <div style="width: 68px;"></div>
+                </div>
+                <p style="margin: 0; font-size: 12.5px; color: #64748b; text-align: center; line-height: 1.5;">請依序點擊下方按鈕，將自動擷取遊戲截圖底部的經緯度座標。</p>
+
+                <!-- 兩段式操作區塊 -->
+                <div style="display:flex; gap:8px; width:100%;">
+                    <input type="file" id="ocrtool-file-input" accept="image/*" multiple style="display:none;" onchange="ocrToolUpdateSelectedCount()">
+                    <button type="button" onclick="document.getElementById('ocrtool-file-input').click()"
+                        style="flex:1; padding:14px 8px; border-radius:12px; background:#f1f5f9; color:#334155; border:2px dashed #cbd5e1; font-size:14px; font-weight:bold; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; transition:all 0.2s;">
+                        <div style="font-size: 20px;">1️⃣</div>
+                        <div>選擇圖片</div>
+                    </button>
+                    <button type="button" onclick="ocrToolStartRecognition()"
+                        style="flex:1; padding:14px 8px; border-radius:12px; background:linear-gradient(135deg,#10b981,#059669); color:white; border:none; font-size:14px; font-weight:bold; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; box-shadow:0 4px 14px rgba(16,185,129,0.35);">
+                        <div style="font-size: 20px;">2️⃣</div>
+                        <div>開始辨識</div>
+                    </button>
+                </div>
+
+                <!-- 狀態顯示與 Loading -->
+                <div style="min-height: 22px; text-align: center;">
+                    <div id="ocrtool-loader" style="border: 3px solid #f3f3f3; border-top: 3px solid #10b981; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; margin: 0 auto 4px;"></div>
+                    <div id="ocrtool-status" style="font-size: 13px; color: #64748b; font-weight: bold;">尚未選擇圖片</div>
+                </div>
+
+                <!-- 擷取結果區 -->
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                        <label style="font-size: 13px; font-weight: bold; color: #1e293b;">📝 擷取結果：</label>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <label style="font-size:12px; color:#64748b; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
+                                <input type="checkbox" id="ocrtool-dedupe-check" onchange="ocrToolSortCoordinates(true)" checked> 自動去重
+                            </label>
+                            <select id="ocrtool-sort-select" onchange="ocrToolSortCoordinates(true)" style="padding:4px 8px; border-radius:6px; border:1px solid #cbd5e1; font-size:12px; background:white; color:#334155; outline:none; cursor:pointer;">
+                                <option value="lat-asc">依緯度 (由小到大 ↑)</option>
+                                <option value="lat-desc">依緯度 (由大到小 ↓)</option>
+                                <option value="lng-asc">依經度 (由小到大 ↑)</option>
+                                <option value="lng-desc">依經度 (由大到小 ↓)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <textarea id="ocrtool-result-text" placeholder="擷取的座標會顯示在這裡..." style="width: 100%; height: 140px; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: monospace; font-size: 13.5px; resize: vertical; outline: none; box-sizing: border-box;"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" onclick="ocrToolSortCoordinates(true)" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 13.5px; font-weight: bold; cursor: pointer; background:#e0f2fe; color:#0369a1;">🔃 排序</button>
+                    <button type="button" onclick="ocrToolClearText()" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 13.5px; font-weight: bold; cursor: pointer; background: #f1f5f9; color: #64748b;">🗑️ 清空</button>
+                    <button type="button" onclick="ocrToolCopyText()" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 13.5px; font-weight: bold; cursor: pointer; background: #10b981; color: white; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);">📋 一鍵複製</button>
+                </div>
+
+                <!-- 傳送至通用暫存區快捷列 -->
+                <div style="display:flex; flex-direction:column; gap:8px; padding-top:6px; border-top:1px dashed #e2e8f0;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                        <label style="font-size:12px; color:#0369a1; font-weight:bold; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
+                            <input type="checkbox" id="ocrtool-auto-sync-check" onchange="ocrToolSaveAutoSyncPref()" checked> 辨識完自動追加至通用暫存區
+                        </label>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" onclick="ocrToolAppendToShared(false)" style="flex: 1; padding: 9px; border-radius: 8px; font-weight: bold; cursor: pointer; background:#f0f9ff; color:#0284c7; border:1px solid #bae6fd; font-size:13px;">➕ 追加至暫存區</button>
+                        <button type="button" onclick="ocrToolOverwriteShared()" style="flex: 1; padding: 9px; border-radius: 8px; font-weight: bold; cursor: pointer; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:13px;">⬆️ 覆蓋至暫存區</button>
+                    </div>
+                </div>
+
+                <!-- 通用座標暫存區 (跨裝置即時同步) -->
+                <div style="display: flex; flex-direction: column; gap: 8px; background:linear-gradient(160deg, #f0f9ff 0%, #f8fafc 100%); border:1.5px solid #bae6fd; border-radius:12px; padding:14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <label style="font-size: 14px; font-weight: 800; color: #0369a1;">☁️ 通用座標暫存區</label>
+                            <span style="font-size:10px; background:#0284c7; color:white; padding:2px 6px; border-radius:99px; font-weight:bold;">跨裝置同步</span>
+                        </div>
+                        <span id="ocrtool-cloud-sync-status" style="font-size:11px; color:#059669; font-weight:bold;">⏳ 連線中...</span>
+                    </div>
+                    <div style="font-size:11px; color:#64748b;">所有裝置皆可即時查看與編輯此處座標（支援直接打字或貼上自動同步）</div>
+                    <textarea id="ocrtool-shared-result-text" placeholder="此處的座標會即時同步到所有裝置，可直接輸入或由上方傳入..." oninput="ocrToolOnSharedInput()" style="width: 100%; height: 140px; padding: 10px 12px; border-radius: 8px; border: 1px solid #93c5fd; background: #ffffff; font-family: monospace; font-size: 13.5px; resize: vertical; outline: none; box-sizing: border-box;"></textarea>
+                    <div style="display: flex; gap: 8px; margin-top: 2px;">
+                        <button type="button" onclick="ocrToolSortShared()" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 13.5px; font-weight: bold; cursor: pointer; background:#e0f2fe; color:#0369a1;">🔃 排序</button>
+                        <button type="button" onclick="ocrToolClearShared()" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 13.5px; font-weight: bold; cursor: pointer; background:#fee2e2; color:#b91c1c;">🗑️ 清空</button>
+                        <button type="button" onclick="ocrToolCopyShared()" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 13.5px; font-weight: bold; cursor: pointer; background:linear-gradient(135deg,#0284c7,#0369a1); color:white; box-shadow:0 2px 4px rgba(2,132,199,0.3);">📋 複製暫存區</button>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -5283,11 +5371,12 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.11.03.0411";</script>
-    <script src="js/main.js?v=1793650292395.10.31.0400"></script>
-    <script src="js/autofill.js?v=1793650292401"></script>
+    <script>const APP_VERSION = "2026.11.03.0439";</script>
+    <script src="js/main.js?v=1793651958943.10.31.0400"></script>
+    <script src="js/autofill.js?v=1793651958949"></script>
 </body>
 </html>
+
 
 
 
