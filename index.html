@@ -3819,6 +3819,7 @@
                     <button type="button" id="gb-view-cal-btn" class="gb-view-btn" onclick="setGbViewMode('calendar')" style="border:none; background:transparent; color:#64748b; padding:5px 12px; font-size:12px; font-weight:700; border-radius:7px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">📅 活動行事曆</button>
                 </div>
                 <div id="gb-cal-tools" style="display:none; align-items:center; gap:6px;">
+                    <button type="button" onclick="openTodayNoticeModal(true)" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; border-radius:8px; padding:5px 10px; font-size:12px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:3px;">📢 今日活動提醒</button>
                     <button type="button" onclick="openCustomEventModal()" style="background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:8px; padding:5px 10px; font-size:12px; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(16,185,129,0.3); display:inline-flex; align-items:center; gap:3px;">➕ 新增自訂活動</button>
                 </div>
             </div>
@@ -4154,6 +4155,27 @@
                 </div>
                 <div class="settings-card-body">
                     <button class="btn-sm btn-primary btn-block" onclick="switchTab('ocr')" style="padding:10px; font-size:14px; border-radius:10px; width:100%;">🔗 前往擷取工具</button>
+                </div>
+            </div>
+
+                        <!-- 今日活動彈出提醒 -->
+            <div class="settings-card">
+                <div class="settings-card-header" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #fcd34d;">
+                    <span class="settings-card-icon">📢</span>
+                    <div>
+                        <div class="settings-card-title">今日活動彈出提醒</div>
+                        <div class="settings-card-subtitle">開啟網頁時自動跳出當日進行中的活動通知</div>
+                    </div>
+                </div>
+                <div class="settings-card-body" style="gap:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:13px; font-weight:700; color:#334155;">開啟網頁時自動跳出提醒</span>
+                        <input type="checkbox" id="today-notice-enable-toggle" onchange="toggleTodayNoticeAutoPref(this.checked)" checked style="transform:scale(1.2); cursor:pointer; accent-color:#10b981;">
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button type="button" class="btn-sm btn-default" onclick="openTodayNoticeModal(true)" style="flex:1; padding:8px; font-size:12px; font-weight:700; border-radius:8px;">📢 立即預覽今日公告</button>
+                        <button type="button" class="btn-sm btn-default" onclick="resetTodayNoticeDismiss()" style="flex:1; padding:8px; font-size:12px; font-weight:700; border-radius:8px; color:#64748b;">🔄 重設今日不提醒狀態</button>
+                    </div>
                 </div>
             </div>
 
@@ -5370,9 +5392,44 @@
         </div>
     </div>
 
+        <!-- 今日活動快訊公告 Modal -->
+    <div id="today-notice-modal" class="modal-overlay" style="display:none; z-index:1008;" onclick="if(event.target === this) closeTodayNoticeModal();">
+        <div class="modal-box" style="width:440px; max-width:92vw; max-height:88vh; padding:0; border-radius:18px; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.22); border:1px solid #e2e8f0; display:flex; flex-direction:column;">
+            <!-- 頂部 Header -->
+            <div style="background:linear-gradient(135deg, #10b981 0%, #047857 100%); padding:14px 18px; color:#fff; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:22px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.15));">📢</span>
+                    <div>
+                        <div style="font-size:16px; font-weight:900; letter-spacing:0.5px; line-height:1.2;">今日活動提醒</div>
+                        <div id="today-notice-date-subtitle" style="font-size:11.5px; color:#d1fae5; font-weight:700; margin-top:2px;">載入中...</div>
+                    </div>
+                </div>
+                <button type="button" class="close-btn" onclick="closeTodayNoticeModal()" style="color:#fff; opacity:0.85; font-size:24px; line-height:1; padding:0 4px; background:transparent; border:none; cursor:pointer;" title="關閉">&times;</button>
+            </div>
+
+            <!-- 內容區塊 -->
+            <div class="modal-body" style="padding:14px 16px 12px; background:#f8fafc; overflow-y:auto; flex:1;">
+                <div id="today-notice-list">
+                    <!-- JS 動態生成活動卡片 -->
+                </div>
+            </div>
+
+            <!-- 底部操作列 -->
+            <div style="background:#fff; border-top:1px solid #e2e8f0; padding:10px 16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; flex-shrink:0;">
+                <label style="display:inline-flex; align-items:center; gap:6px; font-size:12px; color:#64748b; font-weight:700; cursor:pointer; user-select:none;">
+                    <input type="checkbox" id="today-notice-dont-show-checkbox" style="cursor:pointer; accent-color:#10b981;"> 今日不再自動提示
+                </label>
+                <div style="display:flex; gap:8px; align-items:center; margin-left:auto;">
+                    <button type="button" onclick="goToCalendarFromNotice()" class="btn-sm btn-default" style="padding:6px 12px; font-size:12px; font-weight:700; border-radius:8px; border-color:#cbd5e1; color:#334155; display:inline-flex; align-items:center; gap:3px;">📅 前往行事曆</button>
+                    <button type="button" onclick="closeTodayNoticeModal()" class="btn-sm btn-primary" style="padding:6px 16px; font-size:12px; font-weight:800; border-radius:8px; background:linear-gradient(135deg,#10b981,#059669); border:none; color:#fff; box-shadow:0 2px 6px rgba(16,185,129,0.25);">我知道了</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.11.03.0439";</script>
-    <script src="js/main.js?v=1793651958943.10.31.0400"></script>
+    <script>const APP_VERSION = "2026.11.04.0241";</script>
+    <script src="js/main.js?v=202611040241"></script>
     <script src="js/autofill.js?v=1793651958949"></script>
 </body>
 </html>

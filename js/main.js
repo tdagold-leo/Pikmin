@@ -1,5 +1,5 @@
 // JS logic begins
-    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.10.31.0400";
+    const CURRENT_APP_VERSION = typeof APP_VERSION !== 'undefined' ? APP_VERSION : "2026.11.04.0241";
 
     // 自動清理網址列上的版本號參數，保持網址乾淨漂亮 (例如保持為 https://tdagold-leo.github.io/Pikmin/)
     if (window.location.search && (window.location.search.includes('v=') || window.location.search.includes('_t='))) {
@@ -2494,6 +2494,14 @@
             }
         } catch(err) {}
         updateView();
+        if (!window._todayNoticeTriggered) {
+            window._todayNoticeTriggered = true;
+            setTimeout(() => {
+                if (typeof checkAndShowTodayNotice === 'function') {
+                    checkAndShowTodayNotice(false);
+                }
+            }, 300);
+        }
     });
 
     dbRef('views').transaction(curr => (curr || 0) + 1);
@@ -4358,6 +4366,20 @@
             const toggleEl = document.getElementById('toggle-time-setter');
             if (toggleEl) toggleEl.checked = false; // default off
         }
+
+        const todayNoticeToggle = document.getElementById('today-notice-enable-toggle');
+        if (todayNoticeToggle) {
+            todayNoticeToggle.checked = (localStorage.getItem('pikmin_enable_today_notice') !== 'false');
+        }
+
+        setTimeout(() => {
+            if (!window._todayNoticeTriggered) {
+                window._todayNoticeTriggered = true;
+                if (typeof checkAndShowTodayNotice === 'function') {
+                    checkAndShowTodayNotice(false);
+                }
+            }
+        }, 1500);
 
         updateClocks();
     });
@@ -6666,6 +6688,208 @@ function layoutWeekEvents(weekEvents) {
         if (!editId) return;
         deleteCustomEventById(editId);
         closeModal('custom-event-modal');
+    };
+
+    // ===== 今日活動開網頁彈出提醒 (Today's Events Notice) =====
+    window._todayNoticeTriggered = false;
+
+    window.checkAndShowTodayNotice = function(forceOpen = false) {
+        const isAutoEnabled = localStorage.getItem('pikmin_enable_today_notice') !== 'false';
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        const todayStr = `${y}-${m}-${d}`;
+
+        if (!forceOpen) {
+            if (!isAutoEnabled) return;
+            // 清理過期的歷史不再提醒標記 (只保留當日)
+            try {
+                Object.keys(localStorage).forEach(k => {
+                    if (k.startsWith('pikmin_hide_today_notice_') && k !== ('pikmin_hide_today_notice_' + todayStr)) {
+                        localStorage.removeItem(k);
+                    }
+                });
+            } catch(e) {}
+
+            if (localStorage.getItem('pikmin_hide_today_notice_' + todayStr) === '1') {
+                return;
+            }
+        }
+
+        const events = (typeof getEventsForDate === 'function') ? getEventsForDate(todayStr, now) : [];
+        if (!forceOpen && (!events || events.length === 0)) {
+            return;
+        }
+
+        renderTodayNoticeModal(todayStr, now, events);
+        const modal = document.getElementById('today-notice-modal');
+        if (modal) {
+            const chk = document.getElementById('today-notice-dont-show-checkbox');
+            if (chk) chk.checked = false;
+            modal.style.display = 'flex';
+        }
+    };
+
+    window.renderTodayNoticeModal = function(todayStr, now, events) {
+        const dayNames = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+        const dayStr = dayNames[now.getDay()];
+        const dateFormatted = `${todayStr.replace(/-/g, '/')} (${dayStr})`;
+
+        const titleEl = document.getElementById('today-notice-date-subtitle');
+        if (titleEl) {
+            titleEl.textContent = `📅 ${dateFormatted}`;
+        }
+
+        const container = document.getElementById('today-notice-list');
+        if (!container) return;
+
+        if (!events || events.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center; padding:24px 12px; color:#64748b;">
+                    <div style="font-size:38px; margin-bottom:8px;">🌱</div>
+                    <div style="font-size:14px; font-weight:800; color:#334155;">今日目前無特殊活動</div>
+                    <div style="font-size:12px; margin-top:4px;">好好享受散步採集、打菇與收集明信片的時光吧！</div>
+                </div>
+            `;
+            return;
+        }
+
+        let html = `
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:8px 12px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                <span style="font-size:18px;">📢</span>
+                <span style="font-size:12.5px; font-weight:800; color:#166534;">今天共有 ${events.length} 項正在進行中的活動提醒：</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px; max-height:55vh; overflow-y:auto; padding-right:2px;">
+        `;
+
+        events.forEach(ev => {
+            if (ev.type === 'mushroom') {
+                html += `
+                    <div style="background:#fff; border:1px solid #fed7aa; border-left:4.5px solid #f97316; border-radius:10px; padding:10px 12px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px;">
+                            <span style="background:#ffedd5; color:#c2410c; border:1px solid #fed7aa; font-size:11px; font-weight:800; padding:2px 8px; border-radius:12px;">🍄 週末活動</span>
+                            <span style="font-size:11px; color:#ea580c; font-weight:700;">進行中</span>
+                        </div>
+                        <div style="font-size:13.5px; font-weight:800; color:#1e293b; margin-top:5px;">🍄 週末常規巨菇日</div>
+                        <div style="font-size:12px; color:#64748b; margin-top:3px; line-height:1.45;">每週六、週日全天巨大蘑菇現身，擊倒可獲得更多精華、水果與明信片！</div>
+                        <div style="margin-top:8px; display:flex; justify-content:flex-end;">
+                            <button type="button" onclick="goToMushroomFromNotice()" style="background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:700; cursor:pointer;">🍄 前往巨菇清單</button>
+                        </div>
+                    </div>
+                `;
+            } else if (ev.isGoldBasin) {
+                const pal = ev.palette || { bg: '#fef3c7', text: '#92400e', border: '#fcd34d', bar: '#f59e0b' };
+                const safeActName = (ev.actName || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                html += `
+                    <div style="background:#fff; border:1px solid ${pal.border}; border-left:4.5px solid ${pal.bar}; border-radius:10px; padding:10px 12px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px; flex-wrap:wrap;">
+                            <span style="background:${pal.bg}; color:${pal.text}; border:1px solid ${pal.border}; font-size:11px; font-weight:800; padding:2px 8px; border-radius:12px;">🌟 期間特殊金盆</span>
+                            <span style="font-size:11px; color:#059669; font-weight:800; background:#ecfdf5; border:1px solid #a7f3d0; padding:2px 6px; border-radius:6px;">共 ${ev.count} 處點位</span>
+                        </div>
+                        <div style="font-size:13.5px; font-weight:800; color:#1e293b; margin-top:5px;">${escapeHtml(ev.actName)}</div>
+                        <div style="font-size:12px; color:#64748b; margin-top:3px; line-height:1.45;">${escapeHtml(ev.desc)}</div>
+                        <div style="margin-top:8px; display:flex; justify-content:flex-end; gap:6px;">
+                            <button type="button" onclick="viewGoldbasinActListFromNotice('${safeActName}')" style="background:${pal.bg}; color:${pal.text}; border:1px solid ${pal.border}; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:700; cursor:pointer;">🔍 查看此活動金盆</button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                let barColor = '#3b82f6';
+                let badgeBg = '#eff6ff';
+                let badgeColor = '#1d4ed8';
+                let badgeBorder = '#bfdbfe';
+                let typeLabel = '自訂活動';
+
+                if (ev.type === 'community') {
+                    barColor = '#10b981'; badgeBg = '#ecfdf5'; badgeColor = '#047857'; badgeBorder = '#a7f3d0'; typeLabel = '🟢 社群日';
+                } else if (ev.type === 'giant') {
+                    barColor = '#f97316'; badgeBg = '#fff7ed'; badgeColor = '#c2410c'; badgeBorder = '#fed7aa'; typeLabel = '🍄 巨菇活動';
+                } else if (ev.type === 'special') {
+                    barColor = '#8b5cf6'; badgeBg = '#f5f3ff'; badgeColor = '#6d28d9'; badgeBorder = '#ddd6fe'; typeLabel = '🟣 特別活動';
+                } else if (ev.type === 'reminder') {
+                    barColor = '#eab308'; badgeBg = '#fefce8'; badgeColor = '#a16207'; badgeBorder = '#fef08a'; typeLabel = '🟡 提醒備忘';
+                }
+
+                html += `
+                    <div style="background:#fff; border:1px solid ${badgeBorder}; border-left:4.5px solid ${barColor}; border-radius:10px; padding:10px 12px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px;">
+                            <span style="background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeBorder}; font-size:11px; font-weight:800; padding:2px 8px; border-radius:12px;">${typeLabel}</span>
+                            <span style="font-size:11px; color:#64748b;">${ev.startDate === ev.endDate ? ev.startDate : `${ev.startDate} ~ ${ev.endDate}`}</span>
+                        </div>
+                        <div style="font-size:13.5px; font-weight:800; color:#1e293b; margin-top:5px;">${escapeHtml(ev.title)}</div>
+                        ${ev.desc ? `<div style="font-size:12px; color:#64748b; margin-top:3px; line-height:1.45;">${escapeHtml(ev.desc)}</div>` : ''}
+                        <div style="margin-top:8px; display:flex; justify-content:flex-end;">
+                            <button type="button" onclick="goToCalendarFromNotice()" style="background:#f8fafc; color:#334155; border:1px solid #cbd5e1; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:700; cursor:pointer;">📅 查看行事曆</button>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        html += `</div>`;
+        container.innerHTML = html;
+    };
+
+    window.closeTodayNoticeModal = function() {
+        const chk = document.getElementById('today-notice-dont-show-checkbox');
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        const todayStr = `${y}-${m}-${d}`;
+
+        if (chk && chk.checked) {
+            localStorage.setItem('pikmin_hide_today_notice_' + todayStr, '1');
+        }
+        closeModal('today-notice-modal');
+    };
+
+    window.openTodayNoticeModal = function(force = true) {
+        checkAndShowTodayNotice(force);
+    };
+
+    window.goToCalendarFromNotice = function() {
+        closeTodayNoticeModal();
+        switchTab('goldbasin');
+        setGbViewMode('calendar');
+        if (typeof jumpGbCalendarToday === 'function') {
+            jumpGbCalendarToday();
+        }
+    };
+
+    window.goToMushroomFromNotice = function() {
+        closeTodayNoticeModal();
+        switchTab('mushroom');
+    };
+
+    window.viewGoldbasinActListFromNotice = function(actName) {
+        closeTodayNoticeModal();
+        switchTab('goldbasin');
+        if (typeof viewGoldbasinActList === 'function') {
+            viewGoldbasinActList(actName);
+        } else {
+            setGbViewMode('list');
+            const searchInput = document.getElementById('postcard-search');
+            if (searchInput) {
+                searchInput.value = actName;
+                updateView();
+            }
+        }
+    };
+
+    window.resetTodayNoticeDismiss = function() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        const todayStr = `${y}-${m}-${d}`;
+        localStorage.removeItem('pikmin_hide_today_notice_' + todayStr);
+        alert('✅ 已重設今日提醒狀態，下次開啟網頁將會再次跳出提醒！');
+    };
+
+    window.toggleTodayNoticeAutoPref = function(enabled) {
+        localStorage.setItem('pikmin_enable_today_notice', enabled ? 'true' : 'false');
     };
 
     function saveMushroomViewPref() {
