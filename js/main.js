@@ -7481,25 +7481,24 @@ function layoutWeekEvents(weekEvents) {
             const pct = baseFiltered.length > 0 ? Math.round((doneCount / baseFiltered.length) * 100) : 0;
             bentoEl.innerHTML = `
                 <button type="button" class="gb-bento-card ${cocoStatusFilter === 'all' ? 'active-all' : ''}" onclick="setCocoStatusFilter('all')">
-                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                        <span style="font-size:12px; font-weight:800; opacity:0.9;">🧋 篩選範圍總覽</span>
-                        <span style="font-size:10.5px; font-weight:800; opacity:0.8;">已領 ${pct}%</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:2px;">
+                        <span style="font-size:11.5px; font-weight:800; opacity:0.9; white-space:nowrap;">🧋 總覽</span>
+                        <span style="font-size:10px; font-weight:800; opacity:0.8; white-space:nowrap;">${pct}%</span>
                     </div>
-                    <div style="font-size:21px; font-weight:900; line-height:1.15; margin-top:2px;">${baseFiltered.length} <span style="font-size:11px; font-weight:700; opacity:0.75;">處 (已領 ${doneCount})</span></div>
+                    <div style="font-size:19px; font-weight:900; line-height:1.15; margin-top:2px; white-space:nowrap;">${baseFiltered.length}<span style="font-size:11px; font-weight:700; opacity:0.8; margin-left:2px;">處</span></div>
                 </button>
                 <button type="button" class="gb-bento-card ${cocoStatusFilter === 'claimable' ? 'active-limited' : ''}" onclick="setCocoStatusFilter('claimable')">
-                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                        <span style="font-size:12px; font-weight:800; color:#c2410c;">🎁 今日可領</span>
-                        ${claimableList.length > 0 ? '<span style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:10px; font-weight:800; padding:1px 6px; border-radius:999px;">可刷</span>' : ''}
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:2px;">
+                        <span style="font-size:11.5px; font-weight:800; color:#c2410c; white-space:nowrap;">🎁 今日可領</span>
                     </div>
-                    <div style="font-size:21px; font-weight:900; color:#15803d; line-height:1.15; margin-top:2px;">${claimableList.length} <span style="font-size:11px; font-weight:700;">處</span></div>
+                    <div style="font-size:19px; font-weight:900; color:#15803d; line-height:1.15; margin-top:2px; white-space:nowrap;">${claimableList.length}<span style="font-size:11px; font-weight:700; margin-left:2px;">處</span></div>
                 </button>
                 <button type="button" class="gb-bento-card ${cocoStatusFilter === 'cooling' ? 'active-permanent' : ''}" onclick="setCocoStatusFilter('cooling')">
-                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                        <span style="font-size:12px; font-weight:800; color:#0369a1;">⏳ 7天冷卻中</span>
-                        ${earliestNextShort ? `<span style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-size:10px; font-weight:800; padding:1px 6px; border-radius:999px;">下次 ${earliestNextShort}</span>` : ''}
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:2px;">
+                        <span style="font-size:11.5px; font-weight:800; color:#0369a1; white-space:nowrap;">⏳ 冷卻中</span>
+                        ${earliestNextShort ? `<span style="font-size:9.5px; color:#0369a1; font-weight:800; white-space:nowrap;">${earliestNextShort}</span>` : ''}
                     </div>
-                    <div style="font-size:21px; font-weight:900; color:#0c4a6e; line-height:1.15; margin-top:2px;">${coolingList.length} <span style="font-size:11px; font-weight:700;">處</span></div>
+                    <div style="font-size:19px; font-weight:900; color:#0c4a6e; line-height:1.15; margin-top:2px; white-space:nowrap;">${coolingList.length}<span style="font-size:11px; font-weight:700; margin-left:2px;">處</span></div>
                 </button>
             `;
         }
@@ -7573,51 +7572,46 @@ function layoutWeekEvents(weekEvents) {
 
             let statusRowHtml = '';
             if (isEventEnded) {
-                statusRowHtml = `<div style="background:#f1f5f9; color:#64748b; font-size:11px; font-weight:700; padding:4px 8px; border-radius:6px; text-align:center;">📦 活動已結束</div>`;
+                statusRowHtml = `<div style="background:#f1f5f9; color:#64748b; font-size:11px; font-weight:700; padding:4px 6px; border-radius:6px; text-align:center;">📦 活動已結束</div>`;
             } else if (!hasEventStarted) {
-                statusRowHtml = `<div style="background:#fef3c7; color:#b45309; font-size:11px; font-weight:700; padding:4px 8px; border-radius:6px; text-align:center;">🔜 11/05 活動開跑</div>`;
+                statusRowHtml = `<div style="background:#fef3c7; color:#b45309; font-size:11px; font-weight:700; padding:4px 6px; border-radius:6px; text-align:center;">🔜 11/05 活動開跑</div>`;
             } else if (st.isClaimable) {
                 statusRowHtml = `
-                    <div style="display:flex; gap:6px; align-items:center;">
-                        <div style="flex:1; background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:11px; font-weight:800; padding:4px 8px; border-radius:6px; text-align:center;">
-                            ✅ 可領取${st.lastStr ? ` (上次:${st.lastStr.substring(5).replace('-','/')})` : ''}
+                    <div style="display:flex; gap:4px; align-items:center;">
+                        <div style="flex:1; min-width:0; background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:10.5px; font-weight:800; padding:4px 4px; border-radius:6px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            ✅ 可領${st.lastStr ? ` (${st.lastStr.substring(5).replace('-','/')})` : ''}
                         </div>
-                        <button type="button" onclick="markCocoSpotClaimed('${spot.id}', event)" style="background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; border:none; border-radius:6px; padding:5px 10px; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap; box-shadow:0 1px 3px rgba(22,163,74,0.25);">
-                            🎁 今日領取
+                        <button type="button" onclick="markCocoSpotClaimed('${spot.id}', event)" style="background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; border:none; border-radius:6px; padding:4px 7px; font-size:10.5px; font-weight:800; cursor:pointer; white-space:nowrap; flex-shrink:0; box-shadow:0 1px 3px rgba(22,163,74,0.25);">
+                            🎁 領取
                         </button>
                     </div>
                 `;
             } else {
                 statusRowHtml = `
-                    <div style="display:flex; gap:6px; align-items:center;">
-                        <div style="flex:1; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-size:11px; font-weight:800; padding:4px 8px; border-radius:6px; text-align:center;">
-                            ⏳ 下次：${st.nextShortStr} (剩${st.daysToWait}天)
+                    <div style="display:flex; gap:4px; align-items:center;">
+                        <div style="flex:1; min-width:0; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-size:10.5px; font-weight:800; padding:4px 4px; border-radius:6px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            ⏳ ${st.nextShortStr} (${st.daysToWait}天)
                         </div>
-                        <button type="button" onclick="unmarkCocoSpotClaimed('${spot.id}', event)" title="取消已領狀態" style="background:#f8fafc; color:#64748b; border:1px solid #cbd5e1; border-radius:6px; padding:4px 8px; font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap;">
-                            ↺ 取消
+                        <button type="button" onclick="unmarkCocoSpotClaimed('${spot.id}', event)" title="取消已領狀態" style="background:#f8fafc; color:#64748b; border:1px solid #cbd5e1; border-radius:6px; padding:4px 6px; font-size:10.5px; font-weight:700; cursor:pointer; white-space:nowrap; flex-shrink:0;">
+                            ↺
                         </button>
                     </div>
                 `;
             }
 
             card.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
-                    <div style="font-size:13.5px; font-weight:900; color:#1e293b; display:flex; align-items:center; gap:5px;">
-                        <span>🧋 ${escapeHtml(spot.name)}</span>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:4px;">
-                        ${distBadge}
-                        <span style="background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; font-size:11px; font-weight:800; padding:1.5px 7px; border-radius:999px;">📍 ${escapeHtml(spot.city)} · ${escapeHtml(spot.district)} (${spot.distSeq})</span>
-                    </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:4px; min-width:0;">
+                    <span style="font-size:12.5px; font-weight:900; color:#1e293b; white-space:nowrap;">🧋 ${escapeHtml(spot.code)}</span>
+                    <span style="background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; font-size:10px; font-weight:800; padding:1px 6px; border-radius:999px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">📍 ${escapeHtml(spot.district)}(${spot.distSeq})</span>
                 </div>
-                <div style="font-family:monospace; font-size:11.5px; color:#475569; background:#f8fafc; padding:3px 7px; border-radius:6px; border:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
-                    <span>🌐 ${spot.coords}</span>
-                    ${st.lastStr ? `<span style="font-size:10px; color:#64748b; font-family:sans-serif;">上次領取：${st.lastStr}</span>` : ''}
+                ${distBadge ? `<div>${distBadge}</div>` : ''}
+                <div style="font-family:monospace; font-size:10.5px; color:#475569; background:#f8fafc; padding:3px 5px; border-radius:6px; border:1px solid #f1f5f9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    🌐 ${spot.coords}
                 </div>
                 ${statusRowHtml}
-                <div style="display:flex; gap:5px; margin-top:2px;">
-                    <button type="button" class="btn-sm btn-default" style="flex:1.2; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:800; padding:4px 8px; font-size:11.5px;" onclick="copyCoords('${spot.coords}', this)">📍 複製座標</button>
-                    <button type="button" class="btn-sm btn-default" style="flex:0.8; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; font-weight:800; padding:4px 8px; font-size:11.5px;" onclick="goToMapCoords('${spot.coords}')">🗺️ 地圖</button>
+                <div style="display:flex; gap:4px; margin-top:1px;">
+                    <button type="button" class="btn-sm btn-default" style="flex:1; min-width:0; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:800; padding:4px 4px; font-size:10.5px; white-space:nowrap;" onclick="copyCoords('${spot.coords}', this)">📍 座標</button>
+                    <button type="button" class="btn-sm btn-default" style="flex:1; min-width:0; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; font-weight:800; padding:4px 4px; font-size:10.5px; white-space:nowrap;" onclick="goToMapCoords('${spot.coords}')">🗺️ 地圖</button>
                 </div>
             `;
             container.appendChild(card);
@@ -7649,20 +7643,20 @@ function layoutWeekEvents(weekEvents) {
             const regHeader = document.createElement('div');
             regHeader.style.cssText = 'grid-column: 1 / -1; margin-top: 8px; margin-bottom: 2px;';
             regHeader.innerHTML = `
-                <div style="width:100%; background:linear-gradient(90deg, ${regMeta.bg} 0%, #ffffff 100%); border:1.5px solid ${regMeta.border}; border-left:5px solid ${regMeta.color}; color:${regMeta.color}; padding:8px 14px; border-radius:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; box-sizing:border-box;">
-                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                        <span style="font-size:15px; font-weight:900;">${regMeta.icon} ${regMeta.label}地區</span>
-                        <span style="background:rgba(255,255,255,0.9); padding:1.5px 8px; border-radius:999px; font-size:12px; font-weight:900; border:1px solid ${regMeta.border};">${regItems.length} 處</span>
+                <div style="width:100%; background:linear-gradient(90deg, ${regMeta.bg} 0%, #ffffff 100%); border:1.5px solid ${regMeta.border}; border-left:5px solid ${regMeta.color}; color:${regMeta.color}; padding:8px 11px; border-radius:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; box-sizing:border-box;">
+                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; min-width:0;">
+                        <span style="font-size:14.5px; font-weight:900; white-space:nowrap;">${regMeta.icon} ${regMeta.label}</span>
+                        <span style="background:rgba(255,255,255,0.9); padding:1px 7px; border-radius:999px; font-size:11.5px; font-weight:900; border:1px solid ${regMeta.border}; white-space:nowrap;">${regItems.length}處</span>
                         ${regClaimableCount > 0
-                            ? `<span style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:11.5px; font-weight:800; padding:1.5px 8px; border-radius:999px;">🎁 可領 ${regClaimableCount} 處</span>`
-                            : `<span style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-size:11.5px; font-weight:800; padding:1.5px 8px; border-radius:999px;">✓ 本區已全領</span>`
+                            ? `<span style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:11px; font-weight:800; padding:1px 7px; border-radius:999px; white-space:nowrap;">🎁 可領 ${regClaimableCount}</span>`
+                            : `<span style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-size:11px; font-weight:800; padding:1px 7px; border-radius:999px; white-space:nowrap;">✓ 已全領</span>`
                         }
                     </div>
-                    <div style="display:flex; align-items:center; gap:6px;">
+                    <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
                         ${regClaimableCount > 0 ? `
-                            <button type="button" onclick="markCocoGroupClaimed('region', '${regName}', '', event)" style="background:#22c55e; color:#fff; border:none; border-radius:7px; padding:4px 9px; font-size:11px; font-weight:800; cursor:pointer;">🎁 地區全領</button>
+                            <button type="button" onclick="markCocoGroupClaimed('region', '${regName}', '', event)" style="background:#22c55e; color:#fff; border:none; border-radius:7px; padding:4px 8px; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap;">🎁 地區全領</button>
                         ` : ''}
-                        <button type="button" onclick="copyCocoCoordsByGroup('region', '${regName}', '', this, event)" style="background:#fff; color:#334155; border:1px solid #cbd5e1; border-radius:7px; padding:4px 9px; font-size:11px; font-weight:800; cursor:pointer;">📋 地區座標 (${regItems.length})</button>
+                        <button type="button" onclick="copyCocoCoordsByGroup('region', '${regName}', '', this, event)" style="background:#fff; color:#334155; border:1px solid #cbd5e1; border-radius:7px; padding:4px 8px; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap;">📋 座標(${regItems.length})</button>
                     </div>
                 </div>
             `;
@@ -7731,15 +7725,15 @@ function layoutWeekEvents(weekEvents) {
                         </div>
                     </div>
                     <div class="sq-meta-pills">
-                        <span style="font-size:10px; color:#9a3412; background:#ffedd5; padding:1.5px 6px; border-radius:999px; font-weight:700; border:1px solid #fdba74; white-space:nowrap;">📍 ${distNames.length} 個行政區</span>
-                        <span style="font-size:10px; color:#b45309; background:#fef3c7; padding:1.5px 6px; border-radius:999px; font-weight:700; border:1px solid #fde68a; white-space:nowrap;">⏱ 每7天可領</span>
+                        <span style="font-size:10px; color:#9a3412; background:#ffedd5; padding:1px 6px; border-radius:999px; font-weight:700; border:1px solid #fdba74; white-space:nowrap;">📍 ${distNames.length}個行政區</span>
+                        <span style="font-size:10px; color:#b45309; background:#fef3c7; padding:1px 5px; border-radius:999px; font-weight:700; border:1px solid #fde68a; white-space:nowrap;">⏱ 7天</span>
                     </div>
                     <div class="sq-btn-row">
                         <button type="button" class="group-claim-btn ${cClaimable === 0 ? 'claimed' : ''}" onclick="markCocoGroupClaimed('city', '${cityName}', '', event)">
-                            ${cClaimable > 0 ? '🎁 縣市全領' : '✓ 今日已領'}
+                            ${cClaimable > 0 ? '🎁 全領' : '✓ 已領'}
                         </button>
                         <button type="button" class="group-claim-btn claimed" onclick="copyCocoCoordsByGroup('city', '${cityName}', '', this, event)">
-                            📋 座標 (${cItems.length})
+                            📋 座標(${cItems.length})
                         </button>
                     </div>
                 `;

@@ -74,11 +74,15 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            white-space: nowrap;
+            min-width: 0;
         }
         .header-right {
             font-size: 12px;
             color: var(--text-muted);
             font-weight: bold;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         /* 主內容區 */
@@ -1204,7 +1208,7 @@
         @media (max-width: 380px) {
             .app-header h2 { font-size: 15px; }
             .app-content { padding: 10px; }
-            .grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
             .card-body { padding: 8px; }
             .card-title { font-size: 12px; }
             .nav-icon { font-size: 18px; }
@@ -1216,26 +1220,26 @@
 
         /* 一般手機 (381px ~ 480px) */
         @media (min-width: 381px) and (max-width: 480px) {
-            .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
         }
 
         /* 平板直向 (481px ~ 768px) */
         @media (min-width: 481px) and (max-width: 768px) {
-            .grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+            .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
             .app-content { padding: 20px; }
         }
 
         /* 平板橫向 / 小桌面 (769px ~ 1200px) */
         @media (min-width: 769px) and (max-width: 1200px) {
             .app-content { max-width: 1100px; padding: 20px 30px; }
-            .grid { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+            .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
             .app-header h2 { font-size: 20px; }
         }
 
         /* 大桌面螢幕 (> 1200px) */
         @media (min-width: 1201px) {
             .app-content { max-width: 1400px; padding: 25px 40px; }
-            .grid { grid-template-columns: repeat(5, 1fr); gap: 16px; }
+            .grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
             .app-header { padding: 14px 30px; }
             .app-header h2 { font-size: 22px; }
             .card-body { padding: 14px; }
@@ -1434,7 +1438,7 @@
         /* ===== 特殊金盆 Bento 儀表板與活動方塊升級樣式 ===== */
         .gb-bento-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 10px;
             margin-bottom: 12px;
         }
@@ -1444,7 +1448,7 @@
         }
         @media (max-width: 680px) {
             .gb-bento-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(2, minmax(0, 1fr));
                 gap: 8px;
             }
         }
@@ -2127,7 +2131,9 @@
             box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
             transition: all 0.2s;
             width: 100%;
-            min-height: 132px;
+            min-width: 0;
+            overflow: hidden;
+            min-height: 124px;
             align-self: start;
             box-sizing: border-box;
             text-align: left;
@@ -2231,11 +2237,11 @@
             transition: width 0.3s ease;
         }
         .sq-group-header .group-claim-btn {
-            margin-top: 4px;
+            margin-top: 0;
             background: linear-gradient(135deg, #22c55e, #16a34a);
             color: #ffffff;
             border: none;
-            padding: 5px 12px;
+            padding: 5px 6px;
             border-radius: 8px;
             font-size: 11px;
             font-weight: 700;
@@ -2349,7 +2355,7 @@
         }
         .lm-location-row {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 12px;
         }
         @media (max-width: 640px) {
@@ -3357,13 +3363,13 @@
         /* ===== 明信片分頁 5 大優化專屬樣式 (#view-postcard) ===== */
         .pc-stats-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 8px;
             margin-bottom: 10px;
         }
         @media (max-width: 640px) {
             .pc-stats-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(2, minmax(0, 1fr));
                 gap: 6px;
                 margin-bottom: 8px;
             }
@@ -3770,13 +3776,16 @@
             background: #ffffff;
             border: 1px solid #e2e8f0;
             border-radius: 12px;
-            padding: 10px 12px;
+            padding: 10px 11px;
             display: flex;
             flex-direction: column;
             gap: 6px;
             box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
             transition: transform 0.12s, box-shadow 0.12s;
             position: relative;
+            min-width: 0;
+            overflow: hidden;
+            box-sizing: border-box;
         }
         .coco-spot-card.is-claimable {
             border-left: 4px solid #f97316;
@@ -3787,15 +3796,65 @@
             opacity: 0.92;
         }
         @media (max-width: 640px) {
-            .coco-region-scroll {
+            .coco-region-scroll,
+            .coco-city-scroll {
                 flex-wrap: nowrap;
                 overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
                 padding-bottom: 3px;
                 scrollbar-width: none;
             }
-            .coco-region-scroll::-webkit-scrollbar { display: none; }
+            .coco-region-scroll::-webkit-scrollbar,
+            .coco-city-scroll::-webkit-scrollbar { display: none; }
             .coco-hero-banner {
-                padding: 11px 12px;
+                padding: 10px 12px;
+                margin-bottom: 9px;
+                border-radius: 13px;
+            }
+            .coco-filter-panel {
+                padding: 10px 11px;
+                gap: 8px;
+                margin-bottom: 10px;
+            }
+            #coco-bento-dashboard {
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+                gap: 6px !important;
+                margin-bottom: 9px !important;
+            }
+            #coco-bento-dashboard .gb-bento-card {
+                padding: 8px 8px !important;
+                border-radius: 11px !important;
+                min-width: 0;
+            }
+            .sq-group-header {
+                padding: 8px 8px;
+                min-height: 112px;
+                gap: 5px;
+                border-radius: 12px;
+            }
+            .sq-group-header .title {
+                font-size: 12.5px;
+            }
+            .sq-count-pill {
+                font-size: 10px;
+                padding: 1.5px 6px;
+            }
+            .sq-btn-row {
+                gap: 4px;
+            }
+            .sq-btn-row .group-claim-btn {
+                padding: 4.5px 3px !important;
+                font-size: 10.5px !important;
+                border-radius: 7px;
+            }
+            .coco-spot-card {
+                padding: 8px 8px;
+                gap: 5px;
+            }
+            .gb-view-btn {
+                padding: 5px 8px !important;
+                font-size: 11.5px !important;
+                white-space: nowrap;
             }
         }
 </style>
@@ -3805,10 +3864,7 @@
 
     <header class="app-header">
         <h2>🌱 Pickmin Tracker <span id="header-version-tag" style="font-size: 10px; color: #9ca3af; font-weight: normal; margin-left: 4px;"></span></h2>
-        <div style="display:flex; align-items:center; gap:6px;">
-            <button type="button" onclick="switchTab('coco')" style="background:linear-gradient(135deg,#f97316,#ea580c); color:#fff; border:none; border-radius:999px; padding:4px 10px; font-size:11.5px; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(234,88,12,0.3); display:inline-flex; align-items:center; gap:3px; white-space:nowrap;">🧋 CoCo聯名(346)</button>
-            <div class="header-right" id="sync-status-indicator">⚪ 未連線</div>
-        </div>
+        <div class="header-right" id="sync-status-indicator">⚪ 未連線</div>
     </header>
 
     <main class="app-content">
@@ -4629,7 +4685,7 @@
             </div>
 
             <!-- 2. Bento 3 格統計與狀態快篩儀表板 -->
-            <div id="coco-bento-dashboard" class="gb-bento-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom:10px;"></div>
+            <div id="coco-bento-dashboard" class="gb-bento-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom:10px;"></div>
 
             <!-- 3. 地區分類 + 各縣市分類 + 行政區與搜尋面板 -->
             <div class="coco-filter-panel">
@@ -5615,8 +5671,8 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.11.06.0410";</script>
-    <script src="js/main.js?v=202611060410"></script>
+    <script>const APP_VERSION = "2026.11.06.0422";</script>
+    <script src="js/main.js?v=202611060422"></script>
     <script src="js/autofill.js?v=1793651958949"></script>
 </body>
 </html>
