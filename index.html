@@ -3682,6 +3682,122 @@
                 white-space: nowrap !important;
             }
         }
+
+        /* ===== CoCo 聯名活動專頁樣式 ===== */
+        .coco-hero-banner {
+            background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 60%, #fed7aa 100%);
+            border: 1.5px solid #fdba74;
+            border-left: 6px solid #ea580c;
+            border-radius: 16px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 14px rgba(234, 88, 12, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .coco-filter-panel {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .coco-region-scroll, .coco-city-scroll {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .coco-region-pill {
+            border: 1.5px solid #cbd5e1;
+            background: #f8fafc;
+            color: #334155;
+            border-radius: 999px;
+            padding: 5px 12px;
+            font-size: 12.5px;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .coco-region-pill:hover {
+            border-color: #fb923c;
+            background: #fff7ed;
+        }
+        .coco-region-pill.active {
+            background: linear-gradient(135deg, #ea580c, #d97706);
+            color: #ffffff;
+            border-color: #c2410c;
+            box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3);
+        }
+        .coco-city-pill {
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #475569;
+            border-radius: 9px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .coco-city-pill:hover {
+            border-color: #fdba74;
+            color: #c2410c;
+            background: #fff7ed;
+        }
+        .coco-city-pill.active {
+            background: #ffedd5;
+            color: #9a3412;
+            border: 1.5px solid #f97316;
+            font-weight: 900;
+        }
+        .coco-spot-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+            transition: transform 0.12s, box-shadow 0.12s;
+            position: relative;
+        }
+        .coco-spot-card.is-claimable {
+            border-left: 4px solid #f97316;
+        }
+        .coco-spot-card.is-cooling {
+            border-left: 4px solid #38bdf8;
+            background: #f8fafc;
+            opacity: 0.92;
+        }
+        @media (max-width: 640px) {
+            .coco-region-scroll {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                padding-bottom: 3px;
+                scrollbar-width: none;
+            }
+            .coco-region-scroll::-webkit-scrollbar { display: none; }
+            .coco-hero-banner {
+                padding: 11px 12px;
+            }
+        }
 </style>
     <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
 </head>
@@ -3689,7 +3805,10 @@
 
     <header class="app-header">
         <h2>🌱 Pickmin Tracker <span id="header-version-tag" style="font-size: 10px; color: #9ca3af; font-weight: normal; margin-left: 4px;"></span></h2>
-        <div class="header-right" id="sync-status-indicator">⚪ 未連線</div>
+        <div style="display:flex; align-items:center; gap:6px;">
+            <button type="button" onclick="switchTab('coco')" style="background:linear-gradient(135deg,#f97316,#ea580c); color:#fff; border:none; border-radius:999px; padding:4px 10px; font-size:11.5px; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(234,88,12,0.3); display:inline-flex; align-items:center; gap:3px; white-space:nowrap;">🧋 CoCo聯名(346)</button>
+            <div class="header-right" id="sync-status-indicator">⚪ 未連線</div>
+        </div>
     </header>
 
     <main class="app-content">
@@ -3817,6 +3936,7 @@
                 <div class="gb-view-toggle-group" style="display:inline-flex; background:#f1f5f9; padding:3px; border-radius:10px; border:1px solid #cbd5e1;">
                     <button type="button" id="gb-view-list-btn" class="gb-view-btn" onclick="setGbViewMode('list')" style="border:none; background:#fff; color:#0f172a; padding:5px 12px; font-size:12px; font-weight:800; border-radius:7px; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.1); display:inline-flex; align-items:center; gap:4px;">📋 金盆清單</button>
                     <button type="button" id="gb-view-cal-btn" class="gb-view-btn" onclick="setGbViewMode('calendar')" style="border:none; background:transparent; color:#64748b; padding:5px 12px; font-size:12px; font-weight:700; border-radius:7px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">📅 活動行事曆</button>
+                    <button type="button" id="gb-view-coco-btn" class="gb-view-btn" onclick="switchTab('coco')" style="border:none; background:linear-gradient(135deg,#fff7ed,#ffedd5); color:#c2410c; padding:5px 12px; font-size:12px; font-weight:800; border-radius:7px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; border:1px solid #fdba74;">🧋 CoCo聯名(346)</button>
                 </div>
                 <div id="gb-cal-tools" style="display:none; align-items:center; gap:6px;">
                     <button type="button" onclick="openTodayNoticeModal(true)" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; border-radius:8px; padding:5px 10px; font-size:12px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:3px;">📢 今日活動提醒</button>
@@ -4482,6 +4602,73 @@
             </div>
         </section>
 
+
+        <section id="view-coco" class="view-section">
+            <!-- 頂部切換列：返回金盆清單 / 活動行事曆 / 目前 CoCo 專頁 -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin:4px 0 10px; gap:8px; flex-wrap:wrap;">
+                <div class="gb-view-toggle-group" style="display:inline-flex; background:#f1f5f9; padding:3px; border-radius:10px; border:1px solid #cbd5e1;">
+                    <button type="button" class="gb-view-btn" onclick="switchTab('goldbasin'); setGbViewMode('list');" style="border:none; background:transparent; color:#64748b; padding:5px 12px; font-size:12px; font-weight:700; border-radius:7px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">📋 金盆清單</button>
+                    <button type="button" class="gb-view-btn" onclick="switchTab('goldbasin'); setGbViewMode('calendar');" style="border:none; background:transparent; color:#64748b; padding:5px 12px; font-size:12px; font-weight:700; border-radius:7px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">📅 活動行事曆</button>
+                    <button type="button" class="gb-view-btn" style="border:none; background:linear-gradient(135deg,#ea580c,#d97706); color:#fff; padding:5px 12px; font-size:12px; font-weight:800; border-radius:7px; cursor:pointer; box-shadow:0 1px 4px rgba(234,88,12,0.3); display:inline-flex; align-items:center; gap:4px;">🧋 CoCo聯名 (346)</button>
+                </div>
+                <button type="button" onclick="openTodayNoticeModal(true)" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; border-radius:8px; padding:5px 10px; font-size:12px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:3px;">📢 今日活動提醒</button>
+            </div>
+
+            <!-- 1. 活動主視覺資訊橫幅 -->
+            <div class="coco-hero-banner">
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <span style="font-size:18px; font-weight:900; color:#9a3412;">🧋 Pikmin × CoCo都可 聯名金盆專區</span>
+                        <span id="coco-hero-countdown" style="font-size:11.5px; font-weight:800; background:#ea580c; color:#fff; padding:2px 8px; border-radius:999px;">進行中</span>
+                    </div>
+                    <div style="font-size:12px; color:#7c2d12; font-weight:700; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <span>📅 活動期間：2026/11/05 (四) 00:00 ～ 2026/11/22 (日) 23:59</span>
+                        <span style="background:#fff; color:#c2410c; border:1px solid #fdba74; padding:1.5px 8px; border-radius:999px; font-size:11px; font-weight:800;">⏱ 每 7 天最多可領取一次 (共 346 處)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Bento 3 格統計與狀態快篩儀表板 -->
+            <div id="coco-bento-dashboard" class="gb-bento-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom:10px;"></div>
+
+            <!-- 3. 地區分類 + 各縣市分類 + 行政區與搜尋面板 -->
+            <div class="coco-filter-panel">
+                <!-- 第一層：依地區分類 -->
+                <div>
+                    <div style="font-size:11.5px; font-weight:800; color:#64748b; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;">
+                        <span>🌍 第一步：依地區分類篩選</span>
+                        <span id="coco-filter-summary-text" style="color:#ea580c; font-weight:800;"></span>
+                    </div>
+                    <div id="coco-region-tabs" class="coco-region-scroll"></div>
+                </div>
+
+                <!-- 第二層：依各縣市分類 -->
+                <div style="border-top:1px dashed #e2e8f0; padding-top:8px;">
+                    <div style="font-size:11.5px; font-weight:800; color:#64748b; margin-bottom:5px;">🏙️ 第二步：依各縣市分類篩選（點擊單看該縣市）</div>
+                    <div id="coco-city-pills" class="coco-city-scroll"></div>
+                </div>
+
+                <!-- 第三層：行政區下拉 + 關鍵字/GPS搜尋 + 批次動作 -->
+                <div style="border-top:1px dashed #e2e8f0; padding-top:8px; display:flex; flex-direction:column; gap:8px;">
+                    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                        <select id="coco-district-select" class="input-base" onchange="onCocoDistrictChange(this.value)" style="padding:6px 10px; font-size:12.5px; font-weight:700; min-width:135px; flex:0 0 auto; width:auto;">
+                            <option value="">📌 全部行政區</option>
+                        </select>
+                        <div style="position:relative; flex:1; min-width:180px; display:flex; align-items:center;">
+                            <input type="text" id="coco-search-input" class="input-base" oninput="renderCocoView()" placeholder="🔍 搜尋編號(#001)、行政區，或貼上 GPS 座標依距離排序..." style="width:100%; padding:6px 28px 6px 10px; font-size:12.5px;">
+                            <button type="button" onclick="document.getElementById('coco-search-input').value=''; renderCocoView();" title="清除搜尋" style="position:absolute; right:6px; background:none; border:none; color:#94a3b8; font-size:13px; cursor:pointer;">✕</button>
+                        </div>
+                    </div>
+
+                    <!-- 快捷工具列 -->
+                    <div id="coco-toolbar-actions" style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; justify-content:space-between;"></div>
+                </div>
+            </div>
+
+            <!-- 4. 階層式分群列表容器 (地區 -> 縣市 -> 行政區 -> 點位卡片) -->
+            <div id="coco-list-container" class="grid"></div>
+            <div id="coco-empty-state" class="empty-message" style="display:none;">目前篩選條件下沒有符合的 CoCo 聯名金盆點位</div>
+        </section>
     </main>
 
     <section id="view-map" class="view-section" style="padding:0; height:calc(100dvh - 112px); position:relative;">
@@ -5428,8 +5615,8 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.11.04.0241";</script>
-    <script src="js/main.js?v=202611040241"></script>
+    <script>const APP_VERSION = "2026.11.06.0400";</script>
+    <script src="js/main.js?v=202611060400"></script>
     <script src="js/autofill.js?v=1793651958949"></script>
 </body>
 </html>
