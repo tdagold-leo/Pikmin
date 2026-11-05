@@ -5989,7 +5989,20 @@
     function getEventsForDate(dateStr, dateObj) {
         const events = [];
         // 1. 六日自動設定為巨菇日
-        const dayOfWeek = dateObj.getDay(); // 0: Sun, 6: Sat
+        const dayOfWeek = dateObj.getDay(); // 0: Sun, 5: Fri, 6: Sat
+        if (dayOfWeek === 5) {
+            events.push({
+                id: `friday_save_mush_${dateStr}`,
+                type: 'friday_reminder',
+                tagClass: 'giant',
+                badgeText: '⚠️ 留一次打巨菇',
+                title: '⚠️ 重點提醒：留一次打巨菇',
+                desc: '每週五重點提醒：今日免費打菇次數請務必「留一次打巨菇」，供跨日／週末巨菇日使用！',
+                isSystem: true,
+                isFridayReminder: true,
+                palette: { bg: '#fef2f2', text: '#b91c1c', border: '#fca5a5', bar: '#dc2626' }
+            });
+        }
         if (dayOfWeek === 0 || dayOfWeek === 6) {
             events.push({
                 id: `giant_mush_${dateStr}`,
@@ -6172,7 +6185,14 @@
                 : (ev.type === 'goldbasin' ? getEventPalette(ev.actName || ev.title) : getEventPalette(ev.title)));
 
             let actionBtns = '';
-            if (ev.isCocoSpecial) {
+            if (ev.isFridayReminder) {
+                actionBtns = `
+                    <button type="button" onclick="switchTab('mushroom')"
+                            style="background:${pal.bg}; color:${pal.text}; border:1.5px solid ${pal.border}; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:800; cursor:pointer; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                        🍄 前往巨菇清單
+                    </button>
+                `;
+            } else if (ev.isCocoSpecial) {
                 actionBtns = `
                     <button type="button" onclick="switchTab('coco')"
                             style="background:${pal.bg}; color:${pal.text}; border:1.5px solid ${pal.border}; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:800; cursor:pointer; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
@@ -6424,6 +6444,21 @@ function layoutWeekEvents(weekEvents) {
         const monthlyLongEvents = [];
         const gridSpanEvents = [];
 
+        if (gbCalFilters.giant) {
+            allDays.forEach(d => {
+                if (d.dateObj.getDay() === 5) {
+                    gridSpanEvents.push({
+                        id: `friday_save_mush_${d.dateStr}`,
+                        title: '⚠️ 留一次打巨菇',
+                        startDate: d.dateStr,
+                        endDate: d.dateStr,
+                        palette: { bg: '#fef2f2', text: '#b91c1c', border: '#fca5a5', bar: '#dc2626' },
+                        isFridayReminder: true
+                    });
+                }
+            });
+        }
+
         allSpanEvents.forEach(ev => {
             // 確認是否涵蓋當前檢視的月份
             if (ev.startDate <= curMonthEndStr && ev.endDate >= curMonthStartStr) {
@@ -6614,7 +6649,11 @@ function layoutWeekEvents(weekEvents) {
             visibleSegments.forEach(seg => {
                 const pal = seg.palette;
                 const isSingleCol = (seg.startCol === seg.endCol);
-                const clickAction = seg.isGoldBasin
+                const clickAction = seg.isFridayReminder
+                    ? `selectGbCalDate('${escapeHtml(seg.startDate)}')`
+                    : seg.isCocoSpecial
+                    ? `switchTab('coco')`
+                    : seg.isGoldBasin
                     ? `viewGoldbasinActList('${escapeHtml(seg.actName).replace(/'/g, "\\'")}')`
                     : `editCustomEvent('${escapeHtml(seg.id).replace(/'/g, "\\'")}')`;
 
@@ -6834,7 +6873,21 @@ function layoutWeekEvents(weekEvents) {
         `;
 
         events.forEach(ev => {
-            if (ev.type === 'mushroom') {
+            if (ev.isFridayReminder) {
+                html += `
+                    <div style="background:linear-gradient(135deg,#fef2f2 0%,#fff1f2 100%); border:1.5px solid #fca5a5; border-left:5px solid #dc2626; border-radius:10px; padding:11px 12px; box-shadow:0 2px 6px rgba(220,38,38,0.1);">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px;">
+                            <span style="background:#dc2626; color:#ffffff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:12px;">🚨 每週五重點提醒</span>
+                            <span style="font-size:11px; color:#b91c1c; font-weight:800;">務必留意</span>
+                        </div>
+                        <div style="font-size:15px; font-weight:900; color:#991b1b; margin-top:6px;">⚠️ 留一次打巨菇</div>
+                        <div style="font-size:12px; color:#7f1d1d; margin-top:3px; line-height:1.45; font-weight:600;">今日（週五）免費打菇次數請務必預留 1 次，不要全部打完，以便跨日或迎接週末巨菇日！</div>
+                        <div style="margin-top:8px; display:flex; justify-content:flex-end;">
+                            <button type="button" onclick="goToMushroomFromNotice()" style="background:#ffffff; color:#dc2626; border:1px solid #fca5a5; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:800; cursor:pointer;">🍄 前往巨菇清單</button>
+                        </div>
+                    </div>
+                `;
+            } else if (ev.type === 'mushroom') {
                 html += `
                     <div style="background:#fff; border:1px solid #fed7aa; border-left:4.5px solid #f97316; border-radius:10px; padding:10px 12px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px;">
