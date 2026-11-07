@@ -5209,7 +5209,7 @@
                 if (info.mainAct === mainAct) {
                     if (subAct === '__ALL__' || info.subAct === subAct) {
                         const normalized = normalizeCoords(String(item.coords));
-                        lines.push((os === 'ios' || os === 'macos' || os === 'windows') ? normalized.replace(/,/g, ' ') : normalized);
+                        lines.push(normalized);
                     }
                 }
             }
@@ -5809,7 +5809,7 @@
             const normalized = normalizeCoords(String(item.coords));
             if (!normalized || seen.has(normalized)) return;
             seen.add(normalized);
-            lines.push((os === 'ios' || os === 'macos' || os === 'windows') ? normalized.replace(/,/g, ' ') : normalized);
+            lines.push(normalized);
         });
         if (lines.length === 0) {
             alert('目前可領取的金盆中沒有有效座標！');
@@ -7279,11 +7279,7 @@ function layoutWeekEvents(weekEvents) {
             alert('目前範圍內沒有可複製的座標！');
             return;
         }
-        const os = typeof detectOS === 'function' ? detectOS() : 'unknown';
-        const lines = targets.map(s => {
-            const norm = normalizeCoords(s.coords);
-            return (os === 'ios' || os === 'macos' || os === 'windows') ? norm.replace(/,/g, ' ') : norm;
-        });
+        const lines = targets.map(s => normalizeCoords(s.coords));
 
         const origHtml = btn ? btn.innerHTML : '';
         navigator.clipboard.writeText(lines.join('\n')).then(() => {
