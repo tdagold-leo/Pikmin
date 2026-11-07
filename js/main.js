@@ -7068,6 +7068,7 @@ function layoutWeekEvents(weekEvents) {
     let cocoDistrictFilter = '';
     let cocoStatusFilter = 'all'; // 'all' | 'claimable' | 'cooling'
     const cocoCollapsedCities = new Set(COCO_CITY_ORDER); // 預設收合各縣市群組，保持頁面清爽流暢
+    let cocoLastSearch = '';
     let cocoCurrentFilteredList = [];
     let cocoCurrentClaimableList = [];
 
@@ -7427,6 +7428,10 @@ function layoutWeekEvents(weekEvents) {
             : [...cityPool];
 
         const searchRaw = (document.getElementById('coco-search-input')?.value || '').trim();
+        if (searchRaw !== cocoLastSearch) {
+            cocoLastSearch = searchRaw;
+            if (searchRaw) baseFiltered.forEach(s => cocoCollapsedCities.delete(s.city));
+        }
         let gpsCenter = null;
         if (searchRaw) {
             const coordMatch = searchRaw.match(/^\s*(-?\d+(?:\.\d+)?)\s*[,，\s]\s*(-?\d+(?:\.\d+)?)\s*$/);
@@ -7672,8 +7677,8 @@ function layoutWeekEvents(weekEvents) {
                 const cItems = cityMap[cityName];
                 if (!cItems || cItems.length === 0) return;
 
-                const isAutoExpanded = Boolean(searchRaw || cocoDistrictFilter || cocoCityFilter === cityName);
-                const isCol = !isAutoExpanded && cocoCollapsedCities.has(cityName);
+                
+                const isCol = cocoCollapsedCities.has(cityName);
 
                 let cClaimable = 0;
                 let cClaimed = 0;
