@@ -4946,14 +4946,14 @@
             </div>
 
             <div id="form-postcard" style="display:none; flex-direction:column; gap:6px;">
-                <div class="input-group" style="margin:0;">
+                <div class="input-group" id="post-type-container" style="margin:0;">
                     <label style="font-size:11px; margin-bottom:2px;">種類</label>
                     <select id="post-type" class="input-base" style="padding:6px 8px; font-size:13px;" onchange="if(typeof togglePostcardSgFields==='function') togglePostcardSgFields('post')">
                         <option value="菇">菇</option>
                         <option value="花">花</option>
                         <option value="菇窩">菇窩</option>
                         <option value="隱藏">隱藏</option>
-                        <option value="特殊金盆">特殊金盆</option>
+                        <option value="特殊金盆" style="display:none;">特殊金盆</option>
                         <option value="節慶蘑菇">節慶蘑菇</option>
                     </select>
                 </div>
@@ -5023,10 +5023,10 @@
                 </div><!-- end post-sg-dates -->
                 </div><!-- end post-sg-fields -->
                 <div class="input-group" style="margin:0;">
-                    <label style="font-size:11px; margin-bottom:2px;">名稱 (上行)</label>
+                    <label id="post-name-label" style="font-size:11px; margin-bottom:2px;">名稱 (上行)</label>
                     <input type="text" id="post-name" class="input-base" placeholder="例如：三日月ボートうさぎ" style="padding:6px 10px; font-size:13px;">
                 </div>
-                <div class="input-group" style="margin:0;">
+                <div class="input-group" id="post-subname-container" style="margin:0;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
                         <label style="font-size:11px; margin:0;">下行名稱 <span style="color:#9ca3af; font-size:10px; font-weight:normal;">(選填，明信片第二行小字)</span></label>
                         <button type="button" onclick="moveTagToSubname('post')" title="每點一次可將「標籤」最前面的詞移入下行名稱（或先反白選取標籤文字再點擊）" style="background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; border-radius:5px; font-size:10px; padding:1px 6px; cursor:pointer; font-weight:700; line-height:1.3;">⬆️ 從標籤移入首詞</button>
@@ -5042,7 +5042,7 @@
                         <label style="font-size:11px; margin-bottom:2px; color:#854d0e; font-weight:700;">子分類 <span style="color:#9ca3af; font-size:10px; font-weight:normal;">(選填)</span></label>
                         <input type="text" id="post-sg-sub" class="input-base" style="border:1px solid #facc15; padding:6px 10px; font-size:13px;" placeholder="例如：第一期">
                     </div>
-                    <div class="input-group" style="flex:1; margin:0;">
+                    <div class="input-group" id="post-auth-container" style="flex:1; margin:0;">
                         <label style="font-size:11px; margin-bottom:2px;">🔑 授權 <span style="color:#9ca3af; font-size:10px;">(選填)</span></label>
                         <input type="text" id="post-auth" class="input-base" placeholder="拍攝者 / 授權" style="padding:6px 10px; font-size:13px;">
                     </div>
@@ -5083,7 +5083,7 @@
                     <div style="display:flex; gap:6px; align-items:center;">
                         <input type="text" id="post-image" class="input-base" placeholder="請貼上圖片網址，或留空" style="flex:1; padding:5px 8px; font-size:13px;" oninput="checkDatabaseForImage(this.value, 'post')">
                         <input type="file" id="post-ocr-file" accept="image/*" style="display:none;" onchange="handleVisionOcrUpload(event, 'post-ocr-result')">
-                        <button type="button" class="btn-sm btn-default" onclick="triggerOCR('post-image', 'post-ocr-file', 'post-ocr-result')" style="white-space:nowrap; border-radius:6px; background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; padding:5px 8px; font-size:11px; font-weight:bold;">
+                        <button type="button" id="post-ocr-btn" class="btn-sm btn-default" onclick="triggerOCR('post-image', 'post-ocr-file', 'post-ocr-result')" style="white-space:nowrap; border-radius:6px; background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; padding:5px 8px; font-size:11px; font-weight:bold;">
                             🔍 辨識
                         </button>
                     </div>
@@ -5384,10 +5384,10 @@
 
             <div id="edit-group-postcard" style="display:none; flex-direction:column; gap:6px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin:0;">
-                    <div class="input-group" style="flex:1; margin:0;">
+                    <div class="input-group" id="edit-post-type-container" style="flex:1; margin:0;">
                         <label style="margin:0; font-size:11px;">種類</label>
                         <select id="edit-post-type" class="input-base" style="padding:6px 8px; font-size:13px;" onchange="togglePostcardTimeEdit(); if(typeof togglePostcardSgFields==='function') togglePostcardSgFields('edit-post')">
-                            <option value="菇">菇</option><option value="花">花</option><option value="菇窩">菇窩</option><option value="隱藏">隱藏</option><option value="特殊金盆">特殊金盆</option><option value="節慶蘑菇">節慶蘑菇</option>
+                            <option value="菇">菇</option><option value="花">花</option><option value="菇窩">菇窩</option><option value="隱藏">隱藏</option><option value="特殊金盆" style="display:none;">特殊金盆</option><option value="節慶蘑菇">節慶蘑菇</option>
                         </select>
                     </div>
                     <div style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-end;">
@@ -5447,10 +5447,10 @@
                         </div>
                 </div>
                 <div class="input-group" style="margin:0;">
-                    <label style="font-size:11px; margin-bottom:2px;">名稱 (上行)</label>
+                    <label id="edit-post-name-label" style="font-size:11px; margin-bottom:2px;">名稱 (上行)</label>
                     <input type="text" id="edit-post-name" class="input-base" style="padding:6px 10px; font-size:13px;" placeholder="例如：三日月ボートうさぎ">
                 </div>
-                <div class="input-group" style="margin:0;">
+                <div class="input-group" id="edit-post-subname-container" style="margin:0;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
                         <label style="font-size:11px; margin:0;">下行名稱 <span style="color:#9ca3af; font-size:10px; font-weight:normal;">(選填，明信片第二行小字)</span></label>
                         <button type="button" onclick="moveTagToSubname('edit-post')" title="每點一次可將「標籤」最前面的詞移入下行名稱（或先反白選取標籤文字再點擊）" style="background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8; border-radius:5px; font-size:10px; padding:1px 6px; cursor:pointer; font-weight:700; line-height:1.3;">⬆️ 從標籤移入首詞</button>
@@ -5466,7 +5466,7 @@
                         <label style="font-size:11px; margin-bottom:2px; color:#854d0e; font-weight:700;">子分類 <span style="color:#9ca3af; font-size:10px; font-weight:normal;">(選填)</span></label>
                         <input type="text" id="edit-post-sg-sub" class="input-base" style="border:1px solid #facc15; padding:6px 10px; font-size:13px;" placeholder="例如：第一期">
                     </div>
-                    <div class="input-group" style="flex:1; margin:0;">
+                    <div class="input-group" id="edit-post-auth-container" style="flex:1; margin:0;">
                         <label style="font-size:11px; margin-bottom:2px;">🔑 授權 <span style="color:#9ca3af; font-size:10px;">(選填)</span></label>
                         <input type="text" id="edit-post-auth" class="input-base" style="padding:6px 10px; font-size:13px;" placeholder="拍攝者 / 授權">
                     </div>
@@ -5507,7 +5507,7 @@
                     <div style="display:flex; gap:6px; align-items:center;">
                         <input type="text" id="edit-post-image" class="input-base" style="flex:1; padding:6px 10px; font-size:13px;" placeholder="貼上圖片網址，或留空" oninput="checkDatabaseForImage(this.value, 'edit-post')">
                         <input type="file" id="edit-post-ocr-file" accept="image/*" style="display:none;" onchange="handleVisionOcrUpload(event, 'edit-post-ocr-result')">
-                        <button type="button" class="btn-sm btn-default" onclick="triggerOCR('edit-post-image', 'edit-post-ocr-file', 'edit-post-ocr-result')" style="white-space:nowrap; border-radius:6px; background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; padding:5px 8px; font-size:11px; font-weight:bold;">
+                        <button type="button" id="edit-post-ocr-btn" class="btn-sm btn-default" onclick="triggerOCR('edit-post-image', 'edit-post-ocr-file', 'edit-post-ocr-result')" style="white-space:nowrap; border-radius:6px; background:#e0e7ff; color:#3730a3; border:1px dashed #6366f1; padding:5px 8px; font-size:11px; font-weight:bold;">
                             🔍 辨識
                         </button>
                     </div>
@@ -5671,8 +5671,8 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.11.07.2245";</script>
-    <script src="js/main.js?v=202611072245"></script>
+    <script>const APP_VERSION = "2026.11.08.2230";</script>
+    <script src="js/main.js?v=202611082230"></script>
     <script src="js/autofill.js?v=1793651958949"></script>
 </body>
 </html>

@@ -1162,7 +1162,7 @@
             if (fTime) fTime.style.display = 'flex';
         } else if (currentMode === 'postcard' || currentMode === 'goldbasin') {
             const titleEl = document.getElementById('add-modal-title');
-            if (titleEl) titleEl.innerText = currentMode === 'goldbasin' ? '🏺 新增金盆' : '🖼️ 新增明信片';
+            if (titleEl) titleEl.innerText = currentMode === 'goldbasin' ? '🏺 新增特殊金盆' : '🖼️ 新增明信片';
             if (fPost) fPost.style.display = 'flex';
             const typeEl = document.getElementById('post-type');
             if (typeEl) {
@@ -1171,6 +1171,9 @@
                     typeEl.disabled = true;
                 } else {
                     typeEl.disabled = false;
+                    if (typeEl.value === '特殊金盆') {
+                        typeEl.value = '菇';
+                    }
                 }
             }
             if (typeof togglePostcardSgFields === 'function') togglePostcardSgFields('post');
@@ -5001,16 +5004,28 @@
 
     window.togglePostcardSgFields = function(prefix) {
         const typeEl = document.getElementById(prefix + '-type');
+        const typeContainer = document.getElementById(prefix + '-type-container');
         const sgFields = document.getElementById(prefix + '-sg-fields');
         const ocrButtons = document.getElementById(prefix + '-image-ocr-buttons');
+        const ocrBtn = document.getElementById(prefix + '-ocr-btn');
         const tagContainer = document.getElementById(prefix + '-tag-container');
         const subContainer = document.getElementById(prefix + '-sg-sub-container');
+        const subnameContainer = document.getElementById(prefix + '-subname-container');
+        const authContainer = document.getElementById(prefix + '-auth-container');
+        const nameLabel = document.getElementById(prefix + '-name-label');
+        const nameInput = document.getElementById(prefix + '-name');
         if (typeEl) {
             const isSg = typeEl.value === '特殊金盆';
+            if (typeContainer) typeContainer.style.display = isSg ? 'none' : 'flex';
             if (sgFields) sgFields.style.display = isSg ? 'flex' : 'none';
             if (ocrButtons) ocrButtons.style.display = isSg ? 'none' : 'flex';
+            if (ocrBtn) ocrBtn.style.display = isSg ? 'none' : 'inline-flex';
             if (tagContainer) tagContainer.style.display = isSg ? 'none' : 'flex';
             if (subContainer) subContainer.style.display = isSg ? 'flex' : 'none';
+            if (subnameContainer) subnameContainer.style.display = isSg ? 'none' : 'flex';
+            if (authContainer) authContainer.style.display = isSg ? 'none' : 'flex';
+            if (nameLabel) nameLabel.textContent = isSg ? '金盆名稱 / 地標名稱' : '名稱 (上行)';
+            if (nameInput) nameInput.placeholder = isSg ? '例如：IKEA 新莊店 / 任天堂東京' : '例如：三日月ボートうさぎ';
         }
     };
     window.togglePostcardSgDates = function(prefix) {
