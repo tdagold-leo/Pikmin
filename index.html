@@ -4893,6 +4893,8 @@
                 <button id="map-layer-mushroom" onclick="toggleMapLayer('mushroom')" class="map-layer-btn active" title="顯示巨菇">🍄</button>
                 <button id="map-layer-postcard" onclick="toggleMapLayer('postcard')" class="map-layer-btn active" title="顯示明信片">🖼️</button>
                 <button id="map-layer-landmark" onclick="toggleMapLayer('landmark')" class="map-layer-btn active" title="顯示純點">📍</button>
+                <button id="map-layer-coco" onclick="toggleMapLayer('coco')" class="map-layer-btn active" title="顯示 CoCo 聯名金盆">🧋</button>
+                <button id="map-layer-family" onclick="toggleMapLayer('family')" class="map-layer-btn" title="顯示全家聯名金盆 (點擊開啟)">🏪</button>
             </div>
             <!-- 路線管理按鈕 -->
             <div style="background:rgba(255,255,255,0.96); padding:5px 8px; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.18); display:flex; gap:5px; align-items:center; position:relative;">
@@ -5794,6 +5796,64 @@
         </div>
     </div>
 
+    <!-- 專屬頁面店點雲端增刪改 Modal -->
+    <div id="spot-override-modal" class="modal-overlay" style="display:none; z-index:1010;" onclick="if(event.target === this) closeModal('spot-override-modal');">
+        <div class="modal-box" style="width:420px; max-width:92vw; max-height:88vh; padding:0; border-radius:16px; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.22); border:1px solid #e2e8f0; display:flex; flex-direction:column;">
+            <div id="so-modal-header" style="background:linear-gradient(135deg, #00a040 0%, #0080c6 100%); padding:13px 16px; color:#fff; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span id="so-modal-icon" style="font-size:20px;">🏪</span>
+                    <div>
+                        <div id="so-modal-title" style="font-size:15px; font-weight:900; line-height:1.2;">編輯門市店點</div>
+                        <div style="font-size:11px; opacity:0.9; font-weight:600; margin-top:2px;">☁️ 儲存後透過 Firebase 全網即時生效（免推送網頁）</div>
+                    </div>
+                </div>
+                <button type="button" class="close-btn" onclick="closeModal('spot-override-modal')" style="color:#fff; opacity:0.85; font-size:24px; line-height:1; padding:0 4px; background:transparent; border:none; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:14px 16px; background:#fff; overflow-y:auto; flex:1;">
+                <form id="spot-override-form" onsubmit="saveSpotOverride(event)" style="display:flex; flex-direction:column; gap:10px;">
+                    <input type="hidden" id="so-brand" value="">
+                    <input type="hidden" id="so-spot-id" value="">
+                    <div>
+                        <label style="display:block; font-size:12px; font-weight:800; color:#334155; margin-bottom:4px;">門市名稱 <span style="color:#ef4444;">*</span></label>
+                        <input type="text" id="so-store-name" class="input-base" required placeholder="例如：全家馬祖福運店 / CoCo 淡水北新店" style="padding:7px 10px; font-size:13px; font-weight:700;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:12px; font-weight:800; color:#334155; margin-bottom:4px;">經緯度座標 <span style="color:#ef4444;">*</span></label>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <input type="text" id="so-coords" class="input-base" required placeholder="例如：26.158582, 119.943750" style="flex:1; padding:7px 10px; font-size:13px; font-family:monospace;">
+                            <button type="button" onclick="pasteSpotOverrideCoords()" style="background:#f0fdf4; color:#15803d; border:1px solid #86efac; border-radius:8px; padding:7px 10px; font-size:12px; font-weight:800; cursor:pointer; white-space:nowrap; flex-shrink:0;">📋 貼上</button>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <div>
+                            <label style="display:block; font-size:12px; font-weight:800; color:#334155; margin-bottom:4px;">縣市 <span style="color:#ef4444;">*</span></label>
+                            <select id="so-city" class="input-base" required onchange="updateSpotOverrideDistrictList()" style="padding:7px 8px; font-size:13px; font-weight:700;"></select>
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:12px; font-weight:800; color:#334155; margin-bottom:4px;">行政區 / 鄉鎮 <span style="color:#ef4444;">*</span></label>
+                            <input type="text" id="so-district" list="so-district-datalist" class="input-base" required placeholder="例如：南竿鄉、大安區" style="padding:7px 10px; font-size:13px; font-weight:700;">
+                            <datalist id="so-district-datalist"></datalist>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-top:6px; padding-top:10px; border-top:1px solid #f1f5f9;">
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <button type="button" id="so-delete-btn" onclick="deleteCurrentSpotOverride()" style="display:none; background:#fee2e2; color:#dc2626; border:1px solid #fca5a5; border-radius:8px; padding:6px 10px; font-size:12px; font-weight:800; cursor:pointer;">🗑️ 移除此店點</button>
+                            <button type="button" id="so-restore-btn" onclick="restoreCurrentSpotDefault()" style="display:none; background:#fffbeb; color:#b45309; border:1px solid #fde68a; border-radius:8px; padding:6px 10px; font-size:12px; font-weight:800; cursor:pointer;">↺ 還原預設</button>
+                        </div>
+                        <div style="display:flex; gap:6px; margin-left:auto;">
+                            <button type="button" class="btn-sm btn-default" onclick="closeModal('spot-override-modal')" style="padding:6px 12px; border-radius:8px; font-weight:700;">取消</button>
+                            <button type="submit" id="so-save-btn" class="btn-sm btn-primary" style="padding:6px 14px; border-radius:8px; font-weight:800; background:#10b981; border:none; color:#fff;">💾 儲存同步</button>
+                        </div>
+                    </div>
+                </form>
+                <div id="so-deleted-section" style="display:none; margin-top:12px; padding-top:10px; border-top:1px dashed #cbd5e1;">
+                    <div style="font-size:11.5px; font-weight:800; color:#64748b; margin-bottom:6px;">🗑️ 已從清單移除的店點（點擊可恢復）：</div>
+                    <div id="so-deleted-list" style="display:flex; flex-direction:column; gap:5px; max-height:140px; overflow-y:auto;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
         <!-- 今日活動快訊公告 Modal -->
     <div id="today-notice-modal" class="modal-overlay" style="display:none; z-index:1008;" onclick="if(event.target === this) closeTodayNoticeModal();">
         <div class="modal-box" style="width:440px; max-width:92vw; max-height:88vh; padding:0; border-radius:18px; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.22); border:1px solid #e2e8f0; display:flex; flex-direction:column;">
@@ -5830,9 +5890,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script src="js/family-data.js?v=202611100051"></script>
-    <script>const APP_VERSION = "2026.11.10.0051";</script>
-    <script src="js/main.js?v=202611100051"></script>
+    <script src="js/family-data.js?v=202611100138"></script>
+    <script>const APP_VERSION = "2026.11.10.0138";</script>
+    <script src="js/main.js?v=202611100138"></script>
     <script src="js/autofill.js?v=1793651958949"></script>
 </body>
 </html>

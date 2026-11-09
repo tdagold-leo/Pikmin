@@ -7133,7 +7133,7 @@ function layoutWeekEvents(weekEvents) {
     // [seq, region, city, district, distSeq, lat, lon]
     const COCO_346_RAW = [[1,"北北基宜","基隆市","七堵區",1,25.097441,121.712885,"七堵店"],[2,"北北基宜","基隆市","七堵區",2,25.08183,121.696117,"百福店"],[3,"北北基宜","基隆市","中山區",1,25.145051,121.726579,"基隆復興店"],[4,"北北基宜","基隆市","中正區",1,25.137248,121.75089,"基隆中船店"],[5,"北北基宜","基隆市","中正區",2,25.15093,121.771939,"基隆海洋店"],[6,"北北基宜","基隆市","中正區",3,25.136018,121.787004,"基隆海豐店"],[7,"北北基宜","基隆市","仁愛區",1,25.127596,121.742205,"基隆廟口店"],[8,"北北基宜","基隆市","仁愛區",2,25.127811,121.737019,"基隆成功店"],[9,"北北基宜","基隆市","安樂區",1,25.140205,121.709281,"基隆武崙店"],[10,"北北基宜","基隆市","安樂區",2,25.120437,121.723072,"基隆長庚店"],[11,"北北基宜","台北市","中山區",1,25.082638,121.546281,"台北大直店"],[12,"北北基宜","台北市","中山區",2,25.060451,121.525419,"林森北店"],[13,"北北基宜","台北市","中山區",3,25.065744,121.540888,"龍江2店"],[14,"北北基宜","台北市","中正區",1,25.035996,121.522631,"台北永康店"],[15,"北北基宜","台北市","中正區",2,25.044992,121.516266,"台北站前店"],[16,"北北基宜","台北市","中正區",3,25.046432,121.517762,"捷運北車2店"],[17,"北北基宜","台北市","中正區",4,25.03026,121.516594,"台北南昌店"],[18,"北北基宜","台北市","中正區",5,25.045933,121.514247,"台北開封店"],[19,"北北基宜","台北市","大同區",1,25.048164,121.518447,"捷運北車店"],[20,"北北基宜","台北市","中正區",6,25.043416,121.524222,"青島店"],[21,"北北基宜","台北市","信義區",1,25.044302,121.568877,"信義永吉店"],[22,"北北基宜","台北市","松山區",1,25.049444,121.578915,"台鐵松山店"],[23,"北北基宜","台北市","信義區",2,25.027667,121.563314,"吳興店"],[24,"北北基宜","台北市","內湖區",1,25.083522,121.566992,"內湖店"],[25,"北北基宜","台北市","內湖區",2,25.081858,121.592349,"內湖成功店"],[26,"北北基宜","台北市","內湖區",3,25.084722,121.593355,"內湖金龍店"],[27,"北北基宜","台北市","內湖區",4,25.070705,121.611694,"康寧店"],[28,"北北基宜","台北市","內湖區",5,25.068906,121.613817,"東湖2店"],[29,"北北基宜","台北市","內湖區",6,25.068764,121.585874,"民權店"],[30,"北北基宜","台北市","北投區",1,25.118125,121.506621,"尊賢店"],[31,"北北基宜","台北市","北投區",2,25.116153,121.516217,"石牌商城店"],[32,"北北基宜","台北市","北投區",3,25.122097,121.467199,"關渡店"],[33,"北北基宜","台北市","北投區",4,25.140374,121.500477,"北投中和店"],[34,"北北基宜","台北市","北投區",5,25.136657,121.495627,"北投中央北店"],[35,"北北基宜","台北市","南港區",1,25.059256,121.618031,"南港三井店"],[36,"北北基宜","台北市","南港區",2,25.045295,121.583965,"同德店"],[37,"北北基宜","台北市","南港區",3,25.056392,121.605883,"興華店"],[38,"北北基宜","台北市","士林區",1,25.137493,121.541882,"文化店"],[39,"北北基宜","台北市","士林區",2,25.094639,121.52197,"士林中正店"],[40,"北北基宜","台北市","士林區",3,25.08882,121.518386,"大南店"],[41,"北北基宜","台北市","士林區",4,25.107981,121.528815,"天母德行店"],[42,"北北基宜","台北市","士林區",5,25.088584,121.508524,"社子店"],[43,"北北基宜","台北市","士林區",6,25.083034,121.519539,"華齡店"],[44,"北北基宜","台北市","大同區",2,25.05739,121.517608,"台北民生店"],[45,"北北基宜","台北市","大同區",3,25.064577,121.511034,"延平店"],[46,"北北基宜","台北市","大同區",4,25.065994,121.516107,"昌吉店"],[47,"北北基宜","台北市","大安區",1,25.032708,121.538152,"台北建國店"],[48,"北北基宜","台北市","信義區",3,25.021031,121.554809,"安居店"],[49,"北北基宜","台北市","大安區",2,25.041502,121.545082,"忠孝復興店"],[50,"北北基宜","台北市","中正區",7,25.034328,121.527113,"金山店"],[51,"北北基宜","台北市","文山區",1,24.984761,121.561476,"忠順店"],[52,"北北基宜","台北市","文山區",2,25.000017,121.55573,"興隆店"],[53,"北北基宜","台北市","松山區",2,25.052146,121.545625,"台北南京店"],[54,"北北基宜","台北市","松山區",3,25.050638,121.56087,"南京五店"],[55,"北北基宜","台北市","松山區",4,25.052287,121.555048,"南四店"],[56,"北北基宜","台北市","萬華區",1,25.026344,121.494107,"萬華寶興店"],[57,"北北基宜","台北市","萬華區",2,25.044313,121.508425,"西門町店"],[58,"北北基宜","新北市","三峽區",1,24.93132,121.373259,"三峽光明店"],[59,"北北基宜","新北市","三峽區",2,24.943848,121.374431,"三峽北大��店"],[60,"北北基宜","新北市","三峽區",3,24.937357,121.370323,"三峽和平店"],[61,"北北基宜","新北市","三芝區",1,25.258825,121.502137,"三芝店"],[62,"北北基宜","新北市","三重區",1,25.063167,121.485582,"三民店"],[63,"北北基宜","新北市","三重區",2,25.069461,121.47717,"三重中正北店"],[64,"北北基宜","新北市","三重區",3,25.083706,121.491544,"三重五華店"],[65,"北北基宜","新北市","三重區",4,25.060911,121.497965,"三重天台店"],[66,"北北基宜","新北市","三重區",5,25.078791,121.483176,"三重徐匯店"],[67,"北北基宜","新北市","三重區",6,25.067402,121.492656,"三重自強店"],[68,"北北基宜","新北市","三重區",7,25.072591,121.496377,"三重龍門店"],[69,"北北基宜","新北市","三重區",8,25.054141,121.49114,"集美店"],[70,"北北基宜","新北市","中和區",1,25.001604,121.481178,"中和員山店"],[71,"北北基宜","新北市","中和區",2,24.999349,121.488168,"中和建一店"],[72,"北北基宜","新北市","中和區",3,25.005281,121.49879,"福美店"],[73,"北北基宜","新北市","中和區",4,24.988318,121.509529,"中和興南店"],[74,"北北基宜","新北市","中和區",5,24.998381,121.498984,"中和連勝店"],[75,"北北基宜","新北市","中和區",6,24.997051,121.504126,"中和永華店"],[76,"北北基宜","新北市","中和區",7,24.99061,121.492472,"圓通店"],[77,"北北基宜","新北市","中和區",8,25.003485,121.468989,"德光店"],[78,"北北基宜","新北市","中和區",9,24.993088,121.504716,"景安店"],[79,"北北基宜","新北市","中和區",10,24.993166,121.522313,"自立店"],[80,"北北基宜","新北市","五股區",1,25.084577,121.438664,"成泰店"],[81,"北北基宜","新北市","五股區",2,25.101491,121.450414,"凌雲店"],[82,"北北基宜","新北市","五股區",3,25.089899,121.446396,"洲子洋店"],[83,"北北基宜","新北市","八里區",1,25.125918,121.452847,"八里2店"],[84,"北北基宜","新北市","八里區",2,25.146705,121.398105,"八里店"],[85,"北北基宜","新北市","土城區",1,24.974003,121.441181,"土城中央店"],[86,"北北基宜","新北市","土城區",2,24.987229,121.454889,"土城廣福店"],[87,"北北基宜","新北市","土城區",3,24.987335,121.463561,"土城立德店"],[88,"北北基宜","新北市","新店區",1,24.953348,121.493175,"安康2店"],[89,"北北基宜","新北市","新店區",2,24.963778,121.514865,"安康店"],[90,"北北基宜","新北市","新店區",3,24.965168,121.540385,"新店北新店"],[91,"北北基宜","新北市","新店區",4,24.97542,121.536643,"新店民族店"],[92,"北北基宜","新北市","新店區",5,24.978061,121.546478,"新店裕隆城店"],[93,"北北基宜","新北市","新莊區",1,25.04947,121.455667,"新莊幸福店"],[94,"北北基宜","新北市","新莊區",2,25.049401,121.447453,"新莊中和店"],[95,"北北基宜","新北市","新莊區",3,25.044946,121.452409,"新莊中港店"],[96,"北北基宜","新北市","新莊區",4,25.065324,121.457444,"新莊五權店"],[97,"北北基宜","新北市","新莊區",5,25.054858,121.466138,"新莊化成店"],[98,"北北基宜","新北市","新莊區",6,25.024492,121.424701,"富國店"],[99,"北北基宜","新北市","新莊區",7,25.028665,121.443714,"新莊新泰店"],[100,"北北基宜","新北市","新莊區",8,25.050679,121.454762,"昌隆店"],[101,"北北基宜","新北市","新莊區",9,25.030698,121.434171,"新莊輔大店"],[102,"北北基宜","新北市","新莊區",10,25.019366,121.42159,"新莊龍安店"],[103,"北北基宜","新北市","新莊區",11,25.016737,121.426141,"民安店"],[104,"北北基宜","新北市","板橋區",1,24.997774,121.447383,"板橋合宜店"],[105,"北北基宜","新北市","板橋區",2,25.022558,121.461213,"新海店"],[106,"北北基宜","新北市","板橋區",3,25.015211,121.479299,"板橋三民店"],[107,"北北基宜","新北市","板橋區",4,25.031139,121.47845,"民治店"],[108,"北北基宜","新北市","中和區",11,25.008482,121.471718,"板橋漢東店"],[109,"北北基宜","新北市","板橋區",5,25.024387,121.471149,"板橋莊敬店"],[110,"北北基宜","新北市","板橋區",6,25.002495,121.462778,"板橋重慶店"],[111,"北北基宜","新北市","板橋區",7,24.98522,121.42872,"板橋金門店"],[112,"北北基宜","新北市","林口區",1,25.077365,121.39401,"林口中正店"],[113,"北北基宜","新北市","林口區",2,25.073074,121.370517,"林口文化2店"],[114,"北北基宜","新北市","林口區",3,25.077347,121.37442,"林口萬家福店"],[115,"北北基宜","新北市","樹林區",1,24.947218,121.379877,"三峽大雅店"],[116,"北北基宜","新北市","樹林區",2,24.98109,121.418773,"樹林中華店"],[117,"北北基宜","新北市","樹林區",3,24.995065,121.422782,"樹保店"],[118,"北北基宜","新北市","樹林區",4,24.991119,121.42554,"樹林店"],[119,"北北基宜","新北市","永和區",1,24.996898,121.515448,"永和中正店"],[120,"北北基宜","新北市","永和區",2,25.013026,121.512466,"永和仁愛店"],[121,"北北基宜","新北市","永和區",3,24.999117,121.525428,"永和得和店"],[122,"北北基宜","新北市","永和區",4,25.002846,121.511073,"永安市場店"],[123,"北北基宜","新北市","汐止區",1,25.067315,121.662614,"汐止忠孝店"],[124,"北北基宜","新北市","汐止區",2,25.065938,121.642128,"汐止樟樹店"],[125,"北北基宜","新北市","汐止區",3,25.065323,121.634563,"汐止福德店"],[126,"北北基宜","新北市","汐止區",4,25.062469,121.650081,"遠雄汐止店"],[127,"北北基宜","新北市","泰山區",1,25.059602,121.431663,"泰山明志店"],[128,"北北基宜","新北市","泰山區",2,25.040849,121.425017,"泰山貴子店"],[129,"北北基宜","新北市","淡水區",1,25.227554,121.451902,"新埔店"],[130,"北北基宜","新北市","淡水區",2,25.177765,121.443836,"水碓店"],[131,"北北基宜","新北市","淡水區",3,25.183435,121.424248,"沙崙店"],[132,"北北基宜","新北市","淡水區",4,25.170998,121.445767,"淡水店"],[133,"北北基宜","新北市","淡水區",5,25.15628,121.45937,"淡水紅樹林店"],[134,"北北基宜","新北市","淡水區",6,25.136212,121.461775,"竹圍店"],[135,"北北基宜","新北市","深坑區",1,25.00238,121.619051,"深坑店"],[136,"北北基宜","新北市","瑞芳區",1,25.107808,121.806042,"瑞芳店"],[137,"北北基宜","新北市","蘆洲區",1,25.090766,121.459057,"蘆洲永平店"],[138,"北北基宜","新北市","蘆洲區",2,25.081892,121.464944,"蘆洲光華店"],[139,"北北基宜","新北市","蘆洲區",3,25.086202,121.479453,"蘆洲民族店"],[140,"北北基宜","新北市","蘆洲區",4,25.09102,121.473956,"蘆洲民義店"],[141,"北北基宜","新北市","蘆洲區",5,25.080223,121.462508,"蘆洲長安店"],[142,"北北基宜","新北市","金山區",1,25.221158,121.638059,"新北金山店"],[143,"北北基宜","新北市","鶯歌區",1,24.940293,121.337034,"鶯歌中正店"],[144,"北北基宜","新北市","鶯歌區",2,24.953419,121.348248,"鶯歌建國店"],[145,"桃竹苗","桃園市","中壢區",1,24.969393,121.250094,"中壢中華店"],[146,"桃竹苗","桃園市","中壢區",2,24.979225,121.250207,"內壢長春店"],[147,"桃竹苗","桃園市","中壢區",3,24.945479,121.247225,"中壢中山東店"],[148,"桃竹苗","桃園市","中壢區",4,24.971774,121.235201,"中壢南園店"],[149,"桃竹苗","桃園市","中壢區",5,24.988473,121.18115,"中壢大崙店"],[150,"桃竹苗","桃園市","中壢區",6,24.964315,121.225628,"中壢慈惠店"],[151,"桃竹苗","桃園市","中壢區",7,24.957519,121.214469,"中壢新明店"],[152,"桃竹苗","桃園市","中壢區",8,24.964952,121.261406,"中壢榮民店"],[153,"桃竹苗","桃園市","平鎮區",1,24.957513,121.205151,"中壢民族店"],[154,"桃竹苗","桃園市","中壢區",9,24.967477,121.232666,"中壢福州店"],[155,"桃竹苗","桃園市","中壢區",10,24.95448,121.225585,"中壢站前店"],[156,"桃竹苗","桃園市","中壢區",11,24.958097,121.166516,"中壢高榮店"],[157,"桃竹苗","桃園市","中壢區",12,24.974125,121.255926,"內壢忠孝店"],[158,"桃竹苗","桃園市","中壢區",13,24.970371,121.257381,"內壢莊敬店"],[159,"桃竹苗","桃園市","八德區",1,24.955845,121.26414,"新中北店"],[160,"桃竹苗","桃園市","中壢區",14,24.935675,121.234184,"龍岡店"],[161,"桃竹苗","桃園市","八德區",2,24.95939,121.296596,"廣福店"],[162,"桃竹苗","桃園市","八德區",3,24.932518,121.297325,"桃園介壽店"],[163,"桃竹苗","桃園市","八德區",4,24.96358,121.303806,"桃園八德店"],[164,"桃竹苗","桃園市","八德區",5,24.948311,121.297428,"桃園大湳店"],[165,"桃竹苗","桃園市","八德區",6,24.929238,121.286752,"桃園興豐店"],[166,"桃竹苗","桃園市","八德區",7,24.975488,121.271172,"永豐店"],[167,"北北基宜","新北市","鶯歌區",3,24.970785,121.32714,"鳳鳴店"],[168,"桃竹苗","桃園市","大園區",1,25.080825,121.238157,"桃捷A12店"],[169,"桃竹苗","桃園市","大園區",2,25.066713,121.180262,"大園大工店"],[170,"桃竹苗","桃園市","大園區",3,25.064573,121.196913,"大園店"],[171,"桃竹苗","桃園市","中壢區",15,25.004924,121.228518,"中壢大江店"],[172,"桃竹苗","桃園市","中壢區",16,25.009549,121.213874,"桃園青埔店"],[173,"桃竹苗","桃園市","大園區",4,25.074663,121.259359,"菓林店"],[174,"桃竹苗","桃園市","大溪區",1,24.901075,121.283614,"大溪崎頂店"],[175,"桃竹苗","桃園市","大溪區",2,24.881363,121.288928,"大溪店"],[176,"桃竹苗","桃園市","平鎮區",2,24.965489,121.183565,"平鎮中豐店"],[177,"桃竹苗","桃園市","平鎮區",3,24.915418,121.210411,"平鎮南勢店"],[178,"桃竹苗","桃園市","平鎮區",4,24.900296,121.209068,"平鎮山頂店"],[179,"桃竹苗","桃園市","平鎮區",5,24.951828,121.203338,"平鎮文化店"],[180,"桃竹苗","桃園市","平鎮區",6,24.951916,121.210326,"平鎮育達店"],[181,"桃竹苗","桃園市","平鎮區",7,24.921883,121.251196,"平鎮龍南店"],[182,"桃竹苗","桃園市","新屋區",1,24.972855,121.104793,"新屋中山店"],[183,"桃竹苗","桃園市","新屋區",2,24.989194,121.030546,"永安中山店"],[184,"桃竹苗","桃園市","桃園區",1,25.006847,121.303515,"桃園中正店"],[185,"桃竹苗","桃園市","桃園區",2,24.989649,121.291975,"中平店"],[186,"桃竹苗","桃園市","桃園區",3,25.015567,121.311066,"大興店"],[187,"桃竹苗","桃園市","桃園區",4,24.990689,121.310391,"桃園中華店"],[188,"桃竹苗","桃園市","桃園區",5,25.017037,121.295508,"南平店"],[189,"桃竹苗","桃園市","桃園區",6,24.98951,121.312441,"桃園大同店"],[190,"桃竹苗","桃園市","桃園區",7,25.012736,121.317062,"桃園寶山店"],[191,"桃竹苗","桃園市","桃園區",8,24.983751,121.318476,"桃鶯店"],[192,"桃竹苗","桃園市","桃園區",9,24.992475,121.299467,"桃園縣府店"],[193,"桃竹苗","桃園市","桃園區",10,24.989788,121.280049,"桃安店"],[194,"桃竹苗","桃園市","楊梅區",1,24.917682,121.184806,"埔心中興店"],[195,"桃竹苗","桃園市","楊梅區",2,24.911726,121.183287,"埔心文化店"],[196,"桃竹苗","桃園市","楊梅區",3,24.908129,121.145646,"楊梅大成店"],[197,"桃竹苗","桃園市","楊梅區",4,24.936298,121.081703,"楊梅富岡店"],[198,"桃竹苗","桃園市","楊梅區",5,24.922511,121.177341,"楊梅幼獅店"],[199,"桃竹苗","桃園市","楊梅區",6,24.906204,121.177045,"楊梅梅獅店"],[200,"桃竹苗","桃園市","楊梅區",7,24.910953,121.156358,"楊梅環東店"],[201,"桃竹苗","桃園市","楊梅區",8,24.934383,121.123024,"老飯店"],[202,"桃竹苗","桃園市","蘆竹區",1,25.039822,121.289247,"南崁忠孝西店"],[203,"桃竹苗","桃園市","蘆竹區",2,25.05023,121.291044,"南崁3店"],[204,"桃竹苗","桃園市","蘆竹區",3,25.055839,121.29811,"南崁中山店"],[205,"桃竹苗","桃園市","蘆竹區",4,25.06562,121.286667,"南崁公埔店"],[206,"桃竹苗","桃園市","龜山區",1,25.046945,121.293877,"南崁新南店"],[207,"桃竹苗","桃園市","蘆竹區",5,25.084962,121.286107,"山腳店"],[208,"桃竹苗","桃園市","蘆竹區",6,25.019719,121.265904,"桃園大竹2店"],[209,"桃竹苗","桃園市","蘆竹區",7,25.02383,121.259694,"桃園大竹店"],[210,"桃竹苗","桃園市","蘆竹區",8,25.10072,121.261349,"蘆竹海湖店"],[211,"桃竹苗","桃園市","新屋區",3,24.964934,121.151004,"富源店"],[212,"桃竹苗","桃園市","觀音區",1,25.051535,121.118022,"觀音成功店"],[213,"桃竹苗","桃園市","觀音區",2,25.036553,121.082449,"觀音甘泉店"],[214,"桃竹苗","桃園市","觀音區",3,25.047641,121.142896,"草漯店"],[215,"桃竹苗","桃園市","觀音區",4,25.012865,121.135637,"觀音新坡店"],[216,"桃竹苗","桃園市","龍潭區",1,24.873826,121.233673,"中潭店"],[217,"桃竹苗","桃園市","龍潭區",2,24.865897,121.213846,"北潭店"],[218,"桃竹苗","桃園市","龍潭區",3,24.864499,121.217122,"正潭店"],[219,"桃竹苗","桃園市","龍潭區",4,24.878425,121.211525,"百年店"],[220,"桃竹苗","桃園市","龍潭區",5,24.829413,121.192873,"龍潭渴望店"],[221,"桃竹苗","桃園市","龍潭區",6,24.848876,121.230152,"龍潭石門店"],[222,"桃竹苗","桃園市","龜山區",2,24.993592,121.336931,"中興店"],[223,"桃竹苗","桃園市","龜山區",3,25.055818,121.362679,"林口2店"],[224,"桃竹苗","桃園市","龜山區",4,25.040394,121.388044,"林口文青店"],[225,"桃竹苗","桃園市","龜山區",5,25.059921,121.368893,"林口長庚店"],[226,"桃竹苗","桃園市","龜山區",6,24.99089,121.323222,"桃園山鶯店"],[227,"桃竹苗","桃園市","龜山區",7,24.991396,121.343835,"龜山大同店"],[228,"桃竹苗","桃園市","龜山區",8,25.035256,121.302306,"龜山民生北店"],[229,"北北基宜","新北市","樹林區",5,25.017001,121.402325,"龍華店"],[230,"桃竹苗","新竹市","北區",1,24.805207,120.95251,"延平1號店"],[231,"桃竹苗","新竹市","北區",2,24.812508,120.964279,"新竹中正店"],[232,"桃竹苗","新竹市","北區",3,24.815899,120.974388,"新竹光華店"],[233,"桃竹苗","新竹市","北區",4,24.840867,120.937169,"新竹南寮店"],[234,"桃竹苗","新竹市","北區",5,24.804645,120.965328,"新竹城隍廟店"],[235,"桃竹苗","新竹市","北區",6,24.82135,120.975333,"新竹湳雅店"],[236,"桃竹苗","新竹市","東區",1,24.810185,120.9768,"巨城民生店"],[237,"桃竹苗","新竹市","東區",2,24.798364,120.997262,"清大建新店"],[238,"桃竹苗","新竹市","東區",3,24.808789,120.97389,"新竹巨城中央店"],[239,"桃竹苗","新竹市","東區",4,24.80434,120.971958,"新竹東門店"],[240,"桃竹苗","新竹市","東區",5,24.796312,120.998618,"新竹清大店"],[241,"桃竹苗","新竹市","東區",6,24.777086,121.023371,"新竹金山2店"],[242,"桃竹苗","新竹市","東區",7,24.785746,121.018322,"新竹關新店"],[243,"桃竹苗","新竹市","東區",8,24.796959,120.975767,"新竹食品店"],[244,"桃竹苗","新竹市","東區",9,24.788905,120.966723,"明湖店"],[245,"桃竹苗","新竹市","北區",7,24.799725,120.965082,"林森店"],[246,"桃竹苗","新竹市","香山區",1,24.789775,120.927927,"大庄店"],[247,"桃竹苗","新竹市","香山區",2,24.756573,120.952674,"新竹中華店"],[248,"桃竹苗","新竹市","香山區",3,24.742887,120.90589,"新竹內湖店"],[249,"桃竹苗","新竹市","香山區",4,24.796711,120.941714,"新竹牛埔店"],[250,"桃竹苗","新竹縣","北埔鄉",1,24.701695,121.057311,"新竹北埔店"],[251,"桃竹苗","新竹縣","寶山鄉",1,24.765181,120.990403,"園區寶山店"],[252,"桃竹苗","新竹縣","新埔鎮",1,24.827639,121.0806,"新竹新埔店"],[253,"桃竹苗","新竹縣","新豐鄉",1,24.866882,120.990241,"新豐尚仁店"],[254,"桃竹苗","新竹縣","新豐鄉",2,24.870839,120.995768,"新豐建興店"],[255,"桃竹苗","新竹縣","新豐鄉",3,24.899659,120.98649,"新豐新市店"],[256,"桃竹苗","新竹縣","湖口鄉",1,24.869895,121.026466,"湖口光復店"],[257,"桃竹苗","新竹縣","湖口鄉",2,24.900929,121.046893,"湖口中正2店"],[258,"桃竹苗","新竹縣","湖口鄉",3,24.902536,121.044303,"湖口中正店"],[259,"桃竹苗","新竹縣","湖口鄉",4,24.872969,121.014849,"湖口仁和店"],[260,"桃竹苗","新竹縣","湖口鄉",5,24.863348,121.026529,"湖口勝利店"],[261,"桃竹苗","新竹縣","竹北市",1,24.833899,121.010346,"竹北三民店"],[262,"桃竹苗","新竹縣","竹北市",2,24.840968,121.000161,"竹北中正店"],[263,"桃竹苗","新竹縣","竹北市",3,24.835103,121.013525,"竹北中正東店"],[264,"桃竹苗","新竹縣","竹北市",4,24.82599,121.008988,"竹北光明店"],[265,"桃竹苗","新竹縣","竹北市",5,24.822826,121.026363,"竹北勝利店"],[266,"桃竹苗","新竹縣","竹北市",6,24.818758,121.023276,"竹北成功店"],[267,"桃竹苗","新竹縣","竹北市",7,24.807744,121.033918,"竹北文興店"],[268,"桃竹苗","新竹縣","竹東鎮",1,24.7437,121.083552,"竹東2店"],[269,"桃竹苗","新竹縣","竹東鎮",2,24.767353,121.055873,"竹東二重店"],[270,"桃竹苗","新竹縣","竹東鎮",3,24.736497,121.095839,"竹東北興店"],[271,"桃竹苗","新竹縣","竹東鎮",4,24.737393,121.088906,"竹東店"],[272,"桃竹苗","新竹縣","竹東鎮",5,24.721886,121.096335,"竹東東峰店"],[273,"桃竹苗","新竹縣","芎林鄉",1,24.776791,121.078006,"新竹芎林店"],[274,"桃竹苗","苗栗縣","三義鄉",1,24.411102,120.768493,"苗栗三義店"],[275,"桃竹苗","苗栗縣","公館鄉",1,24.504871,120.827016,"苗栗公館店"],[276,"桃竹苗","苗栗縣","後龍鎮",1,24.614876,120.789785,"後龍店"],[277,"桃竹苗","苗栗縣","竹南鎮",1,24.68821,120.879272,"竹南光復店"],[278,"桃竹苗","苗栗縣","竹南鎮",2,24.687438,120.870714,"竹南博愛店"],[279,"桃竹苗","苗栗縣","竹南鎮",3,24.685421,120.878284,"竹南民族店"],[280,"桃竹苗","苗栗縣","苑裡鎮",1,24.442846,120.652344,"苗栗苑裡店"],[281,"桃竹苗","苗栗縣","苗栗市",1,24.55208,120.816012,"南苗中正店"],[282,"桃竹苗","苗栗縣","苗栗市",2,24.560583,120.818592,"苗栗府前店"],[283,"桃竹苗","苗栗縣","苗栗市",3,24.569273,120.819938,"苗栗正發店"],[284,"桃竹苗","苗栗縣","通霄鎮",1,24.489321,120.678136,"苗栗通霄店"],[285,"桃竹苗","苗栗縣","銅鑼鄉",1,24.488201,120.787424,"銅鑼中正店"],[286,"桃竹苗","苗栗縣","頭份市",1,24.693694,120.912956,"頭份建國店"],[287,"桃竹苗","苗栗縣","頭份市",2,24.683609,120.906141,"頭份中正2店"],[288,"桃竹苗","苗栗縣","頭份市",3,24.68632,120.910105,"頭份中正店"],[289,"桃竹苗","苗栗縣","頭份市",4,24.686285,120.907416,"頭份信義店"],[290,"桃竹苗","苗栗縣","頭份市",5,24.699154,120.899411,"頭份文化店"],[291,"桃竹苗","苗栗縣","頭份市",6,24.680341,120.94645,"頭份斗煥坪店"],[292,"中彰投","台中市","中區",1,24.136784,120.684927,"台中火車站店"],[293,"中彰投","台中市","北屯區",1,24.17743,120.690175,"北屯昌平店"],[294,"中彰投","台中市","南屯區",1,24.129759,120.645765,"文心秀泰店"],[295,"中彰投","台中市","后里區",1,24.3089,120.724968,"台中后里店"],[296,"中彰投","台中市","后里區",2,24.330341,120.711635,"泰安服務區南下店"],[297,"中彰投","台中市","大甲區",1,24.346788,120.620367,"大甲店"],[298,"中彰投","台中市","大里區",1,24.106451,120.689739,"大里中興店"],[299,"中彰投","台中市","大里區",2,24.115304,120.681341,"大里大明店"],[300,"中彰投","台中市","大里區",3,24.090799,120.703199,"大里成功店"],[301,"中彰投","台中市","大雅區",1,24.224963,120.648959,"台中大雅店"],[302,"中彰投","台中市","太平區",1,24.152183,120.717474,"太平樹孝店"],[303,"中彰投","台中市","東區",1,24.135994,120.687663,"台中遠雄店"],[304,"中彰投","台中市","梧棲區",1,24.255408,120.530597,"台中梧棲店"],[305,"中彰投","台中市","沙鹿區",1,24.235891,120.55893,"台中沙鹿店"],[306,"中彰投","台中市","沙鹿區",2,24.228744,120.573852,"台中靜宜店"],[307,"中彰投","台中市","清水區",1,24.27107,120.575964,"台中清水店"],[308,"中彰投","台中市","潭子區",1,24.210081,120.700808,"潭子勝利店"],[309,"中彰投","台中市","西屯區",1,24.170168,120.64493,"青海萬家福店"],[310,"中彰投","台中市","豐原區",1,24.245176,120.727388,"豐原南陽店"],[311,"中彰投","台中市","霧峰區",1,24.063755,120.698727,"台中霧峰店"],[312,"中彰投","台中市","西屯區",2,24.1821,120.592703,"台中東海店"],[313,"中彰投","彰化縣","和美鎮",1,24.111367,120.499351,"彰化和美店"],[314,"中彰投","彰化縣","彰化市",1,24.075124,120.539918,"彰化民族店"],[315,"中彰投","南投縣","南投市",1,23.900109,120.711596,"南投服務區店"],[316,"中彰投","南投縣","草屯鎮",1,23.981912,120.684466,"南投草屯店"],[317,"雲嘉南","雲林縣","斗六市",1,23.701498,120.530476,"斗六萬家福店"],[318,"雲嘉南","雲林縣","虎尾鎮",1,23.70811,120.433523,"雲林虎尾店"],[319,"雲嘉南","雲林縣","西螺鎮",1,23.788702,120.477403,"西螺服務區店"],[320,"雲嘉南","台南市","中西區",1,22.991528,120.210594,"台南青年店"],[321,"雲嘉南","台南市","中西區",2,22.997624,120.199189,"台南國華店"],[322,"雲嘉南","台南市","新市區",1,23.084114,120.295149,"台南新市店"],[323,"雲嘉南","台南市","東區",1,22.990567,120.232608,"南紡購物中心店"],[324,"雲嘉南","台南市","東區",2,22.969592,120.227382,"台南市醫店"],[325,"雲嘉南","台南市","永康區",1,23.008725,120.233514,"永康中華店"],[326,"高屏","高雄市","前鎮區",1,22.5834,120.330071,"SKM Park店"],[327,"高屏","高雄市","前鎮區",2,22.594712,120.306619,"夢時代店"],[328,"高屏","高雄市","前鎮區",3,22.604988,120.304336,"成功萬家福店"],[329,"高屏","高雄市","岡山區",1,22.77989,120.300028,"岡山樂購廣場店"],[330,"高屏","高雄市","左營區",1,22.687824,120.309228,"左營新光三越店"],[331,"高屏","高雄市","左營區",2,22.664447,120.311091,"左營裕誠店"],[332,"高屏","高雄市","左營區",3,22.709569,120.296668,"楠梓後昌店"],[333,"高屏","高雄市","楠梓區",1,22.726622,120.306501,"楠梓德賢店"],[334,"高屏","高雄市","苓雅區",1,22.612926,120.304395,"高雄大遠百店"],[335,"高屏","高雄市","三民區",1,22.639716,120.351165,"鳳山青年店"],[336,"高屏","高雄市","左營區",4,22.656121,120.306471,"博愛二店"],[337,"北北基宜","宜蘭縣","五結鄉",1,24.684847,121.797022,"宜蘭五結店"],[338,"北北基宜","宜蘭縣","冬山鄉",1,24.667242,121.767892,"冬山義成店"],[339,"北北基宜","宜蘭縣","壯圍鄉",1,24.747189,121.784159,"壯圍店"],[340,"北北基宜","宜蘭縣","宜蘭市",1,24.760675,121.753234,"宜蘭店"],[341,"北北基宜","宜蘭縣","礁溪鄉",1,24.826409,121.771724,"礁溪店"],[342,"北北基宜","宜蘭縣","羅東鎮",1,24.677758,121.767158,"羅東店"],[343,"北北基宜","宜蘭縣","蘇澳鎮",1,24.59617,121.851374,"蘇澳店"],[344,"北北基宜","宜蘭縣","頭城鎮",1,24.857425,121.825044,"頭城店"],[345,"外島","金門縣","金城鎮",1,24.434826,118.319343,"金門金城店"],[346,"外島","金門縣","金湖鎮",1,24.441409,118.415624,"山外店"]];
 
-    const cocoSpotList = COCO_346_RAW.map(row => {
+    const cocoBaseSpotList = COCO_346_RAW.map(row => {
         const seq = row[0];
         const code = String(seq).padStart(3, '0');
         const storeName = row[7] || ('門市 #' + code);
@@ -7154,6 +7154,7 @@ function layoutWeekEvents(weekEvents) {
         };
     });
 
+    let cocoSpotList = [...cocoBaseSpotList];
     let cocoRegionFilter = 'all';
     let cocoCityFilter = 'all';
     let cocoDistrictFilter = '';
@@ -7676,6 +7677,7 @@ function layoutWeekEvents(weekEvents) {
                 <div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
                     <button type="button" onclick="expandAllCocoCities()" style="background:#f8fafc; color:#334155; border:1px solid #cbd5e1; border-radius:8px; padding:5px 9px; font-size:11.5px; font-weight:800; cursor:pointer;">📂 全展開</button>
                     <button type="button" onclick="collapseAllCocoCities()" style="background:#f8fafc; color:#64748b; border:1px solid #cbd5e1; border-radius:8px; padding:5px 9px; font-size:11.5px; font-weight:800; cursor:pointer;">📁 全折疊</button>
+                    <button type="button" onclick="openSpotOverrideModal('coco', '', event)" style="background:#fff7ed; color:#c2410c; border:1px solid #fdba74; border-radius:8px; padding:5px 9px; font-size:11.5px; font-weight:800; cursor:pointer;" title="雲端新增或恢復已移除的 CoCo 店點（免推送即時生效）">➕ 新增店點</button>
                 </div>
                 <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
                     ${claimableList.length > 0 ? `
@@ -7776,6 +7778,7 @@ function layoutWeekEvents(weekEvents) {
                     <button type="button" class="btn-sm btn-default" style="flex:1; min-width:0; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:800; padding:4px 3px; font-size:10.5px; white-space:nowrap;" onclick="copyCoords('${spot.coords}', this)">📍 座標</button>
                     <button type="button" class="btn-sm btn-default" style="flex:1; min-width:0; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; font-weight:800; padding:4px 3px; font-size:10.5px; white-space:nowrap;" onclick="goToMapCoords('${spot.coords}')">🗺️ 地圖</button>
                     <button type="button" class="btn-sm btn-default" style="flex:1; min-width:0; background:${st.isNoBasin ? '#fee2e2' : '#fff1f2'}; color:#be123c; border:1px solid #fecdd3; font-weight:800; padding:4px 3px; font-size:10px; white-space:nowrap;" onclick="toggleCocoNoBasin('${spot.id}', event)" title="${st.isNoBasin ? '點擊恢復為有金盆' : '回報此處沒有金盆（複製座標時將自動略過）'}">${st.isNoBasin ? '↺ 有盆' : '🚫 無盆'}</button>
+                    <button type="button" class="btn-sm btn-default" style="flex:0 0 auto; background:#f8fafc; color:#475569; border:1px solid #cbd5e1; font-weight:800; padding:4px 5px; font-size:10px; white-space:nowrap;" onclick="openSpotOverrideModal('coco', '${spot.id}', event)" title="雲端編輯店名、座標或移除此店點">✏️</button>
                 </div>
             `;
             container.appendChild(card);
@@ -7971,7 +7974,7 @@ function layoutWeekEvents(weekEvents) {
         '澎湖縣', '金門縣', '連江縣'
     ];
 
-    const familySpotList = (window.FAMILY_RAW_DATA || []).map(row => {
+    const familyBaseSpotList = (window.FAMILY_RAW_DATA || []).map(row => {
         const seq = row[0];
         const code = String(seq).padStart(4, '0');
         const storeName = row[7] || ('全家門市 #' + code);
@@ -7992,6 +7995,7 @@ function layoutWeekEvents(weekEvents) {
         };
     });
 
+    let familySpotList = [...familyBaseSpotList];
     let familyRegionFilter = 'all';
     let familyCityFilter = 'all';
     let familyDistrictFilter = '';
@@ -8000,6 +8004,366 @@ function layoutWeekEvents(weekEvents) {
     let familyLastSearch = '';
     let familyCurrentFilteredList = [];
     let familyCurrentClaimableList = [];
+
+    // 雲端即時增刪改覆寫層 (CoCo & 全家，免改程式碼推送即可全網同步)
+    let cocoOverridesMap = JSON.parse(localStorage.getItem('pikmin_coco_overrides_map') || '{}');
+    let familyOverridesMap = JSON.parse(localStorage.getItem('pikmin_family_overrides_map') || '{}');
+
+    function getCollabRegionByCity(city, brand) {
+        if (['基隆市', '台北市', '新北市', '宜蘭縣'].includes(city)) return '北北基宜';
+        if (['桃園市', '新竹市', '新竹縣', '苗栗縣'].includes(city)) return '桃竹苗';
+        if (['台中市', '彰化縣', '南投縣'].includes(city)) return '中彰投';
+        if (['雲林縣', '嘉義市', '嘉義縣', '台南市'].includes(city)) return '雲嘉南';
+        if (['高雄市', '屏東縣'].includes(city)) return '高屏';
+        if (['花蓮縣', '台東縣'].includes(city)) return brand === 'coco' ? '外島' : '花東';
+        return '外島';
+    }
+
+    function applySpotOverrides(baseList, overridesMap, brand) {
+        const result = [];
+        baseList.forEach(base => {
+            const ov = overridesMap && overridesMap[base.id];
+            if (ov && ov.deleted) return;
+            if (ov) {
+                const sName = ov.storeName || base.storeName;
+                const city = ov.city || base.city;
+                const dist = ov.district || base.district;
+                const reg = ov.region || getCollabRegionByCity(city, brand);
+                const lat = ov.lat !== undefined ? parseFloat(ov.lat) : base.lat;
+                const lon = ov.lon !== undefined ? parseFloat(ov.lon) : base.lon;
+                const coords = ov.coords || (Number(lat).toFixed(6) + ', ' + Number(lon).toFixed(6));
+                result.push({
+                    ...base,
+                    storeName: sName,
+                    name: sName + ' (' + base.code + ')',
+                    region: reg,
+                    city: city,
+                    district: dist,
+                    subname: city + dist + ' (' + base.distSeq + ')',
+                    lat: lat,
+                    lon: lon,
+                    coords: coords,
+                    _isModified: true
+                });
+            } else {
+                result.push({ ...base });
+            }
+        });
+        if (overridesMap) {
+            Object.keys(overridesMap).forEach(id => {
+                const ov = overridesMap[id];
+                if (ov && ov.isCustom && !ov.deleted) {
+                    const sName = ov.storeName || '新增門市';
+                    const city = ov.city || '台北市';
+                    const dist = ov.district || '中正區';
+                    const reg = ov.region || getCollabRegionByCity(city, brand);
+                    const lat = parseFloat(ov.lat) || 25.0;
+                    const lon = parseFloat(ov.lon) || 121.5;
+                    const coords = ov.coords || (Number(lat).toFixed(6) + ', ' + Number(lon).toFixed(6));
+                    const code = ov.code || '#新增';
+                    result.push({
+                        id: id,
+                        seq: ov.seq || 9999,
+                        code: code,
+                        storeName: sName,
+                        name: sName + ' (' + code + ')',
+                        region: reg,
+                        city: city,
+                        district: dist,
+                        distSeq: ov.distSeq || 99,
+                        subname: city + dist + ' (新增)',
+                        lat: lat,
+                        lon: lon,
+                        coords: coords,
+                        _isCustom: true,
+                        _isModified: true
+                    });
+                }
+            });
+        }
+        return result;
+    }
+
+    function updateCollabTabCountBadges() {
+        document.querySelectorAll('.gb-view-btn').forEach(btn => {
+            const oc = btn.getAttribute('onclick') || '';
+            if (oc.includes("'coco'") || btn.textContent.includes('CoCo聯名')) {
+                btn.innerHTML = `🧋 CoCo聯名(${cocoSpotList.length})`;
+            } else if (oc.includes("'family'") || btn.textContent.includes('全家聯名')) {
+                btn.innerHTML = `🏪 全家聯名(${familySpotList.length})`;
+            }
+        });
+    }
+
+    function rebuildCocoSpotList() {
+        cocoSpotList = applySpotOverrides(cocoBaseSpotList, cocoOverridesMap, 'coco');
+        updateCollabTabCountBadges();
+    }
+
+    function rebuildFamilySpotList() {
+        familySpotList = applySpotOverrides(familyBaseSpotList, familyOverridesMap, 'family');
+        updateCollabTabCountBadges();
+    }
+
+    rebuildCocoSpotList();
+    rebuildFamilySpotList();
+
+    try {
+        dbRef('coco_overrides').on('value', (snap) => {
+            cocoOverridesMap = snap.val() || {};
+            localStorage.setItem('pikmin_coco_overrides_map', JSON.stringify(cocoOverridesMap));
+            rebuildCocoSpotList();
+            if (currentMode === 'coco' && typeof window.renderCocoView === 'function') window.renderCocoView();
+        });
+        dbRef('family_overrides').on('value', (snap) => {
+            familyOverridesMap = snap.val() || {};
+            localStorage.setItem('pikmin_family_overrides_map', JSON.stringify(familyOverridesMap));
+            rebuildFamilySpotList();
+            if (currentMode === 'family' && typeof window.renderFamilyView === 'function') window.renderFamilyView();
+        });
+    } catch (e) {}
+
+    window.updateSpotOverrideDistrictList = function() {
+        const brand = document.getElementById('so-brand').value;
+        const city = document.getElementById('so-city').value;
+        const datalist = document.getElementById('so-district-datalist');
+        if (!datalist) return;
+        const list = brand === 'coco' ? cocoSpotList : familySpotList;
+        const dists = Array.from(new Set(list.filter(s => s.city === city).map(s => s.district)));
+        datalist.innerHTML = dists.map(d => `<option value="${escapeHtml(d)}">`).join('');
+    };
+
+    window.pasteSpotOverrideCoords = async function() {
+        try {
+            const text = await navigator.clipboard.readText();
+            if (text && text.trim()) {
+                document.getElementById('so-coords').value = text.trim();
+            }
+        } catch (e) {
+            alert('無法自動讀取剪貼簿，請直接長按輸入框貼上！');
+        }
+    };
+
+    function renderDeletedSpotsInModal(brand) {
+        const secEl = document.getElementById('so-deleted-section');
+        const listEl = document.getElementById('so-deleted-list');
+        if (!secEl || !listEl) return;
+        const ovMap = brand === 'coco' ? cocoOverridesMap : familyOverridesMap;
+        const baseList = brand === 'coco' ? cocoBaseSpotList : familyBaseSpotList;
+        const deletedIds = Object.keys(ovMap || {}).filter(id => ovMap[id] && ovMap[id].deleted);
+        if (deletedIds.length === 0) {
+            secEl.style.display = 'none';
+            return;
+        }
+        secEl.style.display = 'block';
+        listEl.innerHTML = deletedIds.map(id => {
+            const base = baseList.find(b => b.id === id);
+            const ov = ovMap[id];
+            const name = (ov && ov.storeName) || (base && base.storeName) || id;
+            const cityDist = base ? `${base.city}${base.district}` : ((ov && ov.city ? ov.city + (ov.district || '') : ''));
+            return `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:5px 8px; font-size:12px;">
+                    <span style="font-weight:700; color:#475569;">${escapeHtml(name)} <span style="font-size:11px; color:#94a3b8;">(${escapeHtml(cityDist)})</span></span>
+                    <button type="button" onclick="restoreDeletedSpotOverride('${brand}', '${id}')" style="background:#ecfdf5; color:#047857; border:1px solid #6ee7b7; border-radius:6px; padding:2px 8px; font-size:11px; font-weight:800; cursor:pointer;">↺ 恢復店點</button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    window.openSpotOverrideModal = function(brand, spotId, e) {
+        if (e && e.stopPropagation) e.stopPropagation();
+        const modal = document.getElementById('spot-override-modal');
+        if (!modal) return;
+
+        document.getElementById('so-brand').value = brand;
+        document.getElementById('so-spot-id').value = spotId || '';
+
+        const headerEl = document.getElementById('so-modal-header');
+        const iconEl = document.getElementById('so-modal-icon');
+        const titleEl = document.getElementById('so-modal-title');
+        const citySelect = document.getElementById('so-city');
+        const deleteBtn = document.getElementById('so-delete-btn');
+        const restoreBtn = document.getElementById('so-restore-btn');
+
+        citySelect.innerHTML = FAMILY_CITY_ORDER.map(c => `<option value="${c}">${c}</option>`).join('');
+
+        const isCoco = brand === 'coco';
+        headerEl.style.background = isCoco
+            ? 'linear-gradient(135deg, #f97316 0%, #d97706 100%)'
+            : 'linear-gradient(135deg, #00a040 0%, #0080c6 100%)';
+        iconEl.textContent = isCoco ? '🧋' : '🏪';
+
+        const list = isCoco ? cocoSpotList : familySpotList;
+        const ovMap = isCoco ? cocoOverridesMap : familyOverridesMap;
+        const baseList = isCoco ? cocoBaseSpotList : familyBaseSpotList;
+
+        if (spotId) {
+            const spot = list.find(s => s.id === spotId);
+            if (!spot) return;
+            titleEl.textContent = `編輯${isCoco ? ' CoCo ' : '全家'}店點 (${spot.code})`;
+            document.getElementById('so-store-name').value = spot.storeName;
+            document.getElementById('so-coords').value = spot.coords;
+            citySelect.value = spot.city;
+            window.updateSpotOverrideDistrictList();
+            document.getElementById('so-district').value = spot.district;
+
+            deleteBtn.style.display = 'inline-block';
+            const hasBase = baseList.some(b => b.id === spotId);
+            restoreBtn.style.display = (hasBase && ovMap && ovMap[spotId]) ? 'inline-block' : 'none';
+            document.getElementById('so-deleted-section').style.display = 'none';
+        } else {
+            titleEl.textContent = `新增${isCoco ? ' CoCo ' : '全家'}店點`;
+            document.getElementById('so-store-name').value = '';
+            document.getElementById('so-coords').value = '';
+            const curCity = isCoco ? cocoCityFilter : familyCityFilter;
+            const curDist = isCoco ? cocoDistrictFilter : familyDistrictFilter;
+            citySelect.value = (curCity && curCity !== 'all') ? curCity : '台北市';
+            window.updateSpotOverrideDistrictList();
+            document.getElementById('so-district').value = curDist || '';
+
+            deleteBtn.style.display = 'none';
+            restoreBtn.style.display = 'none';
+            renderDeletedSpotsInModal(brand);
+        }
+
+        modal.style.display = 'flex';
+    };
+
+    window.saveSpotOverride = function(e) {
+        if (e) e.preventDefault();
+        const brand = document.getElementById('so-brand').value;
+        let spotId = document.getElementById('so-spot-id').value;
+        const storeName = document.getElementById('so-store-name').value.trim();
+        const rawCoords = document.getElementById('so-coords').value.trim();
+        const city = document.getElementById('so-city').value;
+        const district = document.getElementById('so-district').value.trim();
+
+        const m = rawCoords.match(/(-?\d+\.\d+)\s*[,\s]\s*(-?\d+\.\d+)/);
+        if (!m) {
+            alert('請輸入正確的經緯度座標格式（例如：26.158582, 119.943750）！');
+            return;
+        }
+        const lat = parseFloat(m[1]);
+        const lon = parseFloat(m[2]);
+        const coords = Number(lat).toFixed(6) + ', ' + Number(lon).toFixed(6);
+        const region = getCollabRegionByCity(city, brand);
+
+        const isCoco = brand === 'coco';
+        const ovMap = isCoco ? cocoOverridesMap : familyOverridesMap;
+        const dbNode = isCoco ? 'coco_overrides' : 'family_overrides';
+        const storageKey = isCoco ? 'pikmin_coco_overrides_map' : 'pikmin_family_overrides_map';
+
+        let payload = {
+            storeName: storeName,
+            city: city,
+            district: district,
+            region: region,
+            lat: lat,
+            lon: lon,
+            coords: coords,
+            updatedAt: Date.now()
+        };
+
+        if (!spotId) {
+            spotId = (isCoco ? 'coco_custom_' : 'fm_custom_') + Date.now();
+            payload.isCustom = true;
+            payload.code = '#新增';
+        } else if (ovMap[spotId] && ovMap[spotId].isCustom) {
+            payload.isCustom = true;
+            payload.code = ovMap[spotId].code || '#新增';
+        }
+
+        ovMap[spotId] = payload;
+        localStorage.setItem(storageKey, JSON.stringify(ovMap));
+        try { dbRef(dbNode + '/' + spotId).set(payload); } catch (err) {}
+
+        if (isCoco) {
+            rebuildCocoSpotList();
+            renderCocoView();
+        } else {
+            rebuildFamilySpotList();
+            renderFamilyView();
+        }
+        closeModal('spot-override-modal');
+    };
+
+    window.deleteCurrentSpotOverride = function() {
+        const brand = document.getElementById('so-brand').value;
+        const spotId = document.getElementById('so-spot-id').value;
+        const storeName = document.getElementById('so-store-name').value.trim() || spotId;
+        if (!spotId) return;
+        if (!confirm(`確定要從清單中移除「${storeName}」嗎？\n移除後所有人的頁面都會隱藏此店點（日後可於「➕ 新增店點」視窗下方隨時恢復）。`)) return;
+
+        const isCoco = brand === 'coco';
+        const ovMap = isCoco ? cocoOverridesMap : familyOverridesMap;
+        const dbNode = isCoco ? 'coco_overrides' : 'family_overrides';
+        const storageKey = isCoco ? 'pikmin_coco_overrides_map' : 'pikmin_family_overrides_map';
+
+        if (ovMap[spotId] && ovMap[spotId].isCustom) {
+            delete ovMap[spotId];
+            localStorage.setItem(storageKey, JSON.stringify(ovMap));
+            try { dbRef(dbNode + '/' + spotId).remove(); } catch (err) {}
+        } else {
+            const delPayload = { deleted: true, storeName: storeName, updatedAt: Date.now() };
+            ovMap[spotId] = delPayload;
+            localStorage.setItem(storageKey, JSON.stringify(ovMap));
+            try { dbRef(dbNode + '/' + spotId).set(delPayload); } catch (err) {}
+        }
+
+        if (isCoco) {
+            rebuildCocoSpotList();
+            renderCocoView();
+        } else {
+            rebuildFamilySpotList();
+            renderFamilyView();
+        }
+        closeModal('spot-override-modal');
+    };
+
+    window.restoreCurrentSpotDefault = function() {
+        const brand = document.getElementById('so-brand').value;
+        const spotId = document.getElementById('so-spot-id').value;
+        if (!spotId) return;
+        if (!confirm('確定要將此店點還原為系統預設的店名與座標嗎？')) return;
+
+        const isCoco = brand === 'coco';
+        const ovMap = isCoco ? cocoOverridesMap : familyOverridesMap;
+        const dbNode = isCoco ? 'coco_overrides' : 'family_overrides';
+        const storageKey = isCoco ? 'pikmin_coco_overrides_map' : 'pikmin_family_overrides_map';
+
+        delete ovMap[spotId];
+        localStorage.setItem(storageKey, JSON.stringify(ovMap));
+        try { dbRef(dbNode + '/' + spotId).remove(); } catch (err) {}
+
+        if (isCoco) {
+            rebuildCocoSpotList();
+            renderCocoView();
+        } else {
+            rebuildFamilySpotList();
+            renderFamilyView();
+        }
+        closeModal('spot-override-modal');
+    };
+
+    window.restoreDeletedSpotOverride = function(brand, spotId) {
+        const isCoco = brand === 'coco';
+        const ovMap = isCoco ? cocoOverridesMap : familyOverridesMap;
+        const dbNode = isCoco ? 'coco_overrides' : 'family_overrides';
+        const storageKey = isCoco ? 'pikmin_coco_overrides_map' : 'pikmin_family_overrides_map';
+
+        delete ovMap[spotId];
+        localStorage.setItem(storageKey, JSON.stringify(ovMap));
+        try { dbRef(dbNode + '/' + spotId).remove(); } catch (err) {}
+
+        if (isCoco) {
+            rebuildCocoSpotList();
+            renderCocoView();
+        } else {
+            rebuildFamilySpotList();
+            renderFamilyView();
+        }
+        renderDeletedSpotsInModal(brand);
+    };
 
     function getFamilyLastMap() {
         try {
@@ -8460,6 +8824,7 @@ function layoutWeekEvents(weekEvents) {
                 <div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
                     <button type="button" onclick="expandAllFamilyCities()" style="background:#f8fafc; color:#334155; border:1px solid #cbd5e1; border-radius:8px; padding:5px 9px; font-size:11.5px; font-weight:800; cursor:pointer;">📂 全展開</button>
                     <button type="button" onclick="collapseAllFamilyCities()" style="background:#f8fafc; color:#64748b; border:1px solid #cbd5e1; border-radius:8px; padding:5px 9px; font-size:11.5px; font-weight:800; cursor:pointer;">📁 全折疊</button>
+                    <button type="button" onclick="openSpotOverrideModal('family', '', event)" style="background:#f0fdf4; color:#047857; border:1px solid #86efac; border-radius:8px; padding:5px 9px; font-size:11.5px; font-weight:800; cursor:pointer;" title="雲端新增或恢復已移除的全家店點（免推送即時生效）">➕ 新增店點</button>
                 </div>
                 <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
                     ${claimableList.length > 0 ? `
@@ -8559,6 +8924,7 @@ function layoutWeekEvents(weekEvents) {
                     <button type="button" class="btn-sm btn-default" style="flex:1; min-width:0; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:800; padding:4px 3px; font-size:10.5px; white-space:nowrap;" onclick="copyCoords('${spot.coords}', this)">📍 座標</button>
                     <button type="button" class="btn-sm btn-default" style="flex:1; min-width:0; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; font-weight:800; padding:4px 3px; font-size:10.5px; white-space:nowrap;" onclick="goToMapCoords('${spot.coords}')">🗺️ 地圖</button>
                     <button type="button" class="btn-sm btn-default" style="flex:1; min-width:0; background:${st.isNoBasin ? '#fee2e2' : '#fff1f2'}; color:#be123c; border:1px solid #fecdd3; font-weight:800; padding:4px 3px; font-size:10px; white-space:nowrap;" onclick="toggleFamilyNoBasin('${spot.id}', event)" title="${st.isNoBasin ? '點擊恢復為有金盆' : '回報此處沒有金盆（複製座標時將自動略過）'}">${st.isNoBasin ? '↺ 有盆' : '🚫 無盆'}</button>
+                    <button type="button" class="btn-sm btn-default" style="flex:0 0 auto; background:#f8fafc; color:#475569; border:1px solid #cbd5e1; font-weight:800; padding:4px 5px; font-size:10px; white-space:nowrap;" onclick="openSpotOverrideModal('family', '${spot.id}', event)" title="雲端編輯店名、座標或移除此店點">✏️</button>
                 </div>
             `;
             container.appendChild(card);
@@ -12604,7 +12970,7 @@ function layoutWeekEvents(weekEvents) {
     }
 
     // 地圖圖層狀態
-    const mapLayerActive = { mushroom: true, postcard: true, landmark: true };
+    const mapLayerActive = { mushroom: true, postcard: true, landmark: true, coco: true, family: false };
 
     function toggleMapLayer(layer) {
         mapLayerActive[layer] = !mapLayerActive[layer];
@@ -12771,6 +13137,64 @@ function layoutWeekEvents(weekEvents) {
             });
         }
         
+        // ── CoCo 聯名標記 ──
+        if (mapLayerActive.coco && typeof cocoSpotList !== 'undefined') {
+            cocoSpotList.forEach(s => {
+                if (cocoNoBasinMap && cocoNoBasinMap[s.id]) return;
+                const lat = parseFloat(s.lat), lng = parseFloat(s.lon);
+                if (isNaN(lat) || isNaN(lng)) return;
+                const tag = document.createElement('div');
+                tag.innerHTML = `<div style="position:relative; width:22px; height:26px; cursor:pointer;">
+                    <div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:15px; height:15px; background:#f97316; border:2px solid white; border-radius:50%; box-shadow:0 2px 5px rgba(0,0,0,0.4);"></div>
+                    <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); font-size:12px; line-height:1;">🧋</div>
+                </div>`;
+                const marker = new google.maps.marker.AdvancedMarkerElement({
+                    map: mapInstance, position: { lat, lng }, content: tag, title: `${s.storeName} (${s.code})`
+                });
+                marker.addListener('click', () => {
+                    const content = `<div style="min-width:170px; padding:6px; font-family:var(--font-family); text-align:center;">
+                        <div style="font-size:11px; font-weight:bold; color:white; background:#f97316; padding:2px 8px; border-radius:4px; display:inline-block; margin-bottom:5px;">🧋 CoCo 聯名 (${escapeHtml(s.code)})</div>
+                        <div style="font-size:14px; font-weight:900; color:#1e293b; margin-bottom:3px;">${escapeHtml(s.storeName)}</div>
+                        <div style="font-size:12px; color:#64748b; margin-bottom:6px;">📍 ${escapeHtml(s.city)} · ${escapeHtml(s.district)}</div>
+                        <div style="font-family:monospace; font-size:11px; color:#475569; background:#f8fafc; padding:3px 6px; border-radius:4px; margin-bottom:8px;">${s.coords}</div>
+                        <button onclick="copyCoords('${s.coords}', this)" style="width:100%; padding:6px 0; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; border:none; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">📍 複製座標</button>
+                    </div>`;
+                    mapInfoWindow.setContent(content);
+                    mapInfoWindow.open(mapInstance, marker);
+                });
+                mapMarkers.push(marker);
+            });
+        }
+
+        // ── 全家聯名標記 ──
+        if (mapLayerActive.family && typeof familySpotList !== 'undefined') {
+            familySpotList.forEach(s => {
+                if (familyNoBasinMap && familyNoBasinMap[s.id]) return;
+                const lat = parseFloat(s.lat), lng = parseFloat(s.lon);
+                if (isNaN(lat) || isNaN(lng)) return;
+                const tag = document.createElement('div');
+                tag.innerHTML = `<div style="position:relative; width:22px; height:26px; cursor:pointer;">
+                    <div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:15px; height:15px; background:#0284c7; border:2px solid white; border-radius:50%; box-shadow:0 2px 5px rgba(0,0,0,0.4);"></div>
+                    <div style="position:absolute; top:0; left:50%; transform:translateX(-50%); font-size:12px; line-height:1;">🏪</div>
+                </div>`;
+                const marker = new google.maps.marker.AdvancedMarkerElement({
+                    map: mapInstance, position: { lat, lng }, content: tag, title: `${s.storeName} (${s.code})`
+                });
+                marker.addListener('click', () => {
+                    const content = `<div style="min-width:170px; padding:6px; font-family:var(--font-family); text-align:center;">
+                        <div style="font-size:11px; font-weight:bold; color:white; background:#0284c7; padding:2px 8px; border-radius:4px; display:inline-block; margin-bottom:5px;">🏪 全家聯名 (${escapeHtml(s.code)})</div>
+                        <div style="font-size:14px; font-weight:900; color:#1e293b; margin-bottom:3px;">${escapeHtml(s.storeName)}</div>
+                        <div style="font-size:12px; color:#64748b; margin-bottom:6px;">📍 ${escapeHtml(s.city)} · ${escapeHtml(s.district)}</div>
+                        <div style="font-family:monospace; font-size:11px; color:#475569; background:#f8fafc; padding:3px 6px; border-radius:4px; margin-bottom:8px;">${s.coords}</div>
+                        <button onclick="copyCoords('${s.coords}', this)" style="width:100%; padding:6px 0; background:linear-gradient(135deg,#0284c7,#2563eb); color:#fff; border:none; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">📍 複製座標</button>
+                    </div>`;
+                    mapInfoWindow.setContent(content);
+                    mapInfoWindow.open(mapInstance, marker);
+                });
+                mapMarkers.push(marker);
+            });
+        }
+
         // 建立群集
         if (window.markerClusterer && mapMarkers.length > 0) {
             mapClusterer = new markerClusterer.MarkerClusterer({ 
@@ -12822,6 +13246,73 @@ window.loadCloudRoute = loadCloudRoute;
 window.downloadCloudRoute = downloadCloudRoute;
 window.deleteCloudRoute = deleteCloudRoute;
 window.renameCloudRoute = renameCloudRoute;
+    let focusMapMarker = null;
+    goToMapCoords = function(coords, customTitle = '', customSub = '') {
+        const match = String(coords || '').match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
+        if (!match) { alert('座標格式無法識別'); return; }
+        const lat = parseFloat(match[1]);
+        const lng = parseFloat(match[2]);
+
+        let spotTitle = customTitle;
+        let spotSub = customSub;
+        if (!spotTitle) {
+            const eps = 0.0001;
+            const fm = (typeof familySpotList !== 'undefined' ? familySpotList : []).find(s => Math.abs(s.lat - lat) < eps && Math.abs(s.lon - lng) < eps);
+            const cc = !fm && (typeof cocoSpotList !== 'undefined' ? cocoSpotList : []).find(s => Math.abs(s.lat - lat) < eps && Math.abs(s.lon - lng) < eps);
+            if (fm) {
+                spotTitle = `🏪 ${fm.storeName} (${fm.code})`;
+                spotSub = `${fm.city} · ${fm.district}`;
+            } else if (cc) {
+                spotTitle = `🧋 ${cc.storeName} (${cc.code})`;
+                spotSub = `${cc.city} · ${cc.district}`;
+            }
+        }
+
+        switchTab('map');
+        const waitAndGo = () => {
+            if (mapInstance && window.google && google.maps && google.maps.marker) {
+                mapInstance.setCenter({ lat, lng });
+                mapInstance.setZoom(17);
+
+                if (focusMapMarker) {
+                    focusMapMarker.map = null;
+                    focusMapMarker = null;
+                }
+                const pinTag = document.createElement('div');
+                pinTag.innerHTML = `<div style="position:relative; width:30px; height:36px; cursor:pointer; filter:drop-shadow(0 3px 6px rgba(0,0,0,0.45));">
+                    <div style="position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:22px; height:22px; background:${spotTitle && spotTitle.includes('🏪') ? '#0284c7' : '#ef4444'}; border:3px solid #fff; border-radius:50%;"></div>
+                    <div style="position:absolute; top:-2px; left:50%; transform:translateX(-50%); font-size:17px; line-height:1;">📍</div>
+                </div>`;
+
+                focusMapMarker = new google.maps.marker.AdvancedMarkerElement({
+                    map: mapInstance,
+                    position: { lat, lng },
+                    content: pinTag,
+                    title: spotTitle || coords,
+                    zIndex: 9999
+                });
+
+                const openFocusInfo = () => {
+                    if (!mapInfoWindow) return;
+                    const displayCoords = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                    const content = `<div style="min-width:175px; padding:6px 6px 4px; font-family:var(--font-family); text-align:center;">
+                        <div style="font-size:14px; font-weight:900; color:#1e293b; margin-bottom:4px;">${escapeHtml(spotTitle || '📍 指定座標位置')}</div>
+                        ${spotSub ? `<div style="font-size:12px; color:#047857; font-weight:700; margin-bottom:4px;">📍 ${escapeHtml(spotSub)}</div>` : ''}
+                        <div style="font-family:monospace; font-size:11.5px; color:#475569; background:#f8fafc; padding:3px 6px; border-radius:5px; border:1px solid #e2e8f0; margin-bottom:8px;">${displayCoords}</div>
+                        <button onclick="copyCoords('${displayCoords}', this)" style="width:100%; padding:6px 0; background:linear-gradient(135deg, #0ea5e9, #2563eb); color:white; border:none; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">📍 複製座標</button>
+                    </div>`;
+                    mapInfoWindow.setContent(content);
+                    mapInfoWindow.open(mapInstance, focusMapMarker);
+                };
+
+                focusMapMarker.addListener('click', openFocusInfo);
+                setTimeout(openFocusInfo, 150);
+            } else {
+                setTimeout(waitAndGo, 300);
+            }
+        };
+        setTimeout(waitAndGo, 200);
+    };
 window.goToMapCoords = goToMapCoords;
 window.handleProfileAvatarUpload = handleProfileAvatarUpload;
 window.handleVisionOcrUpload = handleVisionOcrUpload;
