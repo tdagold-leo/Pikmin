@@ -6088,11 +6088,11 @@
                 id: 'family_collab_2026',
                 type: 'goldbasin',
                 tagClass: 'goldbasin',
-                badgeText: '🏪 全家聯名 (4541處)',
-                title: '🏪 聯名金盆：Pikmin × 全家便利商店 (全台4541處)',
+                badgeText: '🏪 全家聯名 (4537處)',
+                title: '🏪 聯名金盆：Pikmin × 全家便利商店 (全台4537處)',
                 desc: '活動期間：2026-11-10 ～ 2026-12-07，每 7 天最多可獲得 1 個，全台共 4,541 處據點（獨立專屬頁面管理）。',
                 actName: '全家便利商店聯名活動',
-                count: 4541,
+                count: 4537,
                 isGoldBasin: true,
                 isFamilySpecial: true,
                 palette: { bg: '#dcfce7', text: '#065f46', border: '#86efac', bar: '#00a040' }
@@ -6270,7 +6270,7 @@
                 actionBtns = `
                     <button type="button" onclick="switchTab('family')"
                             style="background:${pal.bg}; color:${pal.text}; border:1.5px solid ${pal.border}; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:800; cursor:pointer; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-                        🏪 前往全家專頁 (4541處)
+                        🏪 前往全家專頁 (4537處)
                     </button>
                 `;
             } else if (ev.isGoldBasin) {
@@ -6456,7 +6456,7 @@ function layoutWeekEvents(weekEvents) {
                 isGoldBasin: true,
                 isFamilySpecial: true,
                 actName: '全家便利商店聯名活動',
-                count: 4541
+                count: 4537
             });
             const actMap = {};
             (postcardList || []).forEach(item => {
@@ -7003,7 +7003,7 @@ function layoutWeekEvents(weekEvents) {
                             ${ev.isCocoSpecial
                                 ? `<button type="button" onclick="closeTodayNoticeModal(); switchTab('coco');" style="background:${pal.bg}; color:${pal.text}; border:1.5px solid ${pal.border}; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:800; cursor:pointer;">🧋 前往 CoCo 聯名專頁 (346處)</button>`
                                 : ev.isFamilySpecial
-                                ? `<button type="button" onclick="closeTodayNoticeModal(); switchTab('family');" style="background:${pal.bg}; color:${pal.text}; border:1.5px solid ${pal.border}; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:800; cursor:pointer;">🏪 前往全家聯名專頁 (4541處)</button>`
+                                ? `<button type="button" onclick="closeTodayNoticeModal(); switchTab('family');" style="background:${pal.bg}; color:${pal.text}; border:1.5px solid ${pal.border}; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:800; cursor:pointer;">🏪 前往全家聯名專頁 (4537處)</button>`
                                 : `<button type="button" onclick="viewGoldbasinActListFromNotice('${safeActName}')" style="background:${pal.bg}; color:${pal.text}; border:1px solid ${pal.border}; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:700; cursor:pointer;">🔍 查看此活動金盆</button>`
                             }
                         </div>
@@ -7150,7 +7150,7 @@ function layoutWeekEvents(weekEvents) {
             subname: row[2] + row[3] + ' (' + row[4] + ')',
             lat: row[5],
             lon: row[6],
-            coords: row[5] + ', ' + row[6]
+            coords: Number(row[5]).toFixed(6) + ', ' + Number(row[6]).toFixed(6)
         };
     });
 
@@ -7988,7 +7988,7 @@ function layoutWeekEvents(weekEvents) {
             subname: row[2] + row[3] + ' (' + row[4] + ')',
             lat: row[5],
             lon: row[6],
-            coords: row[5] + ', ' + row[6]
+            coords: Number(row[5]).toFixed(6) + ', ' + Number(row[6]).toFixed(6)
         };
     });
 
