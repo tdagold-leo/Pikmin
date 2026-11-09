@@ -3795,6 +3795,11 @@
             background: #f8fafc;
             opacity: 0.92;
         }
+        .coco-spot-card.is-nobasin {
+            border-left: 4px solid #ef4444 !important;
+            background: #fef2f2;
+            opacity: 0.72;
+        }
         @media (max-width: 640px) {
             .coco-region-scroll,
             .coco-city-scroll {
@@ -3855,6 +3860,90 @@
                 padding: 5px 8px !important;
                 font-size: 11.5px !important;
                 white-space: nowrap;
+            }
+        }
+
+        /* ===== 全家便利商店聯名活動專頁樣式 ===== */
+        .family-hero-banner {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 55%, #e0f2fe 100%);
+            border: 1.5px solid #86efac;
+            border-left: 6px solid #00a040;
+            border-radius: 16px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 14px rgba(0, 160, 64, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .family-region-pill {
+            border: 1.5px solid #cbd5e1;
+            background: #f8fafc;
+            color: #334155;
+            border-radius: 999px;
+            padding: 5px 12px;
+            font-size: 12.5px;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .family-region-pill:hover {
+            border-color: #34d399;
+            background: #f0fdf4;
+        }
+        .family-region-pill.active {
+            background: linear-gradient(135deg, #00a040, #0080c6);
+            color: #ffffff;
+            border-color: #059669;
+            box-shadow: 0 2px 8px rgba(0, 160, 64, 0.3);
+        }
+        .family-city-pill {
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #475569;
+            border-radius: 9px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .family-city-pill:hover {
+            border-color: #6ee7b7;
+            color: #047857;
+            background: #f0fdf4;
+        }
+        .family-city-pill.active {
+            background: #dcfce7;
+            color: #065f46;
+            border: 1.5px solid #10b981;
+            font-weight: 900;
+        }
+        @media (max-width: 640px) {
+            .family-hero-banner {
+                padding: 10px 12px;
+                margin-bottom: 9px;
+                border-radius: 13px;
+            }
+            #family-bento-dashboard {
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+                gap: 6px !important;
+                margin-bottom: 9px !important;
+            }
+            #family-bento-dashboard .gb-bento-card {
+                padding: 8px 8px !important;
+                border-radius: 11px !important;
+                min-width: 0;
             }
         }
 </style>
@@ -3989,10 +4078,11 @@
 
             <!-- 2. 視圖切換列：清單 vs 行事曆 -->
             <div id="gb-view-controls" class="gb-view-controls" style="display:flex; justify-content:space-between; align-items:center; margin:8px 0 12px; gap:8px; flex-wrap:wrap;">
-                <div class="gb-view-toggle-group" style="display:inline-flex; background:#f1f5f9; padding:3px; border-radius:10px; border:1px solid #cbd5e1;">
+                <div class="gb-view-toggle-group" style="display:inline-flex; background:#f1f5f9; padding:3px; border-radius:10px; border:1px solid #cbd5e1; flex-wrap:wrap; gap:2px;">
                     <button type="button" id="gb-view-list-btn" class="gb-view-btn" onclick="setGbViewMode('list')" style="border:none; background:#fff; color:#0f172a; padding:5px 12px; font-size:12px; font-weight:800; border-radius:7px; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.1); display:inline-flex; align-items:center; gap:4px;">📋 金盆清單</button>
                     <button type="button" id="gb-view-cal-btn" class="gb-view-btn" onclick="setGbViewMode('calendar')" style="border:none; background:transparent; color:#64748b; padding:5px 12px; font-size:12px; font-weight:700; border-radius:7px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">📅 活動行事曆</button>
                     <button type="button" id="gb-view-coco-btn" class="gb-view-btn" onclick="switchTab('coco')" style="border:none; background:linear-gradient(135deg,#fff7ed,#ffedd5); color:#c2410c; padding:5px 12px; font-size:12px; font-weight:800; border-radius:7px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; border:1px solid #fdba74;">🧋 CoCo聯名(346)</button>
+                    <button type="button" id="gb-view-family-btn" class="gb-view-btn" onclick="switchTab('family')" style="border:none; background:linear-gradient(135deg,#f0fdf4,#dcfce7); color:#047857; padding:5px 12px; font-size:12px; font-weight:800; border-radius:7px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; border:1px solid #86efac;">🏪 全家聯名(4541)</button>
                 </div>
                 <div id="gb-cal-tools" style="display:none; align-items:center; gap:6px;">
                     <button type="button" onclick="openTodayNoticeModal(true)" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; border-radius:8px; padding:5px 10px; font-size:12px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:3px;">📢 今日活動提醒</button>
@@ -4662,10 +4752,11 @@
         <section id="view-coco" class="view-section">
             <!-- 頂部切換列：返回金盆清單 / 活動行事曆 / 目前 CoCo 專頁 -->
             <div style="display:flex; justify-content:space-between; align-items:center; margin:4px 0 10px; gap:8px; flex-wrap:wrap;">
-                <div class="gb-view-toggle-group" style="display:inline-flex; background:#f1f5f9; padding:3px; border-radius:10px; border:1px solid #cbd5e1;">
+                <div class="gb-view-toggle-group" style="display:inline-flex; background:#f1f5f9; padding:3px; border-radius:10px; border:1px solid #cbd5e1; flex-wrap:wrap; gap:2px;">
                     <button type="button" class="gb-view-btn" onclick="switchTab('goldbasin'); setGbViewMode('list');" style="border:none; background:transparent; color:#64748b; padding:5px 12px; font-size:12px; font-weight:700; border-radius:7px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">📋 金盆清單</button>
                     <button type="button" class="gb-view-btn" onclick="switchTab('goldbasin'); setGbViewMode('calendar');" style="border:none; background:transparent; color:#64748b; padding:5px 12px; font-size:12px; font-weight:700; border-radius:7px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">📅 活動行事曆</button>
                     <button type="button" class="gb-view-btn" style="border:none; background:linear-gradient(135deg,#ea580c,#d97706); color:#fff; padding:5px 12px; font-size:12px; font-weight:800; border-radius:7px; cursor:pointer; box-shadow:0 1px 4px rgba(234,88,12,0.3); display:inline-flex; align-items:center; gap:4px;">🧋 CoCo聯名 (346)</button>
+                    <button type="button" class="gb-view-btn" onclick="switchTab('family')" style="border:none; background:linear-gradient(135deg,#f0fdf4,#dcfce7); color:#047857; padding:5px 12px; font-size:12px; font-weight:800; border-radius:7px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; border:1px solid #86efac;">🏪 全家聯名 (4541)</button>
                 </div>
                 <button type="button" onclick="openTodayNoticeModal(true)" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; border-radius:8px; padding:5px 10px; font-size:12px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:3px;">📢 今日活動提醒</button>
             </div>
@@ -4724,6 +4815,74 @@
             <!-- 4. 階層式分群列表容器 (地區 -> 縣市 -> 行政區 -> 點位卡片) -->
             <div id="coco-list-container" class="grid"></div>
             <div id="coco-empty-state" class="empty-message" style="display:none;">目前篩選條件下沒有符合的 CoCo 聯名金盆點位</div>
+        </section>
+
+        <section id="view-family" class="view-section">
+            <!-- 頂部切換列：返回金盆清單 / 活動行事曆 / CoCo 專頁 / 目前 全家 專頁 -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin:4px 0 10px; gap:8px; flex-wrap:wrap;">
+                <div class="gb-view-toggle-group" style="display:inline-flex; background:#f1f5f9; padding:3px; border-radius:10px; border:1px solid #cbd5e1; flex-wrap:wrap; gap:2px;">
+                    <button type="button" class="gb-view-btn" onclick="switchTab('goldbasin'); setGbViewMode('list');" style="border:none; background:transparent; color:#64748b; padding:5px 12px; font-size:12px; font-weight:700; border-radius:7px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">📋 金盆清單</button>
+                    <button type="button" class="gb-view-btn" onclick="switchTab('goldbasin'); setGbViewMode('calendar');" style="border:none; background:transparent; color:#64748b; padding:5px 12px; font-size:12px; font-weight:700; border-radius:7px; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">📅 活動行事曆</button>
+                    <button type="button" class="gb-view-btn" onclick="switchTab('coco')" style="border:none; background:linear-gradient(135deg,#fff7ed,#ffedd5); color:#c2410c; padding:5px 12px; font-size:12px; font-weight:800; border-radius:7px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; border:1px solid #fdba74;">🧋 CoCo聯名 (346)</button>
+                    <button type="button" class="gb-view-btn" style="border:none; background:linear-gradient(135deg,#00a040,#0080c6); color:#fff; padding:5px 12px; font-size:12px; font-weight:800; border-radius:7px; cursor:pointer; box-shadow:0 1px 4px rgba(0,160,64,0.3); display:inline-flex; align-items:center; gap:4px;">🏪 全家聯名 (4541)</button>
+                </div>
+                <button type="button" onclick="openTodayNoticeModal(true)" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; border-radius:8px; padding:5px 10px; font-size:12px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:3px;">📢 今日活動提醒</button>
+            </div>
+
+            <!-- 1. 活動主視覺資訊橫幅 -->
+            <div class="family-hero-banner">
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <span style="font-size:18px; font-weight:900; color:#065f46;">🏪 Pikmin × 全家便利商店 聯名金盆專區</span>
+                        <span id="family-hero-countdown" style="font-size:11.5px; font-weight:800; background:#00a040; color:#fff; padding:2px 8px; border-radius:999px;">進行中</span>
+                    </div>
+                    <div style="font-size:12px; color:#047857; font-weight:700; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <span>📅 活動期間：2026/11/10 (二) 00:00 ～ 2026/12/07 (一) 23:59</span>
+                        <span style="background:#fff; color:#047857; border:1px solid #86efac; padding:1.5px 8px; border-radius:999px; font-size:11px; font-weight:800;">⏱ 每 7 天最多可獲得 1 個 (全台 4,541 處)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Bento 3 格統計與狀態快篩儀表板 -->
+            <div id="family-bento-dashboard" class="gb-bento-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom:10px;"></div>
+
+            <!-- 3. 地區分類 + 各縣市分類 + 行政區與搜尋面板 -->
+            <div class="coco-filter-panel">
+                <!-- 第一層：依地區分類 -->
+                <div>
+                    <div style="font-size:11.5px; font-weight:800; color:#64748b; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;">
+                        <span>🌍 第一步：依地區分類篩選</span>
+                        <span id="family-filter-summary-text" style="color:#00a040; font-weight:800;"></span>
+                    </div>
+                    <div id="family-region-tabs" class="coco-region-scroll"></div>
+                </div>
+
+                <!-- 第二層：依各縣市分類 -->
+                <div style="border-top:1px dashed #e2e8f0; padding-top:8px;">
+                    <div style="font-size:11.5px; font-weight:800; color:#64748b; margin-bottom:5px;">🏙️ 第二步：依各縣市分類篩選（點擊單看該縣市）</div>
+                    <div id="family-city-pills" class="coco-city-scroll"></div>
+                </div>
+
+                <!-- 第三層：行政區下拉 + 關鍵字/GPS搜尋 + 批次動作 -->
+                <div style="border-top:1px dashed #e2e8f0; padding-top:8px; display:flex; flex-direction:column; gap:8px;">
+                    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                        <select id="family-district-select" class="input-base" onchange="onFamilyDistrictChange(this.value)" style="padding:6px 10px; font-size:12.5px; font-weight:700; min-width:135px; flex:0 0 auto; width:auto;">
+                            <option value="">📌 全部行政區</option>
+                        </select>
+                        <div style="position:relative; flex:1; min-width:180px; display:flex; align-items:center;">
+                            <input type="text" id="family-search-input" class="input-base" oninput="renderFamilyView()" placeholder="🔍 搜尋門市名稱、編號(#0001)、行政區，或貼上 GPS 座標依距離排序..." style="width:100%; padding:6px 28px 6px 10px; font-size:12.5px;">
+                            <button type="button" onclick="document.getElementById('family-search-input').value=''; renderFamilyView();" title="清除搜尋" style="position:absolute; right:6px; background:none; border:none; color:#94a3b8; font-size:13px; cursor:pointer;">✕</button>
+                        </div>
+                    </div>
+
+                    <!-- 快捷工具列 -->
+                    <div id="family-toolbar-actions" style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; justify-content:space-between;"></div>
+                </div>
+            </div>
+
+            <!-- 4. 階層式分群列表容器 (地區 -> 縣市 -> 行政區 -> 點位卡片) -->
+            <div id="family-list-container" class="grid"></div>
+            <div id="family-empty-state" class="empty-message" style="display:none;">目前篩選條件下沒有符合的全家聯名金盆點位</div>
         </section>
     </main>
 
@@ -5671,8 +5830,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>const APP_VERSION = "2026.11.08.2230";</script>
-    <script src="js/main.js?v=202611082230"></script>
+    <script src="js/family-data.js?v=202611092355"></script>
+    <script>const APP_VERSION = "2026.11.09.2355";</script>
+    <script src="js/main.js?v=202611092355"></script>
     <script src="js/autofill.js?v=1793651958949"></script>
 </body>
 </html>

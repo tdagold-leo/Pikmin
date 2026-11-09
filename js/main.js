@@ -535,7 +535,7 @@
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         document.getElementById('view-' + tab).classList.add('active');
 
-        if(tab === 'settings' || tab === 'cloud' || tab === 'ocr' || tab === 'map' || tab === 'coco') {
+        if(tab === 'settings' || tab === 'cloud' || tab === 'ocr' || tab === 'map' || tab === 'coco' || tab === 'family') {
             document.getElementById('main-fab').style.display = 'none';
         } else {
             document.getElementById('main-fab').style.display = 'flex';
@@ -549,6 +549,13 @@
             if (gbNav) gbNav.classList.add('active');
             if (typeof window.renderCocoView === 'function') {
                 window.renderCocoView();
+            }
+        }
+        if (tab === 'family') {
+            const gbNav = document.getElementById('nav-goldbasin');
+            if (gbNav) gbNav.classList.add('active');
+            if (typeof window.renderFamilyView === 'function') {
+                window.renderFamilyView();
             }
         }
         if (tab === 'ocr' && typeof window.initOcrToolIfNeeded === 'function') {
@@ -2252,6 +2259,7 @@
         if (favPcListenerRef) { favPcListenerRef.off(); favPcListenerRef = null; }
         if (sgLastListenerRef) { sgLastListenerRef.off(); sgLastListenerRef = null; }
         if (window._cocoLastListenerRef) { window._cocoLastListenerRef.off(); window._cocoLastListenerRef = null; }
+        if (window._familyLastListenerRef) { window._familyLastListenerRef.off(); window._familyLastListenerRef = null; }
         if (calEventsListenerRef) { calEventsListenerRef.off(); calEventsListenerRef = null; }
         if (inputId) {
             statusEl.innerText = '已連線🟢'; statusEl.classList.add('active');
@@ -2335,6 +2343,33 @@
                     try {
                         const local = JSON.parse(localStorage.getItem('pikmin_coco_last_map') || '{}');
                         if (Object.keys(local).length > 0) dbRef('user_coco_last/' + inputId).update(local);
+                    } catch(e) {}
+                }
+            });
+            // 即時監聽雲端個人 全家聯名活動 領取記錄 (跨裝置同步)
+            window._familyLastListenerRef = dbRef('user_family_last/' + inputId);
+            window._familyLastListenerRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && typeof data === 'object') {
+                    try {
+                        let local = JSON.parse(localStorage.getItem('pikmin_family_last_map') || '{}');
+                        let pushBack = {};
+                        Object.keys(data).forEach(k => {
+                            if (!local[k] || data[k] > local[k]) local[k] = data[k];
+                        });
+                        Object.keys(local).forEach(k => {
+                            if (!data[k] || local[k] > data[k]) pushBack[k] = local[k];
+                        });
+                        localStorage.setItem('pikmin_family_last_map', JSON.stringify(local));
+                        if (Object.keys(pushBack).length > 0) dbRef('user_family_last/' + inputId).update(pushBack);
+                        if (currentMode === 'family' && typeof window.renderFamilyView === 'function') {
+                            window.renderFamilyView();
+                        }
+                    } catch(e) {}
+                } else {
+                    try {
+                        const local = JSON.parse(localStorage.getItem('pikmin_family_last_map') || '{}');
+                        if (Object.keys(local).length > 0) dbRef('user_family_last/' + inputId).update(local);
                     } catch(e) {}
                 }
             });
@@ -6047,6 +6082,23 @@
             });
         }
 
+        // 1.6 自動加入獨立專頁活動：Pikmin × 全家便利商店 聯名金盆 (2026-11-10 ~ 2026-12-07)
+        if (dateStr >= '2026-11-10' && dateStr <= '2026-12-07') {
+            events.push({
+                id: 'family_collab_2026',
+                type: 'goldbasin',
+                tagClass: 'goldbasin',
+                badgeText: '🏪 全家聯名 (4541處)',
+                title: '🏪 聯名金盆：Pikmin × 全家便利商店 (全台4541處)',
+                desc: '活動期間：2026-11-10 ～ 2026-12-07，每 7 天最多可獲得 1 個，全台共 4,541 處據點（獨立專屬頁面管理）。',
+                actName: '全家便利商店聯名活動',
+                count: 4541,
+                isGoldBasin: true,
+                isFamilySpecial: true,
+                palette: { bg: '#dcfce7', text: '#065f46', border: '#86efac', bar: '#00a040' }
+            });
+        }
+
         // 2. 自動把期間特殊金盆的活動日加進去 (以活動名稱彙整)
         const actMap = {};
         (postcardList || []).forEach(item => {
@@ -6212,6 +6264,13 @@
                     <button type="button" onclick="switchTab('coco')"
                             style="background:${pal.bg}; color:${pal.text}; border:1.5px solid ${pal.border}; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:800; cursor:pointer; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
                         🧋 前往 CoCo 專頁 (346處)
+                    </button>
+                `;
+            } else if (ev.isFamilySpecial) {
+                actionBtns = `
+                    <button type="button" onclick="switchTab('family')"
+                            style="background:${pal.bg}; color:${pal.text}; border:1.5px solid ${pal.border}; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:800; cursor:pointer; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                        🏪 前往全家專頁 (4541處)
                     </button>
                 `;
             } else if (ev.isGoldBasin) {
@@ -6388,6 +6447,17 @@ function layoutWeekEvents(weekEvents) {
                 actName: 'CoCo都可聯名活動',
                 count: 346
             });
+            allSpanEvents.push({
+                id: 'family_collab_2026',
+                title: '🏪 全家便利商店聯名活動',
+                startDate: '2026-11-10',
+                endDate: '2026-12-07',
+                palette: { bg: '#dcfce7', text: '#065f46', border: '#86efac', bar: '#00a040' },
+                isGoldBasin: true,
+                isFamilySpecial: true,
+                actName: '全家便利商店聯名活動',
+                count: 4541
+            });
             const actMap = {};
             (postcardList || []).forEach(item => {
                 if (item.type !== '特殊金盆' || item.sgType !== '期間') return;
@@ -6495,7 +6565,7 @@ function layoutWeekEvents(weekEvents) {
                     const pal = ev.palette;
                     const dateDesc = `${formatShortDate(ev.startDate)} ~ ${formatShortDate(ev.endDate)}`;
                     const countBadge = ev.count ? `<span class="chip-count">${ev.count} 處</span>` : '';
-                    const clickAction = ev.isCocoSpecial ? "switchTab('coco')" : ev.isGoldBasin
+                    const clickAction = ev.isCocoSpecial ? "switchTab('coco')" : ev.isFamilySpecial ? "switchTab('family')" : ev.isGoldBasin
                         ? `viewGoldbasinActList('${escapeHtml(ev.actName).replace(/'/g, "\\'")}')`
                         : `editCustomEvent('${escapeHtml(ev.id).replace(/'/g, "\\'")}')`;
 
@@ -6668,6 +6738,8 @@ function layoutWeekEvents(weekEvents) {
                     ? `selectGbCalDate('${escapeHtml(seg.startDate)}')`
                     : seg.isCocoSpecial
                     ? `switchTab('coco')`
+                    : seg.isFamilySpecial
+                    ? `switchTab('family')`
                     : seg.isGoldBasin
                     ? `viewGoldbasinActList('${escapeHtml(seg.actName).replace(/'/g, "\\'")}')`
                     : `editCustomEvent('${escapeHtml(seg.id).replace(/'/g, "\\'")}')`;
@@ -6930,6 +7002,8 @@ function layoutWeekEvents(weekEvents) {
                         <div style="margin-top:8px; display:flex; justify-content:flex-end; gap:6px;">
                             ${ev.isCocoSpecial
                                 ? `<button type="button" onclick="closeTodayNoticeModal(); switchTab('coco');" style="background:${pal.bg}; color:${pal.text}; border:1.5px solid ${pal.border}; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:800; cursor:pointer;">🧋 前往 CoCo 聯名專頁 (346處)</button>`
+                                : ev.isFamilySpecial
+                                ? `<button type="button" onclick="closeTodayNoticeModal(); switchTab('family');" style="background:${pal.bg}; color:${pal.text}; border:1.5px solid ${pal.border}; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:800; cursor:pointer;">🏪 前往全家聯名專頁 (4541處)</button>`
                                 : `<button type="button" onclick="viewGoldbasinActListFromNotice('${safeActName}')" style="background:${pal.bg}; color:${pal.text}; border:1px solid ${pal.border}; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:700; cursor:pointer;">🔍 查看此活動金盆</button>`
                             }
                         </div>
@@ -7089,6 +7163,58 @@ function layoutWeekEvents(weekEvents) {
     let cocoCurrentFilteredList = [];
     let cocoCurrentClaimableList = [];
 
+    // 共享回報「無金盆」清單 (CoCo & 全家共用或各自管理，即時同步 Firebase)
+    let cocoNoBasinMap = JSON.parse(localStorage.getItem('pikmin_coco_nobasin_map') || '{}');
+    let familyNoBasinMap = JSON.parse(localStorage.getItem('pikmin_family_nobasin_map') || '{}');
+    try {
+        dbRef('coco_no_basin').on('value', (snap) => {
+            cocoNoBasinMap = snap.val() || {};
+            localStorage.setItem('pikmin_coco_nobasin_map', JSON.stringify(cocoNoBasinMap));
+            if (currentMode === 'coco' && typeof window.renderCocoView === 'function') window.renderCocoView();
+        });
+        dbRef('family_no_basin').on('value', (snap) => {
+            familyNoBasinMap = snap.val() || {};
+            localStorage.setItem('pikmin_family_nobasin_map', JSON.stringify(familyNoBasinMap));
+            if (currentMode === 'family' && typeof window.renderFamilyView === 'function') window.renderFamilyView();
+        });
+    } catch (e) {}
+
+    window.toggleCocoNoBasin = function(spotId, e) {
+        if (e && e.stopPropagation) e.stopPropagation();
+        const isMarked = !!cocoNoBasinMap[spotId];
+        if (!isMarked) {
+            const spot = cocoSpotList.find(s => s.id === spotId);
+            const label = spot ? spot.storeName : spotId;
+            if (!confirm(`確定要回報「${label}」沒有金盆嗎？\n回報後，複製座標與批次領取時都會自動排除此地點。`)) return;
+            cocoNoBasinMap[spotId] = true;
+            localStorage.setItem('pikmin_coco_nobasin_map', JSON.stringify(cocoNoBasinMap));
+            try { dbRef('coco_no_basin/' + spotId).set(true); } catch (err) {}
+        } else {
+            delete cocoNoBasinMap[spotId];
+            localStorage.setItem('pikmin_coco_nobasin_map', JSON.stringify(cocoNoBasinMap));
+            try { dbRef('coco_no_basin/' + spotId).remove(); } catch (err) {}
+        }
+        renderCocoView();
+    };
+
+    window.toggleFamilyNoBasin = function(spotId, e) {
+        if (e && e.stopPropagation) e.stopPropagation();
+        const isMarked = !!familyNoBasinMap[spotId];
+        if (!isMarked) {
+            const spot = familySpotList.find(s => s.id === spotId);
+            const label = spot ? spot.storeName : spotId;
+            if (!confirm(`確定要回報「${label}」沒有金盆嗎？\n回報後，複製座標與批次領取時都會自動排除此地點。`)) return;
+            familyNoBasinMap[spotId] = true;
+            localStorage.setItem('pikmin_family_nobasin_map', JSON.stringify(familyNoBasinMap));
+            try { dbRef('family_no_basin/' + spotId).set(true); } catch (err) {}
+        } else {
+            delete familyNoBasinMap[spotId];
+            localStorage.setItem('pikmin_family_nobasin_map', JSON.stringify(familyNoBasinMap));
+            try { dbRef('family_no_basin/' + spotId).remove(); } catch (err) {}
+        }
+        renderFamilyView();
+    };
+
     function getCocoLastMap() {
         try {
             return JSON.parse(localStorage.getItem('pikmin_coco_last_map') || '{}');
@@ -7115,6 +7241,7 @@ function layoutWeekEvents(weekEvents) {
     }
 
     function getCocoSpotStatus(spot, lastMap, todayZeroMs, isEventEnded, hasEventStarted) {
+        const isNoBasin = !!cocoNoBasinMap[spot.id];
         const lastStr = lastMap[spot.id] || '';
         let isClaimable = false;
         let isCooling = false;
@@ -7123,7 +7250,7 @@ function layoutWeekEvents(weekEvents) {
         let nextShortStr = '';
         let daysToWait = 0;
 
-        if (!isEventEnded && hasEventStarted) {
+        if (!isNoBasin && !isEventEnded && hasEventStarted) {
             if (!lastStr) {
                 isClaimable = true;
             } else {
@@ -7146,6 +7273,7 @@ function layoutWeekEvents(weekEvents) {
             }
         }
         return {
+            isNoBasin,
             lastStr,
             isClaimable,
             isCooling,
@@ -7239,13 +7367,13 @@ function layoutWeekEvents(weekEvents) {
         let targets = [];
 
         if (scopeType === 'region') {
-            targets = cocoSpotList.filter(s => s.region === scopeVal1);
+            targets = cocoSpotList.filter(s => s.region === scopeVal1 && !cocoNoBasinMap[s.id]);
         } else if (scopeType === 'city') {
-            targets = cocoSpotList.filter(s => s.city === scopeVal1);
+            targets = cocoSpotList.filter(s => s.city === scopeVal1 && !cocoNoBasinMap[s.id]);
         } else if (scopeType === 'district') {
-            targets = cocoSpotList.filter(s => s.city === scopeVal1 && s.district === scopeVal2);
+            targets = cocoSpotList.filter(s => s.city === scopeVal1 && s.district === scopeVal2 && !cocoNoBasinMap[s.id]);
         } else if (scopeType === 'filtered') {
-            targets = cocoCurrentFilteredList || [];
+            targets = (cocoCurrentFilteredList || []).filter(s => !cocoNoBasinMap[s.id]);
         }
 
         if (targets.length === 0) return;
@@ -7279,19 +7407,19 @@ function layoutWeekEvents(weekEvents) {
         if (e && e.stopPropagation) e.stopPropagation();
         let targets = [];
         if (scopeType === 'region') {
-            targets = cocoSpotList.filter(s => s.region === scopeVal1);
+            targets = cocoSpotList.filter(s => s.region === scopeVal1 && !cocoNoBasinMap[s.id]);
         } else if (scopeType === 'city') {
-            targets = cocoSpotList.filter(s => s.city === scopeVal1);
+            targets = cocoSpotList.filter(s => s.city === scopeVal1 && !cocoNoBasinMap[s.id]);
         } else if (scopeType === 'district') {
-            targets = cocoSpotList.filter(s => s.city === scopeVal1 && s.district === scopeVal2);
+            targets = cocoSpotList.filter(s => s.city === scopeVal1 && s.district === scopeVal2 && !cocoNoBasinMap[s.id]);
         } else if (scopeType === 'claimable') {
-            targets = cocoCurrentClaimableList || [];
+            targets = (cocoCurrentClaimableList || []).filter(s => !cocoNoBasinMap[s.id]);
         } else if (scopeType === 'filtered') {
-            targets = cocoCurrentFilteredList || [];
+            targets = (cocoCurrentFilteredList || []).filter(s => !cocoNoBasinMap[s.id]);
         }
 
         if (!targets || targets.length === 0) {
-            alert('目前範圍內沒有可複製的座標！');
+            alert('目前範圍內沒有可複製的有效金盆座標（已自動排除回報無金盆的地點）！');
             return;
         }
         const lines = targets.map(s => normalizeCoords(s.coords));
@@ -7537,7 +7665,9 @@ function layoutWeekEvents(weekEvents) {
                 cocoCityFilter === 'all' ? '' : cocoCityFilter,
                 cocoDistrictFilter || ''
             ].filter(Boolean).join(' · ');
-            summaryTextEl.textContent = `目前顯示：${scopeDesc} (${finalFiltered.length} 處)`;
+            const cValidCnt = finalFiltered.filter(s => !s._status.isNoBasin).length;
+            const cNoBasinCnt = finalFiltered.length - cValidCnt;
+            summaryTextEl.textContent = `目前顯示：${scopeDesc} (${finalFiltered.length} 處${cNoBasinCnt > 0 ? `，已排除無盆 ${cNoBasinCnt} 處` : ''})`;
         }
 
         const toolbarEl = document.getElementById('coco-toolbar-actions');
@@ -7554,7 +7684,7 @@ function layoutWeekEvents(weekEvents) {
                         </button>
                     ` : ''}
                     <button type="button" onclick="copyCocoCoordsByGroup('filtered', '', '', this, event)" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:8px; padding:5px 10px; font-size:11.5px; font-weight:800; cursor:pointer;">
-                        📋 複製目前座標 (${finalFiltered.length})
+                        📋 複製目前座標 (${finalFiltered.filter(s => !s._status.isNoBasin).length})
                     </button>
                     ${claimableList.length > 0 ? `
                         <button type="button" onclick="markCocoGroupClaimed('filtered', '', '', event)" style="background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:8px; padding:5px 10px; font-size:11.5px; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(16,185,129,0.25);">
@@ -7581,7 +7711,7 @@ function layoutWeekEvents(weekEvents) {
         const renderSpotCard = (spot) => {
             const st = spot._status;
             const card = document.createElement('div');
-            card.className = `coco-spot-card ${st.isClaimable ? 'is-claimable' : (st.isCooling ? 'is-cooling' : '')}`;
+            card.className = `coco-spot-card ${st.isNoBasin ? 'is-nobasin' : (st.isClaimable ? 'is-claimable' : (st.isCooling ? 'is-cooling' : ''))}`;
 
             let distBadge = '';
             if (spot._distKm !== undefined) {
@@ -7590,7 +7720,18 @@ function layoutWeekEvents(weekEvents) {
             }
 
             let statusRowHtml = '';
-            if (isEventEnded) {
+            if (st.isNoBasin) {
+                statusRowHtml = `
+                    <div style="display:flex; gap:4px; align-items:center;">
+                        <div style="flex:1; min-width:0; background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-size:10.5px; font-weight:800; padding:4px 4px; border-radius:6px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            🚫 已回報無金盆 (複製已排除)
+                        </div>
+                        <button type="button" onclick="toggleCocoNoBasin('${spot.id}', event)" title="恢復為正常金盆點位" style="background:#fff; color:#dc2626; border:1px solid #fca5a5; border-radius:6px; padding:4px 6px; font-size:10.5px; font-weight:800; cursor:pointer; white-space:nowrap; flex-shrink:0;">
+                            ↺ 恢復
+                        </button>
+                    </div>
+                `;
+            } else if (isEventEnded) {
                 statusRowHtml = `<div style="background:#f1f5f9; color:#64748b; font-size:11px; font-weight:700; padding:4px 6px; border-radius:6px; text-align:center;">📦 活動已結束</div>`;
             } else if (!hasEventStarted) {
                 statusRowHtml = `<div style="background:#fef3c7; color:#b45309; font-size:11px; font-weight:700; padding:4px 6px; border-radius:6px; text-align:center;">🔜 11/05 活動開跑</div>`;
@@ -7622,7 +7763,7 @@ function layoutWeekEvents(weekEvents) {
                 <div style="display:flex; justify-content:space-between; align-items:center; gap:4px; min-width:0;">
                     <div style="display:flex; align-items:center; gap:4px; min-width:0; overflow:hidden;">
                         <span style="font-size:11px; font-weight:800; color:#ea580c; background:#ffedd5; border:1px solid #fed7aa; padding:1px 4.5px; border-radius:4px; flex-shrink:0;">${escapeHtml(spot.code)}</span>
-                        <span style="font-size:12.5px; font-weight:900; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(spot.storeName)}">🧋 ${escapeHtml(spot.storeName)}</span>
+                        <span style="font-size:12.5px; font-weight:900; color:${st.isNoBasin ? '#991b1b; text-decoration:line-through' : '#1e293b'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(spot.storeName)}">🧋 ${escapeHtml(spot.storeName)}</span>
                     </div>
                     <span style="background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; font-size:10px; font-weight:800; padding:1px 5px; border-radius:999px; white-space:nowrap; flex-shrink:0;">📍 ${escapeHtml(spot.district)}</span>
                 </div>
@@ -7632,8 +7773,9 @@ function layoutWeekEvents(weekEvents) {
                 </div>
                 ${statusRowHtml}
                 <div style="display:flex; gap:4px; margin-top:1px;">
-                    <button type="button" class="btn-sm btn-default" style="flex:1; min-width:0; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:800; padding:4px 4px; font-size:10.5px; white-space:nowrap;" onclick="copyCoords('${spot.coords}', this)">📍 座標</button>
-                    <button type="button" class="btn-sm btn-default" style="flex:1; min-width:0; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; font-weight:800; padding:4px 4px; font-size:10.5px; white-space:nowrap;" onclick="goToMapCoords('${spot.coords}')">🗺️ 地圖</button>
+                    <button type="button" class="btn-sm btn-default" style="flex:1; min-width:0; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:800; padding:4px 3px; font-size:10.5px; white-space:nowrap;" onclick="copyCoords('${spot.coords}', this)">📍 座標</button>
+                    <button type="button" class="btn-sm btn-default" style="flex:1; min-width:0; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; font-weight:800; padding:4px 3px; font-size:10.5px; white-space:nowrap;" onclick="goToMapCoords('${spot.coords}')">🗺️ 地圖</button>
+                    <button type="button" class="btn-sm btn-default" style="flex:1; min-width:0; background:${st.isNoBasin ? '#fee2e2' : '#fff1f2'}; color:#be123c; border:1px solid #fecdd3; font-weight:800; padding:4px 3px; font-size:10px; white-space:nowrap;" onclick="toggleCocoNoBasin('${spot.id}', event)" title="${st.isNoBasin ? '點擊恢復為有金盆' : '回報此處沒有金盆（複製座標時將自動略過）'}">${st.isNoBasin ? '↺ 有盆' : '🚫 無盆'}</button>
                 </div>
             `;
             container.appendChild(card);
@@ -7660,7 +7802,11 @@ function layoutWeekEvents(weekEvents) {
 
             const regMeta = COCO_REGION_META[regName] || { icon: '📍', label: regName, color: '#ea580c', bg: '#ffedd5', border: '#fdba74' };
             let regClaimableCount = 0;
-            regItems.forEach(s => { if (s._status.isClaimable) regClaimableCount++; });
+            let regValidCount = 0;
+            regItems.forEach(s => {
+                if (!s._status.isNoBasin) regValidCount++;
+                if (s._status.isClaimable) regClaimableCount++;
+            });
 
             const regHeader = document.createElement('div');
             regHeader.style.cssText = 'grid-column: 1 / -1; margin-top: 8px; margin-bottom: 2px;';
@@ -7668,7 +7814,7 @@ function layoutWeekEvents(weekEvents) {
                 <div style="width:100%; background:linear-gradient(90deg, ${regMeta.bg} 0%, #ffffff 100%); border:1.5px solid ${regMeta.border}; border-left:5px solid ${regMeta.color}; color:${regMeta.color}; padding:8px 11px; border-radius:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; box-sizing:border-box;">
                     <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; min-width:0;">
                         <span style="font-size:14.5px; font-weight:900; white-space:nowrap;">${regMeta.icon} ${regMeta.label}</span>
-                        <span style="background:rgba(255,255,255,0.9); padding:1px 7px; border-radius:999px; font-size:11.5px; font-weight:900; border:1px solid ${regMeta.border}; white-space:nowrap;">${regItems.length}處</span>
+                        <span style="background:rgba(255,255,255,0.9); padding:1px 7px; border-radius:999px; font-size:11.5px; font-weight:900; border:1px solid ${regMeta.border}; white-space:nowrap;">${regValidCount}處</span>
                         ${regClaimableCount > 0
                             ? `<span style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:11px; font-weight:800; padding:1px 7px; border-radius:999px; white-space:nowrap;">🎁 可領 ${regClaimableCount}</span>`
                             : `<span style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-size:11px; font-weight:800; padding:1px 7px; border-radius:999px; white-space:nowrap;">✓ 已全領</span>`
@@ -7678,7 +7824,7 @@ function layoutWeekEvents(weekEvents) {
                         ${regClaimableCount > 0 ? `
                             <button type="button" onclick="markCocoGroupClaimed('region', '${regName}', '', event)" style="background:#22c55e; color:#fff; border:none; border-radius:7px; padding:4px 8px; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap;">🎁 地區全領</button>
                         ` : ''}
-                        <button type="button" onclick="copyCocoCoordsByGroup('region', '${regName}', '', this, event)" style="background:#fff; color:#334155; border:1px solid #cbd5e1; border-radius:7px; padding:4px 8px; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap;">📋 座標(${regItems.length})</button>
+                        <button type="button" onclick="copyCocoCoordsByGroup('region', '${regName}', '', this, event)" style="background:#fff; color:#334155; border:1px solid #cbd5e1; border-radius:7px; padding:4px 8px; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap;">📋 座標(${regValidCount})</button>
                     </div>
                 </div>
             `;
@@ -7699,11 +7845,13 @@ function layoutWeekEvents(weekEvents) {
 
                 let cClaimable = 0;
                 let cClaimed = 0;
+                let cValidCount = 0;
                 let cEarliestDate = null;
                 let cEarliestShort = '';
                 const distMap = {};
 
                 cItems.forEach(s => {
+                    if (!s._status.isNoBasin) cValidCount++;
                     if (s._status.isClaimable) cClaimable++;
                     else if (s._status.isCooling) {
                         cClaimed++;
@@ -7717,8 +7865,8 @@ function layoutWeekEvents(weekEvents) {
                 });
 
                 const distNames = Object.keys(distMap);
-                const pct = Math.round((cClaimed / cItems.length) * 100);
-                const isAllCityClaimed = cClaimed >= cItems.length && cClaimable === 0;
+                const pct = cValidCount > 0 ? Math.round((cClaimed / cValidCount) * 100) : 0;
+                const isAllCityClaimed = cValidCount > 0 && cClaimed >= cValidCount && cClaimable === 0;
                 const barColor = cClaimable > 0 ? 'linear-gradient(90deg, #f59e0b, #10b981)' : '#10b981';
 
                 let statusNote = '';
@@ -7735,11 +7883,11 @@ function layoutWeekEvents(weekEvents) {
                 cityHeader.innerHTML = `
                     <div class="sq-header-top">
                         <div class="title">${isCol ? '▶' : '▼'} 🏙️ ${escapeHtml(cityName)}</div>
-                        <span class="sq-count-pill">${cItems.length}處</span>
+                        <span class="sq-count-pill">${cValidCount}處</span>
                     </div>
                     <div class="sq-progress-wrap">
                         <div style="display:flex; justify-content:space-between; align-items:center; gap:4px; font-size:10.5px; color:#64748b; font-weight:700; white-space:nowrap;">
-                            <span>已領 ${cClaimed}/${cItems.length}</span>
+                            <span>已領 ${cClaimed}/${cValidCount}</span>
                             ${statusNote}
                         </div>
                         <div class="sq-progress-bar-bg">
@@ -7755,7 +7903,7 @@ function layoutWeekEvents(weekEvents) {
                             ${cClaimable > 0 ? '🎁 全領' : '✓ 已領'}
                         </button>
                         <button type="button" class="group-claim-btn claimed" onclick="copyCocoCoordsByGroup('city', '${cityName}', '', this, event)">
-                            📋 座標(${cItems.length})
+                            📋 座標(${cValidCount})
                         </button>
                     </div>
                 `;
@@ -7766,14 +7914,18 @@ function layoutWeekEvents(weekEvents) {
                     distNames.forEach(distName => {
                         const dItems = distMap[distName];
                         let dClaimable = 0;
-                        dItems.forEach(s => { if (s._status.isClaimable) dClaimable++; });
+                        let dValidCount = 0;
+                        dItems.forEach(s => {
+                            if (!s._status.isNoBasin) dValidCount++;
+                            if (s._status.isClaimable) dClaimable++;
+                        });
 
                         const distDivider = document.createElement('div');
                         distDivider.style.cssText = 'grid-column: 1 / -1; display:flex; align-items:center; justify-content:space-between; padding:7px 12px; margin:8px 0 2px; background:#fff7ed; border-radius:8px; border-left:4px solid #fb923c; border:1px solid #fed7aa; border-left-width:4px;';
                         distDivider.innerHTML = `
                             <div style="font-size:13px; font-weight:800; color:#9a3412; display:flex; align-items:center; gap:6px;">
                                 <span>📍 ${escapeHtml(cityName)} · ${escapeHtml(distName)}</span>
-                                <span style="background:#fff; color:#c2410c; border:1px solid #fdba74; font-size:11px; padding:1px 7px; border-radius:999px;">${dItems.length} 處</span>
+                                <span style="background:#fff; color:#c2410c; border:1px solid #fdba74; font-size:11px; padding:1px 7px; border-radius:999px;">${dValidCount} 處</span>
                                 ${dClaimable > 0 ? `<span style="font-size:11px; color:#15803d; font-weight:800;">(可領 ${dClaimable})</span>` : '<span style="font-size:11px; color:#0369a1;">(✓ 已領)</span>'}
                             </div>
                             <div style="display:flex; align-items:center; gap:5px;">
@@ -7781,7 +7933,791 @@ function layoutWeekEvents(weekEvents) {
                                     ${dClaimable > 0 ? '🎁 本區全領' : '✓ 已領'}
                                 </button>
                                 <button type="button" class="group-claim-btn claimed" onclick="copyCocoCoordsByGroup('district', '${cityName}', '${distName}', this, event)" style="padding:3px 8px; font-size:11px; margin:0; min-height:0;">
-                                    📋 座標 (${dItems.length})
+                                    📋 座標 (${dValidCount})
+                                </button>
+                            </div>
+                        `;
+                        container.appendChild(distDivider);
+
+                        dItems.forEach(s => renderSpotCard(s));
+                    });
+                }
+            });
+        });
+    };
+
+    // ===== Pikmin × 全家便利商店 聯名金盆專屬活動頁面模組 (4,541處) =====
+    const FAMILY_START_DATE = '2026-11-10';
+    const FAMILY_END_DATE = '2026-12-07';
+    const FAMILY_COOLDOWN_DAYS = 7;
+
+    const FAMILY_REGION_ORDER = ['北北基宜', '桃竹苗', '中彰投', '雲嘉南', '高屏', '花東', '外島'];
+    const FAMILY_REGION_META = {
+        '北北基宜': { icon: '🏙️', label: '北北基宜', color: '#0284c7', bg: '#e0f2fe', border: '#7dd3fc' },
+        '桃竹苗':   { icon: '🍑', label: '桃竹苗',   color: '#c2410c', bg: '#ffedd5', border: '#fdba74' },
+        '中彰投':   { icon: '☀️', label: '中彰投',   color: '#b45309', bg: '#fef3c7', border: '#fcd34d' },
+        '雲嘉南':   { icon: '🌾', label: '雲嘉南',   color: '#15803d', bg: '#dcfce7', border: '#86efac' },
+        '高屏':     { icon: '🌊', label: '高屏',     color: '#6d28d9', bg: '#f3e8ff', border: '#d8b4fe' },
+        '花東':     { icon: '⛰️', label: '花東',     color: '#0d9488', bg: '#ccfbf1', border: '#5eead4' },
+        '外島':     { icon: '🏝️', label: '外島',     color: '#be123c', bg: '#ffe4e6', border: '#fda4af' }
+    };
+    const FAMILY_CITY_ORDER = [
+        '基隆市', '台北市', '新北市', '宜蘭縣',
+        '桃園市', '新竹市', '新竹縣', '苗栗縣',
+        '台中市', '彰化縣', '南投縣',
+        '雲林縣', '嘉義市', '嘉義縣', '台南市',
+        '高雄市', '屏東縣',
+        '花蓮縣', '台東縣',
+        '澎湖縣', '金門縣', '連江縣'
+    ];
+
+    const familySpotList = (window.FAMILY_RAW_DATA || []).map(row => {
+        const seq = row[0];
+        const code = String(seq).padStart(4, '0');
+        const storeName = row[7] || ('全家門市 #' + code);
+        return {
+            id: 'fm_' + code,
+            seq: seq,
+            code: '#' + code,
+            storeName: storeName,
+            name: storeName + ' (#' + code + ')',
+            region: row[1],
+            city: row[2],
+            district: row[3],
+            distSeq: row[4],
+            subname: row[2] + row[3] + ' (' + row[4] + ')',
+            lat: row[5],
+            lon: row[6],
+            coords: row[5] + ', ' + row[6]
+        };
+    });
+
+    let familyRegionFilter = 'all';
+    let familyCityFilter = 'all';
+    let familyDistrictFilter = '';
+    let familyStatusFilter = 'all'; // 'all' | 'claimable' | 'cooling'
+    const familyCollapsedCities = new Set(FAMILY_CITY_ORDER); // 預設收合各縣市群組，保持頁面流暢
+    let familyLastSearch = '';
+    let familyCurrentFilteredList = [];
+    let familyCurrentClaimableList = [];
+
+    function getFamilyLastMap() {
+        try {
+            return JSON.parse(localStorage.getItem('pikmin_family_last_map') || '{}');
+        } catch (e) {
+            return {};
+        }
+    }
+
+    function saveFamilyLastMap(mapObj, changedObj = null) {
+        try {
+            localStorage.setItem('pikmin_family_last_map', JSON.stringify(mapObj));
+            if (typeof currentSyncId !== 'undefined' && currentSyncId && changedObj) {
+                dbRef('user_family_last/' + currentSyncId).update(changedObj);
+            }
+        } catch (e) {}
+    }
+
+    function getFamilySpotStatus(spot, lastMap, todayZeroMs, isEventEnded, hasEventStarted) {
+        const isNoBasin = !!familyNoBasinMap[spot.id];
+        const lastStr = lastMap[spot.id] || '';
+        let isClaimable = false;
+        let isCooling = false;
+        let nextDate = null;
+        let nextStr = '';
+        let nextShortStr = '';
+        let daysToWait = 0;
+
+        if (!isNoBasin && !isEventEnded) {
+            if (!lastStr) {
+                isClaimable = true;
+            } else {
+                const lastDate = new Date(lastStr + 'T00:00:00');
+                if (!isNaN(lastDate.getTime())) {
+                    nextDate = new Date(lastDate.getTime() + FAMILY_COOLDOWN_DAYS * 86400000);
+                    if (nextDate.getTime() <= todayZeroMs) {
+                        isClaimable = true;
+                    } else {
+                        isCooling = true;
+                        daysToWait = Math.ceil((nextDate.getTime() - todayZeroMs) / 86400000);
+                        const mm = String(nextDate.getMonth() + 1).padStart(2, '0');
+                        const dd = String(nextDate.getDate()).padStart(2, '0');
+                        nextStr = `${nextDate.getFullYear()}/${mm}/${dd}`;
+                        nextShortStr = `${mm}/${dd}`;
+                    }
+                } else {
+                    isClaimable = true;
+                }
+            }
+        }
+        return {
+            isNoBasin,
+            lastStr,
+            isClaimable,
+            isCooling,
+            nextDate,
+            nextStr,
+            nextShortStr,
+            daysToWait
+        };
+    }
+
+    window.setFamilyRegionFilter = function(region) {
+        familyRegionFilter = region || 'all';
+        familyCityFilter = 'all';
+        familyDistrictFilter = '';
+        const distEl = document.getElementById('family-district-select');
+        if (distEl) distEl.value = '';
+        renderFamilyView();
+    };
+
+    window.setFamilyCityFilter = function(city) {
+        if (familyCityFilter === city && city !== 'all') {
+            familyCityFilter = 'all';
+        } else {
+            familyCityFilter = city || 'all';
+            if (familyCityFilter !== 'all') {
+                familyCollapsedCities.delete(familyCityFilter);
+            }
+        }
+        familyDistrictFilter = '';
+        const distEl = document.getElementById('family-district-select');
+        if (distEl) distEl.value = '';
+        renderFamilyView();
+    };
+
+    window.onFamilyDistrictChange = function(dist) {
+        familyDistrictFilter = dist || '';
+        if (familyDistrictFilter) {
+            familySpotList.forEach(s => {
+                if (s.district === familyDistrictFilter) familyCollapsedCities.delete(s.city);
+            });
+        }
+        renderFamilyView();
+    };
+
+    window.setFamilyStatusFilter = function(status) {
+        familyStatusFilter = status || 'all';
+        renderFamilyView();
+    };
+
+    window.toggleFamilyCityGroup = function(city) {
+        if (familyCollapsedCities.has(city)) {
+            familyCollapsedCities.delete(city);
+        } else {
+            familyCollapsedCities.add(city);
+        }
+        renderFamilyView();
+    };
+
+    window.expandAllFamilyCities = function() {
+        if (familyRegionFilter === 'all' && familyCityFilter === 'all' && !familyDistrictFilter && !familyLastSearch) {
+            if (!confirm('全台共有 4,541 間全家門市，一次展開全部縣市卡片較多，建議先點選「地區」或「縣市」再展開。\n確定要直接展開全部縣市嗎？')) {
+                return;
+            }
+        }
+        familyCollapsedCities.clear();
+        renderFamilyView();
+    };
+
+    window.collapseAllFamilyCities = function() {
+        FAMILY_CITY_ORDER.forEach(c => familyCollapsedCities.add(c));
+        renderFamilyView();
+    };
+
+    window.markFamilySpotClaimed = function(spotId, e) {
+        if (e && e.stopPropagation) e.stopPropagation();
+        const todayStr = getTodayDateString();
+        const map = getFamilyLastMap();
+        map[spotId] = todayStr;
+        saveFamilyLastMap(map, { [spotId]: todayStr });
+        renderFamilyView();
+    };
+
+    window.unmarkFamilySpotClaimed = function(spotId, e) {
+        if (e && e.stopPropagation) e.stopPropagation();
+        const map = getFamilyLastMap();
+        delete map[spotId];
+        saveFamilyLastMap(map, { [spotId]: null });
+        renderFamilyView();
+    };
+
+    window.markFamilyGroupClaimed = function(scopeType, scopeVal1, scopeVal2, e) {
+        if (e && e.stopPropagation) e.stopPropagation();
+        const todayStr = getTodayDateString();
+        const map = getFamilyLastMap();
+        const changed = {};
+        let targets = [];
+
+        if (scopeType === 'region') {
+            targets = familySpotList.filter(s => s.region === scopeVal1 && !familyNoBasinMap[s.id]);
+        } else if (scopeType === 'city') {
+            targets = familySpotList.filter(s => s.city === scopeVal1 && !familyNoBasinMap[s.id]);
+        } else if (scopeType === 'district') {
+            targets = familySpotList.filter(s => s.city === scopeVal1 && s.district === scopeVal2 && !familyNoBasinMap[s.id]);
+        } else if (scopeType === 'filtered') {
+            targets = (familyCurrentFilteredList || []).filter(s => !familyNoBasinMap[s.id]);
+        }
+
+        if (targets.length === 0) return;
+        if (targets.length > 200 && !confirm(`確定要將這 ${targets.length} 處全家門市全部標記為「今日已領」嗎？`)) return;
+        targets.forEach(s => {
+            map[s.id] = todayStr;
+            changed[s.id] = todayStr;
+        });
+        saveFamilyLastMap(map, changed);
+        renderFamilyView();
+    };
+
+    window.resetFamilyScopeClaimed = function() {
+        const targets = familyCurrentFilteredList || [];
+        if (targets.length === 0) return;
+        const scopeLabel = familyCityFilter !== 'all'
+            ? familyCityFilter
+            : (familyRegionFilter !== 'all' ? familyRegionFilter + '地區' : `全部 ${familySpotList.length} 處`);
+        if (!confirm(`確定要重設「${scopeLabel}」(共 ${targets.length} 處) 的已領取紀錄嗎？`)) return;
+
+        const map = getFamilyLastMap();
+        const changed = {};
+        targets.forEach(s => {
+            delete map[s.id];
+            changed[s.id] = null;
+        });
+        saveFamilyLastMap(map, changed);
+        renderFamilyView();
+    };
+
+    window.copyFamilyCoordsByGroup = function(scopeType, scopeVal1, scopeVal2, btn, e) {
+        if (e && e.stopPropagation) e.stopPropagation();
+        let targets = [];
+        if (scopeType === 'region') {
+            targets = familySpotList.filter(s => s.region === scopeVal1 && !familyNoBasinMap[s.id]);
+        } else if (scopeType === 'city') {
+            targets = familySpotList.filter(s => s.city === scopeVal1 && !familyNoBasinMap[s.id]);
+        } else if (scopeType === 'district') {
+            targets = familySpotList.filter(s => s.city === scopeVal1 && s.district === scopeVal2 && !familyNoBasinMap[s.id]);
+        } else if (scopeType === 'claimable') {
+            targets = (familyCurrentClaimableList || []).filter(s => !familyNoBasinMap[s.id]);
+        } else if (scopeType === 'filtered') {
+            targets = (familyCurrentFilteredList || []).filter(s => !familyNoBasinMap[s.id]);
+        }
+
+        if (!targets || targets.length === 0) {
+            alert('目前範圍內沒有可複製的有效金盆座標（已自動排除回報無金盆的地點）！');
+            return;
+        }
+        const lines = targets.map(s => normalizeCoords(s.coords));
+
+        const origHtml = btn ? btn.innerHTML : '';
+        navigator.clipboard.writeText(lines.join('\n')).then(() => {
+            if (btn) {
+                btn.innerHTML = `✅ 已複製 ${lines.length} 筆`;
+                setTimeout(() => { btn.innerHTML = origHtml; }, 1600);
+            }
+        }).catch(() => alert('複製失敗，請手動複製。'));
+    };
+
+    window.renderFamilyView = function() {
+        const container = document.getElementById('family-list-container');
+        if (!container) return;
+
+        const nowMs = Date.now();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayZeroMs = today.getTime();
+
+        const startDate = new Date(FAMILY_START_DATE + 'T00:00:00');
+        const endDate = new Date(FAMILY_END_DATE + 'T23:59:59');
+        const hasEventStarted = nowMs >= startDate.getTime();
+        const isEventEnded = nowMs > endDate.getTime();
+        const daysLeft = !isEventEnded && hasEventStarted ? Math.ceil((endDate.getTime() - nowMs) / 86400000) : null;
+        const daysUntilStart = !hasEventStarted ? Math.ceil((startDate.getTime() - todayZeroMs) / 86400000) : null;
+
+        const heroCdEl = document.getElementById('family-hero-countdown');
+        if (heroCdEl) {
+            if (isEventEnded) {
+                heroCdEl.textContent = '📦 活動已結束';
+                heroCdEl.style.background = '#64748b';
+            } else if (!hasEventStarted) {
+                heroCdEl.textContent = daysUntilStart === 1 ? '🔜 明日 (11/10) 開跑' : `🔜 距開跑 ${daysUntilStart} 天`;
+                heroCdEl.style.background = '#0284c7';
+            } else if (daysLeft !== null && daysLeft <= 3) {
+                heroCdEl.textContent = `🔥 最後 ${daysLeft} 天！`;
+                heroCdEl.style.background = '#dc2626';
+            } else {
+                heroCdEl.textContent = `⏳ 進行中 (剩 ${daysLeft} 天)`;
+                heroCdEl.style.background = '#00a040';
+            }
+        }
+
+        const lastMap = getFamilyLastMap();
+        familySpotList.forEach(spot => {
+            spot._status = getFamilySpotStatus(spot, lastMap, todayZeroMs, isEventEnded, hasEventStarted);
+        });
+
+        // 1. 渲染地區分類膠囊列 (#family-region-tabs)
+        const regionTabsEl = document.getElementById('family-region-tabs');
+        if (regionTabsEl) {
+            const regCounts = {};
+            const regClaimable = {};
+            FAMILY_REGION_ORDER.forEach(r => { regCounts[r] = 0; regClaimable[r] = 0; });
+            familySpotList.forEach(s => {
+                regCounts[s.region] = (regCounts[s.region] || 0) + 1;
+                if (s._status.isClaimable) {
+                    regClaimable[s.region] = (regClaimable[s.region] || 0) + 1;
+                }
+            });
+
+            let regHtml = `
+                <button type="button" class="family-region-pill ${familyRegionFilter === 'all' ? 'active' : ''}" onclick="setFamilyRegionFilter('all')">
+                    <span>🌏 全部地區</span>
+                    <span style="opacity:0.85; font-size:11px;">(${familySpotList.length})</span>
+                </button>
+            `;
+            FAMILY_REGION_ORDER.forEach(reg => {
+                const meta = FAMILY_REGION_META[reg] || { icon: '📍', label: reg };
+                const cnt = regCounts[reg] || 0;
+                const clm = regClaimable[reg] || 0;
+                const isAct = familyRegionFilter === reg;
+                const doneMark = (cnt > 0 && clm === 0 && !isEventEnded) ? ' ✓' : '';
+                regHtml += `
+                    <button type="button" class="family-region-pill ${isAct ? 'active' : ''}" onclick="setFamilyRegionFilter('${reg}')">
+                        <span>${meta.icon} ${meta.label}</span>
+                        <span style="font-size:11px; opacity:0.9;">(${cnt}${doneMark})</span>
+                    </button>
+                `;
+            });
+            regionTabsEl.innerHTML = regHtml;
+        }
+
+        const regionPool = familyRegionFilter === 'all'
+            ? familySpotList
+            : familySpotList.filter(s => s.region === familyRegionFilter);
+
+        // 2. 渲染各縣市分類膠囊列 (#family-city-pills)
+        const cityPillsEl = document.getElementById('family-city-pills');
+        if (cityPillsEl) {
+            const cityCounts = {};
+            const cityClaimable = {};
+            regionPool.forEach(s => {
+                cityCounts[s.city] = (cityCounts[s.city] || 0) + 1;
+                if (s._status.isClaimable) {
+                    cityClaimable[s.city] = (cityClaimable[s.city] || 0) + 1;
+                }
+            });
+
+            const availableCities = FAMILY_CITY_ORDER.filter(c => cityCounts[c] > 0);
+            let cityHtml = `
+                <button type="button" class="family-city-pill ${familyCityFilter === 'all' ? 'active' : ''}" onclick="setFamilyCityFilter('all')">
+                    <span>全部縣市 (${regionPool.length})</span>
+                </button>
+            `;
+            availableCities.forEach(city => {
+                const cnt = cityCounts[city];
+                const clm = cityClaimable[city] || 0;
+                const isAct = familyCityFilter === city;
+                const allDone = (cnt > 0 && clm === 0 && !isEventEnded);
+                cityHtml += `
+                    <button type="button" class="family-city-pill ${isAct ? 'active' : ''}" onclick="setFamilyCityFilter('${city}')">
+                        <span>${city}</span>
+                        <span style="font-size:11px; color:${allDone ? '#16a34a' : (isAct ? '#065f46' : '#64748b')}; font-weight:800;">${allDone ? '✓' : cnt}</span>
+                    </button>
+                `;
+            });
+            cityPillsEl.innerHTML = cityHtml;
+        }
+
+        const cityPool = familyCityFilter === 'all'
+            ? regionPool
+            : regionPool.filter(s => s.city === familyCityFilter);
+
+        // 3. 更新行政區下拉選單 (#family-district-select)
+        const distSelectEl = document.getElementById('family-district-select');
+        if (distSelectEl) {
+            const distMap = {};
+            cityPool.forEach(s => {
+                const dKey = familyCityFilter === 'all' ? `${s.city} - ${s.district}` : s.district;
+                if (!distMap[s.district]) distMap[s.district] = { label: dKey, count: 0 };
+                distMap[s.district].count++;
+            });
+            const distKeys = Object.keys(distMap);
+            if (familyDistrictFilter && !distMap[familyDistrictFilter]) {
+                familyDistrictFilter = '';
+            }
+            distSelectEl.innerHTML = '<option value="">📌 全部行政區 (' + cityPool.length + '處)</option>' +
+                distKeys.map(d => `<option value="${escapeHtml(d)}" ${familyDistrictFilter === d ? 'selected' : ''}>${escapeHtml(distMap[d].label)} (${distMap[d].count}處)</option>`).join('');
+        }
+
+        let baseFiltered = familyDistrictFilter
+            ? cityPool.filter(s => s.district === familyDistrictFilter)
+            : [...cityPool];
+
+        const searchRaw = (document.getElementById('family-search-input')?.value || '').trim();
+        if (searchRaw !== familyLastSearch) {
+            familyLastSearch = searchRaw;
+            if (searchRaw) baseFiltered.forEach(s => familyCollapsedCities.delete(s.city));
+        }
+        let gpsCenter = null;
+        if (searchRaw) {
+            const coordMatch = searchRaw.match(/^\s*(-?\d+(?:\.\d+)?)\s*[,，\s]\s*(-?\d+(?:\.\d+)?)\s*$/);
+            if (coordMatch) {
+                const sLat = parseFloat(coordMatch[1]);
+                const sLon = parseFloat(coordMatch[2]);
+                if (!isNaN(sLat) && !isNaN(sLon) && Math.abs(sLat) <= 90 && Math.abs(sLon) <= 180) {
+                    gpsCenter = { lat: sLat, lon: sLon };
+                }
+            }
+            if (gpsCenter) {
+                baseFiltered.forEach(s => {
+                    s._distKm = getDistanceFromLatLonInKm(gpsCenter.lat, gpsCenter.lon, s.lat, s.lon);
+                });
+                baseFiltered.sort((a, b) => (a._distKm || 0) - (b._distKm || 0));
+            } else {
+                const kw = toTW(searchRaw).toLowerCase();
+                baseFiltered = baseFiltered.filter(s =>
+                    s.name.toLowerCase().includes(kw) ||
+                    s.code.toLowerCase().includes(kw) ||
+                    (s.storeName && s.storeName.toLowerCase().includes(kw)) ||
+                    s.city.toLowerCase().includes(kw) ||
+                    s.district.toLowerCase().includes(kw) ||
+                    s.subname.toLowerCase().includes(kw) ||
+                    s.coords.includes(kw)
+                );
+            }
+        } else {
+            baseFiltered.forEach(s => { delete s._distKm; });
+        }
+
+        let claimableList = [];
+        let coolingList = [];
+        let earliestNextDate = null;
+        let earliestNextShort = '';
+
+        baseFiltered.forEach(s => {
+            if (s._status.isClaimable) {
+                claimableList.push(s);
+            } else if (s._status.isCooling) {
+                coolingList.push(s);
+                if (s._status.nextDate && (!earliestNextDate || s._status.nextDate < earliestNextDate)) {
+                    earliestNextDate = s._status.nextDate;
+                    earliestNextShort = s._status.nextShortStr;
+                }
+            }
+        });
+        familyCurrentClaimableList = claimableList;
+
+        const bentoEl = document.getElementById('family-bento-dashboard');
+        if (bentoEl) {
+            const doneCount = coolingList.length;
+            const pct = baseFiltered.length > 0 ? Math.round((doneCount / baseFiltered.length) * 100) : 0;
+            bentoEl.innerHTML = `
+                <button type="button" class="gb-bento-card ${familyStatusFilter === 'all' ? 'active-all' : ''}" onclick="setFamilyStatusFilter('all')">
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:2px;">
+                        <span style="font-size:11.5px; font-weight:800; opacity:0.9; white-space:nowrap;">🏪 總覽</span>
+                        <span style="font-size:10px; font-weight:800; opacity:0.8; white-space:nowrap;">${pct}%</span>
+                    </div>
+                    <div style="font-size:19px; font-weight:900; line-height:1.15; margin-top:2px; white-space:nowrap;">${baseFiltered.length}<span style="font-size:11px; font-weight:700; opacity:0.8; margin-left:2px;">處</span></div>
+                </button>
+                <button type="button" class="gb-bento-card ${familyStatusFilter === 'claimable' ? 'active-limited' : ''}" onclick="setFamilyStatusFilter('claimable')">
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:2px;">
+                        <span style="font-size:11.5px; font-weight:800; color:#047857; white-space:nowrap;">🎁 可領取</span>
+                    </div>
+                    <div style="font-size:19px; font-weight:900; color:#15803d; line-height:1.15; margin-top:2px; white-space:nowrap;">${claimableList.length}<span style="font-size:11px; font-weight:700; margin-left:2px;">處</span></div>
+                </button>
+                <button type="button" class="gb-bento-card ${familyStatusFilter === 'cooling' ? 'active-permanent' : ''}" onclick="setFamilyStatusFilter('cooling')">
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:2px;">
+                        <span style="font-size:11.5px; font-weight:800; color:#0369a1; white-space:nowrap;">⏳ 冷卻中</span>
+                        ${earliestNextShort ? `<span style="font-size:9.5px; color:#0369a1; font-weight:800; white-space:nowrap;">${earliestNextShort}</span>` : ''}
+                    </div>
+                    <div style="font-size:19px; font-weight:900; color:#0c4a6e; line-height:1.15; margin-top:2px; white-space:nowrap;">${coolingList.length}<span style="font-size:11px; font-weight:700; margin-left:2px;">處</span></div>
+                </button>
+            `;
+        }
+
+        let finalFiltered = baseFiltered;
+        if (familyStatusFilter === 'claimable') {
+            finalFiltered = baseFiltered.filter(s => s._status.isClaimable);
+        } else if (familyStatusFilter === 'cooling') {
+            finalFiltered = baseFiltered.filter(s => s._status.isCooling);
+        }
+        familyCurrentFilteredList = finalFiltered;
+
+        const summaryTextEl = document.getElementById('family-filter-summary-text');
+        if (summaryTextEl) {
+            const scopeDesc = [
+                familyRegionFilter === 'all' ? '全台' : familyRegionFilter,
+                familyCityFilter === 'all' ? '' : familyCityFilter,
+                familyDistrictFilter || ''
+            ].filter(Boolean).join(' · ');
+            const cValidCnt = finalFiltered.filter(s => !s._status.isNoBasin).length;
+            const cNoBasinCnt = finalFiltered.length - cValidCnt;
+            summaryTextEl.textContent = `目前顯示：${scopeDesc} (${finalFiltered.length} 處${cNoBasinCnt > 0 ? `，已排除無盆 ${cNoBasinCnt} 處` : ''})`;
+        }
+
+        const toolbarEl = document.getElementById('family-toolbar-actions');
+        if (toolbarEl) {
+            toolbarEl.innerHTML = `
+                <div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
+                    <button type="button" onclick="expandAllFamilyCities()" style="background:#f8fafc; color:#334155; border:1px solid #cbd5e1; border-radius:8px; padding:5px 9px; font-size:11.5px; font-weight:800; cursor:pointer;">📂 全展開</button>
+                    <button type="button" onclick="collapseAllFamilyCities()" style="background:#f8fafc; color:#64748b; border:1px solid #cbd5e1; border-radius:8px; padding:5px 9px; font-size:11.5px; font-weight:800; cursor:pointer;">📁 全折疊</button>
+                </div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                    ${claimableList.length > 0 ? `
+                        <button type="button" onclick="copyFamilyCoordsByGroup('claimable', '', '', this, event)" style="background:linear-gradient(135deg,#00a040,#059669); color:#fff; border:none; border-radius:8px; padding:5px 10px; font-size:11.5px; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(0,160,64,0.25);">
+                            📋 複製可領座標 (${claimableList.length})
+                        </button>
+                    ` : ''}
+                    <button type="button" onclick="copyFamilyCoordsByGroup('filtered', '', '', this, event)" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:8px; padding:5px 10px; font-size:11.5px; font-weight:800; cursor:pointer;">
+                        📋 複製目前座標 (${finalFiltered.filter(s => !s._status.isNoBasin).length})
+                    </button>
+                    ${claimableList.length > 0 ? `
+                        <button type="button" onclick="markFamilyGroupClaimed('filtered', '', '', event)" style="background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:8px; padding:5px 10px; font-size:11.5px; font-weight:800; cursor:pointer; box-shadow:0 2px 6px rgba(16,185,129,0.25);">
+                            🎁 範圍全設今日已領 (${claimableList.length})
+                        </button>
+                    ` : ''}
+                    ${coolingList.length > 0 ? `
+                        <button type="button" onclick="resetFamilyScopeClaimed()" style="background:#fef2f2; color:#dc2626; border:1px solid #fca5a5; border-radius:8px; padding:5px 9px; font-size:11.5px; font-weight:700; cursor:pointer;">
+                            ↺ 重設已領
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        const emptyEl = document.getElementById('family-empty-state');
+        container.innerHTML = '';
+        if (finalFiltered.length === 0) {
+            if (emptyEl) emptyEl.style.display = 'block';
+            return;
+        }
+        if (emptyEl) emptyEl.style.display = 'none';
+
+        const renderSpotCard = (spot) => {
+            const st = spot._status;
+            const card = document.createElement('div');
+            card.className = `coco-spot-card ${st.isNoBasin ? 'is-nobasin' : (st.isClaimable ? 'is-claimable' : (st.isCooling ? 'is-cooling' : ''))}`;
+            if (st.isClaimable && !st.isNoBasin) card.style.borderLeftColor = '#00a040';
+
+            let distBadge = '';
+            if (spot._distKm !== undefined) {
+                const distText = spot._distKm < 1 ? (spot._distKm * 1000).toFixed(0) + ' m' : spot._distKm.toFixed(1) + ' km';
+                distBadge = `<span style="background:#d1fae5; color:#065f46; border:1px solid #6ee7b7; font-size:10.5px; font-weight:800; padding:1.5px 6px; border-radius:999px;">📏 ${distText}</span>`;
+            }
+
+            let statusRowHtml = '';
+            if (st.isNoBasin) {
+                statusRowHtml = `
+                    <div style="display:flex; gap:4px; align-items:center;">
+                        <div style="flex:1; min-width:0; background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-size:10.5px; font-weight:800; padding:4px 4px; border-radius:6px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            🚫 已回報無金盆 (複製已排除)
+                        </div>
+                        <button type="button" onclick="toggleFamilyNoBasin('${spot.id}', event)" title="恢復為正常金盆點位" style="background:#fff; color:#dc2626; border:1px solid #fca5a5; border-radius:6px; padding:4px 6px; font-size:10.5px; font-weight:800; cursor:pointer; white-space:nowrap; flex-shrink:0;">
+                            ↺ 恢復
+                        </button>
+                    </div>
+                `;
+            } else if (isEventEnded) {
+                statusRowHtml = `<div style="background:#f1f5f9; color:#64748b; font-size:11px; font-weight:700; padding:4px 6px; border-radius:6px; text-align:center;">📦 活動已結束</div>`;
+            } else if (st.isClaimable) {
+                statusRowHtml = `
+                    <div style="display:flex; gap:4px; align-items:center;">
+                        <div style="flex:1; min-width:0; background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:10.5px; font-weight:800; padding:4px 4px; border-radius:6px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            ${!hasEventStarted ? '🔜 11/10 開跑 (可預標)' : `✅ 可領${st.lastStr ? ` (${st.lastStr.substring(5).replace('-','/')})` : ''}`}
+                        </div>
+                        <button type="button" onclick="markFamilySpotClaimed('${spot.id}', event)" style="background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; border:none; border-radius:6px; padding:4px 7px; font-size:10.5px; font-weight:800; cursor:pointer; white-space:nowrap; flex-shrink:0; box-shadow:0 1px 3px rgba(22,163,74,0.25);">
+                            🎁 領取
+                        </button>
+                    </div>
+                `;
+            } else {
+                statusRowHtml = `
+                    <div style="display:flex; gap:4px; align-items:center;">
+                        <div style="flex:1; min-width:0; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-size:10.5px; font-weight:800; padding:4px 4px; border-radius:6px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            ⏳ ${st.nextShortStr} (${st.daysToWait}天)
+                        </div>
+                        <button type="button" onclick="unmarkFamilySpotClaimed('${spot.id}', event)" title="取消已領狀態" style="background:#f8fafc; color:#64748b; border:1px solid #cbd5e1; border-radius:6px; padding:4px 6px; font-size:10.5px; font-weight:700; cursor:pointer; white-space:nowrap; flex-shrink:0;">
+                            ↺
+                        </button>
+                    </div>
+                `;
+            }
+
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:4px; min-width:0;">
+                    <div style="display:flex; align-items:center; gap:4px; min-width:0; overflow:hidden;">
+                        <span style="font-size:11px; font-weight:800; color:#047857; background:#dcfce7; border:1px solid #86efac; padding:1px 4.5px; border-radius:4px; flex-shrink:0;">${escapeHtml(spot.code)}</span>
+                        <span style="font-size:12.5px; font-weight:900; color:${st.isNoBasin ? '#991b1b; text-decoration:line-through' : '#1e293b'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(spot.storeName)}">🏪 ${escapeHtml(spot.storeName)}</span>
+                    </div>
+                    <span style="background:#f0fdf4; color:#047857; border:1px solid #86efac; font-size:10px; font-weight:800; padding:1px 5px; border-radius:999px; white-space:nowrap; flex-shrink:0;">📍 ${escapeHtml(spot.district)}</span>
+                </div>
+                ${distBadge ? `<div>${distBadge}</div>` : ''}
+                <div style="font-family:monospace; font-size:10.5px; color:#475569; background:#f8fafc; padding:3px 5px; border-radius:6px; border:1px solid #f1f5f9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    🌐 ${spot.coords}
+                </div>
+                ${statusRowHtml}
+                <div style="display:flex; gap:4px; margin-top:1px;">
+                    <button type="button" class="btn-sm btn-default" style="flex:1; min-width:0; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-weight:800; padding:4px 3px; font-size:10.5px; white-space:nowrap;" onclick="copyCoords('${spot.coords}', this)">📍 座標</button>
+                    <button type="button" class="btn-sm btn-default" style="flex:1; min-width:0; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; font-weight:800; padding:4px 3px; font-size:10.5px; white-space:nowrap;" onclick="goToMapCoords('${spot.coords}')">🗺️ 地圖</button>
+                    <button type="button" class="btn-sm btn-default" style="flex:1; min-width:0; background:${st.isNoBasin ? '#fee2e2' : '#fff1f2'}; color:#be123c; border:1px solid #fecdd3; font-weight:800; padding:4px 3px; font-size:10px; white-space:nowrap;" onclick="toggleFamilyNoBasin('${spot.id}', event)" title="${st.isNoBasin ? '點擊恢復為有金盆' : '回報此處沒有金盆（複製座標時將自動略過）'}">${st.isNoBasin ? '↺ 有盆' : '🚫 無盆'}</button>
+                </div>
+            `;
+            container.appendChild(card);
+        };
+
+        if (gpsCenter) {
+            const displayLimit = 200;
+            const shownList = finalFiltered.slice(0, displayLimit);
+            const hintBanner = document.createElement('div');
+            hintBanner.style.cssText = 'grid-column: 1 / -1; background:#ecfdf5; border:1px solid #6ee7b7; color:#065f46; padding:8px 12px; border-radius:10px; font-size:12.5px; font-weight:800;';
+            hintBanner.innerHTML = `🧭 已依您輸入的 GPS 座標 (${gpsCenter.lat.toFixed(4)}, ${gpsCenter.lon.toFixed(4)}) 由近到遠排序（共 ${finalFiltered.length} 處${finalFiltered.length > displayLimit ? `，顯示最近前 ${displayLimit} 處` : ''}）`;
+            container.appendChild(hintBanner);
+            shownList.forEach(s => renderSpotCard(s));
+            return;
+        }
+
+        const regGroups = {};
+        finalFiltered.forEach(s => {
+            if (!regGroups[s.region]) regGroups[s.region] = [];
+            regGroups[s.region].push(s);
+        });
+
+        FAMILY_REGION_ORDER.forEach(regName => {
+            const regItems = regGroups[regName];
+            if (!regItems || regItems.length === 0) return;
+
+            const regMeta = FAMILY_REGION_META[regName] || { icon: '📍', label: regName, color: '#00a040', bg: '#dcfce7', border: '#86efac' };
+            let regClaimableCount = 0;
+            let regValidCount = 0;
+            regItems.forEach(s => {
+                if (!s._status.isNoBasin) regValidCount++;
+                if (s._status.isClaimable) regClaimableCount++;
+            });
+
+            const regHeader = document.createElement('div');
+            regHeader.style.cssText = 'grid-column: 1 / -1; margin-top: 8px; margin-bottom: 2px;';
+            regHeader.innerHTML = `
+                <div style="width:100%; background:linear-gradient(90deg, ${regMeta.bg} 0%, #ffffff 100%); border:1.5px solid ${regMeta.border}; border-left:5px solid ${regMeta.color}; color:${regMeta.color}; padding:8px 11px; border-radius:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; box-sizing:border-box;">
+                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; min-width:0;">
+                        <span style="font-size:14.5px; font-weight:900; white-space:nowrap;">${regMeta.icon} ${regMeta.label}</span>
+                        <span style="background:rgba(255,255,255,0.9); padding:1px 7px; border-radius:999px; font-size:11.5px; font-weight:900; border:1px solid ${regMeta.border}; white-space:nowrap;">${regValidCount}處</span>
+                        ${regClaimableCount > 0
+                            ? `<span style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:11px; font-weight:800; padding:1px 7px; border-radius:999px; white-space:nowrap;">🎁 可領 ${regClaimableCount}</span>`
+                            : `<span style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-size:11px; font-weight:800; padding:1px 7px; border-radius:999px; white-space:nowrap;">✓ 已全領</span>`
+                        }
+                    </div>
+                    <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
+                        ${regClaimableCount > 0 ? `
+                            <button type="button" onclick="markFamilyGroupClaimed('region', '${regName}', '', event)" style="background:#22c55e; color:#fff; border:none; border-radius:7px; padding:4px 8px; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap;">🎁 地區全領</button>
+                        ` : ''}
+                        <button type="button" onclick="copyFamilyCoordsByGroup('region', '${regName}', '', this, event)" style="background:#fff; color:#334155; border:1px solid #cbd5e1; border-radius:7px; padding:4px 8px; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap;">📋 座標(${regValidCount})</button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(regHeader);
+
+            const cityMap = {};
+            regItems.forEach(s => {
+                if (!cityMap[s.city]) cityMap[s.city] = [];
+                cityMap[s.city].push(s);
+            });
+
+            FAMILY_CITY_ORDER.forEach(cityName => {
+                const cItems = cityMap[cityName];
+                if (!cItems || cItems.length === 0) return;
+
+                const isCol = familyCollapsedCities.has(cityName);
+
+                let cClaimable = 0;
+                let cClaimed = 0;
+                let cValidCount = 0;
+                let cEarliestDate = null;
+                let cEarliestShort = '';
+                const distMap = {};
+
+                cItems.forEach(s => {
+                    if (!s._status.isNoBasin) cValidCount++;
+                    if (s._status.isClaimable) cClaimable++;
+                    else if (s._status.isCooling) {
+                        cClaimed++;
+                        if (s._status.nextDate && (!cEarliestDate || s._status.nextDate < cEarliestDate)) {
+                            cEarliestDate = s._status.nextDate;
+                            cEarliestShort = s._status.nextShortStr;
+                        }
+                    }
+                    if (!distMap[s.district]) distMap[s.district] = [];
+                    distMap[s.district].push(s);
+                });
+
+                const distNames = Object.keys(distMap);
+                const pct = cValidCount > 0 ? Math.round((cClaimed / cValidCount) * 100) : 0;
+                const isAllCityClaimed = cValidCount > 0 && cClaimed >= cValidCount && cClaimable === 0;
+                const barColor = cClaimable > 0 ? 'linear-gradient(90deg, #00a040, #0080c6)' : '#10b981';
+
+                let statusNote = '';
+                if (cClaimable > 0) {
+                    statusNote = `<span style="color:#047857; font-weight:800;">🎁 可拿 ${cClaimable}</span>`;
+                } else if (cEarliestShort) {
+                    statusNote = `<span style="color:#0369a1; font-weight:700;">⏳ 下次 ${cEarliestShort}</span>`;
+                } else {
+                    statusNote = `<span style="color:#15803d; font-weight:800;">✓ 全數已領</span>`;
+                }
+
+                const cityHeader = document.createElement('div');
+                cityHeader.className = `sq-group-header ${cClaimable > 0 ? 'alert-pulse' : (isAllCityClaimed ? 'all-claimed' : '')}`;
+                cityHeader.innerHTML = `
+                    <div class="sq-header-top">
+                        <div class="title">${isCol ? '▶' : '▼'} 🏙️ ${escapeHtml(cityName)}</div>
+                        <span class="sq-count-pill">${cValidCount}處</span>
+                    </div>
+                    <div class="sq-progress-wrap">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:4px; font-size:10.5px; color:#64748b; font-weight:700; white-space:nowrap;">
+                            <span>已領 ${cClaimed}/${cValidCount}</span>
+                            ${statusNote}
+                        </div>
+                        <div class="sq-progress-bar-bg">
+                            <div class="sq-progress-bar-fill" style="width:${pct}%; background:${barColor};"></div>
+                        </div>
+                    </div>
+                    <div class="sq-meta-pills">
+                        <span style="font-size:10px; color:#065f46; background:#dcfce7; padding:1px 6px; border-radius:999px; font-weight:700; border:1px solid #86efac; white-space:nowrap;">📍 ${distNames.length}個行政區</span>
+                        <span style="font-size:10px; color:#0369a1; background:#e0f2fe; padding:1px 5px; border-radius:999px; font-weight:700; border:1px solid #bae6fd; white-space:nowrap;">⏱ 7天</span>
+                    </div>
+                    <div class="sq-btn-row">
+                        <button type="button" class="group-claim-btn ${cClaimable === 0 ? 'claimed' : ''}" onclick="markFamilyGroupClaimed('city', '${cityName}', '', event)">
+                            ${cClaimable > 0 ? '🎁 全領' : '✓ 已領'}
+                        </button>
+                        <button type="button" class="group-claim-btn claimed" onclick="copyFamilyCoordsByGroup('city', '${cityName}', '', this, event)">
+                            📋 座標(${cValidCount})
+                        </button>
+                    </div>
+                `;
+                cityHeader.addEventListener('click', () => toggleFamilyCityGroup(cityName));
+                container.appendChild(cityHeader);
+
+                if (!isCol) {
+                    distNames.forEach(distName => {
+                        const dItems = distMap[distName];
+                        let dClaimable = 0;
+                        let dValidCount = 0;
+                        dItems.forEach(s => {
+                            if (!s._status.isNoBasin) dValidCount++;
+                            if (s._status.isClaimable) dClaimable++;
+                        });
+
+                        const distDivider = document.createElement('div');
+                        distDivider.style.cssText = 'grid-column: 1 / -1; display:flex; align-items:center; justify-content:space-between; padding:7px 12px; margin:8px 0 2px; background:#f0fdf4; border-radius:8px; border-left:4px solid #00a040; border:1px solid #86efac; border-left-width:4px;';
+                        distDivider.innerHTML = `
+                            <div style="font-size:13px; font-weight:800; color:#065f46; display:flex; align-items:center; gap:6px;">
+                                <span>📍 ${escapeHtml(cityName)} · ${escapeHtml(distName)}</span>
+                                <span style="background:#fff; color:#047857; border:1px solid #86efac; font-size:11px; padding:1px 7px; border-radius:999px;">${dValidCount} 處</span>
+                                ${dClaimable > 0 ? `<span style="font-size:11px; color:#15803d; font-weight:800;">(可領 ${dClaimable})</span>` : '<span style="font-size:11px; color:#0369a1;">(✓ 已領)</span>'}
+                            </div>
+                            <div style="display:flex; align-items:center; gap:5px;">
+                                <button type="button" class="group-claim-btn ${dClaimable === 0 ? 'claimed' : ''}" onclick="markFamilyGroupClaimed('district', '${cityName}', '${distName}', event)" style="padding:3px 8px; font-size:11px; margin:0; min-height:0;">
+                                    ${dClaimable > 0 ? '🎁 本區全領' : '✓ 已領'}
+                                </button>
+                                <button type="button" class="group-claim-btn claimed" onclick="copyFamilyCoordsByGroup('district', '${cityName}', '${distName}', this, event)" style="padding:3px 8px; font-size:11px; margin:0; min-height:0;">
+                                    📋 座標 (${dValidCount})
                                 </button>
                             </div>
                         `;
