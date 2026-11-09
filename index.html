@@ -1731,18 +1731,37 @@
             box-sizing: border-box;
         }
         .gb-cal-span-line {
-            height: 3.5px;
+            position: relative;
+            height: 2px;
             border-radius: 2px;
             pointer-events: auto;
             cursor: pointer;
             transition: transform 0.12s ease, filter 0.12s ease;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
-            margin: 0 1px;
+            margin: 3px 1px;
+            opacity: 0.85;
         }
+        /* 活動起訖端點圓點 (細線 + 起點/終點圓點) */
+        .gb-cal-span-line.has-start-dot::before,
+        .gb-cal-span-line.has-end-dot::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--line-color, #6366f1);
+            border: 1.5px solid #fff;
+            box-sizing: border-box;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+            transform: translateY(-50%);
+        }
+        .gb-cal-span-line.has-start-dot::before { left: -3px; }
+        .gb-cal-span-line.has-end-dot::after { right: -3px; }
         .gb-cal-span-line:hover {
             transform: scaleY(2);
             filter: brightness(1.2);
             z-index: 5;
+            opacity: 1;
         }
         /* 前景：短期特殊活動橫條圖層 (容納文字橫條與 +N 更多標籤) */
         .gb-cal-events-track-grid {
@@ -2082,7 +2101,8 @@
                 row-gap: 1.5px !important;
             }
             .gb-cal-span-line {
-                height: 3px !important;
+                height: 2px !important;
+                margin: 2px 1px !important;
             }
             .gb-cal-events-track-grid {
                 height: 66px !important;
@@ -5890,9 +5910,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script src="js/family-data.js?v=202611100138"></script>
-    <script>const APP_VERSION = "2026.11.10.0138";</script>
-    <script src="js/main.js?v=202611100138"></script>
+    <script src="js/family-data.js?v=202611100150"></script>
+    <script>const APP_VERSION = "2026.11.10.0150";</script>
+    <script src="js/main.js?v=202611100150"></script>
     <script src="js/autofill.js?v=1793651958949"></script>
 </body>
 </html>

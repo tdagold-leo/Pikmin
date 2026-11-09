@@ -6669,9 +6669,12 @@ function layoutWeekEvents(weekEvents) {
                         ? `viewGoldbasinActList('${escapeHtml(ev.actName).replace(/'/g, "\\'")}')`
                         : `editCustomEvent('${escapeHtml(ev.id).replace(/'/g, "\\'")}')`;
 
+                    const lineColor = pal.bar || pal.border;
+                    const hasStartDot = ev.startDate >= wStart;
+                    const hasEndDot = ev.endDate <= wEnd;
                     linesHtml += `
-                        <div class="gb-cal-span-line"
-                             style="grid-column:${startCol} / ${endCol + 1}; grid-row:${evIdx + 1}; background:${pal.bar || pal.border};"
+                        <div class="gb-cal-span-line ${hasStartDot ? 'has-start-dot' : ''} ${hasEndDot ? 'has-end-dot' : ''}"
+                             style="grid-column:${startCol} / ${endCol + 1}; grid-row:${evIdx + 1}; background:${lineColor}; --line-color:${lineColor};"
                              onclick="${clickAction}"
                              title="${escapeHtml(ev.title)} (${dateDesc}) · 點擊查看明細"></div>
                     `;
