@@ -7952,13 +7952,16 @@ function layoutWeekEvents(weekEvents) {
         });
     };
 
-    // ===== Pikmin × 全家便利商店 聯名金盆專屬活動頁面模組 (4,541處) =====
+    // ===== Pikmin × 全家便利商店 聯名金盆專屬活動頁面模組 (台日雙國支援) =====
     const FAMILY_START_DATE = '2026-11-10';
     const FAMILY_END_DATE = '2026-12-07';
     const FAMILY_COOLDOWN_DAYS = 7;
 
-    const FAMILY_REGION_ORDER = ['北北基宜', '桃竹苗', '中彰投', '雲嘉南', '高屏', '花東', '外島'];
-    const FAMILY_REGION_META = {
+    let familyActiveCountry = localStorage.getItem('pikmin_family_country') || 'tw'; // 'tw' | 'jp'
+
+    // 台灣分區與縣市
+    const FAMILY_TW_REGION_ORDER = ['北北基宜', '桃竹苗', '中彰投', '雲嘉南', '高屏', '花東', '外島'];
+    const FAMILY_TW_REGION_META = {
         '北北基宜': { icon: '🏙️', label: '北北基宜', color: '#0284c7', bg: '#e0f2fe', border: '#7dd3fc' },
         '桃竹苗':   { icon: '🍑', label: '桃竹苗',   color: '#c2410c', bg: '#ffedd5', border: '#fdba74' },
         '中彰投':   { icon: '☀️', label: '中彰投',   color: '#b45309', bg: '#fef3c7', border: '#fcd34d' },
@@ -7967,7 +7970,7 @@ function layoutWeekEvents(weekEvents) {
         '花東':     { icon: '⛰️', label: '花東',     color: '#0d9488', bg: '#ccfbf1', border: '#5eead4' },
         '外島':     { icon: '🏝️', label: '外島',     color: '#be123c', bg: '#ffe4e6', border: '#fda4af' }
     };
-    const FAMILY_CITY_ORDER = [
+    const FAMILY_TW_CITY_ORDER = [
         '基隆市', '台北市', '新北市', '宜蘭縣',
         '桃園市', '新竹市', '新竹縣', '苗栗縣',
         '台中市', '彰化縣', '南投縣',
@@ -7977,7 +7980,63 @@ function layoutWeekEvents(weekEvents) {
         '澎湖縣', '金門縣', '連江縣'
     ];
 
-    const familyBaseSpotList = (window.FAMILY_RAW_DATA || []).map(row => {
+    // 日本分區 (地方) 與 47 都道府縣
+    const FAMILY_JP_REGION_ORDER = ['北海道', '東北', '關東', '中部', '近畿', '中國', '四國', '九州沖繩'];
+    const FAMILY_JP_REGION_META = {
+        '北海道':   { icon: '❄️', label: '北海道',   color: '#0284c7', bg: '#e0f2fe', border: '#7dd3fc' },
+        '東北':     { icon: '🍏', label: '東北',     color: '#15803d', bg: '#dcfce7', border: '#86efac' },
+        '關東':     { icon: '🗼', label: '關東',     color: '#b91c1c', bg: '#fee2e2', border: '#fca5a5' },
+        '中部':     { icon: '🗻', label: '中部',     color: '#b45309', bg: '#fef3c7', border: '#fcd34d' },
+        '近畿':     { icon: '⛩️', label: '近畿',     color: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
+        '中國':     { icon: '🍁', label: '中國',     color: '#c2410c', bg: '#ffedd5', border: '#fdba74' },
+        '四國':     { icon: '🍊', label: '四國',     color: '#d97706', bg: '#fffbeb', border: '#fde68a' },
+        '九州沖繩': { icon: '🌺', label: '九州沖繩', color: '#0d9488', bg: '#ccfbf1', border: '#5eead4' }
+    };
+    const FAMILY_JP_CITY_ORDER = [
+        '北海道',
+        '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
+        '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
+        '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県',
+        '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県',
+        '鳥取県', '島根県', '岡山県', '広島県', '山口県',
+        '徳島県', '香川県', '愛媛県', '高知県',
+        '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
+    ];
+
+    function getFamilyRegionOrder() {
+        return familyActiveCountry === 'jp' ? FAMILY_JP_REGION_ORDER : FAMILY_TW_REGION_ORDER;
+    }
+    function getFamilyRegionMeta() {
+        return familyActiveCountry === 'jp' ? FAMILY_JP_REGION_META : FAMILY_TW_REGION_META;
+    }
+    function getFamilyCityOrder() {
+        return familyActiveCountry === 'jp' ? FAMILY_JP_CITY_ORDER : FAMILY_TW_CITY_ORDER;
+    }
+
+    // 移除店名前綴的「全家」+「分區」，保留精確店名
+    function getFamilyCardDisplayName(spot) {
+        if (!spot) return '';
+        let name = spot.storeName || '';
+        if (spot.country === 'jp' || familyActiveCountry === 'jp') {
+            name = name.replace(/^ファミリーマート\s*/, '').replace(/^全家\s*/, '');
+            return name || spot.storeName;
+        }
+        if (name.startsWith('全家')) name = name.slice(2);
+        const distClean = (spot.district || '').replace(/(區|鄉|鎮|市)$/, '');
+        const cityClean = (spot.city || '').replace(/(市|縣)$/, '');
+        if (distClean && distClean.length >= 2 && name.startsWith(distClean) && name.length > distClean.length + 1) {
+            name = name.slice(distClean.length);
+        } else if (spot.district && name.startsWith(spot.district) && name.length > spot.district.length + 1) {
+            name = name.slice(spot.district.length);
+        } else if (cityClean && cityClean.length >= 2 && name.startsWith(cityClean) && name.length > cityClean.length + 1) {
+            name = name.slice(cityClean.length);
+        } else if (spot.city && name.startsWith(spot.city) && name.length > spot.city.length + 1) {
+            name = name.slice(spot.city.length);
+        }
+        return name || spot.storeName;
+    }
+
+    const familyBaseSpotListTW = (window.FAMILY_RAW_DATA || []).map(row => {
         const seq = row[0];
         const code = String(seq).padStart(4, '0');
         const storeName = row[7] || ('全家門市 #' + code);
@@ -7986,6 +8045,7 @@ function layoutWeekEvents(weekEvents) {
             seq: seq,
             code: '#' + code,
             storeName: storeName,
+            displayName: getFamilyCardDisplayName({ storeName, city: row[2], district: row[3], country: 'tw' }),
             name: storeName + ' (#' + code + ')',
             region: row[1],
             city: row[2],
@@ -7994,25 +8054,140 @@ function layoutWeekEvents(weekEvents) {
             subname: row[2] + row[3] + ' (' + row[4] + ')',
             lat: row[5],
             lon: row[6],
-            coords: Number(row[5]).toFixed(6) + ', ' + Number(row[6]).toFixed(6)
+            coords: Number(row[5]).toFixed(6) + ', ' + Number(row[6]).toFixed(6),
+            country: 'tw'
         };
     });
 
-    let familySpotList = [...familyBaseSpotList];
+    let familyBaseSpotListJP = null;
+    function getFamilyBaseSpotListJP() {
+        if (!familyBaseSpotListJP && window.FAMILY_JP_RAW_DATA) {
+            familyBaseSpotListJP = window.FAMILY_JP_RAW_DATA.map(row => {
+                const seq = row[0];
+                const code = 'JP' + String(seq).padStart(5, '0');
+                const storeName = row[7] || ('ファミリーマート #' + code);
+                return {
+                    id: 'fm_' + code,
+                    seq: seq,
+                    code: '#' + code,
+                    storeName: storeName,
+                    displayName: getFamilyCardDisplayName({ storeName, city: row[2], district: row[3], country: 'jp' }),
+                    name: storeName + ' (#' + code + ')',
+                    region: row[1],
+                    city: row[2],
+                    district: row[3],
+                    distSeq: row[4],
+                    subname: row[2] + row[3] + ' (' + row[4] + ')',
+                    lat: row[5],
+                    lon: row[6],
+                    coords: Number(row[5]).toFixed(6) + ', ' + Number(row[6]).toFixed(6),
+                    country: 'jp'
+                };
+            });
+        }
+        return familyBaseSpotListJP || [];
+    }
+
+    let familySpotList = familyActiveCountry === 'jp' && window.FAMILY_JP_RAW_DATA ? [...getFamilyBaseSpotListJP()] : [...familyBaseSpotListTW];
     let familyRegionFilter = 'all';
     let familyCityFilter = 'all';
     let familyDistrictFilter = '';
     let familyStatusFilter = 'all'; // 'all' | 'claimable' | 'cooling'
-    const familyCollapsedCities = new Set(FAMILY_CITY_ORDER); // 預設收合各縣市群組，保持頁面流暢
+    let familyCollapsedRegions = new Set(getFamilyRegionOrder()); // 預設收合各大分區
+    let familyCollapsedCities = new Set(getFamilyCityOrder()); // 預設收合各縣市群組，保持頁面流暢
+    let familyExpandedDistricts = new Set(); // 預設收疊各子分類 (行政區 / 市區町村)
     let familyLastSearch = '';
     let familyCurrentFilteredList = [];
     let familyCurrentClaimableList = [];
+
+    window.toggleFamilyRegionGroup = function(region, e) {
+        if (e && e.stopPropagation) e.stopPropagation();
+        if (familyCollapsedRegions.has(region)) {
+            familyCollapsedRegions.delete(region);
+        } else {
+            familyCollapsedRegions.add(region);
+        }
+        renderFamilyView();
+    };
+
+    window.toggleFamilyDistrictGroup = function(city, dist, e) {
+        if (e && e.stopPropagation) e.stopPropagation();
+        const key = `${city}__${dist}`;
+        if (familyExpandedDistricts.has(key)) {
+            familyExpandedDistricts.delete(key);
+        } else {
+            familyExpandedDistricts.add(key);
+        }
+        renderFamilyView();
+    };
+
+    window.switchFamilyCountry = async function(country) {
+        familyActiveCountry = country;
+        localStorage.setItem('pikmin_family_country', country);
+
+        const btnTw = document.getElementById('family-country-btn-tw');
+        const btnJp = document.getElementById('family-country-btn-jp');
+        if (btnTw && btnJp) {
+            if (country === 'jp') {
+                btnJp.style.background = '#fff';
+                btnJp.style.color = '#047857';
+                btnJp.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                btnTw.style.background = 'transparent';
+                btnTw.style.color = '#64748b';
+                btnTw.style.boxShadow = 'none';
+            } else {
+                btnTw.style.background = '#fff';
+                btnTw.style.color = '#047857';
+                btnTw.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                btnJp.style.background = 'transparent';
+                btnJp.style.color = '#64748b';
+                btnJp.style.boxShadow = 'none';
+            }
+        }
+
+        if (country === 'jp' && (!window.FAMILY_JP_RAW_DATA || !familyBaseSpotListJP)) {
+            // 動態非同步載入日本全家資料庫
+            try {
+                if (!window.FAMILY_JP_RAW_DATA) {
+                    await new Promise((resolve, reject) => {
+                        const s = document.createElement('script');
+                        s.src = 'js/family-jp-data.js?v=' + (typeof APP_VERSION !== 'undefined' ? APP_VERSION : Date.now());
+                        s.onload = resolve;
+                        s.onerror = reject;
+                        document.body.appendChild(s);
+                    });
+                }
+            } catch (err) {
+                alert('載入日本全家資料失敗，請檢查網路連線！');
+                return;
+            }
+        }
+
+        familyRegionFilter = 'all';
+        familyCityFilter = 'all';
+        familyDistrictFilter = '';
+        familyCollapsedRegions = new Set(getFamilyRegionOrder());
+        familyCollapsedCities = new Set(getFamilyCityOrder());
+        familyExpandedDistricts.clear();
+        rebuildFamilySpotList();
+        renderFamilyView();
+    };
 
     // 雲端即時增刪改覆寫層 (CoCo & 全家，免改程式碼推送即可全網同步)
     let cocoOverridesMap = JSON.parse(localStorage.getItem('pikmin_coco_overrides_map') || '{}');
     let familyOverridesMap = JSON.parse(localStorage.getItem('pikmin_family_overrides_map') || '{}');
 
     function getCollabRegionByCity(city, brand) {
+        if (brand === 'family') {
+            if (['北海道'].includes(city)) return '北海道';
+            if (['青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県'].includes(city)) return '東北';
+            if (['茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県'].includes(city)) return '關東';
+            if (['新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県'].includes(city)) return '中部';
+            if (['三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県'].includes(city)) return '近畿';
+            if (['鳥取県', '島根県', '岡山県', '広島県', '山口県'].includes(city)) return '中國';
+            if (['徳島県', '香川県', '愛媛県', '高知県'].includes(city)) return '四國';
+            if (['福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'].includes(city)) return '九州沖繩';
+        }
         if (['基隆市', '台北市', '新北市', '宜蘭縣'].includes(city)) return '北北基宜';
         if (['桃園市', '新竹市', '新竹縣', '苗栗縣'].includes(city)) return '桃竹苗';
         if (['台中市', '彰化縣', '南投縣'].includes(city)) return '中彰投';
@@ -8093,7 +8268,7 @@ function layoutWeekEvents(weekEvents) {
             if (oc.includes("'coco'") || btn.textContent.includes('CoCo聯名')) {
                 btn.innerHTML = `🧋 CoCo聯名(${cocoSpotList.length})`;
             } else if (oc.includes("'family'") || btn.textContent.includes('全家聯名')) {
-                btn.innerHTML = `🏪 全家聯名(${familySpotList.length})`;
+                btn.innerHTML = '🏪 全家聯名' + (typeof familyActiveCountry !== 'undefined' && familyActiveCountry === 'jp' ? '(日' + familySpotList.length + ')' : '(' + familySpotList.length + ')');
             }
         });
     }
@@ -8104,7 +8279,8 @@ function layoutWeekEvents(weekEvents) {
     }
 
     function rebuildFamilySpotList() {
-        familySpotList = applySpotOverrides(familyBaseSpotList, familyOverridesMap, 'family');
+        const base = familyActiveCountry === 'jp' ? getFamilyBaseSpotListJP() : familyBaseSpotListTW;
+        familySpotList = applySpotOverrides(base, familyOverridesMap, 'family');
         updateCollabTabCountBadges();
     }
 
@@ -8152,7 +8328,7 @@ function layoutWeekEvents(weekEvents) {
         const listEl = document.getElementById('so-deleted-list');
         if (!secEl || !listEl) return;
         const ovMap = brand === 'coco' ? cocoOverridesMap : familyOverridesMap;
-        const baseList = brand === 'coco' ? cocoBaseSpotList : familyBaseSpotList;
+        const baseList = brand === 'coco' ? cocoBaseSpotList : (familyActiveCountry === 'jp' ? getFamilyBaseSpotListJP() : familyBaseSpotListTW);
         const deletedIds = Object.keys(ovMap || {}).filter(id => ovMap[id] && ovMap[id].deleted);
         if (deletedIds.length === 0) {
             secEl.style.display = 'none';
@@ -8178,6 +8354,8 @@ function layoutWeekEvents(weekEvents) {
         const modal = document.getElementById('spot-override-modal');
         if (!modal) return;
 
+        const isCoco = brand === 'coco';
+
         document.getElementById('so-brand').value = brand;
         document.getElementById('so-spot-id').value = spotId || '';
 
@@ -8188,9 +8366,7 @@ function layoutWeekEvents(weekEvents) {
         const deleteBtn = document.getElementById('so-delete-btn');
         const restoreBtn = document.getElementById('so-restore-btn');
 
-        citySelect.innerHTML = FAMILY_CITY_ORDER.map(c => `<option value="${c}">${c}</option>`).join('');
-
-        const isCoco = brand === 'coco';
+        citySelect.innerHTML = (isCoco ? COCO_CITY_ORDER : getFamilyCityOrder()).map(c => `<option value="${c}">${c}</option>`).join('');
         headerEl.style.background = isCoco
             ? 'linear-gradient(135deg, #f97316 0%, #d97706 100%)'
             : 'linear-gradient(135deg, #00a040 0%, #0080c6 100%)';
@@ -8198,7 +8374,7 @@ function layoutWeekEvents(weekEvents) {
 
         const list = isCoco ? cocoSpotList : familySpotList;
         const ovMap = isCoco ? cocoOverridesMap : familyOverridesMap;
-        const baseList = isCoco ? cocoBaseSpotList : familyBaseSpotList;
+        const baseList = isCoco ? cocoBaseSpotList : (familyActiveCountry === 'jp' ? getFamilyBaseSpotListJP() : familyBaseSpotListTW);
 
         if (spotId) {
             const spot = list.find(s => s.id === spotId);
@@ -8431,6 +8607,9 @@ function layoutWeekEvents(weekEvents) {
 
     window.setFamilyRegionFilter = function(region) {
         familyRegionFilter = region || 'all';
+        if (familyRegionFilter !== 'all') {
+            familyCollapsedRegions.delete(familyRegionFilter);
+        }
         familyCityFilter = 'all';
         familyDistrictFilter = '';
         const distEl = document.getElementById('family-district-select');
@@ -8445,6 +8624,9 @@ function layoutWeekEvents(weekEvents) {
             familyCityFilter = city || 'all';
             if (familyCityFilter !== 'all') {
                 familyCollapsedCities.delete(familyCityFilter);
+                familySpotList.forEach(s => {
+                    if (s.city === familyCityFilter) familyCollapsedRegions.delete(s.region);
+                });
             }
         }
         familyDistrictFilter = '';
@@ -8457,7 +8639,10 @@ function layoutWeekEvents(weekEvents) {
         familyDistrictFilter = dist || '';
         if (familyDistrictFilter) {
             familySpotList.forEach(s => {
-                if (s.district === familyDistrictFilter) familyCollapsedCities.delete(s.city);
+                if (s.district === familyDistrictFilter) {
+                    familyCollapsedCities.delete(s.city);
+                    familyExpandedDistricts.add(`${s.city}__${s.district}`);
+                }
             });
         }
         renderFamilyView();
@@ -8479,16 +8664,22 @@ function layoutWeekEvents(weekEvents) {
 
     window.expandAllFamilyCities = function() {
         if (familyRegionFilter === 'all' && familyCityFilter === 'all' && !familyDistrictFilter && !familyLastSearch) {
-            if (!confirm('全台共有 4,541 間全家門市，一次展開全部縣市卡片較多，建議先點選「地區」或「縣市」再展開。\n確定要直接展開全部縣市嗎？')) {
+            if (!confirm('全家門市數量較多，一次展開全部大區、縣市與各子行政區卡片較多，建議先點選「地區」或「縣市」再展開。\n確定要直接展開全部嗎？')) {
                 return;
             }
         }
+        familyCollapsedRegions.clear();
         familyCollapsedCities.clear();
+        familySpotList.forEach(s => {
+            familyExpandedDistricts.add(`${s.city}__${s.district}`);
+        });
         renderFamilyView();
     };
 
     window.collapseAllFamilyCities = function() {
-        FAMILY_CITY_ORDER.forEach(c => familyCollapsedCities.add(c));
+        getFamilyRegionOrder().forEach(r => familyCollapsedRegions.add(r));
+        getFamilyCityOrder().forEach(c => familyCollapsedCities.add(c));
+        familyExpandedDistricts.clear();
         renderFamilyView();
     };
 
@@ -8627,7 +8818,7 @@ function layoutWeekEvents(weekEvents) {
         if (regionTabsEl) {
             const regCounts = {};
             const regClaimable = {};
-            FAMILY_REGION_ORDER.forEach(r => { regCounts[r] = 0; regClaimable[r] = 0; });
+            getFamilyRegionOrder().forEach(r => { regCounts[r] = 0; regClaimable[r] = 0; });
             familySpotList.forEach(s => {
                 regCounts[s.region] = (regCounts[s.region] || 0) + 1;
                 if (s._status.isClaimable) {
@@ -8641,8 +8832,8 @@ function layoutWeekEvents(weekEvents) {
                     <span style="opacity:0.85; font-size:11px;">(${familySpotList.length})</span>
                 </button>
             `;
-            FAMILY_REGION_ORDER.forEach(reg => {
-                const meta = FAMILY_REGION_META[reg] || { icon: '📍', label: reg };
+            getFamilyRegionOrder().forEach(reg => {
+                const meta = getFamilyRegionMeta()[reg] || { icon: '📍', label: reg };
                 const cnt = regCounts[reg] || 0;
                 const clm = regClaimable[reg] || 0;
                 const isAct = familyRegionFilter === reg;
@@ -8673,7 +8864,7 @@ function layoutWeekEvents(weekEvents) {
                 }
             });
 
-            const availableCities = FAMILY_CITY_ORDER.filter(c => cityCounts[c] > 0);
+            const availableCities = getFamilyCityOrder().filter(c => cityCounts[c] > 0);
             let cityHtml = `
                 <button type="button" class="family-city-pill ${familyCityFilter === 'all' ? 'active' : ''}" onclick="setFamilyCityFilter('all')">
                     <span>全部縣市 (${regionPool.length})</span>
@@ -8722,7 +8913,13 @@ function layoutWeekEvents(weekEvents) {
         const searchRaw = (document.getElementById('family-search-input')?.value || '').trim();
         if (searchRaw !== familyLastSearch) {
             familyLastSearch = searchRaw;
-            if (searchRaw) baseFiltered.forEach(s => familyCollapsedCities.delete(s.city));
+            if (searchRaw) {
+            baseFiltered.forEach(s => {
+                familyCollapsedRegions.delete(s.region);
+                familyCollapsedCities.delete(s.city);
+                familyExpandedDistricts.add(`${s.city}__${s.district}`);
+            });
+        }
         }
         let gpsCenter = null;
         if (searchRaw) {
@@ -8914,7 +9111,7 @@ function layoutWeekEvents(weekEvents) {
                 <div style="display:flex; justify-content:space-between; align-items:center; gap:4px; min-width:0;">
                     <div style="display:flex; align-items:center; gap:4px; min-width:0; overflow:hidden;">
                         <span style="font-size:11px; font-weight:800; color:#047857; background:#dcfce7; border:1px solid #86efac; padding:1px 4.5px; border-radius:4px; flex-shrink:0;">${escapeHtml(spot.code)}</span>
-                        <span style="font-size:12.5px; font-weight:900; color:${st.isNoBasin ? '#991b1b; text-decoration:line-through' : '#1e293b'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(spot.storeName)}">🏪 ${escapeHtml(spot.storeName)}</span>
+                        <span style="font-size:12.5px; font-weight:900; color:${st.isNoBasin ? '#991b1b; text-decoration:line-through' : '#1e293b'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(spot.storeName)}">🏪 ${escapeHtml(getFamilyCardDisplayName(spot))}</span>
                     </div>
                     <span style="background:#f0fdf4; color:#047857; border:1px solid #86efac; font-size:10px; font-weight:800; padding:1px 5px; border-radius:999px; white-space:nowrap; flex-shrink:0;">📍 ${escapeHtml(spot.district)}</span>
                 </div>
@@ -8950,11 +9147,13 @@ function layoutWeekEvents(weekEvents) {
             regGroups[s.region].push(s);
         });
 
-        FAMILY_REGION_ORDER.forEach(regName => {
+        getFamilyRegionOrder().forEach(regName => {
             const regItems = regGroups[regName];
             if (!regItems || regItems.length === 0) return;
 
-            const regMeta = FAMILY_REGION_META[regName] || { icon: '📍', label: regName, color: '#00a040', bg: '#dcfce7', border: '#86efac' };
+            const isRegCol = familyCollapsedRegions.has(regName) && (familyRegionFilter !== regName);
+
+            const regMeta = getFamilyRegionMeta()[regName] || { icon: '📍', label: regName, color: '#00a040', bg: '#dcfce7', border: '#86efac' };
             let regClaimableCount = 0;
             let regValidCount = 0;
             regItems.forEach(s => {
@@ -8965,8 +9164,9 @@ function layoutWeekEvents(weekEvents) {
             const regHeader = document.createElement('div');
             regHeader.style.cssText = 'grid-column: 1 / -1; margin-top: 8px; margin-bottom: 2px;';
             regHeader.innerHTML = `
-                <div style="width:100%; background:linear-gradient(90deg, ${regMeta.bg} 0%, #ffffff 100%); border:1.5px solid ${regMeta.border}; border-left:5px solid ${regMeta.color}; color:${regMeta.color}; padding:8px 11px; border-radius:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; box-sizing:border-box;">
+                <div style="width:100%; background:linear-gradient(90deg, ${regMeta.bg} 0%, #ffffff 100%); border:1.5px solid ${regMeta.border}; border-left:5px solid ${regMeta.color}; color:${regMeta.color}; padding:8px 11px; border-radius:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; box-sizing:border-box; cursor:pointer; user-select:none; transition:box-shadow 0.15s ease;" title="${isRegCol ? '點擊展開此大區' : '點擊收合此大區'}">
                     <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; min-width:0;">
+                        <span style="font-size:12px; font-weight:900; width:12px; text-align:center;">${isRegCol ? '▶' : '▼'}</span>
                         <span style="font-size:14.5px; font-weight:900; white-space:nowrap;">${regMeta.icon} ${regMeta.label}</span>
                         <span style="background:rgba(255,255,255,0.9); padding:1px 7px; border-radius:999px; font-size:11.5px; font-weight:900; border:1px solid ${regMeta.border}; white-space:nowrap;">${regValidCount}處</span>
                         ${regClaimableCount > 0
@@ -8974,7 +9174,7 @@ function layoutWeekEvents(weekEvents) {
                             : `<span style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-size:11px; font-weight:800; padding:1px 7px; border-radius:999px; white-space:nowrap;">✓ 已全領</span>`
                         }
                     </div>
-                    <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
+                    <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;" onclick="event.stopPropagation()">
                         ${regClaimableCount > 0 ? `
                             <button type="button" onclick="markFamilyGroupClaimed('region', '${regName}', '', event)" style="background:#22c55e; color:#fff; border:none; border-radius:7px; padding:4px 8px; font-size:11px; font-weight:800; cursor:pointer; white-space:nowrap;">🎁 地區全領</button>
                         ` : ''}
@@ -8982,15 +9182,17 @@ function layoutWeekEvents(weekEvents) {
                     </div>
                 </div>
             `;
+            regHeader.addEventListener('click', (e) => toggleFamilyRegionGroup(regName, e));
             container.appendChild(regHeader);
 
-            const cityMap = {};
-            regItems.forEach(s => {
-                if (!cityMap[s.city]) cityMap[s.city] = [];
-                cityMap[s.city].push(s);
-            });
+            if (!isRegCol) {
+                const cityMap = {};
+                regItems.forEach(s => {
+                    if (!cityMap[s.city]) cityMap[s.city] = [];
+                    cityMap[s.city].push(s);
+                });
 
-            FAMILY_CITY_ORDER.forEach(cityName => {
+                getFamilyCityOrder().forEach(cityName => {
                 const cItems = cityMap[cityName];
                 if (!cItems || cItems.length === 0) return;
 
@@ -9073,15 +9275,20 @@ function layoutWeekEvents(weekEvents) {
                             if (s._status.isClaimable) dClaimable++;
                         });
 
+const distKey = `${cityName}__${distName}`;
+                        const isDistExpanded = familyExpandedDistricts.has(distKey) || (familyDistrictFilter === distName);
+
                         const distDivider = document.createElement('div');
-                        distDivider.style.cssText = 'grid-column: 1 / -1; display:flex; align-items:center; justify-content:space-between; padding:7px 12px; margin:8px 0 2px; background:#f0fdf4; border-radius:8px; border-left:4px solid #00a040; border:1px solid #86efac; border-left-width:4px;';
+                        distDivider.style.cssText = 'grid-column: 1 / -1; display:flex; align-items:center; justify-content:space-between; padding:7px 12px; margin:8px 0 2px; background:#f0fdf4; border-radius:8px; border-left:4px solid #00a040; border:1px solid #86efac; border-left-width:4px; cursor:pointer; user-select:none; transition:background 0.15s ease;';
+                        distDivider.setAttribute('title', isDistExpanded ? '點擊收合此行政區' : '點擊展開此行政區門市');
                         distDivider.innerHTML = `
                             <div style="font-size:13px; font-weight:800; color:#065f46; display:flex; align-items:center; gap:6px;">
+                                <span style="display:inline-block; font-size:11px; color:#047857; width:12px; text-align:center;">${isDistExpanded ? '▼' : '▶'}</span>
                                 <span>📍 ${escapeHtml(cityName)} · ${escapeHtml(distName)}</span>
                                 <span style="background:#fff; color:#047857; border:1px solid #86efac; font-size:11px; padding:1px 7px; border-radius:999px;">${dValidCount} 處</span>
                                 ${dClaimable > 0 ? `<span style="font-size:11px; color:#15803d; font-weight:800;">(可領 ${dClaimable})</span>` : '<span style="font-size:11px; color:#0369a1;">(✓ 已領)</span>'}
                             </div>
-                            <div style="display:flex; align-items:center; gap:5px;">
+                            <div style="display:flex; align-items:center; gap:5px;" onclick="event.stopPropagation()">
                                 <button type="button" class="group-claim-btn ${dClaimable === 0 ? 'claimed' : ''}" onclick="markFamilyGroupClaimed('district', '${cityName}', '${distName}', event)" style="padding:3px 8px; font-size:11px; margin:0; min-height:0;">
                                     ${dClaimable > 0 ? '🎁 本區全領' : '✓ 已領'}
                                 </button>
@@ -9090,12 +9297,16 @@ function layoutWeekEvents(weekEvents) {
                                 </button>
                             </div>
                         `;
+                        distDivider.addEventListener('click', (e) => toggleFamilyDistrictGroup(cityName, distName, e));
                         container.appendChild(distDivider);
 
-                        dItems.forEach(s => renderSpotCard(s));
+                        if (isDistExpanded) {
+                            dItems.forEach(s => renderSpotCard(s));
+                        }
                     });
                 }
             });
+            } // end if (!isRegCol)
         });
     };
 
