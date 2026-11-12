@@ -1602,13 +1602,11 @@
         }
         .gb-cal-week-row {
             position: relative;
-            height: 114px;
-            min-height: 114px;
-            max-height: 114px;
+            min-height: 92px;
+            height: auto;
             border-bottom: 1px solid #cbd5e1;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
             box-sizing: border-box;
         }
         .gb-cal-week-row:last-child {
@@ -1634,6 +1632,22 @@
         }
         .gb-cal-day-bg:hover {
             background: #f8fafc;
+        }
+        .gb-cal-day-bg.gb-cal-long-highlight {
+            background: var(--hl-bg, #fef3c7) !important;
+            box-shadow: inset 0 3px 0 var(--hl-bar, #f59e0b);
+        }
+        .gb-cal-friday-chip {
+            margin-left: auto;
+            font-size: 9.5px;
+            font-weight: 800;
+            color: #b91c1c;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            padding: 1px 5px;
+            border-radius: 999px;
+            line-height: 1.2;
+            white-space: nowrap;
         }
         .gb-cal-day-bg.weekend-cell {
             background: #fffdfa;
@@ -1767,13 +1781,15 @@
         .gb-cal-events-track-grid {
             position: relative;
             z-index: 2;
-            margin-top: 1px;
-            padding: 1px 2px 4px;
+            margin-top: 2px;
+            padding: 2px 2px 6px;
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            row-gap: 2.5px;
+            grid-auto-rows: minmax(21px, auto);
+            row-gap: 3px;
             pointer-events: none;
-            height: 72px;
+            min-height: 58px;
+            height: auto;
             box-sizing: border-box;
         }
         /* 最頂層：今日框與選取框覆蓋層 (z-index: 6，高於色條，框線永遠完整包圍整格，不被色條切斷) */
@@ -2065,9 +2081,13 @@
                 padding: 5px 1px !important;
             }
             .gb-cal-week-row {
-                height: 98px !important;
-                min-height: 98px !important;
-                max-height: 98px !important;
+                height: auto !important;
+                min-height: 82px !important;
+                max-height: none !important;
+            }
+            .gb-cal-friday-chip {
+                padding: 0 3px !important;
+                font-size: 8.5px !important;
             }
             .gb-cal-dates-row {
                 height: 22px !important;
@@ -4114,14 +4134,14 @@
             <div id="gb-calendar-wrapper" class="gb-calendar-wrapper" style="display:none; margin-bottom:16px;">
                 <!-- 月份導航與操作列 -->
                 <div class="gb-cal-header" style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:10px 14px; border-radius:12px 12px 0 0; border:1px solid var(--border); border-bottom:none; flex-wrap:wrap; gap:8px;">
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <button type="button" class="btn-sm btn-default" onclick="changeGbCalendarMonth(-1)" style="padding:4px 9px; font-weight:bold; cursor:pointer; border-radius:6px;">◀ 上月</button>
-                        <span id="gb-cal-month-title" style="font-size:15px; font-weight:900; color:#1e293b; min-width:105px; text-align:center;">2026 年 10 月</span>
-                        <button type="button" class="btn-sm btn-default" onclick="changeGbCalendarMonth(1)" style="padding:4px 9px; font-weight:bold; cursor:pointer; border-radius:6px;">下月 ▶</button>
-                        <button type="button" class="btn-sm btn-default" onclick="jumpGbCalendarToday()" style="padding:4px 8px; font-size:11px; font-weight:bold; cursor:pointer; border-radius:6px; background:#f0fdf4; color:#16a34a; border-color:#bbf7d0;">今日</button>
+                    <div style="display:flex; align-items:center; gap:6px; flex-wrap:nowrap;">
+                        <button type="button" class="btn-sm btn-default" onclick="changeGbCalendarMonth(-1)" style="padding:4px 9px; font-weight:bold; cursor:pointer; border-radius:6px; white-space:nowrap;">◀ 上月</button>
+                        <span id="gb-cal-month-title" style="font-size:15px; font-weight:900; color:#1e293b; min-width:105px; text-align:center; white-space:nowrap;">2026 年 10 月</span>
+                        <button type="button" class="btn-sm btn-default" onclick="changeGbCalendarMonth(1)" style="padding:4px 9px; font-weight:bold; cursor:pointer; border-radius:6px; white-space:nowrap;">下月 ▶</button>
+                        <button type="button" class="btn-sm btn-default" onclick="jumpGbCalendarToday()" style="padding:4px 8px; font-size:11px; font-weight:bold; cursor:pointer; border-radius:6px; background:#f0fdf4; color:#16a34a; border-color:#bbf7d0; white-space:nowrap;">今日</button>
                     </div>
                     <div class="gb-cal-legend" style="display:flex; align-items:center; gap:8px; font-size:11px; font-weight:700; color:#64748b; flex-wrap:wrap;">
-                        <span style="display:inline-flex; align-items:center; gap:3px;"><span style="width:12px; height:3.5px; border-radius:2px; background:#f59e0b; display:inline-block;"></span>━ 長期活動彩線</span>
+                        <span style="display:inline-flex; align-items:center; gap:3px;">🚀/🏁 長期起訖</span>
                         <span style="display:inline-flex; align-items:center; gap:3px;"><span style="width:10px; height:6px; border-radius:3px; background:#3b82f6; display:inline-block;"></span>🌟 短期活動</span>
                         <span style="display:inline-flex; align-items:center; gap:3px;">🍄 巨菇日(六日)</span>
                         <span class="gb-cal-mobile-hint" style="color:#0284c7; font-size:10.5px; font-weight:800; background:#e0f2fe; padding:2px 6px; border-radius:6px; margin-left:auto;">👈 手機可左右滑動 👉</span>
@@ -5164,14 +5184,41 @@
                         </div>
                     </div>
                     <div id="post-sg-dates" style="display:none; flex-direction:column; gap:6px;">
-                        <div style="display:flex; flex-direction:row; gap:6px;">
-                            <div class="input-group" style="flex:1; margin:0;">
-                                <label style="color:#854d0e; font-size:11px; margin-bottom:2px; font-weight:700;">開始日期</label>
-                                <input type="date" id="post-sg-start" class="input-base" style="border:1px solid #facc15; background:#fff; padding:5px 8px; font-size:12px;">
+                        <div class="input-group" style="margin:0;">
+                            <label style="color:#854d0e; font-size:11px; margin-bottom:2px; font-weight:700;">開始時間 (24小時制)</label>
+                            <div style="display:flex; gap:4px; align-items:center;">
+                                <input type="hidden" id="post-sg-start">
+                                <input type="date" id="post-sg-start-date" onchange="updateSgDateTimeValue('post-sg-start')" class="input-base" style="border:1px solid #facc15; background:#fff; padding:5px 8px; font-size:12px; flex:1; min-width:0;">
+                                <select id="post-sg-start-hour" data-default="00" onchange="updateSgDateTimeValue('post-sg-start')" class="input-base sg-24h-hour" style="border:1px solid #facc15; background:#fff; padding:5px 4px; font-size:12px; width:56px; flex:0 0 auto; text-align:center;" title="時 (24小時制)"></select>
+                                <span style="color:#854d0e; font-weight:bold; font-size:12px;">:</span>
+                                <select id="post-sg-start-min" data-default="00" onchange="updateSgDateTimeValue('post-sg-start')" class="input-base sg-24h-min" style="border:1px solid #facc15; background:#fff; padding:5px 4px; font-size:12px; width:56px; flex:0 0 auto; text-align:center;" title="分"></select>
                             </div>
-                            <div class="input-group" style="flex:1; margin:0;">
-                                <label style="color:#854d0e; font-size:11px; margin-bottom:2px; font-weight:700;">結束日期</label>
-                                <input type="date" id="post-sg-end" class="input-base" style="border:1px solid #facc15; background:#fff; padding:5px 8px; font-size:12px;">
+                        </div>
+                        <div class="input-group" style="margin:0;">
+                            <label style="color:#854d0e; font-size:11px; margin-bottom:2px; font-weight:700;">結束時間 (24小時制)</label>
+                            <div style="display:flex; gap:4px; align-items:center;">
+                                <input type="hidden" id="post-sg-end">
+                                <input type="date" id="post-sg-end-date" onchange="updateSgDateTimeValue('post-sg-end')" class="input-base" style="border:1px solid #facc15; background:#fff; padding:5px 8px; font-size:12px; flex:1; min-width:0;">
+                                <select id="post-sg-end-hour" data-default="23" onchange="updateSgDateTimeValue('post-sg-end')" class="input-base sg-24h-hour" style="border:1px solid #facc15; background:#fff; padding:5px 4px; font-size:12px; width:56px; flex:0 0 auto; text-align:center;" title="時 (24小時制)"></select>
+                                <span style="color:#854d0e; font-weight:bold; font-size:12px;">:</span>
+                                <select id="post-sg-end-min" data-default="59" onchange="updateSgDateTimeValue('post-sg-end')" class="input-base sg-24h-min" style="border:1px solid #facc15; background:#fff; padding:5px 4px; font-size:12px; width:56px; flex:0 0 auto; text-align:center;" title="分"></select>
+                            </div>
+                        </div>
+                        <div class="input-group" style="margin:0;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                                <label style="color:#854d0e; font-size:11px; margin:0; font-weight:700;">每日可領時段（選填・台灣時間 24H）</label>
+                                <button type="button" onclick="clearSgDailyWindow('post-sg-daily')" style="background:#fef08a; border:1px solid #facc15; color:#854d0e; border-radius:4px; font-size:10px; padding:1px 6px; cursor:pointer; font-weight:bold; line-height:1.2;">清除(全天)</button>
+                            </div>
+                            <div style="display:flex; gap:3px; align-items:center; flex-wrap:wrap;">
+                                <input type="hidden" id="post-sg-daily-start">
+                                <select id="post-sg-daily-start-hour" data-optional="1" onchange="updateSgTimeOnlyValue('post-sg-daily-start')" class="input-base sg-24h-hour" style="border:1px solid #facc15; background:#fff; padding:4px 2px; font-size:12px; width:50px; flex:0 0 auto; text-align:center;" title="每日開放起始時 (24H)"></select>
+                                <span style="color:#854d0e; font-weight:bold; font-size:12px;">:</span>
+                                <select id="post-sg-daily-start-min" data-optional="1" onchange="updateSgTimeOnlyValue('post-sg-daily-start')" class="input-base sg-24h-min" style="border:1px solid #facc15; background:#fff; padding:4px 2px; font-size:12px; width:50px; flex:0 0 auto; text-align:center;" title="每日開放起始分"></select>
+                                <span style="color:#854d0e; font-weight:bold; font-size:12px; margin:0 3px;">~</span>
+                                <input type="hidden" id="post-sg-daily-end">
+                                <select id="post-sg-daily-end-hour" data-optional="1" onchange="updateSgTimeOnlyValue('post-sg-daily-end')" class="input-base sg-24h-hour" style="border:1px solid #facc15; background:#fff; padding:4px 2px; font-size:12px; width:50px; flex:0 0 auto; text-align:center;" title="每日開放結束時 (24H)"></select>
+                                <span style="color:#854d0e; font-weight:bold; font-size:12px;">:</span>
+                                <select id="post-sg-daily-end-min" data-optional="1" onchange="updateSgTimeOnlyValue('post-sg-daily-end')" class="input-base sg-24h-min" style="border:1px solid #facc15; background:#fff; padding:4px 2px; font-size:12px; width:50px; flex:0 0 auto; text-align:center;" title="每日開放結束分"></select>
                             </div>
                         </div>
                     </div>
@@ -5596,14 +5643,41 @@
                         </div>
                     </div>
                     <div id="edit-post-sg-dates" style="display:none; flex-direction:column; gap:6px;">
-                        <div style="display:flex; flex-direction:row; gap:6px;">
-                            <div class="input-group" style="flex:1; margin:0;">
-                                <label style="color:#854d0e; font-size:11px; margin-bottom:2px; font-weight:700;">開始日期</label>
-                                <input type="date" id="edit-post-sg-start" class="input-base" style="border:1px solid #facc15; background:#fff; padding:5px 8px; font-size:12px;">
+                        <div class="input-group" style="margin:0;">
+                            <label style="color:#854d0e; font-size:11px; margin-bottom:2px; font-weight:700;">開始時間 (24小時制)</label>
+                            <div style="display:flex; gap:4px; align-items:center;">
+                                <input type="hidden" id="edit-post-sg-start">
+                                <input type="date" id="edit-post-sg-start-date" onchange="updateSgDateTimeValue('edit-post-sg-start')" class="input-base" style="border:1px solid #facc15; background:#fff; padding:5px 8px; font-size:12px; flex:1; min-width:0;">
+                                <select id="edit-post-sg-start-hour" data-default="00" onchange="updateSgDateTimeValue('edit-post-sg-start')" class="input-base sg-24h-hour" style="border:1px solid #facc15; background:#fff; padding:5px 4px; font-size:12px; width:56px; flex:0 0 auto; text-align:center;" title="時 (24小時制)"></select>
+                                <span style="color:#854d0e; font-weight:bold; font-size:12px;">:</span>
+                                <select id="edit-post-sg-start-min" data-default="00" onchange="updateSgDateTimeValue('edit-post-sg-start')" class="input-base sg-24h-min" style="border:1px solid #facc15; background:#fff; padding:5px 4px; font-size:12px; width:56px; flex:0 0 auto; text-align:center;" title="分"></select>
                             </div>
-                            <div class="input-group" style="flex:1; margin:0;">
-                                <label style="color:#854d0e; font-size:11px; margin-bottom:2px; font-weight:700;">結束日期</label>
-                                <input type="date" id="edit-post-sg-end" class="input-base" style="border:1px solid #facc15; background:#fff; padding:5px 8px; font-size:12px;">
+                        </div>
+                        <div class="input-group" style="margin:0;">
+                            <label style="color:#854d0e; font-size:11px; margin-bottom:2px; font-weight:700;">結束時間 (24小時制)</label>
+                            <div style="display:flex; gap:4px; align-items:center;">
+                                <input type="hidden" id="edit-post-sg-end">
+                                <input type="date" id="edit-post-sg-end-date" onchange="updateSgDateTimeValue('edit-post-sg-end')" class="input-base" style="border:1px solid #facc15; background:#fff; padding:5px 8px; font-size:12px; flex:1; min-width:0;">
+                                <select id="edit-post-sg-end-hour" data-default="23" onchange="updateSgDateTimeValue('edit-post-sg-end')" class="input-base sg-24h-hour" style="border:1px solid #facc15; background:#fff; padding:5px 4px; font-size:12px; width:56px; flex:0 0 auto; text-align:center;" title="時 (24小時制)"></select>
+                                <span style="color:#854d0e; font-weight:bold; font-size:12px;">:</span>
+                                <select id="edit-post-sg-end-min" data-default="59" onchange="updateSgDateTimeValue('edit-post-sg-end')" class="input-base sg-24h-min" style="border:1px solid #facc15; background:#fff; padding:5px 4px; font-size:12px; width:56px; flex:0 0 auto; text-align:center;" title="分"></select>
+                            </div>
+                        </div>
+                        <div class="input-group" style="margin:0;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                                <label style="color:#854d0e; font-size:11px; margin:0; font-weight:700;">每日可領時段（選填・台灣時間 24H）</label>
+                                <button type="button" onclick="clearSgDailyWindow('edit-post-sg-daily')" style="background:#fef08a; border:1px solid #facc15; color:#854d0e; border-radius:4px; font-size:10px; padding:1px 6px; cursor:pointer; font-weight:bold; line-height:1.2;">清除(全天)</button>
+                            </div>
+                            <div style="display:flex; gap:3px; align-items:center; flex-wrap:wrap;">
+                                <input type="hidden" id="edit-post-sg-daily-start">
+                                <select id="edit-post-sg-daily-start-hour" data-optional="1" onchange="updateSgTimeOnlyValue('edit-post-sg-daily-start')" class="input-base sg-24h-hour" style="border:1px solid #facc15; background:#fff; padding:4px 2px; font-size:12px; width:50px; flex:0 0 auto; text-align:center;" title="每日開放起始時 (24H)"></select>
+                                <span style="color:#854d0e; font-weight:bold; font-size:12px;">:</span>
+                                <select id="edit-post-sg-daily-start-min" data-optional="1" onchange="updateSgTimeOnlyValue('edit-post-sg-daily-start')" class="input-base sg-24h-min" style="border:1px solid #facc15; background:#fff; padding:4px 2px; font-size:12px; width:50px; flex:0 0 auto; text-align:center;" title="每日開放起始分"></select>
+                                <span style="color:#854d0e; font-weight:bold; font-size:12px; margin:0 3px;">~</span>
+                                <input type="hidden" id="edit-post-sg-daily-end">
+                                <select id="edit-post-sg-daily-end-hour" data-optional="1" onchange="updateSgTimeOnlyValue('edit-post-sg-daily-end')" class="input-base sg-24h-hour" style="border:1px solid #facc15; background:#fff; padding:4px 2px; font-size:12px; width:50px; flex:0 0 auto; text-align:center;" title="每日開放結束時 (24H)"></select>
+                                <span style="color:#854d0e; font-weight:bold; font-size:12px;">:</span>
+                                <select id="edit-post-sg-daily-end-min" data-optional="1" onchange="updateSgTimeOnlyValue('edit-post-sg-daily-end')" class="input-base sg-24h-min" style="border:1px solid #facc15; background:#fff; padding:4px 2px; font-size:12px; width:50px; flex:0 0 auto; text-align:center;" title="每日開放結束分"></select>
                             </div>
                         </div>
                     </div>
@@ -5916,9 +5990,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script src="js/family-data.js?v=202611101705"></script>
-    <script>const APP_VERSION = "2026.11.10.1705";</script>
-    <script src="js/main.js?v=202611101705"></script>
+    <script src="js/family-data.js?v=202611130425"></script>
+    <script>const APP_VERSION = "2026.11.13.0425";</script>
+    <script src="js/main.js?v=202611130425"></script>
     <script src="js/autofill.js?v=1793651958949"></script>
 </body>
 </html>

@@ -112,6 +112,15 @@
         return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); 
     }
 
+    function linkifyHtml(str) {
+        const escaped = escapeHtml(str).replace(/\n/g, '<br>');
+        return escaped.replace(/(https?:\/\/[^\s<>"']+)/g, (rawUrl) => {
+            const cleaned = rawUrl.replace(/[.,;:!?)]+$/, '');
+            const trailing = rawUrl.slice(cleaned.length);
+            return `<a href="${cleaned}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:#0284c7; text-decoration:underline; word-break:break-all;">${cleaned}</a>${trailing}`;
+        });
+    }
+
     var mapInstance = null;
     var routePolyline = null;
     var routeCoordinates = [];
@@ -2484,6 +2493,126 @@
         el.value = `${y}-${m}-${d}`;
     }
 
+    function initSg24hTimeSelects() {
+        document.querySelectorAll('.sg-24h-hour').forEach(sel => {
+            if (sel.options.length > 0) return;
+            if (sel.dataset.optional === '1') {
+                const emptyOpt = document.createElement('option');
+                emptyOpt.value = '';
+                emptyOpt.textContent = '--';
+                sel.appendChild(emptyOpt);
+            }
+            for (let h = 0; h < 24; h++) {
+                const val = String(h).padStart(2, '0');
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = val;
+                sel.appendChild(opt);
+            }
+            sel.value = sel.dataset.optional === '1' ? '' : (sel.dataset.default || '00');
+        });
+        document.querySelectorAll('.sg-24h-min').forEach(sel => {
+            if (sel.options.length > 0) return;
+            if (sel.dataset.optional === '1') {
+                const emptyOpt = document.createElement('option');
+                emptyOpt.value = '';
+                emptyOpt.textContent = '--';
+                sel.appendChild(emptyOpt);
+            }
+            for (let m = 0; m < 60; m++) {
+                const val = String(m).padStart(2, '0');
+                const opt = document.createElement('option');
+                opt.value = val;
+                opt.textContent = val;
+                sel.appendChild(opt);
+            }
+            sel.value = sel.dataset.optional === '1' ? '' : (sel.dataset.default || '00');
+        });
+    }
+
+    function updateSgTimeOnlyValue(baseId) {
+        const hiddenEl = document.getElementById(baseId);
+        const hourEl = document.getElementById(baseId + '-hour');
+        const minEl = document.getElementById(baseId + '-min');
+        if (!hiddenEl || !hourEl || !minEl) return;
+        if (hourEl.value && !minEl.value) minEl.value = '00';
+        if (!hourEl.value || !minEl.value) {
+            hiddenEl.value = '';
+            return;
+        }
+        hiddenEl.value = `${hourEl.value}:${minEl.value}`;
+    }
+
+    function syncSgTimeOnlyUI(baseId) {
+        initSg24hTimeSelects();
+        const hiddenEl = document.getElementById(baseId);
+        const hourEl = document.getElementById(baseId + '-hour');
+        const minEl = document.getElementById(baseId + '-min');
+        if (!hiddenEl || !hourEl || !minEl) return;
+        const val = (hiddenEl.value || '').trim();
+        if (!val || !val.includes(':')) {
+            hourEl.value = '';
+            minEl.value = '';
+            return;
+        }
+        const [hh, mm] = val.split(':');
+        hourEl.value = hh.padStart(2, '0');
+        minEl.value = mm.slice(0, 2).padStart(2, '0');
+    }
+
+    window.clearSgDailyWindow = function(prefix) {
+        ['-start', '-end'].forEach(suffix => {
+            const h = document.getElementById(prefix + suffix);
+            if (h) h.value = '';
+            syncSgTimeOnlyUI(prefix + suffix);
+        });
+    };
+
+    function updateSgDateTimeValue(baseId) {
+        const hiddenEl = document.getElementById(baseId);
+        const dateEl = document.getElementById(baseId + '-date');
+        const hourEl = document.getElementById(baseId + '-hour');
+        const minEl = document.getElementById(baseId + '-min');
+        if (!hiddenEl || !dateEl) return;
+        if (!dateEl.value) {
+            hiddenEl.value = '';
+            return;
+        }
+        const hh = (hourEl && hourEl.value) ? hourEl.value : (hourEl?.dataset?.default || '00');
+        const mm = (minEl && minEl.value) ? minEl.value : (minEl?.dataset?.default || '00');
+        hiddenEl.value = `${dateEl.value}T${hh}:${mm}`;
+    }
+
+    function syncSgDateTimeUI(baseId) {
+        initSg24hTimeSelects();
+        const hiddenEl = document.getElementById(baseId);
+        const dateEl = document.getElementById(baseId + '-date');
+        const hourEl = document.getElementById(baseId + '-hour');
+        const minEl = document.getElementById(baseId + '-min');
+        if (!hiddenEl || !dateEl || !hourEl || !minEl) return;
+        const val = hiddenEl.value || '';
+        if (!val) {
+            dateEl.value = '';
+            hourEl.value = hourEl.dataset.default || '00';
+            minEl.value = minEl.dataset.default || '00';
+            return;
+        }
+        dateEl.value = val.slice(0, 10);
+        if (val.includes('T') && val.length >= 16) {
+            hourEl.value = val.slice(11, 13);
+            minEl.value = val.slice(14, 16);
+        } else {
+            hourEl.value = hourEl.dataset.default || '00';
+            minEl.value = minEl.dataset.default || '00';
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSg24hTimeSelects);
+    } else {
+        initSg24hTimeSelects();
+    }
+
 
     dbRef('user_profiles').on('value', (snapshot) => {
         userProfiles = snapshot.val() || {};
@@ -2545,6 +2674,8 @@
                     sgType: cloudData[key].sgType || '常駐',
                     sgStart: cloudData[key].sgStart || null,
                     sgEnd: cloudData[key].sgEnd || null,
+                    sgDailyStart: cloudData[key].sgDailyStart || null,
+                    sgDailyEnd: cloudData[key].sgDailyEnd || null,
                     sgActivity: cloudData[key].sgActivity || "",
                     sgSubActivity: cloudData[key].sgSubActivity || "",
                     sgCooldown: cloudData[key].sgCooldown || "",
@@ -3142,7 +3273,7 @@
                 <div class="lm-nav-card-header">${headerBadges}</div>
                 <div class="lm-nav-body">
                     <div class="lm-nav-title">📍 ${location || '(未填地點)'}</div>
-                    ${item.note ? `<div class="lm-nav-note">${escapeHtml(item.note)}</div>` : ''}
+                    ${item.note ? `<div class="lm-nav-note">${linkifyHtml(item.note)}</div>` : ''}
                     ${partnerHtml}
                 </div>
                 <div class="lm-nav-actions">
@@ -4744,6 +4875,8 @@
                 if (pushData.sgType === '期間') {
                     pushData.sgStart = document.getElementById('post-sg-start').value || '';
                     pushData.sgEnd = document.getElementById('post-sg-end').value || '';
+                    pushData.sgDailyStart = document.getElementById('post-sg-daily-start').value || '';
+                    pushData.sgDailyEnd = document.getElementById('post-sg-daily-end').value || '';
                 }
                 // 常駐與期間皆可設定幾天可領取
                 const cdEl = document.getElementById('post-sg-cooldown');
@@ -4955,13 +5088,21 @@
                 if (subEl) subEl.value = item.sgSubActivity || '';
                 if (item.sgType === '期間') {
                     document.getElementById('edit-post-sg-dates').style.display = 'flex';
-                    document.getElementById('edit-post-sg-start').value = item.sgStart || '';
-                    document.getElementById('edit-post-sg-end').value = item.sgEnd || '';
+                    document.getElementById('edit-post-sg-start').value = item.sgStart ? (item.sgStart.includes('T') ? item.sgStart.slice(0, 16) : item.sgStart + 'T00:00') : '';
+                    document.getElementById('edit-post-sg-end').value = item.sgEnd ? (item.sgEnd.includes('T') ? item.sgEnd.slice(0, 16) : item.sgEnd + 'T23:59') : '';
+                    document.getElementById('edit-post-sg-daily-start').value = item.sgDailyStart || '';
+                    document.getElementById('edit-post-sg-daily-end').value = item.sgDailyEnd || '';
                 } else {
                     document.getElementById('edit-post-sg-dates').style.display = 'none';
                     document.getElementById('edit-post-sg-start').value = '';
                     document.getElementById('edit-post-sg-end').value = '';
+                    document.getElementById('edit-post-sg-daily-start').value = '';
+                    document.getElementById('edit-post-sg-daily-end').value = '';
                 }
+                syncSgDateTimeUI('edit-post-sg-start');
+                syncSgDateTimeUI('edit-post-sg-end');
+                syncSgTimeOnlyUI('edit-post-sg-daily-start');
+                syncSgTimeOnlyUI('edit-post-sg-daily-end');
                 // 常駐與期間皆可設定幾天可領取：若 sgCooldown 不在預設選項中，選「自訂」並填入數字
                 (function() {
                     const cdVal = item.sgCooldown || '';
@@ -4978,7 +5119,7 @@
                         cdCustom.value = '';
                     }
                 })();
-                document.getElementById('edit-post-sg-last').value = item.sgLast || '';
+                document.getElementById('edit-post-sg-last').value = item.sgLast ? item.sgLast.slice(0, 10) : '';
             } else {
                 document.getElementById('edit-post-sg-fields').style.display = 'none';
             }
@@ -5177,9 +5318,13 @@
                 if (updates.sgType === '期間') {
                     updates.sgStart = document.getElementById('edit-post-sg-start').value || '';
                     updates.sgEnd = document.getElementById('edit-post-sg-end').value || '';
+                    updates.sgDailyStart = document.getElementById('edit-post-sg-daily-start').value || null;
+                    updates.sgDailyEnd = document.getElementById('edit-post-sg-daily-end').value || null;
                 } else {
                     updates.sgStart = null;
                     updates.sgEnd = null;
+                    updates.sgDailyStart = null;
+                    updates.sgDailyEnd = null;
                     updates.sgLast = null; // 清除舊有共享資料庫中的 sgLast
                 }
                 // 常駐與期間皆可設定幾天可領取
@@ -5212,6 +5357,8 @@
                 updates.sgSubActivity = null;
                 updates.sgStart = null;
                 updates.sgEnd = null;
+                updates.sgDailyStart = null;
+                updates.sgDailyEnd = null;
                 updates.sgCooldown = null;
                 updates.sgLast = null; // 清除舊有共享資料庫中的 sgLast
             }
@@ -5687,7 +5834,7 @@
 
     function calcSgNextDate(lastStr, cdVal) {
         if (!lastStr || !cdVal) return null;
-        const lastDate = new Date(lastStr + 'T00:00:00');
+        const lastDate = new Date(lastStr.slice(0, 10) + 'T00:00:00');
         if (isNaN(lastDate.getTime())) return null;
         if (cdVal === 'once') return new Date(8.64e15);
         if (cdVal === 'yearly_jan1') {
@@ -5717,22 +5864,57 @@
         let hasStarted = true;
         let daysUntilStart = null;
         if (item.sgType === '期間' && item.sgStart) {
-            const startDate = new Date(item.sgStart + 'T00:00:00');
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            if (startDate > today) {
+            const startNorm = item.sgStart.includes('T') ? item.sgStart : (item.sgStart + 'T00:00:00');
+            const startDate = new Date(startNorm);
+            if (!isNaN(startDate.getTime()) && nowMs < startDate.getTime()) {
                 hasStarted = false;
-                daysUntilStart = Math.ceil((startDate.getTime() - today.getTime()) / 86400000);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const startDay = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+                daysUntilStart = Math.max(0, Math.round((startDay.getTime() - today.getTime()) / 86400000));
             }
         }
         let daysLeft = null;
+        let endDate = null;
         if (item.sgType === '期間' && item.sgEnd) {
-            const endDate = new Date(item.sgEnd);
-            endDate.setHours(23, 59, 59, 999);
-            if (nowMs > endDate.getTime()) {
-                isDisc = true;
-            } else if (hasStarted) {
-                daysLeft = Math.ceil((endDate.getTime() - nowMs) / 86400000);
+            const endNorm = item.sgEnd.includes('T') ? item.sgEnd : (item.sgEnd + 'T23:59:59.999');
+            endDate = new Date(endNorm);
+            if (!isNaN(endDate.getTime())) {
+                if (nowMs > endDate.getTime()) {
+                    isDisc = true;
+                } else if (hasStarted) {
+                    daysLeft = Math.ceil((endDate.getTime() - nowMs) / 86400000);
+                }
+            }
+        }
+        let isDailyClosed = false;
+        let dailyOpenHint = '';
+        if (item.sgType === '期間' && !isDisc && hasStarted && (item.sgDailyStart || item.sgDailyEnd)) {
+            const ds = item.sgDailyStart || '00:00';
+            const de = item.sgDailyEnd || '23:59';
+            const [sh, sm] = ds.split(':').map(Number);
+            const [eh, em] = de.split(':').map(Number);
+            if (!isNaN(sh) && !isNaN(sm) && !isNaN(eh) && !isNaN(em)) {
+                const startMins = sh * 60 + sm;
+                const endMins = eh * 60 + em;
+                const nowDt = new Date(nowMs);
+                const nowMins = nowDt.getHours() * 60 + nowDt.getMinutes();
+                const isOpen = startMins <= endMins
+                    ? (nowMins >= startMins && nowMins <= endMins)
+                    : (nowMins >= startMins || nowMins <= endMins);
+                if (!isOpen) {
+                    isDailyClosed = true;
+                    if (startMins <= endMins && nowMins < startMins) {
+                        dailyOpenHint = `今日 ${ds} 開放`;
+                    } else {
+                        const nextOpen = new Date(nowDt.getFullYear(), nowDt.getMonth(), nowDt.getDate() + 1, sh, sm, 0, 0);
+                        if (endDate && !isNaN(endDate.getTime()) && nextOpen.getTime() > endDate.getTime()) {
+                            dailyOpenHint = '今日已結束';
+                        } else {
+                            dailyOpenHint = `明日 ${ds} 開放`;
+                        }
+                    }
+                }
             }
         }
         let isClaimable = false;
@@ -5742,13 +5924,13 @@
         let nextShortStr = '';
         if (cdVal && !isDisc && hasStarted) {
             if (!item.sgLast) {
-                isClaimable = true;
+                if (!isDailyClosed) isClaimable = true;
             } else {
                 nextDate = calcSgNextDate(item.sgLast, cdVal);
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
                 if (nextDate && nextDate <= today) {
-                    isClaimable = true;
+                    if (!isDailyClosed) isClaimable = true;
                 } else {
                     isCooling = true;
                     if (cdVal !== 'once' && nextDate) {
@@ -5774,11 +5956,17 @@
             (item.note || '').includes('缺') ||
             (item.user || '').includes('缺')
         );
-        return { isDisc, hasStarted, daysUntilStart, cdVal, isClaimable, isCooling, nextDate, nextStr, nextShortStr, daysLeft, hasMissing };
+        return { isDisc, hasStarted, daysUntilStart, cdVal, isClaimable, isCooling, isDailyClosed, dailyOpenHint, nextDate, nextStr, nextShortStr, daysLeft, hasMissing };
     }
 
     function getSgCountdownBadgeHtml(daysLeft, compact = false, daysUntilStart = null) {
-        if (daysUntilStart !== null && daysUntilStart > 0) {
+        if (daysUntilStart !== null && daysUntilStart >= 0) {
+            if (daysUntilStart === 0) {
+                if (compact) {
+                    return `<span class="gb-countdown-badge soon" style="font-size:10px; padding:1.5px 6px;">🔜今日開跑</span>`;
+                }
+                return `<span class="gb-countdown-badge soon">🔜 今日開跑</span>`;
+            }
             if (compact) {
                 return `<span class="gb-countdown-badge soon" style="font-size:10px; padding:1.5px 6px;">🔜${daysUntilStart}天後開跑</span>`;
             }
@@ -6124,8 +6312,8 @@
         });
 
         Object.values(actMap).forEach(act => {
-            const start = act.startDate;
-            const end = act.endDate;
+            const start = act.startDate ? act.startDate.slice(0, 10) : null;
+            const end = act.endDate ? act.endDate.slice(0, 10) : null;
             if (!start && !end) return;
             let inRange = false;
             if (start && end) {
@@ -6136,13 +6324,15 @@
                 inRange = (dateStr <= end);
             }
             if (inRange) {
+                const startDisp = act.startDate ? act.startDate.replace('T', ' ').replace(/-/g, '/') : '未定';
+                const endDisp = act.endDate ? act.endDate.replace('T', ' ').replace(/-/g, '/') : '未定';
                 events.push({
                     id: `gb_act_${act.actName}`,
                     type: 'goldbasin',
                     tagClass: 'goldbasin',
                     badgeText: `🌟 ${act.actName}`,
                     title: `🌟 期間金盆：${act.actName} (${act.count}處)`,
-                    desc: `活動期間：${start || '未定'} ～ ${end || '未定'}，此活動共有 ${act.count} 筆特殊金盆點位。`,
+                    desc: `活動期間：${startDisp} ～ ${endDisp}，此活動共有 ${act.count} 筆特殊金盆點位。`,
                     actName: act.actName,
                     count: act.count,
                     isGoldBasin: true,
@@ -6297,7 +6487,7 @@
                             <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${pal.bar}; flex-shrink:0;"></span>
                             <span style="font-size:13px; font-weight:800; color:#1e293b;">${escapeHtml(ev.title)}</span>
                         </div>
-                        ${ev.desc ? `<div style="font-size:11.5px; color:#64748b; margin-top:3px; line-height:1.4;">${escapeHtml(ev.desc)}</div>` : ''}
+                        ${ev.desc ? `<div style="font-size:11.5px; color:#64748b; margin-top:3px; line-height:1.4;">${linkifyHtml(ev.desc)}</div>` : ''}
                     </div>
                     <div style="flex-shrink:0;">${actionBtns}</div>
                 </div>
@@ -6481,8 +6671,8 @@ function layoutWeekEvents(weekEvents) {
 
             Object.values(actMap).forEach(act => {
                 if (!act.startDate && !act.endDate) return;
-                const s = act.startDate || act.endDate;
-                const e = act.endDate || act.startDate;
+                const s = (act.startDate || act.endDate).slice(0, 10);
+                const e = (act.endDate || act.startDate).slice(0, 10);
                 const palette = getEventPalette(act.actName);
                 allSpanEvents.push({
                     id: `gb_${act.actName}`,
@@ -6529,27 +6719,33 @@ function layoutWeekEvents(weekEvents) {
         const monthlyLongEvents = [];
         const gridSpanEvents = [];
 
-        if (gbCalFilters.giant) {
-            allDays.forEach(d => {
-                if (d.dateObj.getDay() === 5) {
-                    gridSpanEvents.push({
-                        id: `friday_save_mush_${d.dateStr}`,
-                        title: '⚠️ 留一次打巨菇',
-                        startDate: d.dateStr,
-                        endDate: d.dateStr,
-                        palette: { bg: '#fef2f2', text: '#b91c1c', border: '#fca5a5', bar: '#dc2626' },
-                        isFridayReminder: true
-                    });
-                }
-            });
-        }
-
         allSpanEvents.forEach(ev => {
             // 確認是否涵蓋當前檢視的月份
             if (ev.startDate <= curMonthEndStr && ev.endDate >= curMonthStartStr) {
                 const spanDays = getDaysSpan(ev.startDate, ev.endDate);
                 if (spanDays >= 14) {
                     monthlyLongEvents.push(ev);
+                    const rawName = ev.actName || ev.title.replace(/^[^\u4e00-\u9fa5A-Za-z0-9]+/, '').trim();
+                    if (ev.startDate >= allDays[0].dateStr && ev.startDate <= allDays[allDays.length - 1].dateStr) {
+                        gridSpanEvents.push({
+                            ...ev,
+                            id: `${ev.id}_start`,
+                            title: `🚀 ${rawName}`,
+                            startDate: ev.startDate,
+                            endDate: ev.startDate,
+                            isLongMilestone: true
+                        });
+                    }
+                    if (ev.endDate && ev.endDate !== ev.startDate && ev.endDate >= allDays[0].dateStr && ev.endDate <= allDays[allDays.length - 1].dateStr) {
+                        gridSpanEvents.push({
+                            ...ev,
+                            id: `${ev.id}_end`,
+                            title: `🏁 ${rawName}`,
+                            startDate: ev.endDate,
+                            endDate: ev.endDate,
+                            isLongMilestone: true
+                        });
+                    }
                 } else {
                     gridSpanEvents.push(ev);
                 }
@@ -6569,8 +6765,14 @@ function layoutWeekEvents(weekEvents) {
                         ? `viewGoldbasinActList('${escapeHtml(ev.actName).replace(/'/g, "\\'")}')`
                         : `editCustomEvent('${escapeHtml(ev.id).replace(/'/g, "\\'")}')`;
 
+                    const safeStart = escapeHtml(ev.startDate || '');
+                    const safeEnd = escapeHtml(ev.endDate || ev.startDate || '');
+                    const safeBg = escapeHtml(pal.bg || '#fef3c7');
+                    const safeBar = escapeHtml(pal.bar || '#f59e0b');
                     chipsHtml += `
                         <div class="gb-cal-ongoing-chip" style="background:${pal.bg}; color:${pal.text}; border:1px solid ${pal.border}; border-left:3.5px solid ${pal.bar};"
+                             onmouseenter="highlightGbCalRange('${safeStart}', '${safeEnd}', '${safeBg}', '${safeBar}')"
+                             onmouseleave="clearGbCalRangeHighlight()"
                              onclick="${clickAction}" title="${escapeHtml(ev.title)} (${dateDesc}) 點擊查看明細">
                             <span class="chip-name">${escapeHtml(ev.title)}</span>
                             <span class="chip-date">${dateDesc}</span>
@@ -6629,6 +6831,8 @@ function layoutWeekEvents(weekEvents) {
                 let shroomBadgeHtml = '';
                 if (isWeekend && gbCalFilters.giant) {
                     shroomBadgeHtml = `<span class="gb-cal-shroom-chip" title="週末巨菇日">🍄</span>`;
+                } else if (dayOfWeek === 5 && gbCalFilters.giant) {
+                    shroomBadgeHtml = `<span class="gb-cal-friday-chip" title="週五提醒：留一次打巨菇">⚠️留1菇</span>`;
                 }
 
                 datesRowHtml += `
@@ -6643,43 +6847,7 @@ function layoutWeekEvents(weekEvents) {
                 `;
             });
 
-            // 2. 長期全期活動：以 3.5px 彩色細線跨日呈現 (貫穿日期格，清楚標明活動起訖又不佔文字空間)
-            let linesHtml = '';
-            monthlyLongEvents.forEach((ev, evIdx) => {
-                if (ev.startDate <= wEnd && ev.endDate >= wStart) {
-                    let startCol = 1;
-                    let endCol = 7;
-                    if (ev.startDate <= wStart) {
-                        startCol = 1;
-                    } else {
-                        const idx = wDays.findIndex(d => d.dateStr === ev.startDate);
-                        startCol = idx !== -1 ? idx + 1 : 1;
-                    }
-
-                    if (ev.endDate >= wEnd) {
-                        endCol = 7;
-                    } else {
-                        const idx = wDays.findIndex(d => d.dateStr === ev.endDate);
-                        endCol = idx !== -1 ? idx + 1 : 7;
-                    }
-
-                    const pal = ev.palette;
-                    const dateDesc = `${formatShortDate(ev.startDate)} ~ ${formatShortDate(ev.endDate)}`;
-                    const clickAction = ev.isGoldBasin
-                        ? `viewGoldbasinActList('${escapeHtml(ev.actName).replace(/'/g, "\\'")}')`
-                        : `editCustomEvent('${escapeHtml(ev.id).replace(/'/g, "\\'")}')`;
-
-                    const lineColor = pal.bar || pal.border;
-                    const hasStartDot = ev.startDate >= wStart;
-                    const hasEndDot = ev.endDate <= wEnd;
-                    linesHtml += `
-                        <div class="gb-cal-span-line ${hasStartDot ? 'has-start-dot' : ''} ${hasEndDot ? 'has-end-dot' : ''}"
-                             style="grid-column:${startCol} / ${endCol + 1}; grid-row:${evIdx + 1}; background:${lineColor}; --line-color:${lineColor};"
-                             onclick="${clickAction}"
-                             title="${escapeHtml(ev.title)} (${dateDesc}) · 點擊查看明細"></div>
-                    `;
-                }
-            });
+            // 2. 長期全期活動改於起訖日標記（🚀/🏁）＋ 頂部膠囊 Hover 高亮區間，不再每週畫多條彩線
 
             // 3. 本週內的跨日事件條分配 (僅處理短期特殊活動)
             const weekSegments = [];
@@ -6717,8 +6885,8 @@ function layoutWeekEvents(weekEvents) {
             // 安排無碰撞的 Track 樓層
             layoutWeekEvents(weekSegments);
 
-            // 限制最多顯示 2 列橫條，超出第 3 列以上的活動自動統計為「+N 更多」
-            const MAX_VISIBLE_ROWS = 2;
+            // 限制最多顯示 3 列橫條，超出第 4 列以上的活動自動統計為「+N 更多」
+            const MAX_VISIBLE_ROWS = 3;
             const visibleSegments = [];
             const overflowCounts = [0, 0, 0, 0, 0, 0, 0, 0]; // 1-indexed (col 1 ~ 7)
 
@@ -6762,7 +6930,7 @@ function layoutWeekEvents(weekEvents) {
                 if (overflowCounts[c] > 0) {
                     const targetDateStr = wDays[c - 1].dateStr;
                     barsHtml += `
-                        <div class="gb-cal-more-badge" style="grid-column:${c}; grid-row:3;"
+                        <div class="gb-cal-more-badge" style="grid-column:${c}; grid-row:4;"
                              onclick="selectGbCalDate('${targetDateStr}')"
                              title="當日尚有 ${overflowCounts[c]} 個活動，點擊查看完整清單">
                             +${overflowCounts[c]} 更多...
@@ -6775,7 +6943,6 @@ function layoutWeekEvents(weekEvents) {
                 <div class="gb-cal-week-row">
                     <div class="gb-cal-day-bg-grid">${bgCellsHtml}</div>
                     <div class="gb-cal-dates-row">${datesRowHtml}</div>
-                    <div class="gb-cal-lines-track-grid">${linesHtml}</div>
                     <div class="gb-cal-events-track-grid">${barsHtml}</div>
                     <div class="gb-cal-frames-grid">${framesHtml}</div>
                 </div>
@@ -6789,6 +6956,26 @@ function layoutWeekEvents(weekEvents) {
             selectGbCalDate(gbCalSelectedDateStr);
         }
     }
+
+    window.highlightGbCalRange = function(startStr, endStr, bgCol, barCol) {
+        if (!startStr && !endStr) return;
+        const s = startStr || endStr;
+        const e = endStr || startStr;
+        document.querySelectorAll('#gb-calendar-weeks .gb-cal-day-bg').forEach(el => {
+            const d = el.dataset.date;
+            if (d && d >= s && d <= e) {
+                el.style.setProperty('--hl-bg', bgCol || '#fef3c7');
+                el.style.setProperty('--hl-bar', barCol || '#f59e0b');
+                el.classList.add('gb-cal-long-highlight');
+            }
+        });
+    };
+
+    window.clearGbCalRangeHighlight = function() {
+        document.querySelectorAll('#gb-calendar-weeks .gb-cal-day-bg.gb-cal-long-highlight').forEach(el => {
+            el.classList.remove('gb-cal-long-highlight');
+        });
+    };
 
     window.openCustomEventModal = function(defaultDate = '', eventObj = null) {
         const modal = document.getElementById('custom-event-modal');
@@ -7001,7 +7188,7 @@ function layoutWeekEvents(weekEvents) {
                             <span style="font-size:11px; color:#059669; font-weight:800; background:#ecfdf5; border:1px solid #a7f3d0; padding:2px 6px; border-radius:6px;">共 ${ev.count} 處點位</span>
                         </div>
                         <div style="font-size:13.5px; font-weight:800; color:#1e293b; margin-top:5px;">${escapeHtml(ev.actName)}</div>
-                        <div style="font-size:12px; color:#64748b; margin-top:3px; line-height:1.45;">${escapeHtml(ev.desc)}</div>
+                        <div style="font-size:12px; color:#64748b; margin-top:3px; line-height:1.45;">${linkifyHtml(ev.desc)}</div>
                         <div style="margin-top:8px; display:flex; justify-content:flex-end; gap:6px;">
                             ${ev.isCocoSpecial
                                 ? `<button type="button" onclick="closeTodayNoticeModal(); switchTab('coco');" style="background:${pal.bg}; color:${pal.text}; border:1.5px solid ${pal.border}; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:800; cursor:pointer;">🧋 前往 CoCo 聯名專頁 (346處)</button>`
@@ -7036,7 +7223,7 @@ function layoutWeekEvents(weekEvents) {
                             <span style="font-size:11px; color:#64748b;">${ev.startDate === ev.endDate ? ev.startDate : `${ev.startDate} ~ ${ev.endDate}`}</span>
                         </div>
                         <div style="font-size:13.5px; font-weight:800; color:#1e293b; margin-top:5px;">${escapeHtml(ev.title)}</div>
-                        ${ev.desc ? `<div style="font-size:12px; color:#64748b; margin-top:3px; line-height:1.45;">${escapeHtml(ev.desc)}</div>` : ''}
+                        ${ev.desc ? `<div style="font-size:12px; color:#64748b; margin-top:3px; line-height:1.45;">${linkifyHtml(ev.desc)}</div>` : ''}
                         <div style="margin-top:8px; display:flex; justify-content:flex-end;">
                             <button type="button" onclick="goToCalendarFromNotice()" style="background:#f8fafc; color:#334155; border:1px solid #cbd5e1; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:700; cursor:pointer;">📅 查看行事曆</button>
                         </div>
@@ -9350,6 +9537,8 @@ const distKey = `${cityName}__${distName}`;
         const sgActivityEl = document.getElementById('post-sg-activity');
         const sgStartEl = document.getElementById('post-sg-start');
         const sgEndEl = document.getElementById('post-sg-end');
+        const sgDailyStartEl = document.getElementById('post-sg-daily-start');
+        const sgDailyEndEl = document.getElementById('post-sg-daily-end');
         const cdEl = document.getElementById('post-sg-cooldown');
         const cdCustomEl = document.getElementById('post-sg-cooldown-custom');
         const countryEl = document.getElementById('post-country');
@@ -9358,6 +9547,8 @@ const distKey = `${cityName}__${distName}`;
         const sgActivity = sgActivityEl ? sgActivityEl.value.trim() : '';
         const sgStart = sgStartEl ? sgStartEl.value : '';
         const sgEnd = sgEndEl ? sgEndEl.value : '';
+        const sgDailyStart = sgDailyStartEl ? sgDailyStartEl.value : '';
+        const sgDailyEnd = sgDailyEndEl ? sgDailyEndEl.value : '';
         const sgCooldown = (cdEl && cdEl.value === 'custom') ? (cdCustomEl && cdCustomEl.value ? String(parseInt(cdCustomEl.value, 10)) : '') : (cdEl ? cdEl.value : '');
         const country = toTW((countryEl ? countryEl.value : '').trim());
 
@@ -9378,6 +9569,8 @@ const distKey = `${cityName}__${distName}`;
             if (sgType === '期間') {
                 pushData.sgStart = sgStart;
                 pushData.sgEnd = sgEnd;
+                if (sgDailyStart) pushData.sgDailyStart = sgDailyStart;
+                if (sgDailyEnd) pushData.sgDailyEnd = sgDailyEnd;
             }
             pushData.sgCooldown = sgCooldown;
             dbRef('postcards').push(pushData);
@@ -10561,16 +10754,21 @@ const distKey = `${cityName}__${distName}`;
 
             let sgDateBadge = '';
             const st = item._sgStatus || getSgItemStatus(item);
-            const s = item.sgStart || '';
-            const e = item.sgEnd || '';
-            if (item.sgType === '期間' && (s || e)) {
+            const s = item.sgStart ? item.sgStart.replace('T', ' ').replace(/-/g, '/') : '';
+            const e = item.sgEnd ? item.sgEnd.replace('T', ' ').replace(/-/g, '/') : '';
+            const ds = item.sgDailyStart || '';
+            const de = item.sgDailyEnd || '';
+            const dailySpan = (ds || de) ? `<span style="color:#0f766e;">｜⏰ 每日 ${ds || '00:00'}~${de || '23:59'}</span>` : '';
+            if (item.sgType === '期間' && (s || e || ds || de)) {
                 const cdBadge = !st.isDisc ? getSgCountdownBadgeHtml(st.daysLeft, false, st.daysUntilStart) : '';
-                sgDateBadge += `<div style="color: #6d28d9; font-size: 10px; font-weight: bold; margin-top: 4px; background: #f5f3ff; padding: 4px 6px; border-radius: 6px; border: 1px dashed #8b5cf6; display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap;"><span>📅 ${s || '未定'} ~ ${e || '未定'}</span>${cdBadge}</div>`;
+                sgDateBadge += `<div style="color: #6d28d9; font-size: 10px; font-weight: bold; margin-top: 4px; background: #f5f3ff; padding: 4px 6px; border-radius: 6px; border: 1px dashed #8b5cf6; display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap;"><span>📅 ${s || '未定'} ~ ${e || '未定'}${dailySpan}</span>${cdBadge}</div>`;
             }
 
             if (st.cdVal && !st.isDisc) {
                 if (!st.hasStarted) {
                     sgDateBadge += `<div style="color: #b45309; font-size: 11px; font-weight: bold; margin-top: 6px; background: #fef3c7; padding: 4px 8px; border-radius: 6px; border: 1px solid #fde68a; text-align: center; letter-spacing:0.5px;">⏳ 尚未開始</div>`;
+                } else if (st.isDailyClosed && !st.isCooling) {
+                    sgDateBadge += `<div style="color: #475569; font-size: 11px; font-weight: bold; margin-top: 6px; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; text-align: center;">🌙 非開放時段（${st.dailyOpenHint}）</div>`;
                 } else if (st.isClaimable) {
                     sgDateBadge += `<div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
                         <div style="flex:1; color: #15803d; font-size: 11px; font-weight: bold; background: #dcfce7; padding: 5px 6px; border-radius: 6px; border: 1px solid #86efac; text-align: center;">✅ 可領取！</div>
@@ -10875,9 +11073,12 @@ const distKey = `${cityName}__${distName}`;
                                 const metaPills = [];
                                 const firstItem = itemsList[0];
                                 if (firstItem && firstItem.sgType === '期間' && (firstItem.sgStart || firstItem.sgEnd)) {
-                                    const sStr = firstItem.sgStart ? firstItem.sgStart.substring(5).replace('-', '/') : '未定';
-                                    const eStr = firstItem.sgEnd ? firstItem.sgEnd.substring(5).replace('-', '/') : '未定';
+                                    const sStr = firstItem.sgStart ? firstItem.sgStart.substring(5).replace('-', '/').replace('T', ' ') : '未定';
+                                    const eStr = firstItem.sgEnd ? firstItem.sgEnd.substring(5).replace('-', '/').replace('T', ' ') : '未定';
                                     metaPills.push(`<span style="font-size:10px; color:#5b21b6; background:#e0e7ff; padding:1.5px 6px; border-radius:999px; font-weight:700; border:1px solid #c7d2fe; white-space:nowrap;">📅${sStr}~${eStr}</span>`);
+                                    if (firstItem.sgDailyStart || firstItem.sgDailyEnd) {
+                                        metaPills.push(`<span style="font-size:10px; color:#0f766e; background:#ccfbf1; padding:1.5px 6px; border-radius:999px; font-weight:700; border:1px solid #99f6e4; white-space:nowrap;">⏰每日 ${firstItem.sgDailyStart || '00:00'}~${firstItem.sgDailyEnd || '23:59'}</span>`);
+                                    }
                                     if (!allDiscontinued) {
                                         const cdBadge = getSgCountdownBadgeHtml(groupDaysLeft, true, groupNotStarted ? groupDaysUntilStart : null);
                                         if (cdBadge) metaPills.push(cdBadge);
@@ -10902,7 +11103,7 @@ const distKey = `${cityName}__${distName}`;
                                     if (hasClaimable) {
                                         statusNote = `<span style="color:#d97706; font-weight:800;">🎁 可拿 ${claimableCount}</span>`;
                                     } else if (groupNotStarted) {
-                                        const sShort = firstItem && firstItem.sgStart ? firstItem.sgStart.substring(5).replace('-', '/') : '';
+                                        const sShort = firstItem && firstItem.sgStart ? firstItem.sgStart.substring(5).replace('-', '/').replace('T', ' ') : '';
                                         statusNote = `<span style="color:#b45309; font-weight:800;">🔜 ${sShort ? sShort + '開跑' : '尚未開跑'}</span>`;
                                     } else if (earliestNextShortStr && isAllClaimed) {
                                         statusNote = `<span style="color:#0369a1; font-weight:700;">⏳ 下次 ${earliestNextShortStr}</span>`;
