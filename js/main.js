@@ -2304,9 +2304,12 @@
                 if (data && typeof data === 'object') {
                     try {
                         let local = JSON.parse(localStorage.getItem('pikmin_sgLast_map') || '{}');
+                        const clearedMap = window._sgLastClearedAt || {};
+                        const nowTs = Date.now();
                         let pushBack = {};
-                        // 合併：取每個 key 的較新日期
+                        // 合併：取每個 key 的較新日期（忽略剛在本機清除的項目）
                         Object.keys(data).forEach(k => {
+                            if (clearedMap[k] && (nowTs - clearedMap[k] < 10000)) return;
                             if (!local[k] || data[k] > local[k]) local[k] = data[k];
                         });
                         // 本機較新的記錄補回雲端
@@ -2315,7 +2318,11 @@
                         });
                         localStorage.setItem('pikmin_sgLast_map', JSON.stringify(local));
                         postcardList.forEach(item => {
-                            if (local[item.id] && (!item.sgLast || local[item.id] > item.sgLast)) item.sgLast = local[item.id];
+                            if (local[item.id]) {
+                                if (!item.sgLast || local[item.id] > item.sgLast) item.sgLast = local[item.id];
+                            } else if (!(clearedMap[item.id] && (nowTs - clearedMap[item.id] < 10000))) {
+                                item.sgLast = "";
+                            }
                         });
                         if (Object.keys(pushBack).length > 0) dbRef('user_sg_last/' + inputId).update(pushBack);
                         updateView();
@@ -2491,6 +2498,11 @@
         const m = String(now.getMonth() + 1).padStart(2, '0');
         const d = String(now.getDate()).padStart(2, '0');
         el.value = `${y}-${m}-${d}`;
+    }
+
+    function clearInputDate(inputId) {
+        const el = document.getElementById(inputId);
+        if (el) el.value = '';
     }
 
     function initSg24hTimeSelects() {
@@ -5336,12 +5348,15 @@
                 const editLastVal = editLastEl ? editLastEl.value.trim() : '';
                 try {
                     let personal = JSON.parse(localStorage.getItem('pikmin_sgLast_map') || '{}');
+                    window._sgLastClearedAt = window._sgLastClearedAt || {};
                     if (editLastVal) {
+                        delete window._sgLastClearedAt[currentEditingTimeId];
                         personal[currentEditingTimeId] = editLastVal;
                         if (typeof currentSyncId !== 'undefined' && currentSyncId) {
                             dbRef('user_sg_last/' + currentSyncId).update({ [currentEditingTimeId]: editLastVal });
                         }
                     } else {
+                        window._sgLastClearedAt[currentEditingTimeId] = Date.now();
                         delete personal[currentEditingTimeId];
                         if (typeof currentSyncId !== 'undefined' && currentSyncId) {
                             dbRef('user_sg_last/' + currentSyncId + '/' + currentEditingTimeId).remove();
@@ -5845,6 +5860,17 @@
             return new Date(lastDate.getFullYear(), lastDate.getMonth() + 1, lastDate.getDate());
         }
         return new Date(lastDate.getTime() + (n || 30) * 86400000);
+    }
+
+    function formatSgPeriodDisplay(val, short = false, isEnd = false) {
+        if (!val) return '';
+        let v = String(val).trim();
+        if (v.endsWith('T00:00') || (isEnd && v.endsWith('T23:59'))) {
+            v = v.slice(0, 10);
+        }
+        return short
+            ? v.substring(5).replace('-', '/').replace('T', ' ')
+            : v.replace('T', ' ').replace(/-/g, '/');
     }
 
     function formatSgCooldownLabel(cdVal, compact = false) {
@@ -10754,8 +10780,8 @@ const distKey = `${cityName}__${distName}`;
 
             let sgDateBadge = '';
             const st = item._sgStatus || getSgItemStatus(item);
-            const s = item.sgStart ? item.sgStart.replace('T', ' ').replace(/-/g, '/') : '';
-            const e = item.sgEnd ? item.sgEnd.replace('T', ' ').replace(/-/g, '/') : '';
+            const s = item.sgStart ? formatSgPeriodDisplay(item.sgStart, false, false) : '';
+            const e = item.sgEnd ? formatSgPeriodDisplay(item.sgEnd, false, true) : '';
             const ds = item.sgDailyStart || '';
             const de = item.sgDailyEnd || '';
             const dailySpan = (ds || de) ? `<span style="color:#0f766e;">｜⏰ 每日 ${ds || '00:00'}~${de || '23:59'}</span>` : '';
@@ -11073,8 +11099,8 @@ const distKey = `${cityName}__${distName}`;
                                 const metaPills = [];
                                 const firstItem = itemsList[0];
                                 if (firstItem && firstItem.sgType === '期間' && (firstItem.sgStart || firstItem.sgEnd)) {
-                                    const sStr = firstItem.sgStart ? firstItem.sgStart.substring(5).replace('-', '/').replace('T', ' ') : '未定';
-                                    const eStr = firstItem.sgEnd ? firstItem.sgEnd.substring(5).replace('-', '/').replace('T', ' ') : '未定';
+                                    const sStr = firstItem.sgStart ? formatSgPeriodDisplay(firstItem.sgStart, true, false) : '未定';
+                                    const eStr = firstItem.sgEnd ? formatSgPeriodDisplay(firstItem.sgEnd, true, true) : '未定';
                                     metaPills.push(`<span style="font-size:10px; color:#5b21b6; background:#e0e7ff; padding:1.5px 6px; border-radius:999px; font-weight:700; border:1px solid #c7d2fe; white-space:nowrap;">📅${sStr}~${eStr}</span>`);
                                     if (firstItem.sgDailyStart || firstItem.sgDailyEnd) {
                                         metaPills.push(`<span style="font-size:10px; color:#0f766e; background:#ccfbf1; padding:1.5px 6px; border-radius:999px; font-weight:700; border:1px solid #99f6e4; white-space:nowrap;">⏰每日 ${firstItem.sgDailyStart || '00:00'}~${firstItem.sgDailyEnd || '23:59'}</span>`);
@@ -11103,7 +11129,7 @@ const distKey = `${cityName}__${distName}`;
                                     if (hasClaimable) {
                                         statusNote = `<span style="color:#d97706; font-weight:800;">🎁 可拿 ${claimableCount}</span>`;
                                     } else if (groupNotStarted) {
-                                        const sShort = firstItem && firstItem.sgStart ? firstItem.sgStart.substring(5).replace('-', '/').replace('T', ' ') : '';
+                                        const sShort = firstItem && firstItem.sgStart ? formatSgPeriodDisplay(firstItem.sgStart, true, false) : '';
                                         statusNote = `<span style="color:#b45309; font-weight:800;">🔜 ${sShort ? sShort + '開跑' : '尚未開跑'}</span>`;
                                     } else if (earliestNextShortStr && isAllClaimed) {
                                         statusNote = `<span style="color:#0369a1; font-weight:700;">⏳ 下次 ${earliestNextShortStr}</span>`;
