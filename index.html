@@ -4820,37 +4820,43 @@
             <!-- 2. Bento 3 格統計與狀態快篩儀表板 -->
             <div id="coco-bento-dashboard" class="gb-bento-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom:10px;"></div>
 
-            <!-- 3. 地區分類 + 各縣市分類 + 行政區與搜尋面板 -->
+            <!-- 3. 地區分類 + 各縣市分類 + 行政區與搜尋面板 (預設收折) -->
             <div class="coco-filter-panel">
-                <!-- 第一層：依地區分類 -->
-                <div>
-                    <div style="font-size:11.5px; font-weight:800; color:#64748b; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;">
-                        <span>🌍 第一步：依地區分類篩選</span>
-                        <span id="coco-filter-summary-text" style="color:#ea580c; font-weight:800;"></span>
+                <div onclick="toggleCocoFamilyFilterPanel('coco')" style="display:flex; justify-content:space-between; align-items:center; gap:8px; cursor:pointer; user-select:none; flex-wrap:wrap;">
+                    <span style="font-size:12.5px; font-weight:800; color:#1e293b; display:inline-flex; align-items:center; gap:5px; white-space:nowrap;">
+                        <span id="coco-filter-arrow" style="font-size:10px; color:#64748b;">▶</span>
+                        <span>🔍 搜尋與分類篩選</span>
+                    </span>
+                    <span id="coco-filter-summary-text" style="font-size:11px; color:#ea580c; font-weight:800;"></span>
+                </div>
+                <div id="coco-filter-body" style="display:none; flex-direction:column; gap:8px; border-top:1px dashed #e2e8f0; padding-top:8px;">
+                    <!-- 第一層：依地區分類 -->
+                    <div>
+                        <div style="font-size:11.5px; font-weight:800; color:#64748b; margin-bottom:5px;">🌍 第一步：依地區分類篩選</div>
+                        <div id="coco-region-tabs" class="coco-region-scroll"></div>
                     </div>
-                    <div id="coco-region-tabs" class="coco-region-scroll"></div>
-                </div>
 
-                <!-- 第二層：依各縣市分類 -->
-                <div style="border-top:1px dashed #e2e8f0; padding-top:8px;">
-                    <div style="font-size:11.5px; font-weight:800; color:#64748b; margin-bottom:5px;">🏙️ 第二步：依各縣市分類篩選（點擊單看該縣市）</div>
-                    <div id="coco-city-pills" class="coco-city-scroll"></div>
-                </div>
+                    <!-- 第二層：依各縣市分類 -->
+                    <div style="border-top:1px dashed #e2e8f0; padding-top:8px;">
+                        <div style="font-size:11.5px; font-weight:800; color:#64748b; margin-bottom:5px;">🏙️ 第二步：依各縣市分類篩選（點擊單看該縣市）</div>
+                        <div id="coco-city-pills" class="coco-city-scroll"></div>
+                    </div>
 
-                <!-- 第三層：行政區下拉 + 關鍵字/GPS搜尋 + 批次動作 -->
-                <div style="border-top:1px dashed #e2e8f0; padding-top:8px; display:flex; flex-direction:column; gap:8px;">
-                    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-                        <select id="coco-district-select" class="input-base" onchange="onCocoDistrictChange(this.value)" style="padding:6px 10px; font-size:12.5px; font-weight:700; min-width:135px; flex:0 0 auto; width:auto;">
-                            <option value="">📌 全部行政區</option>
-                        </select>
-                        <div style="position:relative; flex:1; min-width:180px; display:flex; align-items:center;">
-                            <input type="text" id="coco-search-input" class="input-base" oninput="renderCocoView()" placeholder="🔍 搜尋編號(#001)、行政區，或貼上 GPS 座標依距離排序..." style="width:100%; padding:6px 28px 6px 10px; font-size:12.5px;">
-                            <button type="button" onclick="document.getElementById('coco-search-input').value=''; renderCocoView();" title="清除搜尋" style="position:absolute; right:6px; background:none; border:none; color:#94a3b8; font-size:13px; cursor:pointer;">✕</button>
+                    <!-- 第三層：行政區下拉 + 關鍵字/GPS搜尋 + 批次動作 -->
+                    <div style="border-top:1px dashed #e2e8f0; padding-top:8px; display:flex; flex-direction:column; gap:8px;">
+                        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                            <select id="coco-district-select" class="input-base" onchange="onCocoDistrictChange(this.value)" style="padding:6px 10px; font-size:12.5px; font-weight:700; min-width:135px; flex:0 0 auto; width:auto;">
+                                <option value="">📌 全部行政區</option>
+                            </select>
+                            <div style="position:relative; flex:1; min-width:180px; display:flex; align-items:center;">
+                                <input type="text" id="coco-search-input" class="input-base" oninput="renderCocoView()" placeholder="🔍 搜尋編號(#001)、行政區，或貼上 GPS 座標依距離排序..." style="width:100%; padding:6px 28px 6px 10px; font-size:12.5px;">
+                                <button type="button" onclick="document.getElementById('coco-search-input').value=''; renderCocoView();" title="清除搜尋" style="position:absolute; right:6px; background:none; border:none; color:#94a3b8; font-size:13px; cursor:pointer;">✕</button>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- 快捷工具列 -->
-                    <div id="coco-toolbar-actions" style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; justify-content:space-between;"></div>
+                        <!-- 快捷工具列 -->
+                        <div id="coco-toolbar-actions" style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; justify-content:space-between;"></div>
+                    </div>
                 </div>
             </div>
 
@@ -4894,37 +4900,43 @@
             <!-- 2. Bento 3 格統計與狀態快篩儀表板 -->
             <div id="family-bento-dashboard" class="gb-bento-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom:10px;"></div>
 
-            <!-- 3. 地區分類 + 各縣市分類 + 行政區與搜尋面板 -->
+            <!-- 3. 地區分類 + 各縣市分類 + 行政區與搜尋面板 (預設收折) -->
             <div class="coco-filter-panel">
-                <!-- 第一層：依地區分類 -->
-                <div>
-                    <div style="font-size:11.5px; font-weight:800; color:#64748b; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;">
-                        <span>🌍 第一步：依地區分類篩選</span>
-                        <span id="family-filter-summary-text" style="color:#00a040; font-weight:800;"></span>
+                <div onclick="toggleCocoFamilyFilterPanel('family')" style="display:flex; justify-content:space-between; align-items:center; gap:8px; cursor:pointer; user-select:none; flex-wrap:wrap;">
+                    <span style="font-size:12.5px; font-weight:800; color:#1e293b; display:inline-flex; align-items:center; gap:5px; white-space:nowrap;">
+                        <span id="family-filter-arrow" style="font-size:10px; color:#64748b;">▶</span>
+                        <span>🔍 搜尋與分類篩選</span>
+                    </span>
+                    <span id="family-filter-summary-text" style="font-size:11px; color:#00a040; font-weight:800;"></span>
+                </div>
+                <div id="family-filter-body" style="display:none; flex-direction:column; gap:8px; border-top:1px dashed #e2e8f0; padding-top:8px;">
+                    <!-- 第一層：依地區分類 -->
+                    <div>
+                        <div style="font-size:11.5px; font-weight:800; color:#64748b; margin-bottom:5px;">🌍 第一步：依地區分類篩選</div>
+                        <div id="family-region-tabs" class="coco-region-scroll"></div>
                     </div>
-                    <div id="family-region-tabs" class="coco-region-scroll"></div>
-                </div>
 
-                <!-- 第二層：依各縣市分類 -->
-                <div style="border-top:1px dashed #e2e8f0; padding-top:8px;">
-                    <div style="font-size:11.5px; font-weight:800; color:#64748b; margin-bottom:5px;">🏙️ 第二步：依各縣市分類篩選（點擊單看該縣市）</div>
-                    <div id="family-city-pills" class="coco-city-scroll"></div>
-                </div>
+                    <!-- 第二層：依各縣市分類 -->
+                    <div style="border-top:1px dashed #e2e8f0; padding-top:8px;">
+                        <div style="font-size:11.5px; font-weight:800; color:#64748b; margin-bottom:5px;">🏙️ 第二步：依各縣市分類篩選（點擊單看該縣市）</div>
+                        <div id="family-city-pills" class="coco-city-scroll"></div>
+                    </div>
 
-                <!-- 第三層：行政區下拉 + 關鍵字/GPS搜尋 + 批次動作 -->
-                <div style="border-top:1px dashed #e2e8f0; padding-top:8px; display:flex; flex-direction:column; gap:8px;">
-                    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-                        <select id="family-district-select" class="input-base" onchange="onFamilyDistrictChange(this.value)" style="padding:6px 10px; font-size:12.5px; font-weight:700; min-width:135px; flex:0 0 auto; width:auto;">
-                            <option value="">📌 全部行政區</option>
-                        </select>
-                        <div style="position:relative; flex:1; min-width:180px; display:flex; align-items:center;">
-                            <input type="text" id="family-search-input" class="input-base" oninput="renderFamilyView()" placeholder="🔍 搜尋門市名稱、編號(#0001)、行政區，或貼上 GPS 座標依距離排序..." style="width:100%; padding:6px 28px 6px 10px; font-size:12.5px;">
-                            <button type="button" onclick="document.getElementById('family-search-input').value=''; renderFamilyView();" title="清除搜尋" style="position:absolute; right:6px; background:none; border:none; color:#94a3b8; font-size:13px; cursor:pointer;">✕</button>
+                    <!-- 第三層：行政區下拉 + 關鍵字/GPS搜尋 + 批次動作 -->
+                    <div style="border-top:1px dashed #e2e8f0; padding-top:8px; display:flex; flex-direction:column; gap:8px;">
+                        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                            <select id="family-district-select" class="input-base" onchange="onFamilyDistrictChange(this.value)" style="padding:6px 10px; font-size:12.5px; font-weight:700; min-width:135px; flex:0 0 auto; width:auto;">
+                                <option value="">📌 全部行政區</option>
+                            </select>
+                            <div style="position:relative; flex:1; min-width:180px; display:flex; align-items:center;">
+                                <input type="text" id="family-search-input" class="input-base" oninput="renderFamilyView()" placeholder="🔍 搜尋門市名稱、編號(#0001)、行政區，或貼上 GPS 座標依距離排序..." style="width:100%; padding:6px 28px 6px 10px; font-size:12.5px;">
+                                <button type="button" onclick="document.getElementById('family-search-input').value=''; renderFamilyView();" title="清除搜尋" style="position:absolute; right:6px; background:none; border:none; color:#94a3b8; font-size:13px; cursor:pointer;">✕</button>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- 快捷工具列 -->
-                    <div id="family-toolbar-actions" style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; justify-content:space-between;"></div>
+                        <!-- 快捷工具列 -->
+                        <div id="family-toolbar-actions" style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; justify-content:space-between;"></div>
+                    </div>
                 </div>
             </div>
 
@@ -6000,9 +6012,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script src="js/family-data.js?v=202611131440"></script>
-    <script>const APP_VERSION = "2026.11.13.1440";</script>
-    <script src="js/main.js?v=202611131440"></script>
+    <script src="js/family-data.js?v=202611141950"></script>
+    <script>const APP_VERSION = "2026.11.14.1950";</script>
+    <script src="js/main.js?v=202611141950"></script>
     <script src="js/autofill.js?v=1793651958949"></script>
 </body>
 </html>

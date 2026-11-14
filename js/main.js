@@ -8988,6 +8988,15 @@ function layoutWeekEvents(weekEvents) {
         }).catch(() => alert('複製失敗，請手動複製。'));
     };
 
+    window.toggleCocoFamilyFilterPanel = function(prefix) {
+        const body = document.getElementById(prefix + '-filter-body');
+        const arrow = document.getElementById(prefix + '-filter-arrow');
+        if (!body) return;
+        const isHidden = body.style.display === 'none';
+        body.style.display = isHidden ? 'flex' : 'none';
+        if (arrow) arrow.textContent = isHidden ? '▼' : '▶';
+    };
+
     window.renderFamilyView = function() {
         const container = document.getElementById('family-list-container');
         if (!container) return;
