@@ -10442,10 +10442,12 @@ const distKey = `${cityName}__${distName}`;
             let limTotal = 0, limClaimable = 0, limMinDays = null;
             let permTotal = 0, permClaimable = 0;
             let discTotal = 0;
+            let missTotal = 0;
 
             filteredPc.forEach(item => {
                 const st = getSgItemStatus(item);
                 item._sgStatus = st;
+                if (st.hasMissing) missTotal++;
                 if (st.isDisc) {
                     discTotal++;
                 } else if (item.sgType === '期間') {
@@ -10464,36 +10466,13 @@ const distKey = `${cityName}__${distName}`;
                 const activeTotal = limTotal + permTotal;
                 const activeClaimable = limClaimable + permClaimable;
                 bentoEl.innerHTML = `
-                    <button type="button" class="gb-bento-card ${gbCategoryTab === 'all' ? 'active-all' : ''}" onclick="setGbCategoryTab('all')">
-                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                            <span style="font-size:12px; font-weight:800; opacity:0.85;">🌟 全部總覽</span>
-                            ${activeClaimable > 0 ? `<span style="background:#fef3c7; color:#b45309; border:1px solid #fcd34d; font-size:10.5px; font-weight:800; padding:1px 6px; border-radius:999px;">🎁 可領 ${activeClaimable}</span>` : ''}
-                        </div>
-                        <div style="font-size:22px; font-weight:900; line-height:1.15; margin-top:2px;">${filteredPc.length} <span style="font-size:11px; font-weight:700; opacity:0.75;">筆 (進行中 ${activeTotal})</span></div>
-                    </button>
-                    <button type="button" class="gb-bento-card ${gbCategoryTab === 'limited' ? 'active-limited' : ''}" onclick="setGbCategoryTab('limited')">
-                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                            <span style="font-size:12px; font-weight:800; color:#c2410c;">🔥 期間 (進行中)</span>
-                            ${limClaimable > 0 ? `<span style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:10.5px; font-weight:800; padding:1px 6px; border-radius:999px;">🎁 可領 ${limClaimable}</span>` : ''}
-                        </div>
-                        <div style="display:flex; align-items:baseline; gap:6px; margin-top:2px; flex-wrap:wrap;">
-                            <span style="font-size:22px; font-weight:900; color:#9a3412; line-height:1.15;">${limTotal} <span style="font-size:11px; font-weight:700;">筆</span></span>
-                            ${limMinDays !== null ? `<span style="font-size:10.5px; font-weight:800; color:${limMinDays <= 3 ? '#dc2626' : '#d97706'};">⏰ 最近剩 ${limMinDays} 天</span>` : ''}
-                        </div>
-                    </button>
-                    <button type="button" class="gb-bento-card ${gbCategoryTab === 'permanent' ? 'active-permanent' : ''}" onclick="setGbCategoryTab('permanent')">
-                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                            <span style="font-size:12px; font-weight:800; color:#0369a1;">📌 常駐金盆</span>
-                            ${permClaimable > 0 ? `<span style="background:#dcfce7; color:#15803d; border:1px solid #86efac; font-size:10.5px; font-weight:800; padding:1px 6px; border-radius:999px;">🎁 可領 ${permClaimable}</span>` : ''}
-                        </div>
-                        <div style="font-size:22px; font-weight:900; color:#0c4a6e; line-height:1.15; margin-top:2px;">${permTotal} <span style="font-size:11px; font-weight:700;">筆</span></div>
-                    </button>
-                    <button type="button" class="gb-bento-card ${gbCategoryTab === 'discontinued' ? 'active-discontinued' : ''}" onclick="setGbCategoryTab('discontinued')">
-                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                            <span style="font-size:12px; font-weight:800; color:#475569;">📦 絕版典藏</span>
-                        </div>
-                        <div style="font-size:22px; font-weight:900; color:#334155; line-height:1.15; margin-top:2px;">${discTotal} <span style="font-size:11px; font-weight:700;">筆</span></div>
-                    </button>
+                    <button type="button" class="gb-status-pill ${gbCategoryTab === 'all' ? 'active-all' : ''}" onclick="setGbCategoryTab('all')">🌟 全部 <span class="chip-count">${filteredPc.length}</span></button>
+                    <button type="button" class="gb-status-pill ${gbCategoryTab === 'limited' ? 'active-limited' : ''}" onclick="setGbCategoryTab('limited')">🔥 期間 <span class="chip-count">${limTotal}</span>${limMinDays !== null ? `<span style="font-size:10.5px; font-weight:800; opacity:0.85;"> · ⏰剩${limMinDays}天</span>` : ''}</button>
+                    <button type="button" class="gb-status-pill ${gbCategoryTab === 'permanent' ? 'active-permanent' : ''}" onclick="setGbCategoryTab('permanent')">📌 常駐 <span class="chip-count">${permTotal}</span></button>
+                    <button type="button" class="gb-status-pill ${gbCategoryTab === 'discontinued' ? 'active-discontinued' : ''}" onclick="setGbCategoryTab('discontinued')">📦 絕版 <span class="chip-count">${discTotal}</span></button>
+                    <span class="gb-chip-sep"></span>
+                    <button type="button" class="gb-status-pill ${gbStatusFilter === 'claimable' ? 'active-claimable' : ''}" onclick="setGbStatusFilter(gbStatusFilter === 'claimable' ? 'all' : 'claimable')">🎁 可領 <span class="chip-count">${activeClaimable}</span></button>
+                    ${(missTotal > 0 || gbStatusFilter === 'missing') ? `<button type="button" class="gb-status-pill ${gbStatusFilter === 'missing' ? 'active-missing' : ''}" onclick="setGbStatusFilter(gbStatusFilter === 'missing' ? 'all' : 'missing')">⚠️ 缺資料 <span class="chip-count">${missTotal}</span></button>` : ''}
                 `;
             }
 
@@ -10745,7 +10724,7 @@ const distKey = `${cityName}__${distName}`;
             return a.localeCompare(b, 'zh-TW');
         };
         
-        const renderItem = (item, currentType) => {
+        const renderItem = (item, currentType, ctx) => {
             vCount++;
             if (item.type !== '特殊金盆') {
                 pcEl.appendChild(createPostcardCardElement(item, currentType, false));
@@ -10789,51 +10768,83 @@ const distKey = `${cityName}__${distName}`;
 
             let sgDateBadge = '';
             const st = item._sgStatus || getSgItemStatus(item);
+            const isDone = !!(st.cdVal && !st.isDisc && st.hasStarted && st.isCooling && !st.isClaimable);
+            card.className += ' sg-card' + (isDone ? ' sg-done' : '');
+            const grpFirst = ctx && ctx.first;
+            const samePeriodAsGroup = !!(grpFirst
+                && (item.sgStart || '') === (grpFirst.sgStart || '')
+                && (item.sgEnd || '') === (grpFirst.sgEnd || '')
+                && (item.sgDailyStart || '') === (grpFirst.sgDailyStart || '')
+                && (item.sgDailyEnd || '') === (grpFirst.sgDailyEnd || ''));
             const s = item.sgStart ? formatSgPeriodDisplay(item.sgStart, false, false) : '';
             const e = item.sgEnd ? formatSgPeriodDisplay(item.sgEnd, false, true) : '';
             const ds = item.sgDailyStart || '';
             const de = item.sgDailyEnd || '';
-            const dailySpan = (ds || de) ? `<span style="color:#0f766e;">｜⏰ 每日 ${ds || '00:00'}~${de || '23:59'}</span>` : '';
-            if (item.sgType === '期間' && (s || e || ds || de)) {
-                const cdBadge = !st.isDisc ? getSgCountdownBadgeHtml(st.daysLeft, false, st.daysUntilStart) : '';
-                sgDateBadge += `<div style="color: #6d28d9; font-size: 10px; font-weight: bold; margin-top: 4px; background: #f5f3ff; padding: 4px 6px; border-radius: 6px; border: 1px dashed #8b5cf6; display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap;"><span>📅 ${s || '未定'} ~ ${e || '未定'}${dailySpan}</span>${cdBadge}</div>`;
+            // 同群組且期間相同時，期間資訊已顯示在群組標題，卡片內不再重複
+            if (item.sgType === '期間' && (s || e || ds || de) && !samePeriodAsGroup) {
+                const periodParts = [`📅 ${s || '未定'} ~ ${e || '未定'}`];
+                if (!st.isDisc) {
+                    if (!st.hasStarted && st.daysUntilStart !== null) {
+                        periodParts.push(st.daysUntilStart > 0 ? `${st.daysUntilStart}天後開跑` : '今日開跑');
+                    } else if (st.daysLeft !== null && st.daysLeft >= 0) {
+                        periodParts.push(`<span style="color:${st.daysLeft <= 3 ? '#dc2626' : '#475569'}; font-weight:800;">剩${st.daysLeft}天</span>`);
+                    }
+                }
+                if (ds || de) periodParts.push(`⏰ 每日 ${ds || '00:00'}~${de || '23:59'}`);
+                sgDateBadge += `<div class="sg-period-line">${periodParts.join(' · ')}</div>`;
             }
 
-            if (st.cdVal && !st.isDisc) {
+            // 單一狀態橫條（可領=綠、冷卻=灰藍、待開放=琥珀）與圖片左上角狀態角標
+            let sgStatusBar = '';
+            let sgCorner = '';
+            const sgBar = (cls, text, btnHtml) => `<div class="sg-status ${cls}"><span class="sg-status-text">${text}</span>${btnHtml || ''}</div>`;
+            if (st.isDisc) {
+                sgCorner = `<div class="sg-corner-badge disc">📦 絕版</div>`;
+            } else if (st.cdVal) {
                 if (!st.hasStarted) {
-                    sgDateBadge += `<div style="color: #b45309; font-size: 11px; font-weight: bold; margin-top: 6px; background: #fef3c7; padding: 4px 8px; border-radius: 6px; border: 1px solid #fde68a; text-align: center; letter-spacing:0.5px;">⏳ 尚未開始</div>`;
+                    sgStatusBar = sgBar('pending', '⏳ 尚未開始');
+                    sgCorner = `<div class="sg-corner-badge pending">🔜 ${st.daysUntilStart !== null ? (st.daysUntilStart > 0 ? st.daysUntilStart + '天後開跑' : '今日開跑') : '尚未開始'}</div>`;
                 } else if (st.isDailyClosed && !st.isCooling) {
-                    sgDateBadge += `<div style="color: #475569; font-size: 11px; font-weight: bold; margin-top: 6px; background: #f1f5f9; padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1; text-align: center;">🌙 非開放時段（${st.dailyOpenHint}）</div>`;
+                    sgStatusBar = sgBar('pending', `🌙 非開放時段（${st.dailyOpenHint}）`);
+                    sgCorner = `<div class="sg-corner-badge pending">🌙 非開放時段</div>`;
                 } else if (st.isClaimable) {
-                    sgDateBadge += `<div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
-                        <div style="flex:1; color: #15803d; font-size: 11px; font-weight: bold; background: #dcfce7; padding: 5px 6px; border-radius: 6px; border: 1px solid #86efac; text-align: center;">✅ 可領取！</div>
-                        <button type="button" onclick="markPostcardClaimedToday('${item.id}', event)" style="background: linear-gradient(135deg, #22c55e, #16a34a); color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 3px; white-space: nowrap;">🎁 今日領取</button>
-                    </div>`;
+                    sgStatusBar = sgBar('ok', '✅ 可領取', `<button type="button" class="sg-btn primary" onclick="markPostcardClaimedToday('${item.id}', event)">🎁 領取</button>`);
+                    sgCorner = `<div class="sg-corner-badge ok">🎁 可領</div>`;
                 } else if (st.cdVal === 'once') {
-                    sgDateBadge += `<div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
-                        <div style="flex:1; color: #64748b; font-size: 11px; font-weight: bold; background: #f1f5f9; padding: 5px 6px; border-radius: 6px; border: 1px solid #cbd5e1; text-align: center;">✓ 已領取（限領一次）</div>
-                    </div>`;
+                    sgStatusBar = sgBar('cool', '✓ 已領取（限領一次）');
+                    sgCorner = `<div class="sg-corner-badge cool">✓ 已領</div>`;
                 } else {
-                    sgDateBadge += `<div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
-                        <div style="flex:1; color: #0369a1; font-size: 11px; font-weight: bold; background: #e0f2fe; padding: 5px 6px; border-radius: 6px; border: 1px solid #bae6fd; text-align: center;">⏳ 下次：${st.nextStr}</div>
-                        <button type="button" onclick="markPostcardClaimedToday('${item.id}', event)" title="重新設定為今日已領" style="background: #f8fafc; color: #64748b; border: 1px solid #cbd5e1; padding: 5px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 3px; white-space: nowrap;">✓ 今日已領</button>
-                    </div>`;
+                    sgStatusBar = sgBar('cool', `⏳ 下次 ${st.nextShortStr || st.nextStr}`, `<button type="button" class="sg-btn ghost" onclick="markPostcardClaimedToday('${item.id}', event)" title="重新設定為今日已領">✓ 已領</button>`);
+                    sgCorner = `<div class="sg-corner-badge cool">⏳ ${st.nextShortStr || st.nextStr}</div>`;
                 }
             }
+
+            const sgCoordsEsc = escapeHtml(item.coords).replace(/'/g, "\\'");
+            const sgIconActions = `<div class="sg-icon-actions">`
+                + `<button type="button" class="sg-icon-btn" title="複製座標" onclick="copyCoords('${sgCoordsEsc}', this, true)">📍</button>`
+                + (item.coords ? `<button type="button" class="sg-icon-btn map" title="在地圖上查看" onclick="goToMapCoords('${sgCoordsEsc}')">🗺️</button>` : '')
+                + `<button type="button" class="sg-icon-btn edit" title="修改" onclick="openTimeModalById('${item.id}', 'postcard')">✏️</button>`
+                + `</div>`;
+            const sgTagBadge = (safeT && !grpFirst) ? `<span class="tag-badge">${safeT}</span>` : '';
             card.innerHTML = `
                 <div class="card-img-box" style="position:relative;">
                     ${imgHtml}
                     ${discWatermark}
-                    <div class="card-badge-type">${escapeHtml(item.type)}</div>
+                    ${sgCorner}
                     <button class="card-star-btn ${isFav?'active':'inactive'}" onclick="toggleCollectPostcard('${item.id}')">${isFav?'⭐':'✰'}</button>
                     <button class="card-fav-btn ${isPcFav?'fav-on':'fav-off'}" onclick="togglePcFav('${item.id}')">${isPcFav?'❤️':'🤍'}</button>
                 </div>
-                <div class="card-body"><div class="card-title">${escapeHtml(item.name)}</div>${item.subname ? `<div style="font-size:11px; color:#64748b; font-weight:600; margin-top:-2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(item.subname)}</div>` : ''}${timeHtml}<div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}${item.district ? ` ${escapeHtml(item.district)}` : ''}</span><div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">${providerHtml}${safeT ? `<span class="tag-badge">${safeT}</span>` : ''}${item.auth ? `<span title="${escapeHtml(item.auth)}" style="background:#f5f3ff; color:#6d28d9; border:1px solid #ddd6fe; padding:1px 5px; border-radius:5px; font-size:10px; font-weight:700; display:inline-flex; align-items:center; gap:2px; cursor:default;">🔑 ${escapeHtml(item.auth)}</span>` : ''}</div></div>
-                ${dupBadge}
-                ${distBadge}
-                ${sgDateBadge}
-                ${item.missingFields && item.missingFields.length > 0 ? `<div style="color: #ef4444; font-size: 10px; font-weight: bold; margin-top: 4px; background: #fee2e2; padding: 4px 6px; border-radius: 4px; border: 1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>` : ''}
-                <div class="card-actions" style="display:flex; gap:4px; margin-top:auto; padding-top:4px;"><button class="btn-sm btn-default" onclick="copyCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}', this)">📍 複製</button>${item.coords ? `<button class="btn-sm btn-default" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;" onclick="goToMapCoords('${escapeHtml(item.coords).replace(/'/g, "\\'")}')">🗺️ 地圖</button>` : ''}<button class="btn-sm btn-edit" style="flex:1;" onclick="openTimeModalById('${item.id}', 'postcard')">✏️ 修改</button></div></div>
+                <div class="card-body">
+                    <div class="sg-title-row"><div class="card-title">${escapeHtml(item.name)}</div>${sgIconActions}</div>
+                    ${item.subname ? `<div style="font-size:11px; color:#64748b; font-weight:600; margin-top:-2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(item.subname)}</div>` : ''}
+                    ${timeHtml}
+                    <div class="card-sub"><span>🌍 ${safeC || '未提供'}${item.city ? ` · ${escapeHtml(item.city)}` : ''}${item.district ? ` ${escapeHtml(item.district)}` : ''}</span><div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">${providerHtml}${sgTagBadge}${item.auth ? `<span title="${escapeHtml(item.auth)}" style="background:#f5f3ff; color:#6d28d9; border:1px solid #ddd6fe; padding:1px 5px; border-radius:5px; font-size:10px; font-weight:700; display:inline-flex; align-items:center; gap:2px; cursor:default;">🔑 ${escapeHtml(item.auth)}</span>` : ''}</div></div>
+                    ${dupBadge}
+                    ${distBadge}
+                    ${sgDateBadge}
+                    ${item.missingFields && item.missingFields.length > 0 ? `<div style="color: #ef4444; font-size: 10px; font-weight: bold; margin-top: 4px; background: #fee2e2; padding: 4px 6px; border-radius: 4px; border: 1px solid #f87171;">⚠️ 缺少：${item.missingFields.join('、')}</div>` : ''}
+                    ${sgStatusBar}
+                </div>
             `;
             pcEl.appendChild(card);
         };
@@ -11009,8 +11020,6 @@ const distKey = `${cityName}__${distName}`;
                         }
 
                         let topReminders = '';
-                        if (claimableTopCount > 0) topReminders += ` <span style="color:#15803d; font-size:12px; font-weight:800; background:#dcfce7; border:1px solid #86efac; padding:3px 10px; border-radius:999px;">🎁 可領 ${claimableTopCount} 筆</span>`;
-                        if (missingTopCount > 0) topReminders += ` <span style="color:#dc2626; font-size:12px; font-weight:800; background:#fef2f2; border:1px solid #fca5a5; padding:3px 10px; border-radius:999px;">⚠️ 缺 ${missingTopCount} 筆</span>`;
 
                         th.innerHTML = `
                             <div style="width:100%; background:${bannerBg}; border:1.5px solid ${borderColor}; border-left:5px solid ${darkText}; color:${darkText}; padding:9px 15px; border-radius:14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:15px; font-weight:900; box-shadow:0 2px 6px rgba(15,23,42,0.04); box-sizing:border-box;">
@@ -11047,7 +11056,20 @@ const distKey = `${cityName}__${distName}`;
                                 actMap[mainAct].subMap[subAct].push(item);
                             });
 
-                            mainActOrder.sort().forEach(mainAct => {
+                            const actRank = {};
+                            mainActOrder.forEach(m => {
+                                const list = actMap[m].totalItems;
+                                let anyClaimable = false, anyNotStarted = false, claimed = 0;
+                                list.forEach(it => {
+                                    const s = it._sgStatus || getSgItemStatus(it);
+                                    if (!s.hasStarted) anyNotStarted = true;
+                                    if (s.isClaimable) anyClaimable = true;
+                                    else if (s.isCooling || it.sgLast) claimed++;
+                                });
+                                // 可領取 → 即將開跑 → 冷卻/待處理 → 已領完
+                                actRank[m] = anyClaimable ? 0 : ((anyNotStarted && claimed < list.length) ? 1 : (claimed >= list.length ? 3 : 2));
+                            });
+                            mainActOrder.sort((a, b) => (actRank[a] - actRank[b]) || (a < b ? -1 : (a > b ? 1 : 0))).forEach(mainAct => {
                                 const actData = actMap[mainAct];
                                 const itemsList = actData.totalItems;
                                 
@@ -11105,29 +11127,27 @@ const distKey = `${cityName}__${distName}`;
                                     ah.className += ' all-claimed';
                                 }
 
-                                const metaPills = [];
+                                const metaParts = [];
                                 const firstItem = itemsList[0];
                                 if (firstItem && firstItem.sgType === '期間' && (firstItem.sgStart || firstItem.sgEnd)) {
                                     const sStr = firstItem.sgStart ? formatSgPeriodDisplay(firstItem.sgStart, true, false) : '未定';
                                     const eStr = firstItem.sgEnd ? formatSgPeriodDisplay(firstItem.sgEnd, true, true) : '未定';
-                                    metaPills.push(`<span style="font-size:10px; color:#5b21b6; background:#e0e7ff; padding:1.5px 6px; border-radius:999px; font-weight:700; border:1px solid #c7d2fe; white-space:nowrap;">📅${sStr}~${eStr}</span>`);
-                                    if (firstItem.sgDailyStart || firstItem.sgDailyEnd) {
-                                        metaPills.push(`<span style="font-size:10px; color:#0f766e; background:#ccfbf1; padding:1.5px 6px; border-radius:999px; font-weight:700; border:1px solid #99f6e4; white-space:nowrap;">⏰每日 ${firstItem.sgDailyStart || '00:00'}~${firstItem.sgDailyEnd || '23:59'}</span>`);
+                                    metaParts.push(`📅 ${sStr}~${eStr}`);
+                                    if (!allDiscontinued && !groupNotStarted && groupDaysLeft !== null && groupDaysLeft >= 0) {
+                                        metaParts.push(`<span style="color:${groupDaysLeft <= 3 ? '#dc2626' : '#475569'}; font-weight:800;">剩${groupDaysLeft}天</span>`);
                                     }
-                                    if (!allDiscontinued) {
-                                        const cdBadge = getSgCountdownBadgeHtml(groupDaysLeft, true, groupNotStarted ? groupDaysUntilStart : null);
-                                        if (cdBadge) metaPills.push(cdBadge);
+                                    if (firstItem.sgDailyStart || firstItem.sgDailyEnd) {
+                                        metaParts.push(`⏰ 每日 ${firstItem.sgDailyStart || '00:00'}~${firstItem.sgDailyEnd || '23:59'}`);
                                     }
                                 }
 
                                 if (firstItem) {
                                     const cdVal = resolveSgCooldown(firstItem);
                                     if (cdVal && !firstItem._localIsDisc) {
-                                        const cdShort = formatSgCooldownLabel(cdVal, true);
-                                        metaPills.push(`<span style="font-size:10px; color:#b45309; background:#fef3c7; padding:1.5px 6px; border-radius:999px; font-weight:700; border:1px solid #fde68a; white-space:nowrap;">⏱${cdShort}</span>`);
+                                        metaParts.push(`⏱ ${formatSgCooldownLabel(cdVal, true)}`);
                                     }
                                 }
-                                const metaPillsHtml = metaPills.length > 0 ? `<div class="sq-meta-pills">${metaPills.join('')}</div>` : '';
+                                const metaPillsHtml = metaParts.length > 0 ? `<div class="sq-meta-line">${metaParts.join(' · ')}</div>` : '';
 
                                 // 領取進度條與最早下次可領日
                                 let progressHtml = '';
@@ -11161,7 +11181,6 @@ const distKey = `${cityName}__${distName}`;
                                 }
 
                                 let subReminders = '';
-                                if (hasMissing) subReminders += ' <span style="color:#ef4444; font-size:11px; font-weight:bold; margin-left:2px;">❗缺</span>';
 
                                 const firstCdVal = firstItem ? resolveSgCooldown(firstItem) : '';
                                 const claimBtnLabel = hasClaimable
@@ -11200,7 +11219,7 @@ const distKey = `${cityName}__${distName}`;
                                     const hasRealSubgroups = subActs.length > 1 || (subActs.length === 1 && subActs[0] !== '');
 
                                     if (!hasRealSubgroups) {
-                                        itemsList.forEach(item => renderItem(item, type));
+                                        itemsList.forEach(item => renderItem(item, type, { first: itemsList[0] }));
                                     } else {
                                         subActs.forEach(subAct => {
                                             const subItems = actData.subMap[subAct];
@@ -11226,7 +11245,7 @@ const distKey = `${cityName}__${distName}`;
                                             divider.innerHTML = `${titleHtml}<div style="display:flex; align-items:center;">${subClaimBtn}${subCopyBtn}</div>`;
                                             pcEl.appendChild(divider);
                                             
-                                            subItems.forEach(item => renderItem(item, type));
+                                            subItems.forEach(item => renderItem(item, type, { first: itemsList[0] }));
                                         });
                                     }
                                 }
