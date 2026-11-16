@@ -4386,3 +4386,344 @@ body.map-tab-active #view-map {
         border-radius: 10px !important;
     }
 }
+
+/* ===== 設定分頁分區、工具捷徑與緊湊化 ===== */
+.settings-top-bar {
+    margin-bottom: 12px;
+}
+.settings-counter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+.settings-section-label {
+    font-size: 12px;
+    font-weight: 800;
+    color: #475569;
+    letter-spacing: 0.4px;
+    margin: 14px 0 8px 2px;
+}
+.settings-tools-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+.settings-tool-tile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    cursor: pointer;
+    text-align: left;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: transform 0.12s, border-color 0.15s, box-shadow 0.15s;
+}
+.settings-tool-tile:hover {
+    transform: translateY(-1px);
+    border-color: #7dd3fc;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.12);
+}
+.settings-tool-icon {
+    font-size: 22px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.settings-tool-meta {
+    flex: 1;
+    min-width: 0;
+}
+.settings-tool-name {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-main);
+}
+.settings-tool-desc {
+    font-size: 10.5px;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.settings-tool-arrow {
+    font-size: 18px;
+    color: #94a3b8;
+    font-weight: 700;
+}
+
+/* 修正各主題標題對比色 */
+.settings-card-title { color: #0369a1; }
+.settings-card-header.success .settings-card-title { color: #047857; }
+.settings-card-header.amber .settings-card-title { color: #b45309; }
+.settings-card-header.danger .settings-card-title { color: #b91c1c; }
+.settings-card-header.purple .settings-card-title { color: #6d28d9; }
+
+.settings-tz-row {
+    display: grid;
+    grid-template-columns: 1fr 1.25fr;
+    gap: 10px;
+    align-items: center;
+}
+.settings-tz-taipei {
+    text-align: center;
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    padding: 8px 6px;
+    border-radius: 10px;
+    border: 1px solid #bbf7d0;
+}
+.settings-tz-custom {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 7px 9px;
+}
+.settings-sub-details {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 6px 10px;
+}
+.settings-sub-details summary {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #475569;
+    cursor: pointer;
+    list-style: none;
+}
+.settings-sub-details summary::-webkit-details-marker {
+    display: none;
+}
+.settings-advanced-collapse {
+    margin-top: 6px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px 14px;
+}
+.settings-advanced-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    list-style: none;
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #334155;
+}
+.settings-advanced-summary::-webkit-details-marker {
+    display: none;
+}
+
+/* ===== 圖片座標擷取工具優化 ===== */
+.ocr-shell {
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-sizing: border-box;
+}
+.ocr-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.ocr-back-btn {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.ocr-dropzone {
+    background: linear-gradient(160deg, #f8fafc 0%, #f0fdf4 100%);
+    border: 2px dashed #6ee7b7;
+    border-radius: 14px;
+    padding: 18px 14px;
+    text-align: center;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s ease;
+}
+.ocr-dropzone:hover,
+.ocr-dropzone.dragover {
+    border-color: #10b981;
+    background: #ecfdf5;
+    transform: translateY(-1px);
+}
+.ocr-status-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.ocr-progress-track {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 99px;
+    overflow: hidden;
+}
+.ocr-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #0ea5e9);
+    border-radius: 99px;
+    transition: width 0.25s ease;
+}
+.ocr-panels-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+@media (min-width: 768px) {
+    .ocr-panels-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+.ocr-panel {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-sizing: border-box;
+}
+.ocr-panel-shared {
+    background: linear-gradient(160deg, #f0f9ff 0%, #f8fafc 100%);
+    border: 1.5px solid #bae6fd;
+}
+.ocr-count-pill {
+    font-size: 11px;
+    font-weight: 800;
+    background: #e2e8f0;
+    color: #334155;
+    padding: 2px 7px;
+    border-radius: 99px;
+}
+
+/* ===== 免洗號工具樣式抽離與微調 ===== */
+.cloud-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.cloud-switch-track { position: relative; width: 28px; height: 16px; border-radius: 999px; background: rgba(148,163,184,0.35); transition: background 0.2s; flex-shrink: 0; }
+.cloud-switch-track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
+.cloud-switch input:checked + .cloud-switch-track { background: #0284c7; }
+.cloud-switch input:checked + .cloud-switch-track::after { transform: translateX(12px); }
+#cloud-inviteListDetails.auto-rotate-off .invite-custom-checkbox { display: none !important; }
+#cloud-inviteListDetails.auto-rotate-on .invite-select-target-btn { display: none !important; }
+
+/* ===== 免洗號工具單欄排版與比例修正 ===== */
+.cloud-app {
+    min-height: auto !important;
+    border-radius: 18px !important;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.22);
+    max-width: 620px;
+    margin: 0 auto;
+}
+.cloud-columns-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    align-items: start;
+}
+.cloud-side-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* ===== 免洗號工具：融入全站淺色風格 ===== */
+.cloud-app {
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 4px 0 36px !important;
+    color: var(--text-main) !important;
+    max-width: 620px;
+}
+.cloud-app .log-container {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #334155 !important;
+}
+.cloud-app .info-box {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #0f172a !important;
+}
+.cloud-app .ready-toast {
+    background: #ecfdf5 !important;
+    border: 1px solid #a7f3d0 !important;
+    color: #047857 !important;
+}
+
+/* ===== 邀請人卡片淺色對比度修正 ===== */
+.cloud-app .invite-card {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04) !important;
+}
+.cloud-app .invite-card:hover {
+    background: #f1f5f9 !important;
+}
+.cloud-app .invite-card.enabled {
+    background: #f0f9ff !important;
+    border-color: #7dd3fc !important;
+    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.12) !important;
+}
+.cloud-app .invite-card.completed {
+    background: #ecfdf5 !important;
+    border-color: #a7f3d0 !important;
+}
+.cloud-app .invite-name-text,
+.cloud-app .invite-card:not(.enabled) .invite-name-text {
+    color: #0f172a !important;
+}
+.cloud-app .badge-disabled {
+    background: #e2e8f0 !important;
+    color: #475569 !important;
+    border-color: #cbd5e1 !important;
+}
+.cloud-app .badge-rotating {
+    background: #e0f2fe !important;
+    color: #0369a1 !important;
+    border-color: #7dd3fc !important;
+}
+.cloud-app .badge-done {
+    background: #d1fae5 !important;
+    color: #047857 !important;
+    border-color: #6ee7b7 !important;
+}
+.cloud-app .stepper-btn.minus {
+    background: #ffffff !important;
+    color: #475569 !important;
+    border: 1px solid #cbd5e1 !important;
+}
+.cloud-app .invite-card-row-bottom {
+    border-top-color: #e2e8f0 !important;
+}
+.cloud-app .card-action-btn {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #334155 !important;
+}
+.cloud-app .card-action-btn.btn-del {
+    background: #fef2f2 !important;
+    border-color: #fecaca !important;
+    color: #dc2626 !important;
+}

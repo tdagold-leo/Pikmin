@@ -11839,9 +11839,30 @@ const distKey = `${cityName}__${distName}`;
         }
 
         // ===== 邀請連結管理邏輯 (Firebase 公開清單 & LocalStorage 私有清單 + 自動輪替與計數) =====
+        function getInviteYearMonth() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        }
+
         function getLocalInvites() {
             try {
-                return JSON.parse(localStorage.getItem('pikmin_local_invites') || '{}');
+                const data = JSON.parse(localStorage.getItem('pikmin_local_invites') || '{}');
+                const curYM = getInviteYearMonth();
+                let changed = false;
+                Object.keys(data).forEach(k => {
+                    const it = data[k];
+                    if (!it) return;
+                    if (!it.countMonth) {
+                        it.countMonth = curYM;
+                        changed = true;
+                    } else if (it.countMonth !== curYM) {
+                        it.count = 0;
+                        it.countMonth = curYM;
+                        changed = true;
+                    }
+                });
+                if (changed) localStorage.setItem('pikmin_local_invites', JSON.stringify(data));
+                return data;
             } catch(e) { return {}; }
         }
         function setLocalInvites(data) {
@@ -11890,31 +11911,36 @@ const distKey = `${cityName}__${distName}`;
         function updateItemCount(item, delta) {
             let newCount = (item.count || 0) + delta;
             if (newCount < 0) newCount = 0;
+            const curYM = getInviteYearMonth();
             item.count = newCount; // 同步更新記憶體內的物件，讓 badge/log 立即正確
+            item.countMonth = curYM;
 
             if (item.isLocal) {
                 const data = getLocalInvites();
                 if (data[item.id]) {
                     data[item.id].count = newCount;
+                    data[item.id].countMonth = curYM;
                     setLocalInvites(data);
                     renderAllInvites();
                 }
             } else if (typeof database !== 'undefined') {
-                database.ref('shared_invites/' + item.id).update({ count: newCount });
+                database.ref('shared_invites/' + item.id).update({ count: newCount, countMonth: curYM });
             }
         }
 
         function resetItemCount(item) {
             if (confirm(`確定要將「${item.name}」的執行次數重置為 0 嗎？`)) {
+                const curYM = getInviteYearMonth();
                 if (item.isLocal) {
                     const data = getLocalInvites();
                     if (data[item.id]) {
                         data[item.id].count = 0;
+                        data[item.id].countMonth = curYM;
                         setLocalInvites(data);
                         renderAllInvites();
                     }
                 } else if (typeof database !== 'undefined') {
-                    database.ref('shared_invites/' + item.id).update({ count: 0 });
+                    database.ref('shared_invites/' + item.id).update({ count: 0, countMonth: curYM });
                 }
             }
         }
@@ -11929,16 +11955,22 @@ const distKey = `${cityName}__${distName}`;
             el.className = `invite-card ${isEnabled ? 'enabled' : ''} ${isDone ? 'completed' : ''}`;
 
             // 狀態徽章 HTML
+            const isAutoRotateOn = Boolean(autoRotateCheckbox && autoRotateCheckbox.checked);
             let badgeClass = 'badge-disabled';
-            let badgeText = `未勾選 (${count}/${target})`;
-            if (isEnabled) {
-                if (isDone) {
-                    badgeClass = 'badge-done';
-                    badgeText = `✓ 達標 (${count}/${target})`;
-                } else {
-                    badgeClass = 'badge-rotating';
-                    badgeText = `🚀 輪替中 (${count}/${target})`;
+            let badgeText = isAutoRotateOn ? `未勾選 (${count}/${target})` : `${count}/${target} 次`;
+            if (isAutoRotateOn) {
+                if (isEnabled) {
+                    if (isDone) {
+                        badgeClass = 'badge-done';
+                        badgeText = `✓ 達標 (${count}/${target})`;
+                    } else {
+                        badgeClass = 'badge-rotating';
+                        badgeText = `🚀 輪替中 (${count}/${target})`;
+                    }
                 }
+            } else if (isDone) {
+                badgeClass = 'badge-done';
+                badgeText = `✓ 達標 (${count}/${target})`;
             }
 
             const icon = item.isLocal ? '🔒 ' : '🌐 ';
@@ -12188,6 +12220,7 @@ const distKey = `${cityName}__${distName}`;
                         details.classList.add('auto-rotate-off');
                     }
                 }
+                renderAllInvites();
             });
         }
 
@@ -12309,7 +12342,26 @@ const distKey = `${cityName}__${distName}`;
         window._latestFirebaseInvites = {};
         if (typeof database !== 'undefined') {
             database.ref('shared_invites').on('value', snap => {
-                window._latestFirebaseInvites = snap.val() || {};
+                const fbData = snap.val() || {};
+                const curYM = getInviteYearMonth();
+                let autoResetCount = 0;
+                Object.keys(fbData).forEach(key => {
+                    const it = fbData[key];
+                    if (!it) return;
+                    if (!it.countMonth) {
+                        it.countMonth = curYM;
+                        database.ref('shared_invites/' + key).update({ countMonth: curYM });
+                    } else if (it.countMonth !== curYM) {
+                        it.count = 0;
+                        it.countMonth = curYM;
+                        autoResetCount++;
+                        database.ref('shared_invites/' + key).update({ count: 0, countMonth: curYM });
+                    }
+                });
+                if (autoResetCount > 0 && typeof log === 'function') {
+                    log(`📅 已跨入新月份 (${curYM})，自動歸零 ${autoResetCount} 筆邀請計數`, 'log-success');
+                }
+                window._latestFirebaseInvites = fbData;
                 renderAllInvites();
             });
         }
@@ -12380,10 +12432,10 @@ const distKey = `${cityName}__${distName}`;
             box.innerHTML = list.map((i, idx) => {
                 const d = new Date(i.time);
                 const t = (d.toLocaleDateString('zh-TW') === todayStr ? '今天 ' : d.toLocaleDateString('zh-TW') + ' ') + d.toLocaleTimeString('zh-TW', { hour12: false });
-                return `<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;background:rgba(0,0,0,0.3);border-radius:8px;padding:6px 8px;font-size:11px;">
-                    <div style="min-width:0;"><div style="font-family:monospace;color:#e2e8f0;word-break:break-all;">${i.address}</div>
-                    <div style="color:#94a3b8;">${t}${i.code ? ' ・ 驗證碼 <b style="color:#86efac;">' + i.code + '</b>' : ''}</div></div>
-                    <button type="button" data-idx="${idx}" class="cloud-mailHistoryCopy" style="flex-shrink:0;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);color:#38bdf8;font-size:10px;padding:3px 8px;border-radius:6px;cursor:pointer;">複製</button>
+                return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:7px 10px;font-size:11.5px;">
+                    <div style="min-width:0;"><div style="font-family:monospace;color:#0f172a;font-weight:700;word-break:break-all;">${i.address}</div>
+                    <div style="color:#64748b;font-size:11px;margin-top:2px;">${t}${i.code ? ' ・ 驗證碼 <b style="color:#059669;">' + i.code + '</b>' : ''}</div></div>
+                    <button type="button" data-idx="${idx}" class="cloud-mailHistoryCopy" style="flex-shrink:0;background:#e0f2fe;border:1px solid #7dd3fc;color:#0369a1;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;cursor:pointer;">複製</button>
                 </div>`;
             }).join('');
             box.querySelectorAll('.cloud-mailHistoryCopy').forEach(btn => {
@@ -13065,26 +13117,72 @@ const distKey = `${cityName}__${distName}`;
             setTimeout(() => window.initOcrToolIfNeeded(), 300);
         }
 
-        window.ocrToolUpdateSelectedCount = function() {
+        window.updateOcrCounts = function() {
+            const countLines = (el) => el && el.value ? el.value.split('\n').filter(l => l.trim()).length : 0;
+            const rc = document.getElementById('ocrtool-result-count');
+            const sc = document.getElementById('ocrtool-shared-count');
+            if (rc) rc.textContent = `${countLines(resultText)} 筆`;
+            if (sc) sc.textContent = `${countLines(sharedResultText)} 筆`;
+        };
+
+        window.ocrToolUpdateSelectedCount = function(autoStart = false) {
             const fileInput = document.getElementById('ocrtool-file-input');
             if (!statusEl) return;
             if (fileInput && fileInput.files && fileInput.files.length > 0) {
-                statusEl.innerText = `✅ 已選擇 ${fileInput.files.length} 張圖片，請點擊上方「2️⃣ 開始辨識」`;
+                statusEl.innerText = `✅ 已選擇 ${fileInput.files.length} 張圖片，準備開始辨識...`;
                 statusEl.style.color = '#059669';
+                if (autoStart) window.ocrToolStartRecognition();
             } else {
                 statusEl.innerText = '尚未選擇圖片';
                 statusEl.style.color = '#64748b';
             }
         };
 
-        window.ocrToolStartRecognition = async function() {
+        // 拖曳上傳 & Ctrl+V 貼上截圖
+        const dropzone = document.getElementById('ocrtool-dropzone');
+        if (dropzone) {
+            ['dragenter', 'dragover'].forEach(ev => dropzone.addEventListener(ev, (e) => {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            }));
+            ['dragleave', 'drop'].forEach(ev => dropzone.addEventListener(ev, (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+            }));
+            dropzone.addEventListener('drop', (e) => {
+                const files = e.dataTransfer && e.dataTransfer.files;
+                if (files && files.length > 0) window.ocrToolStartRecognition(files);
+            });
+        }
+        document.addEventListener('paste', (e) => {
+            const ocrView = document.getElementById('view-ocr');
+            if (!ocrView || !ocrView.classList.contains('active')) return;
+            const items = e.clipboardData && e.clipboardData.items;
+            if (!items) return;
+            const imgFiles = [];
+            for (const it of items) {
+                if (it.type && it.type.startsWith('image/')) {
+                    const f = it.getAsFile();
+                    if (f) imgFiles.push(f);
+                }
+            }
+            if (imgFiles.length > 0) {
+                e.preventDefault();
+                window.ocrToolStartRecognition(imgFiles);
+            }
+        });
+
+        window.ocrToolStartRecognition = async function(overrideFiles) {
             window.initOcrToolIfNeeded();
             const fileInput = document.getElementById('ocrtool-file-input');
-            if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-                alert('請先完成第 1 步：選擇圖片！');
+            const files = overrideFiles || (fileInput && fileInput.files);
+            if (!files || files.length === 0) {
+                alert('請先選擇圖片！');
                 return;
             }
-            const files = fileInput.files;
+            const track = document.getElementById('ocrtool-progress-track');
+            const bar = document.getElementById('ocrtool-progress-bar');
+            if (track && bar) { track.style.display = 'block'; bar.style.width = '5%'; }
             setLoading(true);
             statusEl.innerText = '正在載入 OCR 辨識引擎...';
             statusEl.style.color = '#059669';
@@ -13093,6 +13191,7 @@ const distKey = `${cityName}__${distName}`;
                 await ensureTesseractLoaded();
                 for (let i = 0; i < files.length; i++) {
                     statusEl.innerText = `處理中 (${i + 1}/${files.length})...`;
+                    if (bar) bar.style.width = `${Math.round(((i + 1) / files.length) * 100)}%`;
                     try {
                         await processImage(files[i]);
                     } catch (err) {
@@ -13107,12 +13206,14 @@ const distKey = `${cityName}__${distName}`;
                 } else {
                     statusEl.innerText = '✅ 全部處理完成！已自動按座標排序。';
                 }
+                window.updateOcrCounts();
             } catch (err) {
                 statusEl.innerText = '❌ ' + (err.message || '辨識失敗');
                 statusEl.style.color = '#dc2626';
             } finally {
                 setLoading(false);
-                fileInput.value = '';
+                if (fileInput) fileInput.value = '';
+                setTimeout(() => { if (track) track.style.display = 'none'; }, 1200);
             }
         };
 
@@ -13382,6 +13483,7 @@ const distKey = `${cityName}__${distName}`;
         window.ocrToolClearText = function() {
             if (!resultText || !statusEl) return;
             resultText.value = '';
+            if (typeof window.updateOcrCounts === 'function') window.updateOcrCounts();
             statusEl.innerText = '🗑️ 已清空';
             setTimeout(() => { statusEl.innerText = '尚未選擇圖片'; statusEl.style.color = '#64748b'; }, 2000);
         };

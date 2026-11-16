@@ -28,7 +28,7 @@
 
     <!-- 引入 OpenCC-js 用於簡轉繁 -->
     <script src="https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js"></script>
-    <link rel="stylesheet" href="css/style.css?v=202611170218">
+    <link rel="stylesheet" href="css/style.css?v=202611170305">
     <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
 </head>
 <body>
@@ -300,277 +300,301 @@
         </section>
         <section id="view-settings" class="view-section">
             <!-- 瀏覽次數資訊列 -->
-            <div style="display:flex; align-items:center; gap:8px; padding:8px 12px; background:var(--card-bg); border:1px solid var(--border); border-radius:12px; margin-bottom:14px; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
-                <span style="font-size:16px;">👁️</span>
-                <div id="view-counter-text" style="font-size:13px; color:var(--text-main); font-weight:600;">雲端總瀏覽次數：0 次</div>
+            <div class="settings-top-bar">
+                <div class="settings-counter-pill">
+                    <span style="font-size:15px;">👁️</span>
+                    <div id="view-counter-text" style="font-size:12.5px; color:var(--text-main); font-weight:700;">雲端總瀏覽次數：0 次</div>
+                </div>
             </div>
+
+            <!-- 🧰 實用工具快捷區 -->
+            <div class="settings-section-label">🧰 實用工具</div>
+            <div class="settings-tools-row">
+                <button type="button" class="settings-tool-tile" onclick="switchTab('cloud')">
+                    <span class="settings-tool-icon">🤖</span>
+                    <div class="settings-tool-meta">
+                        <div class="settings-tool-name">免洗號工具</div>
+                        <div class="settings-tool-desc">臨時信箱與驗證碼</div>
+                    </div>
+                    <span class="settings-tool-arrow">›</span>
+                </button>
+                <button type="button" class="settings-tool-tile" onclick="switchTab('ocr')">
+                    <span class="settings-tool-icon">🖼️</span>
+                    <div class="settings-tool-meta">
+                        <div class="settings-tool-name">圖片座標擷取</div>
+                        <div class="settings-tool-desc">截圖辨識經緯度</div>
+                    </div>
+                    <span class="settings-tool-arrow">›</span>
+                </button>
+            </div>
+
+            <!-- 👤 帳號與同步 -->
+            <div class="settings-section-label">👤 帳號與同步</div>
             <div class="settings-grid">
-
-            <!-- 個人資料設定 -->
-            <div class="settings-card">
-                <div class="settings-card-header" style="background:#f0f9ff; color:#0284c7; border-bottom:1px solid #e0f2fe;">
-                    <span class="settings-card-icon">👤</span>
-                    <div>
-                        <div class="settings-card-title">玩家個人資料</div>
-                        <div class="settings-card-subtitle">設定你的專屬名稱與頭像</div>
-                    </div>
-                </div>
-                <div class="settings-card-body">
-                    <div class="mush-profile-row" style="background:transparent; border:none; padding:0; margin-bottom:10px;">
-                        <div class="mush-profile-avatar-wrap">
-                            <div id="profile-avatar-preview" class="mush-avatar-circle"
-                                 onclick="document.getElementById('profile-avatar-upload').click()" title="點擊上傳個人圖像">圖像</div>
-                            <div id="profile-avatar-clear" onclick="clearProfileAvatar(event)"
-                                 style="display:none; position:absolute; top:-3px; right:-3px; background:#ef4444; color:white; border-radius:50%; width:17px; height:17px; font-size:10px; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.25);">✕</div>
-                        </div>
-                        <input type="file" id="profile-avatar-upload" accept="image/*" style="display:none;" onchange="handleProfileAvatarUpload(event)">
-                        <input type="text" id="profile-name-input" class="input-base mush-profile-name"
-                               placeholder="設定專屬名稱…" oninput="saveProfileName()">
-                    </div>
-                    
-                    <div class="input-group" style="margin-bottom:0;">
-                        <label>巨菇版面顯示方式</label>
-                        <select id="mushroom-group-logic" class="input-base mush-group-select"
-                                onchange="saveMushroomViewPref(); updateView();" style="width:100%;">
-                            <option value="grouped" selected>📂 分群顯示 (依照國家/城市分類)</option>
-                            <option value="flat">📄 平鋪顯示 (不分類直接列出)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 同步設定（最上面） -->
-            <div class="settings-card sync-card">
-                <div class="settings-card-header success">
-                    <span class="settings-card-icon">☁️</span>
-                    <div>
-                        <div class="settings-card-title">跨裝置收藏同步</div>
-                        <div class="settings-card-subtitle">輸入相同代號即可同步</div>
-                    </div>
-                </div>
-                <div class="settings-card-body">
-                    <label style="font-size:12px; color:#64748b; font-weight:600;">綁定同步代號</label>
-                    <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
-                        <input type="text" id="sync-user-id" class="input-base" placeholder="例如：Leo..." onchange="applySyncId()" style="flex:1;">
-                        <span id="sync-status" class="sync-status">未啟用</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 時區設定 -->
-            <div class="settings-card">
-                <div class="settings-card-header amber">
-                    <span class="settings-card-icon">⏰</span>
-                    <div>
-                        <div class="settings-card-title">時區與系統時間</div>
-                        <div class="settings-card-subtitle">可選擇一個其他國家時間對照</div>
-                    </div>
-                </div>
-                <div class="settings-card-body">
-                    <div style="text-align:center; margin-bottom:14px; background:linear-gradient(135deg,#f0fdf4,#dcfce7); padding:10px; border-radius:10px; border:1px solid #bbf7d0;">
-                        <div style="font-size:11px; color:#64748b; font-weight:bold; margin-bottom:2px;">🇹🇼 台北標準時間</div>
-                        <div id="clock-taipei" style="font-size:28px; font-weight:900; color:#15803d; font-family:monospace; letter-spacing:2px;">00:00:00</div>
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:8px;">
-                        <label style="font-size:12px; color:#64748b; font-weight:600;">選擇對照國家/時區</label>
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <select id="tz-select-1" onchange="saveTimezonePref()" class="input-base" style="flex:1;">
-                                <option value="-11">美屬薩摩亞 (UTC-11)</option>
-                                <option value="-10">夏威夷 (UTC-10)</option>
-                                <option value="-9">阿拉斯加 (UTC-9)</option>
-                                <option value="-8">美國美西/溫哥華 (UTC-8)</option>
-                                <option value="-7">美國山區/丹佛 (UTC-7)</option>
-                                <option value="-6">美國中部/芝加哥 (UTC-6)</option>
-                                <option value="-5">美國美東/紐約 (UTC-5)</option>
-                                <option value="-4">加拿大/大西洋 (UTC-4)</option>
-                                <option value="-3">阿根廷/巴西 (UTC-3)</option>
-                                <option value="-1">亞速群島 (UTC-1)</option>
-                                <option value="0">英國倫敦/格林威治 (UTC+0)</option>
-                                <option value="1">歐陸時間/巴黎 (UTC+1)</option>
-                                <option value="2">東歐/開羅 (UTC+2)</option>
-                                <option value="3">莫斯科/杜拜 (UTC+3)</option>
-                                <option value="4">阿布達比/巴庫 (UTC+4)</option>
-                                <option value="5">巴基斯坦/馬爾地夫 (UTC+5)</option>
-                                <option value="5.5">印度/斯里蘭卡 (UTC+5:30)</option>
-                                <option value="6">孟加拉 (UTC+6)</option>
-                                <option value="7">泰國/越南/印尼 (UTC+7)</option>
-                                <option value="8">港澳/北京/新加坡 (UTC+8)</option>
-                                <option value="9" selected>日本/韓國 (UTC+9)</option>
-                                <option value="9.5">澳洲中部 (UTC+9:30)</option>
-                                <option value="10">澳洲雪梨/關島 (UTC+10)</option>
-                                <option value="11">索羅門群島 (UTC+11)</option>
-                                <option value="12">紐西蘭/斐濟 (UTC+12)</option>
-                            </select>
-                            <div class="w-time" id="clock-custom-1" style="font-size:20px; font-weight:bold; color:var(--text-main); font-family:monospace; min-width:65px; text-align:center;">00:00</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 自動清理開關 -->
-            <div class="settings-card">
-                <div class="settings-card-header danger">
-                    <span class="settings-card-icon">🗑️</span>
-                    <div>
-                        <div class="settings-card-title">巨菇自動清理</div>
-                        <div class="settings-card-subtitle">全域生效，所有裝置同步</div>
-                    </div>
-                </div>
-                <div class="settings-card-body">
-                    <div class="settings-toggle-row">
+                <!-- 個人資料設定 -->
+                <div class="settings-card">
+                    <div class="settings-card-header">
+                        <span class="settings-card-icon">👤</span>
                         <div>
-                            <div class="settings-toggle-label">啟用自動刪除</div>
-                            <div class="settings-toggle-desc">已認領過期 2 小時 / 野菇隔日凌晨 1 點</div>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="auto-delete-toggle" onchange="saveAutoDeletePref()">
-                            <span class="toggle-knob" id="auto-delete-slider"></span>
-                        </label>
-                    </div>
-                    <div id="auto-delete-status" style="margin-top:10px; font-size:11px; font-weight:bold; color:#dc2626; background:#fff1f2; border:1px solid #fecdd3; padding:6px 10px; border-radius:8px; margin-bottom:12px;">⛔ 目前已關閉自動清理</div>
-                    
-                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-size:12px; line-height:1.6; color:#475569;">
-                        <div style="font-weight:bold; color:#1e293b; margin-bottom:6px;">清理規則說明：</div>
-                        <div style="display:flex; gap:6px; margin-bottom:4px;">
-                            <span>⏰</span>
-                            <span><strong>已認領 / 有設時間</strong>：開打後 <strong>2 小時</strong>自動刪除</span>
-                        </div>
-                        <div style="display:flex; gap:6px;">
-                            <span>🌙</span>
-                            <span><strong>無人認領 (野菇)</strong>：所在國家 <strong>隔日凌晨 1 點</strong>自動刪除</span>
+                            <div class="settings-card-title">玩家個人資料</div>
+                            <div class="settings-card-subtitle">設定你的專屬名稱與頭像</div>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- 地圖 API 用量 -->
-            <div class="settings-card">
-                <div class="settings-card-header">
-                    <span class="settings-card-icon">🗺️</span>
-                    <div>
-                        <div class="settings-card-title">地圖 API 用量</div>
-                        <div class="settings-card-subtitle">每月免費配額 28,000 次</div>
-                    </div>
-                </div>
-                <div class="settings-card-body">
-                    <div class="settings-stat">
-                        <span style="font-size:13px; color:#64748b;">本月已載入</span>
-                        <span><span class="settings-stat-val" id="map-usage-count">--</span> <span style="font-size:11px; color:#94a3b8;">/ 28,000</span></span>
-                    </div>
-                    <div class="settings-progress-wrap">
-                        <div class="settings-progress-bar">
-                            <div class="settings-progress-fill" id="map-usage-bar" style="width:0%"></div>
+                    <div class="settings-card-body">
+                        <div class="mush-profile-row" style="background:transparent; border:none; padding:0; margin-bottom:10px;">
+                            <div class="mush-profile-avatar-wrap">
+                                <div id="profile-avatar-preview" class="mush-avatar-circle"
+                                     onclick="document.getElementById('profile-avatar-upload').click()" title="點擊上傳個人圖像">圖像</div>
+                                <div id="profile-avatar-clear" onclick="clearProfileAvatar(event)"
+                                     style="display:none; position:absolute; top:-3px; right:-3px; background:#ef4444; color:white; border-radius:50%; width:17px; height:17px; font-size:10px; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 1px 3px rgba(0,0,0,0.25);">✕</div>
+                            </div>
+                            <input type="file" id="profile-avatar-upload" accept="image/*" style="display:none;" onchange="handleProfileAvatarUpload(event)">
+                            <input type="text" id="profile-name-input" class="input-base mush-profile-name"
+                                   placeholder="設定專屬名稱…" oninput="saveProfileName()">
+                        </div>
+                        <div class="input-group" style="margin-bottom:0;">
+                            <label>巨菇版面顯示方式</label>
+                            <select id="mushroom-group-logic" class="input-base mush-group-select"
+                                    onchange="saveMushroomViewPref(); updateView();" style="width:100%;">
+                                <option value="grouped" selected>📂 分群顯示 (依照國家/城市分類)</option>
+                                <option value="flat">📄 平鋪顯示 (不分類直接列出)</option>
+                            </select>
                         </div>
                     </div>
-                    <div style="font-size:11px; color:#64748b;">超過額度將自動暫停載入，防止產生額外費用</div>
                 </div>
-            </div>
 
-            <!-- 圖片辨識 -->
-            <div class="settings-card">
-                <div class="settings-card-header purple">
-                    <span class="settings-card-icon">🔍</span>
-                    <div>
-                        <div class="settings-card-title">圖片辨識 API</div>
-                        <div class="settings-card-subtitle">Google Cloud Vision 自動讀取明信片文字</div>
+                <!-- 同步設定 -->
+                <div class="settings-card sync-card">
+                    <div class="settings-card-header success">
+                        <span class="settings-card-icon">☁️</span>
+                        <div>
+                            <div class="settings-card-title">跨裝置收藏同步</div>
+                            <div class="settings-card-subtitle">輸入相同代號即可同步</div>
+                        </div>
                     </div>
-                </div>
-                <div class="settings-card-body">
-                    <div class="input-group" style="margin-bottom:0;">
-                        <label>Google Cloud Vision API 金鑰</label>
-                        <input type="text" id="vision-api-key" class="input-base" placeholder="AIzaSy..." onchange="saveVisionApiKey()">
-                        <p style="font-size:11px; color:#6b7280; margin-top:4px; margin-bottom:0;">金鑰僅儲存於您的瀏覽器中，不會上傳。</p>
-                        <div id="vision-usage-display" style="margin-top:8px; font-size:12px; color:var(--text-muted); font-weight:bold;">讀取中...</div>
-                    </div>
-                </div>
-            </div>
-
-                        <!-- 免洗號工具 -->
-            <div class="settings-card">
-                <div class="settings-card-header">
-                    <span class="settings-card-icon">🤖</span>
-                    <div>
-                        <div class="settings-card-title">免洗號工具</div>
-                        <div class="settings-card-subtitle">自動產生臨時任天堂信箱並接收驗證碼</div>
-                    </div>
-                </div>
-                <div class="settings-card-body">
-                    <button class="btn-sm btn-primary btn-block" onclick="switchTab('cloud')" style="padding:10px; font-size:14px; border-radius:10px; width:100%;">🔗 前往免洗號工具</button>
-                </div>
-            </div>
-
-            <!-- 圖片座標擷取工具 -->
-            <div class="settings-card">
-                <div class="settings-card-header" style="background: linear-gradient(135deg, #e0f2fe, #bae6fd);">
-                    <span class="settings-card-icon">🖼️</span>
-                    <div>
-                        <div class="settings-card-title">圖片座標擷取工具</div>
-                        <div class="settings-card-subtitle">自動從遊戲截圖中讀取經緯度座標</div>
-                    </div>
-                </div>
-                <div class="settings-card-body">
-                    <button class="btn-sm btn-primary btn-block" onclick="switchTab('ocr')" style="padding:10px; font-size:14px; border-radius:10px; width:100%;">🔗 前往擷取工具</button>
-                </div>
-            </div>
-
-                        <!-- 今日活動彈出提醒 -->
-            <div class="settings-card">
-                <div class="settings-card-header" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border-color: #fcd34d;">
-                    <span class="settings-card-icon">📢</span>
-                    <div>
-                        <div class="settings-card-title">今日活動彈出提醒</div>
-                        <div class="settings-card-subtitle">開啟網頁時自動跳出當日進行中的活動通知</div>
-                    </div>
-                </div>
-                <div class="settings-card-body" style="gap:10px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-size:13px; font-weight:700; color:#334155;">開啟網頁時自動跳出提醒</span>
-                        <input type="checkbox" id="today-notice-enable-toggle" onchange="toggleTodayNoticeAutoPref(this.checked)" checked style="transform:scale(1.2); cursor:pointer; accent-color:#10b981;">
-                    </div>
-                    <div style="display:flex; gap:8px;">
-                        <button type="button" class="btn-sm btn-default" onclick="openTodayNoticeModal(true)" style="flex:1; padding:8px; font-size:12px; font-weight:700; border-radius:8px;">📢 立即預覽今日公告</button>
-                        <button type="button" class="btn-sm btn-default" onclick="resetTodayNoticeDismiss()" style="flex:1; padding:8px; font-size:12px; font-weight:700; border-radius:8px; color:#64748b;">🔄 重設今日不提醒狀態</button>
+                    <div class="settings-card-body">
+                        <label style="font-size:12px; color:#64748b; font-weight:600;">綁定同步代號</label>
+                        <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
+                            <input type="text" id="sync-user-id" class="input-base" placeholder="例如：Leo..." onchange="applySyncId()" style="flex:1;">
+                            <span id="sync-status" class="sync-status">未啟用</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            </div> <!-- end settings-grid -->
+            <!-- 🔔 功能與通知 -->
+            <div class="settings-section-label">🔔 功能與通知</div>
+            <div class="settings-grid">
+                <!-- 今日活動彈出提醒 -->
+                <div class="settings-card">
+                    <div class="settings-card-header amber">
+                        <span class="settings-card-icon">📢</span>
+                        <div>
+                            <div class="settings-card-title">今日活動彈出提醒</div>
+                            <div class="settings-card-subtitle">開啟網頁時自動跳出當日進行中活動</div>
+                        </div>
+                    </div>
+                    <div class="settings-card-body" style="gap:10px;">
+                        <div class="settings-toggle-row">
+                            <div>
+                                <div class="settings-toggle-label">開啟網頁時自動提醒</div>
+                                <div class="settings-toggle-desc">有進行中或今日開跑活動時彈出</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="today-notice-enable-toggle" onchange="toggleTodayNoticeAutoPref(this.checked)" checked>
+                                <span class="toggle-knob"></span>
+                            </label>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" class="btn-sm btn-default" onclick="openTodayNoticeModal(true)" style="flex:1; padding:7px 8px; font-size:12px; font-weight:700; border-radius:8px;">📢 預覽今日公告</button>
+                            <button type="button" class="btn-sm btn-default" onclick="resetTodayNoticeDismiss()" style="flex:1; padding:7px 8px; font-size:12px; font-weight:700; border-radius:8px; color:#64748b;">🔄 重設今日略過</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 自動清理開關 -->
+                <div class="settings-card">
+                    <div class="settings-card-header danger">
+                        <span class="settings-card-icon">🗑️</span>
+                        <div>
+                            <div class="settings-card-title">巨菇自動清理</div>
+                            <div class="settings-card-subtitle">全域生效，所有裝置同步</div>
+                        </div>
+                    </div>
+                    <div class="settings-card-body" style="gap:8px;">
+                        <div class="settings-toggle-row">
+                            <div>
+                                <div class="settings-toggle-label">啟用自動刪除</div>
+                                <div class="settings-toggle-desc">過期或隔日自動清理舊巨菇</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="auto-delete-toggle" onchange="saveAutoDeletePref()">
+                                <span class="toggle-knob" id="auto-delete-slider"></span>
+                            </label>
+                        </div>
+                        <div id="auto-delete-status" style="font-size:11px; font-weight:bold; color:#dc2626; background:#fff1f2; border:1px solid #fecdd3; padding:6px 10px; border-radius:8px;">⛔ 目前已關閉自動清理</div>
+                        <details class="settings-sub-details">
+                            <summary>查看清理規則說明 ▾</summary>
+                            <div style="padding-top:6px; font-size:11.5px; line-height:1.55; color:#475569; display:flex; flex-direction:column; gap:3px;">
+                                <div>⏰ <strong>已認領 / 有設時間</strong>：開打後 <strong>2 小時</strong>自動刪除</div>
+                                <div>🌙 <strong>無人認領 (野菇)</strong>：所在國家 <strong>隔日凌晨 1 點</strong>自動刪除</div>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ⚙️ 系統時間與進階設定 -->
+            <div class="settings-section-label">⚙️ 系統時間與進階設定</div>
+            <div class="settings-grid">
+                <!-- 時區設定（緊湊並排） -->
+                <div class="settings-card">
+                    <div class="settings-card-header amber">
+                        <span class="settings-card-icon">⏰</span>
+                        <div>
+                            <div class="settings-card-title">時區與系統時間</div>
+                            <div class="settings-card-subtitle">台北標準時間與對照時區</div>
+                        </div>
+                    </div>
+                    <div class="settings-card-body">
+                        <div class="settings-tz-row">
+                            <div class="settings-tz-taipei">
+                                <div style="font-size:10.5px; color:#64748b; font-weight:700;">🇹🇼 台北標準時間</div>
+                                <div id="clock-taipei" style="font-size:22px; font-weight:900; color:#15803d; font-family:monospace; letter-spacing:1px; line-height:1.2;">00:00:00</div>
+                            </div>
+                            <div class="settings-tz-custom">
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:4px;">
+                                    <span style="font-size:10.5px; color:#64748b; font-weight:700;">🌍 對照時區</span>
+                                    <span class="w-time" id="clock-custom-1" style="font-size:15px; font-weight:900; color:var(--text-main); font-family:monospace;">00:00</span>
+                                </div>
+                                <select id="tz-select-1" onchange="saveTimezonePref()" class="input-base" style="width:100%; padding:6px 8px; font-size:12px;">
+                                    <option value="-11">美屬薩摩亞 (UTC-11)</option>
+                                    <option value="-10">夏威夷 (UTC-10)</option>
+                                    <option value="-9">阿拉斯加 (UTC-9)</option>
+                                    <option value="-8">美國美西/溫哥華 (UTC-8)</option>
+                                    <option value="-7">美國山區/丹佛 (UTC-7)</option>
+                                    <option value="-6">美國中部/芝加哥 (UTC-6)</option>
+                                    <option value="-5">美國美東/紐約 (UTC-5)</option>
+                                    <option value="-4">加拿大/大西洋 (UTC-4)</option>
+                                    <option value="-3">阿根廷/巴西 (UTC-3)</option>
+                                    <option value="-1">亞速群島 (UTC-1)</option>
+                                    <option value="0">英國倫敦/格林威治 (UTC+0)</option>
+                                    <option value="1">歐陸時間/巴黎 (UTC+1)</option>
+                                    <option value="2">東歐/開羅 (UTC+2)</option>
+                                    <option value="3">莫斯科/杜拜 (UTC+3)</option>
+                                    <option value="4">阿布達比/巴庫 (UTC+4)</option>
+                                    <option value="5">巴基斯坦/馬爾地夫 (UTC+5)</option>
+                                    <option value="5.5">印度/斯里蘭卡 (UTC+5:30)</option>
+                                    <option value="6">孟加拉 (UTC+6)</option>
+                                    <option value="7">泰國/越南/印尼 (UTC+7)</option>
+                                    <option value="8">港澳/北京/新加坡 (UTC+8)</option>
+                                    <option value="9" selected>日本/韓國 (UTC+9)</option>
+                                    <option value="9.5">澳洲中部 (UTC+9:30)</option>
+                                    <option value="10">澳洲雪梨/關島 (UTC+10)</option>
+                                    <option value="11">索羅門群島 (UTC+11)</option>
+                                    <option value="12">紐西蘭/斐濟 (UTC+12)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 進階 API 與配額（預設收折） -->
+            <details class="settings-advanced-collapse">
+                <summary class="settings-advanced-summary">
+                    <span>🔑 進階 API 與用量設定（地圖配額 / Vision 金鑰）</span>
+                    <span class="lm-cat-chevron">展開 ▾</span>
+                </summary>
+                <div class="settings-grid" style="margin-top:12px;">
+                    <!-- 地圖 API 用量 -->
+                    <div class="settings-card">
+                        <div class="settings-card-header">
+                            <span class="settings-card-icon">🗺️</span>
+                            <div>
+                                <div class="settings-card-title">地圖 API 用量</div>
+                                <div class="settings-card-subtitle">每月免費配額 28,000 次</div>
+                            </div>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="settings-stat">
+                                <span style="font-size:13px; color:#64748b;">本月已載入</span>
+                                <span><span class="settings-stat-val" id="map-usage-count">--</span> <span style="font-size:11px; color:#94a3b8;">/ 28,000</span></span>
+                            </div>
+                            <div class="settings-progress-wrap">
+                                <div class="settings-progress-bar">
+                                    <div class="settings-progress-fill" id="map-usage-bar" style="width:0%"></div>
+                                </div>
+                            </div>
+                            <div style="font-size:11px; color:#64748b;">超過額度將自動暫停載入，防止產生額外費用</div>
+                        </div>
+                    </div>
+
+                    <!-- 圖片辨識 -->
+                    <div class="settings-card">
+                        <div class="settings-card-header purple">
+                            <span class="settings-card-icon">🔍</span>
+                            <div>
+                                <div class="settings-card-title">圖片辨識 API</div>
+                                <div class="settings-card-subtitle">Google Cloud Vision 自動讀取明信片文字</div>
+                            </div>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="input-group" style="margin-bottom:0;">
+                                <label>Google Cloud Vision API 金鑰</label>
+                                <div style="display:flex; gap:6px; align-items:center;">
+                                    <input type="password" id="vision-api-key" class="input-base" placeholder="AIzaSy..." onchange="saveVisionApiKey()" style="flex:1;">
+                                    <button type="button" class="btn-sm btn-default" onclick="const inp=document.getElementById('vision-api-key'); inp.type=inp.type==='password'?'text':'password';" style="padding:7px 10px; border-radius:8px; font-size:13px;" title="顯示/隱藏金鑰">👁️</button>
+                                </div>
+                                <p style="font-size:11px; color:#6b7280; margin-top:4px; margin-bottom:0;">金鑰僅儲存於您的瀏覽器中，不會上傳。</p>
+                                <div id="vision-usage-display" style="margin-top:8px; font-size:12px; color:var(--text-muted); font-weight:bold;">讀取中...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </details>
         </section>
 
-        <section id="view-cloud" class="view-section cloud-app" style="padding: 12px 10px 80px;">
-            <div class="container" style="max-width: 540px; margin: 0 auto; padding: 0;">
-                <header style="margin-bottom: 10px; text-align: center;">
-                    <h1 style="font-size: 22px; margin-bottom: 2px; font-weight: 800; background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Pikmin 自動註冊</h1>
-                    <div class="subtitle" style="font-size: 11px; color: #94a3b8;">自動複製信箱・推播驗證碼</div>
-                    <div style="margin-top: 8px; display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap;">
-                        <a href="https://youtube.com/shorts/cTnb2JIohUY" target="_blank" style="display: inline-flex; align-items: center; gap: 3px; font-size: 10px; line-height: 1.4; color: #f87171; background: rgba(239, 68, 68, 0.1); padding: 3px 10px; border-radius: 999px; text-decoration: none; border: 1px solid rgba(239, 68, 68, 0.2);" title="如何登出到註冊頁面？(短影音教學)">🎥 登出教學</a>
+        <section id="view-cloud" class="view-section cloud-app">
+            <div class="container cloud-shell" style="max-width: 580px; margin: 0 auto; padding: 0;">
+                <header style="margin-bottom: 14px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;">
+                        <button type="button" onclick="switchTab('settings')" style="background: #ffffff; border: 1px solid #cbd5e1; color: #334155; font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 10px; cursor: pointer; white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">← 返回設定</button>
+                        <div style="text-align:center; flex:1; min-width:0;">
+                            <h1 style="font-size: 20px; margin: 0; font-weight: 900; background: linear-gradient(135deg, #0284c7, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🤖 Pikmin 自動註冊</h1>
+                            <div class="subtitle" style="font-size: 11px; color: #64748b;">自動複製信箱・推播驗證碼</div>
+                        </div>
+                        <a href="https://youtube.com/shorts/cTnb2JIohUY" target="_blank" style="display: inline-flex; align-items: center; gap: 3px; font-size: 11px; line-height: 1.4; color: #dc2626; background: #fef2f2; padding: 5px 11px; border-radius: 999px; text-decoration: none; border: 1px solid #fecaca; font-weight: 700; white-space: nowrap;" title="如何登出到註冊頁面？(短影音教學)">🎥 教學</a>
+                    </div>
+                    <div style="display: flex; justify-content: center;">
                         <!-- 伺服器狀態列 -->
-                        <div id="cloud-server-bar" style="display: inline-flex; align-items: center; gap: 5px; background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.12); border-radius: 999px; padding: 3px 10px; font-size: 10px; line-height: 1.4; box-sizing: border-box;">
+                        <div id="cloud-server-bar" style="display: inline-flex; align-items: center; gap: 6px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 999px; padding: 4px 12px; font-size: 11px; line-height: 1.4; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
                             <span id="cloud-server-dot" style="width:7px; height:7px; border-radius:50%; background:#6b7280; display:inline-block; flex-shrink:0; transition: background 0.3s;"></span>
-                            <span id="cloud-server-name" style="font-family: monospace; color: #e2e8f0; font-weight: 700;">偵測中...</span>
-                            <span id="cloud-server-status" style="color: #94a3b8;"></span>
-                            <button id="cloud-switch-server-btn" type="button" onclick="manualSwitchMailApi()" style="display:none; background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.3); color: #38bdf8; font-size: 10px; font-weight: 700; padding: 1px 8px; border-radius: 999px; cursor: pointer; white-space: nowrap;" title="切換到另一台備援伺服器">🔀 切換</button>
+                            <span id="cloud-server-name" style="font-family: monospace; color: #0f172a; font-weight: 700;">偵測中...</span>
+                            <span id="cloud-server-status" style="color: #64748b;"></span>
+                            <button id="cloud-switch-server-btn" type="button" onclick="manualSwitchMailApi()" style="display:none; background: #e0f2fe; border: 1px solid #7dd3fc; color: #0369a1; font-size: 10.5px; font-weight: 700; padding: 1px 8px; border-radius: 999px; cursor: pointer; white-space: nowrap;" title="切換到另一台備援伺服器">🔀 切換</button>
                         </div>
                     </div>
                 </header>
 
-                <div class="card" style="padding: 14px; border-radius: 16px; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); backdrop-filter: blur(12px);">
+                <div class="cloud-columns-grid">
+                <div class="card cloud-main-col" style="padding: 16px; border-radius: 16px; background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);">
                     
                     <!-- 動態引導單一主按鈕 Hero 區塊 -->
-                    <div class="dynamic-hero-card" style="padding: 0; margin-bottom: 12px; text-align: center;">
+                    <div class="dynamic-hero-card" style="padding: 0; text-align: center;">
                         
                         <!-- 當前邀請對象資訊 (點擊可跳到清單設定) -->
-                        <div id="cloud-currentInviterBadge" title="點擊前往清單設定" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); padding: 4px 12px; border-radius: 20px; font-size: 12px; color: #38bdf8; margin-bottom: 8px; max-width: 100%; box-sizing: border-box; cursor: pointer; transition: background 0.2s;">
+                        <div id="cloud-currentInviterBadge" title="點擊前往清單設定" style="display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: #f0f9ff; border: 1px solid #bae6fd; padding: 5px 12px; border-radius: 20px; font-size: 12px; color: #0369a1; margin-bottom: 10px; max-width: 100%; box-sizing: border-box; cursor: pointer; transition: background 0.2s;">
                             <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">🎯 目標 <span style="font-size:10px; opacity:0.8;">(點此更換)</span>：<strong id="cloud-activeInviterName">請在下方選取目標</strong></span>
-                            <span id="cloud-activeInviterCount" style="font-weight: bold; background: rgba(56, 189, 248, 0.25); padding: 1px 6px; border-radius: 6px; font-size: 11px; flex-shrink: 0;">-/- 次</span>
+                            <span id="cloud-activeInviterCount" style="font-weight: 800; background: #dbeafe; color: #1d4ed8; padding: 1px 7px; border-radius: 6px; font-size: 11px; flex-shrink: 0;">-/- 次</span>
                         </div>
 
                         <!-- 模式切換器：自動引導 vs 純手動模式 -->
-                        <div id="cloud-modeSwitchBar" style="display: flex; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 10px; padding: 3px; margin-bottom: 10px; gap: 4px;">
-                            <button type="button" id="cloud-modeAutoBtn" style="flex: 1; padding: 6px 10px; border-radius: 7px; border: none; font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #0284c7, #2563eb); color: #ffffff; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);">
+                        <div id="cloud-modeSwitchBar" style="display: flex; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 10px; padding: 3px; margin-bottom: 12px; gap: 4px;">
+                            <button type="button" id="cloud-modeAutoBtn" style="flex: 1; padding: 7px 10px; border-radius: 8px; border: none; font-size: 12px; font-weight: 800; cursor: pointer; transition: all 0.2s; background: linear-gradient(135deg, #0284c7, #2563eb); color: #ffffff; box-shadow: 0 2px 6px rgba(37, 99, 235, 0.28);">
                                 ⚡ 自動引導模式
                             </button>
-                            <button type="button" id="cloud-modeManualBtn" style="flex: 1; padding: 6px 10px; border-radius: 7px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; background: transparent; color: #94a3b8;">
+                            <button type="button" id="cloud-modeManualBtn" style="flex: 1; padding: 7px 10px; border-radius: 8px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; background: transparent; color: #64748b;">
                                 🛠️ 純手動模式
                             </button>
                         </div>
@@ -578,82 +602,82 @@
                         <!-- 【模式 A】現有自動引導面板 -->
                         <div id="cloud-autoPanel">
                             <!-- 動態引導主按鈕 -->
-                            <button id="cloud-dynamicActionBtn" class="dynamic-action-btn state-ready" style="width: 100%; padding: 14px 12px; border-radius: 12px; font-size: 15px; font-weight: 800; border: 1px solid rgba(255,255,255,0.25); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; box-shadow: 0 4px 18px rgba(37, 99, 235, 0.4); color: white;">
+                            <button id="cloud-dynamicActionBtn" class="dynamic-action-btn state-ready" style="width: 100%; padding: 14px 12px; border-radius: 12px; font-size: 15px; font-weight: 800; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28); color: white;">
                                 <div class="btn-main-label" style="display: flex; align-items: center; gap: 6px;">
                                     <span id="cloud-dynamicBtnIcon" style="font-size: 18px;">🚀</span>
                                     <span id="cloud-dynamicBtnText" style="letter-spacing: 0.5px;">點我開始！產生免洗帳號</span>
                                 </div>
-                                <div id="cloud-dynamicBtnSub" style="font-size: 11px; opacity: 0.9; font-weight: 500;">
+                                <div id="cloud-dynamicBtnSub" style="font-size: 11px; opacity: 0.92; font-weight: 600;">
                                     自動複製信箱 → 開啟遊戲
                                 </div>
                             </button>
 
                             <!-- 中斷/重新開始當前流程按鈕 (僅在流程進行中顯示) -->
                             <div id="cloud-resetFlowWrap" style="display: none; justify-content: center; margin-top: 8px;">
-                                <button id="cloud-resetFlowBtn" type="button" style="background: rgba(148, 163, 184, 0.12); border: 1px solid rgba(148, 163, 184, 0.3); color: #cbd5e1; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                                <button id="cloud-resetFlowBtn" type="button" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
                                     🔄 放棄並重新開始
                                 </button>
                             </div>
 
                             <!-- 流程說明 (預設收起) -->
                             <details style="margin-top: 10px; text-align: left;">
-                                <summary style="cursor: pointer; font-size: 11px; color: #94a3b8; text-align: center; outline: none; user-select: none;">💡 產生信箱 → 複製密碼 → 複製驗證碼 <span style="color:#38bdf8;">(詳細說明)</span></summary>
-                                <div style="margin-top: 8px; font-size: 12.5px; color: #f8fafc; line-height: 1.8; background: rgba(15, 23, 42, 0.5); padding: 8px 12px; border-radius: 10px;">
-                                    <div>1️⃣ <b>產生信箱</b> <span style="color:#7dd3fc; font-size: 11.5px;">(會自動跳轉遊戲，請貼上)</span></div>
-                                    <div>2️⃣ <b>複製密碼</b> <span style="color:#7dd3fc; font-size: 11.5px;">(會自動跳轉遊戲，請貼上)</span></div>
-                                    <div>3️⃣ <b>複製驗證碼</b> <span style="color:#7dd3fc; font-size: 11.5px;">(收信後會自動跳轉遊戲)</span></div>
+                                <summary style="cursor: pointer; font-size: 11px; color: #64748b; text-align: center; outline: none; user-select: none;">💡 產生信箱 → 複製密碼 → 複製驗證碼 <span style="color:#0284c7; font-weight:700;">(詳細說明)</span></summary>
+                                <div style="margin-top: 8px; font-size: 12px; color: #334155; line-height: 1.8; background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 10px;">
+                                    <div>1️⃣ <b>產生信箱</b> <span style="color:#0284c7; font-size: 11px;">(會自動跳轉遊戲，請貼上)</span></div>
+                                    <div>2️⃣ <b>複製密碼</b> <span style="color:#0284c7; font-size: 11px;">(會自動跳轉遊戲，請貼上)</span></div>
+                                    <div>3️⃣ <b>複製驗證碼</b> <span style="color:#0284c7; font-size: 11px;">(收信後會自動跳轉遊戲)</span></div>
                                 </div>
                             </details>
 
                             <!-- 密碼設定區 (預設收起) -->
                             <details style="margin-top: 6px;">
-                                <summary style="cursor: pointer; font-size: 11px; color: #94a3b8; text-align: center; outline: none; user-select: none;">🔑 自訂密碼 <span style="color:#38bdf8;">(點此編輯)</span></summary>
-                                <div style="margin-top: 6px; display: inline-flex; align-items: center; background: rgba(0,0,0,0.35); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-                                    <input type="text" id="cloud-password" value="Pikmin123!@" style="background: transparent; border: none; color: #f8fafc; font-family: monospace; font-size: 14px; font-weight: 800; width: 110px; outline: none; padding: 0; text-align: center;">
+                                <summary style="cursor: pointer; font-size: 11px; color: #64748b; text-align: center; outline: none; user-select: none;">🔑 自訂密碼 <span style="color:#0284c7; font-weight:700;">(點此編輯)</span></summary>
+                                <div style="margin-top: 6px; display: inline-flex; align-items: center; background: #f8fafc; padding: 5px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                                    <input type="text" id="cloud-password" value="Pikmin123!@" style="background: transparent; border: none; color: #0f172a; font-family: monospace; font-size: 14px; font-weight: 800; width: 120px; outline: none; padding: 0; text-align: center;">
                                 </div>
                             </details>
                         </div>
 
                         <!-- 【模式 B】純手動控制面板 (不強制跳轉、各步驟獨立操作) -->
-                        <div id="cloud-manualPanel" style="display: none; flex-direction: column; gap: 8px; text-align: left;">
+                        <div id="cloud-manualPanel" style="display: none; flex-direction: column; gap: 10px; text-align: left;">
                             <!-- 1. 免洗信箱區 -->
-                            <div style="background: rgba(30, 41, 59, 0.65); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px;">
+                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                    <span style="font-size: 12px; font-weight: 800; color: #38bdf8;">1️⃣ 免洗信箱</span>
-                                    <span style="font-size: 10px; color: #94a3b8;">不自動跳轉遊戲・可單獨申請</span>
+                                    <span style="font-size: 12px; font-weight: 800; color: #0369a1;">1️⃣ 免洗信箱</span>
+                                    <span style="font-size: 10px; color: #64748b;">不自動跳轉遊戲・可單獨申請</span>
                                 </div>
-                                <div id="cloud-manualEmailDisplay" style="font-family: monospace; font-size: 12.5px; font-weight: 700; color: #f8fafc; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; word-break: break-all; text-align: center; user-select: all;">尚未產生信箱</div>
+                                <div id="cloud-manualEmailDisplay" style="font-family: monospace; font-size: 12.5px; font-weight: 700; color: #0f172a; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; word-break: break-all; text-align: center; user-select: all;">尚未產生信箱</div>
                                 <div style="display: flex; gap: 6px;">
                                     <button type="button" id="cloud-manualGenEmailBtn" style="flex: 1.3; padding: 8px 10px; border-radius: 8px; border: none; background: linear-gradient(135deg, #0284c7, #2563eb); color: white; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
                                         🎲 產生新信箱
                                     </button>
-                                    <button type="button" id="cloud-manualCopyEmailBtn" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.35); background: rgba(56, 189, 248, 0.12); color: #38bdf8; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                    <button type="button" id="cloud-manualCopyEmailBtn" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #bae6fd; background: #e0f2fe; color: #0369a1; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
                                         📋 複製信箱
                                     </button>
                                 </div>
                             </div>
 
                             <!-- 2. 密碼區 -->
-                            <div style="background: rgba(30, 41, 59, 0.65); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 9px 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                                <span style="font-size: 12px; font-weight: 800; color: #a5b4fc; white-space: nowrap;">2️⃣ 密碼</span>
-                                <input type="text" id="cloud-manualPassword" value="Pikmin123!@" style="flex: 1; min-width: 0; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 7px; color: #f8fafc; font-family: monospace; font-size: 13px; font-weight: 800; padding: 6px 8px; outline: none; text-align: center;">
-                                <button type="button" id="cloud-manualCopyPwdBtn" style="flex-shrink: 0; padding: 7px 12px; border-radius: 8px; border: 1px solid rgba(129, 140, 248, 0.4); background: rgba(99, 102, 241, 0.18); color: #c7d2fe; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 9px 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                <span style="font-size: 12px; font-weight: 800; color: #4f46e5; white-space: nowrap;">2️⃣ 密碼</span>
+                                <input type="text" id="cloud-manualPassword" value="Pikmin123!@" style="flex: 1; min-width: 0; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 7px; color: #0f172a; font-family: monospace; font-size: 13px; font-weight: 800; padding: 6px 8px; outline: none; text-align: center;">
+                                <button type="button" id="cloud-manualCopyPwdBtn" style="flex-shrink: 0; padding: 7px 12px; border-radius: 8px; border: 1px solid #c7d2fe; background: #eef2ff; color: #4338ca; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
                                     📋 複製密碼
                                 </button>
                             </div>
 
                             <!-- 3. 驗證碼接收區 -->
-                            <div style="background: rgba(30, 41, 59, 0.65); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px;">
+                            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                    <span style="font-size: 12px; font-weight: 800; color: #34d399;">3️⃣ 任天堂驗證碼</span>
-                                    <span id="cloud-manualCodeStatus" style="font-size: 10px; color: #94a3b8;">待命</span>
+                                    <span style="font-size: 12px; font-weight: 800; color: #047857;">3️⃣ 任天堂驗證碼</span>
+                                    <span id="cloud-manualCodeStatus" style="font-size: 10.5px; color: #64748b; font-weight: 600;">待命</span>
                                 </div>
-                                <div id="cloud-manualCodeDisplay" style="font-family: monospace; font-size: 20px; font-weight: 900; letter-spacing: 3px; color: #34d399; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(52, 211, 153, 0.2); border-radius: 8px; padding: 6px 10px; margin-bottom: 8px; text-align: center; user-select: all;">----</div>
+                                <div id="cloud-manualCodeDisplay" style="font-family: monospace; font-size: 20px; font-weight: 900; letter-spacing: 3px; color: #059669; background: #ffffff; border: 1px solid #a7f3d0; border-radius: 8px; padding: 6px 10px; margin-bottom: 8px; text-align: center; user-select: all;">----</div>
                                 <div style="display: flex; gap: 6px;">
-                                    <button type="button" id="cloud-manualCheckInboxBtn" style="flex: 1.2; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.15); color: #fcd34d; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                    <button type="button" id="cloud-manualCheckInboxBtn" style="flex: 1.2; padding: 8px 10px; border-radius: 8px; border: 1px solid #fde68a; background: #fef3c7; color: #b45309; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
                                         🔄 手動檢查信件
                                     </button>
-                                    <button type="button" id="cloud-manualCopyCodeBtn" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(52, 211, 153, 0.4); background: rgba(16, 185, 129, 0.18); color: #6ee7b7; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                    <button type="button" id="cloud-manualCopyCodeBtn" style="flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid #a7f3d0; background: #d1fae5; color: #047857; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
                                         📋 複製驗證碼
                                     </button>
                                 </div>
@@ -661,10 +685,10 @@
 
                             <!-- 4. 邀請連結與手動記次輔助列 -->
                             <div style="display: flex; gap: 6px;">
-                                <button type="button" id="cloud-manualOpenGameBtn" style="flex: 1; padding: 8px 10px; border-radius: 9px; border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(15, 23, 42, 0.6); color: #e2e8f0; font-size: 11.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                <button type="button" id="cloud-manualOpenGameBtn" style="flex: 1; padding: 8px 10px; border-radius: 9px; border: 1px solid #cbd5e1; background: #ffffff; color: #334155; font-size: 11.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
                                     🍄 開啟目標邀請連結
                                 </button>
-                                <button type="button" id="cloud-manualCompleteCountBtn" style="flex: 1.1; padding: 8px 10px; border-radius: 9px; border: 1px solid rgba(139, 92, 246, 0.4); background: rgba(139, 92, 246, 0.18); color: #ddd6fe; font-size: 11.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                <button type="button" id="cloud-manualCompleteCountBtn" style="flex: 1.1; padding: 8px 10px; border-radius: 9px; border: 1px solid #ddd6fe; background: #f5f3ff; color: #6d28d9; font-size: 11.5px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
                                     ✅ 記次 +1 / 換下一位
                                 </button>
                             </div>
@@ -680,28 +704,22 @@
                             </button>
                         </div>
                     </div>
-                    <!-- 邀請人清單管理模組 (預設收起) -->
-                    <style>
-                        .cloud-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
-                        .cloud-switch-track { position: relative; width: 28px; height: 16px; border-radius: 999px; background: rgba(148,163,184,0.35); transition: background 0.2s; flex-shrink: 0; }
-                        .cloud-switch-track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
-                        .cloud-switch input:checked + .cloud-switch-track { background: #0284c7; }
-                        .cloud-switch input:checked + .cloud-switch-track::after { transform: translateX(12px); }
-                        #cloud-inviteListDetails.auto-rotate-off .invite-custom-checkbox { display: none !important; }
-                        #cloud-inviteListDetails.auto-rotate-on .invite-select-target-btn { display: none !important; }
-                    </style>
-                    <details id="cloud-inviteListDetails" class="auto-rotate-off" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 12px; margin-top: 6px;">
-                        <summary style="cursor: pointer; font-size: 13px; font-weight: 800; color: #f8fafc; display: flex; justify-content: space-between; align-items: center; user-select: none; outline: none; padding: 2px 0; gap: 8px;">
+                </div> <!-- end cloud-main-col -->
+
+                <div class="cloud-side-col">
+                    <!-- 邀請人清單管理模組（預設收折） -->
+                    <details id="cloud-inviteListDetails" class="auto-rotate-off" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 14px; box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);">
+                        <summary style="cursor: pointer; font-size: 13.5px; font-weight: 800; color: #0f172a; display: flex; justify-content: space-between; align-items: center; user-select: none; outline: none; padding: 2px 0; gap: 8px;">
                             <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                 👥 邀請人清單管理
                             </span>
                             <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
-                                <label class="cloud-switch" onclick="event.stopPropagation()" style="font-size: 11px; color: #38bdf8; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                                <label class="cloud-switch" onclick="event.stopPropagation()" style="font-size: 11px; color: #0284c7; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px;">
                                     <input type="checkbox" id="cloud-autoRotate">
                                     <span class="cloud-switch-track"></span> 自動輪替
                                 </label>
-                                <span style="font-size: 11px; color: #38bdf8; font-weight: 600; background: rgba(56, 189, 248, 0.12); padding: 3px 8px; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.25); white-space: nowrap;">
-                                    ⚙️ 展開 ▼
+                                <span style="font-size: 11px; color: #0369a1; font-weight: 700; background: #e0f2fe; padding: 3px 8px; border-radius: 8px; border: 1px solid #bae6fd; white-space: nowrap;">
+                                    收合 / 展開
                                 </span>
                             </div>
                         </summary>
@@ -709,9 +727,9 @@
                         <div style="margin-top: 12px;">
                             <!-- 工具列：重置 + 新增表單 -->
                             <div style="display: flex; gap: 6px; margin-bottom: 10px; align-items: center;">
-                                <input type="text" id="cloud-inviteName" placeholder="👤 名稱" style="width: 72px; border-radius: 8px; padding: 7px 8px; box-sizing: border-box; font-size: 12px; flex-shrink: 0; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: white; outline: none;">
-                                <input type="text" id="cloud-inviteLink" placeholder="🔗 邀請連結 URL" style="flex: 1; border-radius: 8px; padding: 7px 8px; box-sizing: border-box; font-size: 12px; min-width: 0; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: white; outline: none;">
-                                <label style="font-size: 11px; color: #94a3b8; cursor: pointer; display: flex; align-items: center; gap: 3px; flex-shrink: 0;" title="公開：跨裝置共用">
+                                <input type="text" id="cloud-inviteName" placeholder="👤 名稱" style="width: 72px; border-radius: 8px; padding: 7px 8px; box-sizing: border-box; font-size: 12px; flex-shrink: 0; background: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a; outline: none;">
+                                <input type="text" id="cloud-inviteLink" placeholder="🔗 邀請連結 URL" style="flex: 1; border-radius: 8px; padding: 7px 8px; box-sizing: border-box; font-size: 12px; min-width: 0; background: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a; outline: none;">
+                                <label style="font-size: 11px; color: #64748b; cursor: pointer; display: flex; align-items: center; gap: 3px; flex-shrink: 0;" title="公開：跨裝置共用">
                                     <input type="checkbox" id="cloud-isPublic" checked style="cursor: pointer; width: 14px; height: 14px; accent-color: #0284c7;">🌐
                                 </label>
                                 <button id="cloud-saveInviteBtn" type="button" style="background: linear-gradient(135deg, #0284c7, #2563eb); border: none; color: white; cursor: pointer; font-size: 12px; font-weight: 800; padding: 7px 12px; border-radius: 8px; flex-shrink: 0; white-space: nowrap;">＋ 新增</button>
@@ -719,7 +737,7 @@
 
                             <!-- 操作列：重置全部 -->
                             <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
-                                <button id="cloud-resetAllCountsBtn" type="button" class="cloud-batch-btn" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #f87171; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer;">
+                                <button id="cloud-resetAllCountsBtn" type="button" class="cloud-batch-btn" style="background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer;">
                                     🔄 重置全部次數
                                 </button>
                             </div>
@@ -729,109 +747,118 @@
                             <div id="cloud-savedPublicLinksList" style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;"></div>
                         </div>
                     </details>
-                </div>
 
-                <div class="log-container" id="cloud-logContainer" style="margin-top: 12px; border-radius: 12px; max-height: 120px; font-size: 11px; padding: 10px;">
-                    <div class="log-entry">準備就緒。點擊上方大按鈕即可一鍵開始！</div>
-                </div>
+                    <details class="cloud-log-details" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 11px 14px; box-shadow: 0 1px 6px rgba(15, 23, 42, 0.04);">
+                        <summary style="cursor: pointer; font-size: 12.5px; font-weight: 800; color: #334155; outline: none;">
+                            🧾 執行日誌 (點擊展開查看明細)
+                        </summary>
+                        <div class="log-container" id="cloud-logContainer" style="margin-top: 8px; border-radius: 10px; max-height: 140px; font-size: 11px; padding: 8px;">
+                            <div class="log-entry">準備就緒。點擊上方大按鈕即可一鍵開始！</div>
+                        </div>
+                    </details>
 
-                <!-- 郵箱產生記錄 -->
-                <details id="cloud-mailHistoryDetails" style="margin-top: 8px; background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px;">
-                    <summary style="cursor: pointer; font-size: 12px; font-weight: 800; color: #f8fafc; outline: none;">
-                        🗂️ 郵箱產生記錄 (<span id="cloud-mailHistoryCount">0</span>)
-                    </summary>
-                    <div style="display: flex; justify-content: flex-end; margin: 8px 0;">
-                        <button id="cloud-clearMailHistoryBtn" type="button" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #f87171; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer;">🗑️ 清除記錄</button>
-                    </div>
-                    <div id="cloud-mailHistoryList" style="display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto;"></div>
-                </details>
+                    <!-- 郵箱產生記錄 -->
+                    <details id="cloud-mailHistoryDetails" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 11px 14px; box-shadow: 0 1px 6px rgba(15, 23, 42, 0.04);">
+                        <summary style="cursor: pointer; font-size: 12.5px; font-weight: 800; color: #0f172a; outline: none;">
+                            🗂️ 郵箱產生記錄 (<span id="cloud-mailHistoryCount">0</span>)
+                        </summary>
+                        <div style="display: flex; justify-content: flex-end; margin: 8px 0;">
+                            <button id="cloud-clearMailHistoryBtn" type="button" style="background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer;">🗑️ 清除記錄</button>
+                        </div>
+                        <div id="cloud-mailHistoryList" style="display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto;"></div>
+                    </details>
+                </div> <!-- end cloud-side-col -->
+                </div> <!-- end cloud-columns-grid -->
 
             </div>
         </section>
 
         <section id="view-ocr" class="view-section" style="padding: 12px 10px 80px;">
-            <div style="width: 100%; max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06); padding: 18px; display: flex; flex-direction: column; gap: 14px; box-sizing: border-box;">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <button type="button" onclick="switchTab('settings')" style="background: #f1f5f9; border: 1px solid #e2e8f0; color: #475569; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 8px; cursor: pointer;">← 返回設定</button>
-                    <h2 style="margin: 0; font-size: 19px; color: #1e293b; font-weight: 800;">🖼️ 圖片座標擷取工具</h2>
-                    <div style="width: 68px;"></div>
-                </div>
-                <p style="margin: 0; font-size: 12.5px; color: #64748b; text-align: center; line-height: 1.5;">請依序點擊下方按鈕，將自動擷取遊戲截圖底部的經緯度座標。</p>
-
-                <!-- 兩段式操作區塊 -->
-                <div style="display:flex; gap:8px; width:100%;">
-                    <input type="file" id="ocrtool-file-input" accept="image/*" multiple style="display:none;" onchange="ocrToolUpdateSelectedCount()">
-                    <button type="button" onclick="document.getElementById('ocrtool-file-input').click()"
-                        style="flex:1; padding:14px 8px; border-radius:12px; background:#f1f5f9; color:#334155; border:2px dashed #cbd5e1; font-size:14px; font-weight:bold; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; transition:all 0.2s;">
-                        <div style="font-size: 20px;">1️⃣</div>
-                        <div>選擇圖片</div>
-                    </button>
-                    <button type="button" onclick="ocrToolStartRecognition()"
-                        style="flex:1; padding:14px 8px; border-radius:12px; background:linear-gradient(135deg,#10b981,#059669); color:white; border:none; font-size:14px; font-weight:bold; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; box-shadow:0 4px 14px rgba(16,185,129,0.35);">
-                        <div style="font-size: 20px;">2️⃣</div>
-                        <div>開始辨識</div>
-                    </button>
+            <div class="ocr-shell">
+                <div class="ocr-header-row">
+                    <button type="button" onclick="switchTab('settings')" class="ocr-back-btn">← 返回設定</button>
+                    <h2 style="margin: 0; font-size: 18px; color: #1e293b; font-weight: 900;">🖼️ 圖片座標擷取工具</h2>
+                    <div style="width: 72px;"></div>
                 </div>
 
-                <!-- 狀態顯示與 Loading -->
-                <div style="min-height: 22px; text-align: center;">
-                    <div id="ocrtool-loader" style="border: 3px solid #f3f3f3; border-top: 3px solid #10b981; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; margin: 0 auto 4px;"></div>
-                    <div id="ocrtool-status" style="font-size: 13px; color: #64748b; font-weight: bold;">尚未選擇圖片</div>
+                <!-- 拖曳 / 點擊 / 貼上 上傳區（選完自動辨識） -->
+                <input type="file" id="ocrtool-file-input" accept="image/*" multiple style="display:none;" onchange="ocrToolUpdateSelectedCount(true)">
+                <div id="ocrtool-dropzone" class="ocr-dropzone" onclick="document.getElementById('ocrtool-file-input').click()">
+                    <div style="font-size: 28px; line-height: 1;">📷</div>
+                    <div style="font-size: 14px; font-weight: 800; color: #0f172a;">點擊選擇遊戲截圖（選完自動辨識）</div>
+                    <div style="font-size: 11.5px; color: #64748b;">支援多張批次上傳、拖曳圖片至此，或直接 Ctrl+V 貼上截圖</div>
                 </div>
 
-                <!-- 擷取結果區 -->
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-                        <label style="font-size: 13px; font-weight: bold; color: #1e293b;">📝 擷取結果：</label>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <label style="font-size:12px; color:#64748b; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
-                                <input type="checkbox" id="ocrtool-dedupe-check" onchange="ocrToolSortCoordinates(true)" checked> 自動去重
+                <!-- 進度條與狀態顯示 -->
+                <div class="ocr-status-wrap">
+                    <div id="ocrtool-progress-track" class="ocr-progress-track" style="display:none;">
+                        <div id="ocrtool-progress-bar" class="ocr-progress-fill" style="width:0%;"></div>
+                    </div>
+                    <div style="display:flex; align-items:center; justify-content:center; gap:8px; min-height:22px;">
+                        <div id="ocrtool-loader" style="border: 3px solid #f3f3f3; border-top: 3px solid #10b981; border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; display: none;"></div>
+                        <div id="ocrtool-status" style="font-size: 12.5px; color: #64748b; font-weight: 700;">尚未選擇圖片</div>
+                    </div>
+                </div>
+
+                <!-- 雙欄結果與暫存區 -->
+                <div class="ocr-panels-grid">
+                    <!-- 左側：本機擷取結果 -->
+                    <div class="ocr-panel">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <label style="font-size: 13.5px; font-weight: 800; color: #1e293b;">📝 擷取結果</label>
+                                <span id="ocrtool-result-count" class="ocr-count-pill">0 筆</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <label style="font-size:11.5px; color:#64748b; display:inline-flex; align-items:center; gap:4px; cursor:pointer; font-weight:600;">
+                                    <input type="checkbox" id="ocrtool-dedupe-check" onchange="ocrToolSortCoordinates(true)" checked> 去重
+                                </label>
+                                <select id="ocrtool-sort-select" onchange="ocrToolSortCoordinates(true)" style="padding:4px 8px; border-radius:8px; border:1px solid #cbd5e1; font-size:11.5px; background:white; color:#334155; outline:none; cursor:pointer; font-weight:600;">
+                                    <option value="lat-asc">緯度 ↑</option>
+                                    <option value="lat-desc">緯度 ↓</option>
+                                    <option value="lng-asc">經度 ↑</option>
+                                    <option value="lng-desc">經度 ↓</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <textarea id="ocrtool-result-text" placeholder="擷取的座標會顯示在這裡..." oninput="updateOcrCounts()" style="width: 100%; height: 170px; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-family: monospace; font-size: 13px; resize: vertical; outline: none; box-sizing: border-box;"></textarea>
+
+                        <div style="display: flex; gap: 6px;">
+                            <button type="button" onclick="ocrToolSortCoordinates(true)" style="flex: 1; padding: 8px; border: none; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; background:#e0f2fe; color:#0369a1;">🔃 排序</button>
+                            <button type="button" onclick="ocrToolClearText()" style="flex: 1; padding: 8px; border: none; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; background: #f1f5f9; color: #64748b;">🗑️ 清空</button>
+                            <button type="button" onclick="ocrToolCopyText()" style="flex: 1.3; padding: 8px; border: none; border-radius: 8px; font-size: 12.5px; font-weight: 800; cursor: pointer; background: #10b981; color: white; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.25);">📋 複製結果</button>
+                        </div>
+
+                        <div style="display:flex; flex-direction:column; gap:6px; padding-top:8px; border-top:1px dashed #e2e8f0;">
+                            <label style="font-size:11.5px; color:#0369a1; font-weight:700; display:inline-flex; align-items:center; gap:5px; cursor:pointer;">
+                                <input type="checkbox" id="ocrtool-auto-sync-check" onchange="ocrToolSaveAutoSyncPref()" checked> 辨識完自動追加至右側通用暫存區
                             </label>
-                            <select id="ocrtool-sort-select" onchange="ocrToolSortCoordinates(true)" style="padding:4px 8px; border-radius:6px; border:1px solid #cbd5e1; font-size:12px; background:white; color:#334155; outline:none; cursor:pointer;">
-                                <option value="lat-asc">依緯度 (由小到大 ↑)</option>
-                                <option value="lat-desc">依緯度 (由大到小 ↓)</option>
-                                <option value="lng-asc">依經度 (由小到大 ↑)</option>
-                                <option value="lng-desc">依經度 (由大到小 ↓)</option>
-                            </select>
+                            <div style="display: flex; gap: 6px;">
+                                <button type="button" onclick="ocrToolAppendToShared(false)" style="flex: 1; padding: 7px; border-radius: 8px; font-weight: 700; cursor: pointer; background:#f0f9ff; color:#0284c7; border:1px solid #bae6fd; font-size:12px;">➕ 追加至暫存區</button>
+                                <button type="button" onclick="ocrToolOverwriteShared()" style="flex: 1; padding: 7px; border-radius: 8px; font-weight: 700; cursor: pointer; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:12px;">⬆️ 覆蓋至暫存區</button>
+                            </div>
                         </div>
                     </div>
-                    <textarea id="ocrtool-result-text" placeholder="擷取的座標會顯示在這裡..." style="width: 100%; height: 140px; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: monospace; font-size: 13.5px; resize: vertical; outline: none; box-sizing: border-box;"></textarea>
-                </div>
 
-                <div style="display: flex; gap: 8px;">
-                    <button type="button" onclick="ocrToolSortCoordinates(true)" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 13.5px; font-weight: bold; cursor: pointer; background:#e0f2fe; color:#0369a1;">🔃 排序</button>
-                    <button type="button" onclick="ocrToolClearText()" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 13.5px; font-weight: bold; cursor: pointer; background: #f1f5f9; color: #64748b;">🗑️ 清空</button>
-                    <button type="button" onclick="ocrToolCopyText()" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 13.5px; font-weight: bold; cursor: pointer; background: #10b981; color: white; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);">📋 一鍵複製</button>
-                </div>
-
-                <!-- 傳送至通用暫存區快捷列 -->
-                <div style="display:flex; flex-direction:column; gap:8px; padding-top:6px; border-top:1px dashed #e2e8f0;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-                        <label style="font-size:12px; color:#0369a1; font-weight:bold; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
-                            <input type="checkbox" id="ocrtool-auto-sync-check" onchange="ocrToolSaveAutoSyncPref()" checked> 辨識完自動追加至通用暫存區
-                        </label>
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button type="button" onclick="ocrToolAppendToShared(false)" style="flex: 1; padding: 9px; border-radius: 8px; font-weight: bold; cursor: pointer; background:#f0f9ff; color:#0284c7; border:1px solid #bae6fd; font-size:13px;">➕ 追加至暫存區</button>
-                        <button type="button" onclick="ocrToolOverwriteShared()" style="flex: 1; padding: 9px; border-radius: 8px; font-weight: bold; cursor: pointer; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; font-size:13px;">⬆️ 覆蓋至暫存區</button>
-                    </div>
-                </div>
-
-                <!-- 通用座標暫存區 (跨裝置即時同步) -->
-                <div style="display: flex; flex-direction: column; gap: 8px; background:linear-gradient(160deg, #f0f9ff 0%, #f8fafc 100%); border:1.5px solid #bae6fd; border-radius:12px; padding:14px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <label style="font-size: 14px; font-weight: 800; color: #0369a1;">☁️ 通用座標暫存區</label>
-                            <span style="font-size:10px; background:#0284c7; color:white; padding:2px 6px; border-radius:99px; font-weight:bold;">跨裝置同步</span>
+                    <!-- 右側：通用座標暫存區 (跨裝置即時同步) -->
+                    <div class="ocr-panel ocr-panel-shared">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <label style="font-size: 13.5px; font-weight: 800; color: #0369a1;">☁️ 通用座標暫存區</label>
+                                <span id="ocrtool-shared-count" class="ocr-count-pill" style="background:#dbeafe; color:#1d4ed8;">0 筆</span>
+                            </div>
+                            <span id="ocrtool-cloud-sync-status" style="font-size:11px; color:#059669; font-weight:700;">⏳ 連線中...</span>
                         </div>
-                        <span id="ocrtool-cloud-sync-status" style="font-size:11px; color:#059669; font-weight:bold;">⏳ 連線中...</span>
-                    </div>
-                    <div style="font-size:11px; color:#64748b;">所有裝置皆可即時查看與編輯此處座標（支援直接打字或貼上自動同步）</div>
-                    <textarea id="ocrtool-shared-result-text" placeholder="此處的座標會即時同步到所有裝置，可直接輸入或由上方傳入..." oninput="ocrToolOnSharedInput()" style="width: 100%; height: 140px; padding: 10px 12px; border-radius: 8px; border: 1px solid #93c5fd; background: #ffffff; font-family: monospace; font-size: 13.5px; resize: vertical; outline: none; box-sizing: border-box;"></textarea>
-                    <div style="display: flex; gap: 8px; margin-top: 2px;">
-                        <button type="button" onclick="ocrToolSortShared()" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 13.5px; font-weight: bold; cursor: pointer; background:#e0f2fe; color:#0369a1;">🔃 排序</button>
-                        <button type="button" onclick="ocrToolClearShared()" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 13.5px; font-weight: bold; cursor: pointer; background:#fee2e2; color:#b91c1c;">🗑️ 清空</button>
-                        <button type="button" onclick="ocrToolCopyShared()" style="flex: 1; padding: 10px; border: none; border-radius: 8px; font-size: 13.5px; font-weight: bold; cursor: pointer; background:linear-gradient(135deg,#0284c7,#0369a1); color:white; box-shadow:0 2px 4px rgba(2,132,199,0.3);">📋 複製暫存區</button>
+                        <div style="font-size:11px; color:#64748b;">所有裝置即時同步，支援直接編輯或貼上座標</div>
+
+                        <textarea id="ocrtool-shared-result-text" placeholder="此處座標即時同步至所有裝置..." oninput="ocrToolOnSharedInput(); updateOcrCounts();" style="width: 100%; height: 170px; padding: 10px 12px; border-radius: 10px; border: 1px solid #93c5fd; background: #ffffff; font-family: monospace; font-size: 13px; resize: vertical; outline: none; box-sizing: border-box;"></textarea>
+
+                        <div style="display: flex; gap: 6px; margin-top: auto;">
+                            <button type="button" onclick="ocrToolSortShared()" style="flex: 1; padding: 8px; border: none; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; background:#e0f2fe; color:#0369a1;">🔃 排序</button>
+                            <button type="button" onclick="ocrToolClearShared()" style="flex: 1; padding: 8px; border: none; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; background:#fee2e2; color:#b91c1c;">🗑️ 清空</button>
+                            <button type="button" onclick="ocrToolCopyShared()" style="flex: 1.3; padding: 8px; border: none; border-radius: 8px; font-size: 12.5px; font-weight: 800; cursor: pointer; background:linear-gradient(135deg,#0284c7,#0369a1); color:white; box-shadow:0 2px 4px rgba(2,132,199,0.25);">📋 複製暫存區</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2059,9 +2086,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script src="js/family-data.js?v=202611170218"></script>
-    <script>const APP_VERSION = "2026.11.17.0218";</script>
-    <script src="js/main.js?v=202611170218"></script>
+    <script src="js/family-data.js?v=202611170305"></script>
+    <script>const APP_VERSION = "2026.11.17.0305";</script>
+    <script src="js/main.js?v=202611170305"></script>
     <script src="js/autofill.js?v=1793651958949"></script>
 </body>
 </html>
