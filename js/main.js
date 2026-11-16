@@ -215,7 +215,6 @@
             alert('目前篩選條件下沒有可複製的巨菇座標！');
             return;
         }
-        const os = typeof detectOS === 'function' ? detectOS() : 'unknown';
         const seen = new Set();
         const lines = [];
         list.forEach(item => {
@@ -223,7 +222,7 @@
             const normalized = normalizeCoords(String(item.coords));
             if (!normalized || seen.has(normalized)) return;
             seen.add(normalized);
-            lines.push((os === 'ios' || os === 'macos' || os === 'windows') ? normalized.replace(/,/g, ' ') : normalized);
+            lines.push(normalized);
         });
         if (lines.length === 0) {
             alert('目前篩選結果中沒有有效座標！');
@@ -2638,6 +2637,7 @@
     dbRef('mushrooms_v2').on('value', (snapshot) => {
         const cloudData = snapshot.val();
         dataList = [];
+        const seenMushSnap = new Set();
         const now = Date.now();
         if (cloudData) {
             Object.keys(cloudData).forEach((key) => {
@@ -2645,6 +2645,12 @@
                 if (isAutoDeleteOn && item.targetTime != null && (now - item.targetTime >= 7200000)) {
                     dbRef('mushrooms_v2/' + key).remove();
                 } else {
+                    const normCoord = normalizeCoords(item.coords || '').toLowerCase();
+                    if (normCoord) {
+                        const sig = `${item.sn ?? ''}|${normCoord}|${(item.user || '').trim()}|${item.targetTime ?? ''}`;
+                        if (seenMushSnap.has(sig)) return;
+                        seenMushSnap.add(sig);
+                    }
                     const locNorm = normalizeCountryAndCity(item.country || "", item.city || "");
                     dataList.push({
                         id: key, sn: item.sn, user: item.user || "",
@@ -4702,81 +4708,94 @@
         if (needsViewUpdate) updateView();
     }, 1000);
 
+    let _isAddingMushroom = false;
+    const _recentMushCoords = new Map();
     async function addItem() {
         if (currentMode === 'mushroom') {
-            const userEl = document.getElementById('user'), countryEl = document.getElementById('country');
-            const nameEl = document.getElementById('name'), coordsEl = document.getElementById('coords'), tagEl = document.getElementById('tag');
-            const dVal = document.getElementById('days').value, hVal = document.getElementById('hours').value, mVal = document.getElementById('minutes').value;
+            if (_isAddingMushroom) return;
+            _isAddingMushroom = true;
+            try {
+                const userEl = document.getElementById('user'), countryEl = document.getElementById('country');
+                const nameEl = document.getElementById('name'), coordsEl = document.getElementById('coords'), tagEl = document.getElementById('tag');
+                const dVal = document.getElementById('days').value, hVal = document.getElementById('hours').value, mVal = document.getElementById('minutes').value;
 
-            if (!nameEl.value.trim() || !coordsEl.value.trim()) { alert('請填寫名稱與座標欄位！'); return; }
+                if (!nameEl.value.trim() || !coordsEl.value.trim()) { alert('請填寫名稱與座標欄位！'); return; }
 
-            const d = parseInt(dVal, 10) || 0, h = parseInt(hVal, 10) || 0, m = parseInt(mVal, 10) || 0;
-            let targetTime = null;
-            if (d > 0 || h > 0 || m > 0) targetTime = Date.now() + (((d * 24 * 60) + (h * 60) + m) * 60 * 1000);
+                const d = parseInt(dVal, 10) || 0, h = parseInt(hVal, 10) || 0, m = parseInt(mVal, 10) || 0;
+                let targetTime = null;
+                if (d > 0 || h > 0 || m > 0) targetTime = Date.now() + (((d * 24 * 60) + (h * 60) + m) * 60 * 1000);
 
-            const processedUser = userEl ? userEl.value.trim() : "";
-            let processedCountry = countryEl ? toTW(countryEl.value.trim()) : "";
-            const cityEl = document.getElementById('city');
-            let processedCity = cityEl ? toTW(cityEl.value.trim()) : "";
-            
-            if (processedCountry.includes("中華民國")) {
-                processedCountry = "台灣";
-            }
-            
-            let initSlots = ['', '', '', '', ''];
-            if (processedUser !== "") { initSlots[0] = '✔️'; }
-
-            let nextSn = 1;
-            if (dataList.length > 0) nextSn = Math.max(...dataList.map(i => i.sn || 0)) + 1;
-
-            const kindEl = document.getElementById('mushroom-kind');
-            let mushKind = kindEl ? kindEl.value : '巨菇';
-            
-            // 自動升級種類：如果名稱或標籤含有元素關鍵字，強制將分類改為元素菇
-            const nLower = nameEl.value.trim().toLowerCase();
-            const tLower = tagEl ? tagEl.value.trim().toLowerCase() : '';
-            const chk = nLower + " " + tLower;
-            if (chk.includes('水晶') || chk.includes('毒') || (chk.includes('水') && !chk.includes('水果')) || chk.includes('火') || chk.includes('紅') || chk.includes('電')) {
-                mushKind = '元素菇';
-            }
-
-            const mCoordsStr = normalizeCoords(coordsEl.value).toLowerCase();
-            const mCoordMatch = mCoordsStr.match(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
-            const mLat = mCoordMatch ? parseFloat(mCoordMatch[1]) : null;
-            const mLon = mCoordMatch ? parseFloat(mCoordMatch[2]) : null;
-            if (mCoordsStr) {
-                const dupItem = dataList.find(item => {
-                    const icStr = normalizeCoords(item.coords || '').toLowerCase();
-                    if (icStr === mCoordsStr) return true;
-                    if (mLat !== null && mLon !== null) {
-                        const im = icStr.match(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
-                        if (im) {
-                            const iLat = parseFloat(im[1]), iLon = parseFloat(im[2]);
-                            if (Math.abs(mLat - iLat) < 0.00001 && Math.abs(mLon - iLon) < 0.00001) return true;
-                        }
-                    }
-                    return false;
-                });
-                if (dupItem) {
-                    const dupLoc = [dupItem.country, dupItem.city].filter(Boolean).join(' · ');
-                    const dupUser = dupItem.user ? `（認領人：${dupItem.user}）` : '（未認領）';
-                    alert(`⛔ 禁止重複新增！\n\n此座標已有相同的巨菇/元素菇紀錄：\n🍄 名稱：${dupItem.name || '未命名'} ${dupUser}\n📍 地點：${dupLoc || '未知'}\n🧭 座標：${dupItem.coords}`);
-                    return;
+                const processedUser = userEl ? userEl.value.trim() : "";
+                let processedCountry = countryEl ? toTW(countryEl.value.trim()) : "";
+                const cityEl = document.getElementById('city');
+                let processedCity = cityEl ? toTW(cityEl.value.trim()) : "";
+                
+                if (processedCountry.includes("中華民國")) {
+                    processedCountry = "台灣";
                 }
-            }
+                
+                let initSlots = ['', '', '', '', ''];
+                if (processedUser !== "") { initSlots[0] = '✔️'; }
 
-            dbRef('mushrooms_v2').push({
-                sn: nextSn, user: processedUser, country: processedCountry, city: processedCity,
-                name: nameEl.value.trim(), coords: normalizeCoords(coordsEl.value), tag: tagEl.value.trim(), 
-                targetTime: targetTime, slots: initSlots, kind: mushKind
-            });
-            
-            userEl.value = ''; countryEl.value = ''; if (cityEl) cityEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = '';
-            document.getElementById('tz-hint').innerText = '';
-            const cCand = document.getElementById('city-candidates'); if (cCand) cCand.style.display = 'none';
-            document.getElementById('days').value = '0'; document.getElementById('hours').value = '0'; document.getElementById('minutes').value = '0';
-            if (kindEl) kindEl.value = '巨菇';
-            closeModal('add-modal');
+                let nextSn = 1;
+                if (dataList.length > 0) nextSn = Math.max(...dataList.map(i => i.sn || 0)) + 1;
+
+                const kindEl = document.getElementById('mushroom-kind');
+                let mushKind = kindEl ? kindEl.value : '巨菇';
+                
+                // 自動升級種類：如果名稱或標籤含有元素關鍵字，強制將分類改為元素菇
+                const nLower = nameEl.value.trim().toLowerCase();
+                const tLower = tagEl ? tagEl.value.trim().toLowerCase() : '';
+                const chk = nLower + " " + tLower;
+                if (chk.includes('水晶') || chk.includes('毒') || (chk.includes('水') && !chk.includes('水果')) || chk.includes('火') || chk.includes('紅') || chk.includes('電')) {
+                    mushKind = '元素菇';
+                }
+
+                const mCoordsStr = normalizeCoords(coordsEl.value).toLowerCase();
+                if (mCoordsStr) {
+                    const lastTs = _recentMushCoords.get(mCoordsStr) || 0;
+                    if (Date.now() - lastTs < 5000) return;
+                }
+                const mCoordMatch = mCoordsStr.match(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+                const mLat = mCoordMatch ? parseFloat(mCoordMatch[1]) : null;
+                const mLon = mCoordMatch ? parseFloat(mCoordMatch[2]) : null;
+                if (mCoordsStr) {
+                    const dupItem = dataList.find(item => {
+                        const icStr = normalizeCoords(item.coords || '').toLowerCase();
+                        if (icStr === mCoordsStr) return true;
+                        if (mLat !== null && mLon !== null) {
+                            const im = icStr.match(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);
+                            if (im) {
+                                const iLat = parseFloat(im[1]), iLon = parseFloat(im[2]);
+                                if (Math.abs(mLat - iLat) < 0.00001 && Math.abs(mLon - iLon) < 0.00001) return true;
+                            }
+                        }
+                        return false;
+                    });
+                    if (dupItem) {
+                        const dupLoc = [dupItem.country, dupItem.city].filter(Boolean).join(' · ');
+                        const dupUser = dupItem.user ? `（認領人：${dupItem.user}）` : '（未認領）';
+                        alert(`⛔ 禁止重複新增！\n\n此座標已有相同的巨菇/元素菇紀錄：\n🍄 名稱：${dupItem.name || '未命名'} ${dupUser}\n📍 地點：${dupLoc || '未知'}\n🧭 座標：${dupItem.coords}`);
+                        return;
+                    }
+                    _recentMushCoords.set(mCoordsStr, Date.now());
+                }
+
+                await dbRef('mushrooms_v2').push({
+                    sn: nextSn, user: processedUser, country: processedCountry, city: processedCity,
+                    name: nameEl.value.trim(), coords: normalizeCoords(coordsEl.value), tag: tagEl.value.trim(), 
+                    targetTime: targetTime, slots: initSlots, kind: mushKind
+                });
+                
+                userEl.value = ''; countryEl.value = ''; if (cityEl) cityEl.value = ''; nameEl.value = ''; coordsEl.value = ''; tagEl.value = '';
+                document.getElementById('tz-hint').innerText = '';
+                const cCand = document.getElementById('city-candidates'); if (cCand) cCand.style.display = 'none';
+                document.getElementById('days').value = '0'; document.getElementById('hours').value = '0'; document.getElementById('minutes').value = '0';
+                if (kindEl) kindEl.value = '巨菇';
+                closeModal('add-modal');
+            } finally {
+                _isAddingMushroom = false;
+            }
         } else if (currentMode === 'postcard' || currentMode === 'goldbasin') {
             const typeEl = document.getElementById('post-type'), countryEl = document.getElementById('post-country');
             const nameEl = document.getElementById('post-name'), coordsEl = document.getElementById('post-coords');
@@ -9720,8 +9739,8 @@ const distKey = `${cityName}__${distName}`;
             const slotStatusText = isFull
                 ? `<span class="mush-slot-status" style="color:#dc2626; font-weight:800;">🈵 已額滿 (5/5)</span>`
                 : `<span class="mush-slot-status" style="color:#059669; font-weight:800;">🟢 參戰 ${filledCount}/5 <span style="color:#0284c7; font-weight:800;">(空${emptyCount}位)</span></span>`;
-            slotsHtml = `<div class="slots-wrapper" style="background:transparent; border:none; padding:4px 0 0 0; margin-top:4px;">`;
-            slotsHtml += `<div class="mush-slot-header" style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:5px; padding:0 2px;">${slotStatusText}<span class="mush-slot-hint" style="font-size:10px; color:#94a3b8; font-weight:600;">點第N格自動勾選</span></div>`;
+            slotsHtml = `<div class="slots-wrapper" style="background:transparent; border:none; padding:2px 0 0 0; margin-top:2px;">`;
+            slotsHtml += `<div class="mush-slot-header" title="點擊第 N 格可自動勾選前 N 格" style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:4px; padding:0 2px;">${slotStatusText}</div>`;
             slotsHtml += `<div class="mush-slots-row" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">`;
             for (let i = 0; i < 5; i++) {
                 if (currentSlots[i]) {
@@ -10138,6 +10157,12 @@ const distKey = `${cityName}__${distName}`;
 
         const hideActiveSection = (mushQuickFilter === 'unclaimed');
         const hideUnclaimedSection = (mushQuickFilter === 'active' || mushQuickFilter === '24h' || mushQuickFilter === 'open_slots' || Boolean(selectedMushPlayer));
+        const activeHeadingEl = document.getElementById('active-section-heading');
+        if (activeHeadingEl) {
+            const showActiveHeading = pinnedMatchedCards.length > 0 && !hideActiveSection && actCount > 0;
+            activeHeadingEl.style.display = showActiveHeading ? 'flex' : 'none';
+            if (showActiveHeading) activeHeadingEl.textContent = `🟢 追蹤中 (${actCount} 筆)`;
+        }
         const uncHeadingEl = document.getElementById('unclaimed-section-heading');
         if (uncHeadingEl) uncHeadingEl.style.display = hideUnclaimedSection ? 'none' : '';
         activeEl.style.display = hideActiveSection ? 'none' : '';
@@ -13439,7 +13464,7 @@ const distKey = `${cityName}__${distName}`;
     }
 
     // 地圖圖層狀態
-    const mapLayerActive = { mushroom: true, postcard: true, landmark: true, coco: true, family: false };
+    const mapLayerActive = { mushroom: true, postcard: true, landmark: true, coco: false, family: false };
 
     function toggleMapLayer(layer) {
         mapLayerActive[layer] = !mapLayerActive[layer];
