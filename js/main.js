@@ -542,6 +542,7 @@
 
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         document.getElementById('view-' + tab).classList.add('active');
+        document.body.classList.toggle('map-tab-active', tab === 'map');
 
         if(tab === 'settings' || tab === 'cloud' || tab === 'ocr' || tab === 'map' || tab === 'coco' || tab === 'family') {
             document.getElementById('main-fab').style.display = 'none';

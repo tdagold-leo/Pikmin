@@ -28,7 +28,7 @@
 
     <!-- 引入 OpenCC-js 用於簡轉繁 -->
     <script src="https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js"></script>
-    <link rel="stylesheet" href="css/style.css?v=202611170150">
+    <link rel="stylesheet" href="css/style.css?v=202611170218">
     <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
 </head>
 <body>
@@ -256,37 +256,43 @@
             <div class="lm-filter-panel">
                 <div class="lm-location-row">
                     <div class="lm-field-col">
-                        <label class="lm-field-label">🌐 國家 / 地區</label>
+                        <label class="lm-field-label">🌐 國家</label>
                         <select id="lm-country-filter" class="lm-cream-select" onchange="onLmLocationFilterChange('country')">
                             <option value="">所有國家</option>
                         </select>
                     </div>
                     <div class="lm-field-col">
-                        <label class="lm-field-label">🏙️ 城市 / 縣市</label>
+                        <label class="lm-field-label">🏙️ 城市</label>
                         <select id="lm-city-filter" class="lm-cream-select" onchange="onLmLocationFilterChange('city')">
                             <option value="">所有縣市</option>
                         </select>
                     </div>
                     <div class="lm-field-col">
-                        <label class="lm-field-label">📌 鄉鎮市區</label>
+                        <label class="lm-field-label">📌 行政區</label>
                         <select id="lm-district-filter" class="lm-cream-select" onchange="onLmLocationFilterChange('district')">
                             <option value="">所有行政區</option>
                         </select>
                     </div>
                 </div>
 
-                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                    <input type="text" id="lm-search" class="lm-cream-input" style="flex:1; min-width:220px;" oninput="renderLandmarks()" placeholder="🔎 輸入地標、備註、子分類關鍵字，或貼上 GPS 座標搜尋 1km 內純點...">
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <input type="text" id="lm-search" class="lm-cream-input" style="flex:1; min-width:200px;" oninput="renderLandmarks()" placeholder="🔎 搜尋地標、備註、子分類或貼上 GPS 座標...">
                     <div id="lm-status-filter-bar" class="lm-status-filter-bar"></div>
                 </div>
 
-                <div style="display:flex; flex-direction:column; gap:9px;">
-                    <div class="lm-cat-header">
-                        <label class="lm-field-label">🌱 飾品苗分類矩陣（支援複選篩選）</label>
-                        <div class="lm-cat-actions" id="lm-cat-actions"></div>
+                <details id="lm-cat-collapse" class="lm-cat-collapse">
+                    <summary class="lm-cat-summary">
+                        <span>🌱 飾品苗分類矩陣（支援複選）</span>
+                        <span class="lm-cat-chevron">展開 ▾</span>
+                    </summary>
+                    <div style="display:flex; flex-direction:column; gap:9px; margin-top:10px;">
+                        <div class="lm-cat-header">
+                            <span style="font-size:11.5px; color:#64748b; font-weight:700;">可複選篩選飾品種類</span>
+                            <div class="lm-cat-actions" id="lm-cat-actions"></div>
+                        </div>
+                        <div id="lm-category-pills" class="lm-category-grid"></div>
                     </div>
-                    <div id="lm-category-pills" class="lm-category-grid"></div>
-                </div>
+                </details>
             </div>
 
             <div id="landmark-empty" class="empty-state" style="display:none;">目前沒有符合條件的純點紀錄，請調整篩選條件或點擊下方「+」號新增！</div>
@@ -2053,9 +2059,9 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script src="js/family-data.js?v=202611170207"></script>
-    <script>const APP_VERSION = "2026.11.17.0207";</script>
-    <script src="js/main.js?v=202611170207"></script>
+    <script src="js/family-data.js?v=202611170218"></script>
+    <script>const APP_VERSION = "2026.11.17.0218";</script>
+    <script src="js/main.js?v=202611170218"></script>
     <script src="js/autofill.js?v=1793651958949"></script>
 </body>
 </html>

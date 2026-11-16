@@ -4291,3 +4291,98 @@
         margin-top: 49px;
     }
 }
+
+/* ===== 1. 巨菇頂部玩家頭像徽章防裁切 ===== */
+#player-roster {
+    padding-top: 6px !important;
+    padding-right: 4px !important;
+}
+
+/* ===== 2. 地圖分頁消除頂部空白並強化圖層按鈕辨識度 ===== */
+body.map-tab-active {
+    padding-bottom: 0 !important;
+}
+body.map-tab-active .app-content {
+    display: none !important;
+}
+body.map-tab-active #view-map {
+    height: calc(100dvh - 109px) !important;
+}
+@media (min-width: 1024px) {
+    body.map-tab-active #view-map {
+        height: calc(100dvh - 49px) !important;
+        margin-top: 49px !important;
+    }
+}
+#view-map .map-layer-btn {
+    opacity: 0.62;
+    filter: grayscale(35%);
+    border: 1.5px solid #cbd5e1;
+    background: #f8fafc;
+    transition: all 0.15s ease;
+}
+#view-map .map-layer-btn.active {
+    opacity: 1;
+    filter: none;
+    border-color: #0284c7;
+    background: #e0f2fe;
+}
+
+/* ===== 3. 純點頁面緊湊化與分類矩陣預設收折 ===== */
+.lm-cat-collapse {
+    border: 1px solid #ccfbf1;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 8px 12px;
+}
+.lm-cat-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    list-style: none;
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #0f766e;
+    user-select: none;
+}
+.lm-cat-summary::-webkit-details-marker {
+    display: none;
+}
+.lm-cat-chevron {
+    font-size: 11px;
+    color: #64748b;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    padding: 2px 8px;
+}
+.lm-cat-collapse[open] .lm-cat-chevron {
+    background: #ccfbf1;
+    color: #0f766e;
+    border-color: #99f6e4;
+}
+@media (max-width: 640px) {
+    .lm-page-header {
+        padding: 10px 14px !important;
+        margin-bottom: 10px !important;
+        border-radius: 14px !important;
+    }
+    .lm-filter-panel {
+        padding: 12px 10px !important;
+        gap: 10px !important;
+        margin-bottom: 12px !important;
+    }
+    .lm-location-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 6px !important;
+    }
+    .lm-field-label {
+        font-size: 11px !important;
+    }
+    .lm-cream-select {
+        padding: 7px 6px !important;
+        font-size: 12px !important;
+        border-radius: 10px !important;
+    }
+}
