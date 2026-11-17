@@ -4727,3 +4727,26 @@ body.map-tab-active #view-map {
     border-color: #fecaca !important;
     color: #dc2626 !important;
 }
+
+/* ===== 明信片分頁緊湊化與群組列表優化 ===== */
+#view-postcard .pc-stats-grid {
+    gap: 8px;
+    margin-bottom: 8px;
+}
+#view-postcard .pc-stat-card {
+    padding: 8px 12px;
+    border-radius: 12px;
+}
+#view-postcard .pc-stat-num {
+    font-size: 17px !important;
+}
+#postcard-container .group-header {
+    padding: 8px 12px;
+    margin: 2px 0;
+    border-radius: 12px;
+    transition: transform 0.12s, box-shadow 0.15s;
+}
+#postcard-container .group-header:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.07);
+}

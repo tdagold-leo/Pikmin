@@ -5722,7 +5722,7 @@
 
     function syncPcLayoutAndDrawerUI() {
         const isWall = localStorage.getItem('pikmin_pc_layout') === 'wall';
-        const isDrawerCol = localStorage.getItem('pikmin_pc_drawer_collapsed') === '1';
+        const isDrawerCol = localStorage.getItem('pikmin_pc_drawer_collapsed') !== '0';
         const pcContainer = document.getElementById('postcard-container');
         const layoutBtn = document.getElementById('pc-layout-toggle-btn');
         const drawerEl = document.getElementById('pc-filter-drawer');
@@ -5750,7 +5750,7 @@
     };
 
     window.togglePcFilterDrawer = function() {
-        const cur = localStorage.getItem('pikmin_pc_drawer_collapsed') === '1';
+        const cur = localStorage.getItem('pikmin_pc_drawer_collapsed') !== '0';
         localStorage.setItem('pikmin_pc_drawer_collapsed', cur ? '0' : '1');
         syncPcLayoutAndDrawerUI();
     };
@@ -10960,15 +10960,22 @@ const distKey = `${cityName}__${distName}`;
                     ? `<div style="position:absolute; left:0; bottom:0; width:100%; height:2.5px; background:#f1f5f9; pointer-events:none;"><div style="height:100%; width:${colPct}%; background:${allCol ? '#22c55e' : '#f59e0b'}; transition:width 0.25s;"></div></div>`
                     : '';
 
+                const pctBadge = (!isGoldbasinMode && totalInGroup > 0)
+                    ? `<span style="font-size:11px; font-weight:800; color:${allCol ? '#15803d' : '#64748b'}; white-space:nowrap; flex-shrink:0;">${colPct}%</span>`
+                    : '';
+
                 gHead.innerHTML = `
-                    <div class="pc-group-badges-scroll" style="display:flex; align-items:center; gap:4px; min-width:0; flex:1; overflow-x:auto; scrollbar-width:none;">
-                        <div style="background:${pastelBg}; border:1px solid ${borderColor}; color:${darkText}; padding:3px 8px; border-radius:9px; display:inline-flex; align-items:center; gap:4px; font-size:13px; font-weight:800; white-space:nowrap; flex-shrink:0;">
+                    <div class="pc-group-badges-scroll" style="display:flex; align-items:center; gap:5px; min-width:0; flex:1; overflow-x:auto; scrollbar-width:none;">
+                        <div style="background:${pastelBg}; border:1px solid ${borderColor}; color:${darkText}; padding:3px 9px; border-radius:9px; display:inline-flex; align-items:center; gap:4px; font-size:13px; font-weight:800; white-space:nowrap; flex-shrink:0;">
                             <span>${arrow} ${escapeHtml(type)}</span>
                             <span style="background:rgba(255,255,255,0.85); padding:0.5px 5.5px; border-radius:7px; font-size:11px; font-weight:900;">${totalInGroup}<span class="pc-only-desktop"> 筆</span></span>
                         </div>
                         ${groupReminders}
                     </div>
-                    ${groupCopyBtn}
+                    <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                        ${pctBadge}
+                        ${groupCopyBtn}
+                    </div>
                     ${progressBarHtml}
                 `;
 
