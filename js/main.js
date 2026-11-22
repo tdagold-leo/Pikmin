@@ -13576,6 +13576,26 @@ const distKey = `${cityName}__${distName}`;
     // 地圖圖層狀態
     const mapLayerActive = { mushroom: true, postcard: true, landmark: true, coco: false, family: false };
 
+    // 巨菇地圖資訊視窗內容（含「認領」按鈕），供標記點擊與「地圖」定位按鈕共用
+    function buildMushroomMapInfoContent(mush) {
+        const isUnclaimed = !mush.user || mush.user === '';
+        const claimed = isUnclaimed
+            ? `<div style="font-size:12px; color:#dc2626; font-weight:700; margin-bottom:8px;">⏳ 待認領</div>`
+            : `<div style="font-size:12px; color:#15803d; font-weight:700; margin-bottom:8px;">✅ ${escapeHtml(mush.user)}</div>`;
+        const claimBtn = isUnclaimed
+            ? `<button onclick="mapInfoWindow.close(); openClaimModalById('${mush.id}')" style="width:100%; padding:7px 0; background:linear-gradient(135deg, #6366f1, #4f46e5); color:white; border:none; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; margin-bottom:6px;">🙋 認領</button>`
+            : '';
+        return `<div style="min-width:170px; padding:8px 6px 6px; font-family:var(--font-family); text-align:center;">
+            <div style="font-size:24px; margin-bottom:4px;">🍄</div>
+            <div style="font-size:14px; font-weight:bold; color:#1e293b; margin-bottom:4px;">${escapeHtml(mush.name || '未命名')}</div>
+            ${claimed}
+            <div style="font-size:12px; color:#64748b; margin-bottom:6px;">🌍 ${escapeHtml(mush.country || '未提供')}${mush.city ? ' · ' + escapeHtml(mush.city) : ''}</div>
+            <div style="font-size:11px; font-weight:700; color:white; background:#16a34a; padding:2px 8px; border-radius:4px; display:inline-block; margin-bottom:10px;">${escapeHtml(mush.kind || '巨菇')}</div>
+            ${claimBtn}
+            <button onclick="copyCoords('${escapeHtml(mush.coords).replace(/'/g, "\\'")}', this)" style="width:100%; padding:6px 0; background:#f1f5f9; color:#1e293b; border:1.5px solid #e2e8f0; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">📍 複製座標</button>
+        </div>`;
+    }
+
     function toggleMapLayer(layer) {
         mapLayerActive[layer] = !mapLayerActive[layer];
         const btn = document.getElementById('map-layer-' + layer);
@@ -13682,23 +13702,7 @@ const distKey = `${cityName}__${distName}`;
                         window.addPointToRoute({ lat, lng, name: mush.name || '節點' });
                         return;
                     }
-                    const isUnclaimed = !mush.user || mush.user === '';
-                    const claimed = isUnclaimed
-                        ? `<div style="font-size:12px; color:#dc2626; font-weight:700; margin-bottom:8px;">⏳ 待認領</div>`
-                        : `<div style="font-size:12px; color:#15803d; font-weight:700; margin-bottom:8px;">✅ ${escapeHtml(mush.user)}</div>`;
-                    const claimBtn = isUnclaimed
-                        ? `<button onclick="mapInfoWindow.close(); openClaimModalById('${mush.id}')" style="width:100%; padding:7px 0; background:linear-gradient(135deg, #6366f1, #4f46e5); color:white; border:none; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; margin-bottom:6px;">🙋 認領</button>`
-                        : '';
-                    const content = `<div style="min-width:170px; padding:8px 6px 6px; font-family:var(--font-family); text-align:center;">
-                        <div style="font-size:24px; margin-bottom:4px;">🍄</div>
-                        <div style="font-size:14px; font-weight:bold; color:#1e293b; margin-bottom:4px;">${escapeHtml(mush.name || '未命名')}</div>
-                        ${claimed}
-                        <div style="font-size:12px; color:#64748b; margin-bottom:6px;">🌍 ${escapeHtml(mush.country || '未提供')}${mush.city ? ' · ' + escapeHtml(mush.city) : ''}</div>
-                        <div style="font-size:11px; font-weight:700; color:white; background:#16a34a; padding:2px 8px; border-radius:4px; display:inline-block; margin-bottom:10px;">${escapeHtml(mush.kind || '巨菇')}</div>
-                        ${claimBtn}
-                        <button onclick="copyCoords('${escapeHtml(mush.coords).replace(/'/g, "\\'")}', this)" style="width:100%; padding:6px 0; background:#f1f5f9; color:#1e293b; border:1.5px solid #e2e8f0; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer;">📍 複製座標</button>
-                    </div>`;
-                    mapInfoWindow.setContent(content);
+                    mapInfoWindow.setContent(buildMushroomMapInfoContent(mush));
                     mapInfoWindow.open(mapInstance, marker);
                 });
                 mapMarkers.push(marker);
@@ -13899,6 +13903,17 @@ window.renameCloudRoute = renameCloudRoute;
                 const openFocusInfo = () => {
                     if (!mapInfoWindow) return;
                     const displayCoords = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                    // 若該座標正好是巨菇，直接顯示巨菇資訊（含認領按鈕）
+                    const matchedMush = (typeof dataList !== 'undefined' ? dataList : []).find(m => {
+                        if (!m.coords) return false;
+                        const mm = String(m.coords).match(/(-?\d+(?:\.\d+)?)(?:[\s,，]+)(-?\d+(?:\.\d+)?)/);
+                        return mm && Math.abs(parseFloat(mm[1]) - lat) < 0.00002 && Math.abs(parseFloat(mm[2]) - lng) < 0.00002;
+                    });
+                    if (matchedMush && !customTitle) {
+                        mapInfoWindow.setContent(buildMushroomMapInfoContent(matchedMush));
+                        mapInfoWindow.open(mapInstance, focusMapMarker);
+                        return;
+                    }
                     const content = `<div style="min-width:175px; padding:6px 6px 4px; font-family:var(--font-family); text-align:center;">
                         <div style="font-size:14px; font-weight:900; color:#1e293b; margin-bottom:4px;">${escapeHtml(spotTitle || '📍 指定座標位置')}</div>
                         ${spotSub ? `<div style="font-size:12px; color:#047857; font-weight:700; margin-bottom:4px;">📍 ${escapeHtml(spotSub)}</div>` : ''}
