@@ -7188,60 +7188,76 @@ function layoutWeekEvents(weekEvents) {
         }
 
         let html = `
-            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:8px 12px; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-                <span style="font-size:18px;">📢</span>
-                <span style="font-size:12.5px; font-weight:800; color:#166534;">今天共有 ${events.length} 項正在進行中的活動提醒：</span>
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:8px 12px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="font-size:17px;">📢</span>
+                    <span style="font-size:13px; font-weight:800; color:#166534;">今日共 ${events.length} 項進行中活動</span>
+                </div>
+                <span style="font-size:11.5px; font-weight:700; color:#15803d;">👆 點擊項目查看內容</span>
             </div>
-            <div style="display:flex; flex-direction:column; gap:10px; max-height:55vh; overflow-y:auto; padding-right:2px;">
+            <div style="display:flex; flex-direction:column; gap:10px; max-height:58vh; overflow-y:auto; padding-right:2px;">
         `;
 
-        events.forEach(ev => {
+        events.forEach((ev, idx) => {
+            const detailId = `today-notice-detail-${idx}`;
+            const toggleBadgeId = `today-notice-toggle-${idx}`;
+
             if (ev.isFridayReminder) {
                 html += `
-                    <div style="background:linear-gradient(135deg,#fef2f2 0%,#fff1f2 100%); border:1.5px solid #fca5a5; border-left:5px solid #dc2626; border-radius:10px; padding:11px 12px; box-shadow:0 2px 6px rgba(220,38,38,0.1);">
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px;">
+                    <div onclick="toggleTodayNoticeItem(${idx})" style="background:linear-gradient(135deg,#fef2f2 0%,#fff1f2 100%); border:1.5px solid #fca5a5; border-left:6px solid #dc2626; border-radius:12px; padding:12px 14px; box-shadow:0 2px 8px rgba(220,38,38,0.1); cursor:pointer; transition:box-shadow 0.15s;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
                             <span style="background:#dc2626; color:#ffffff; font-size:11px; font-weight:800; padding:2px 8px; border-radius:12px;">🚨 每週五重點提醒</span>
-                            <span style="font-size:11px; color:#b91c1c; font-weight:800;">務必留意</span>
+                            <span id="${toggleBadgeId}" style="font-size:11.5px; color:#b91c1c; font-weight:800; background:rgba(220,38,38,0.08); padding:2px 8px; border-radius:999px; white-space:nowrap;">詳情 ▾</span>
                         </div>
-                        <div style="font-size:15px; font-weight:900; color:#991b1b; margin-top:6px;">⚠️ 留一次打巨菇</div>
-                        <div style="font-size:12px; color:#7f1d1d; margin-top:3px; line-height:1.45; font-weight:600;">今日（週五）免費打菇次數請務必預留 1 次，不要全部打完，以便跨日或迎接週末巨菇日！</div>
-                        <div style="margin-top:8px; display:flex; justify-content:flex-end;">
-                            <button type="button" onclick="goToMushroomFromNotice()" style="background:#ffffff; color:#dc2626; border:1px solid #fca5a5; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:800; cursor:pointer;">🍄 前往巨菇清單</button>
+                        <div style="font-size:19px; font-weight:900; color:#991b1b; margin-top:7px; line-height:1.35; letter-spacing:0.3px;">⚠️ 留一次打巨菇</div>
+                        <div id="${detailId}" style="display:none; margin-top:10px; padding-top:10px; border-top:1px dashed #fca5a5;">
+                            <div style="font-size:13px; color:#7f1d1d; line-height:1.55; font-weight:600;">今日（週五）免費打菇次數請務必預留 1 次，不要全部打完，以便跨日或迎接週末巨菇日！</div>
+                            <div style="margin-top:10px; display:flex; justify-content:flex-end;">
+                                <button type="button" onclick="event.stopPropagation(); goToMushroomFromNotice();" style="background:#ffffff; color:#dc2626; border:1px solid #fca5a5; border-radius:7px; padding:5px 12px; font-size:12px; font-weight:800; cursor:pointer;">🍄 前往巨菇清單</button>
+                            </div>
                         </div>
                     </div>
                 `;
             } else if (ev.type === 'mushroom') {
                 html += `
-                    <div style="background:#fff; border:1px solid #fed7aa; border-left:4.5px solid #f97316; border-radius:10px; padding:10px 12px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px;">
+                    <div onclick="toggleTodayNoticeItem(${idx})" style="background:#fff; border:1px solid #fed7aa; border-left:6px solid #f97316; border-radius:12px; padding:12px 14px; box-shadow:0 2px 6px rgba(0,0,0,0.05); cursor:pointer; transition:box-shadow 0.15s;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
                             <span style="background:#ffedd5; color:#c2410c; border:1px solid #fed7aa; font-size:11px; font-weight:800; padding:2px 8px; border-radius:12px;">🍄 週末活動</span>
-                            <span style="font-size:11px; color:#ea580c; font-weight:700;">進行中</span>
+                            <span id="${toggleBadgeId}" style="font-size:11.5px; color:#ea580c; font-weight:800; background:#fff7ed; border:1px solid #ffedd5; padding:2px 8px; border-radius:999px; white-space:nowrap;">詳情 ▾</span>
                         </div>
-                        <div style="font-size:13.5px; font-weight:800; color:#1e293b; margin-top:5px;">🍄 週末常規巨菇日</div>
-                        <div style="font-size:12px; color:#64748b; margin-top:3px; line-height:1.45;">每週六、週日全天巨大蘑菇現身，擊倒可獲得更多精華、水果與明信片！</div>
-                        <div style="margin-top:8px; display:flex; justify-content:flex-end;">
-                            <button type="button" onclick="goToMushroomFromNotice()" style="background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:700; cursor:pointer;">🍄 前往巨菇清單</button>
+                        <div style="font-size:18px; font-weight:900; color:#0f172a; margin-top:7px; line-height:1.35; letter-spacing:0.2px;">🍄 週末常規巨菇日</div>
+                        <div id="${detailId}" style="display:none; margin-top:10px; padding-top:10px; border-top:1px dashed #fed7aa;">
+                            <div style="font-size:13px; color:#475569; line-height:1.55;">每週六、週日全天巨大蘑菇現身，擊倒可獲得更多精華、水果與明信片！</div>
+                            <div style="margin-top:10px; display:flex; justify-content:flex-end;">
+                                <button type="button" onclick="event.stopPropagation(); goToMushroomFromNotice();" style="background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; border-radius:7px; padding:5px 12px; font-size:12px; font-weight:800; cursor:pointer;">🍄 前往巨菇清單</button>
+                            </div>
                         </div>
                     </div>
                 `;
             } else if (ev.isGoldBasin) {
                 const pal = ev.palette || { bg: '#fef3c7', text: '#92400e', border: '#fcd34d', bar: '#f59e0b' };
                 const safeActName = (ev.actName || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                const titlePrefix = ev.isCocoSpecial ? '🧋 ' : (ev.isFamilySpecial ? '🏪 ' : '');
                 html += `
-                    <div style="background:#fff; border:1px solid ${pal.border}; border-left:4.5px solid ${pal.bar}; border-radius:10px; padding:10px 12px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px; flex-wrap:wrap;">
-                            <span style="background:${pal.bg}; color:${pal.text}; border:1px solid ${pal.border}; font-size:11px; font-weight:800; padding:2px 8px; border-radius:12px;">🌟 期間特殊金盆</span>
-                            <span style="font-size:11px; color:#059669; font-weight:800; background:#ecfdf5; border:1px solid #a7f3d0; padding:2px 6px; border-radius:6px;">共 ${ev.count} 處點位</span>
+                    <div onclick="toggleTodayNoticeItem(${idx})" style="background:#fff; border:1px solid ${pal.border}; border-left:6px solid ${pal.bar}; border-radius:12px; padding:12px 14px; box-shadow:0 2px 6px rgba(0,0,0,0.05); cursor:pointer; transition:box-shadow 0.15s;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
+                            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                <span style="background:${pal.bg}; color:${pal.text}; border:1px solid ${pal.border}; font-size:11px; font-weight:800; padding:2px 8px; border-radius:12px;">🌟 期間特殊金盆</span>
+                                <span style="font-size:11px; color:#059669; font-weight:800; background:#ecfdf5; border:1px solid #a7f3d0; padding:2px 6px; border-radius:6px;">共 ${ev.count} 處</span>
+                            </div>
+                            <span id="${toggleBadgeId}" style="font-size:11.5px; color:${pal.text}; font-weight:800; background:${pal.bg}; border:1px solid ${pal.border}; padding:2px 8px; border-radius:999px; white-space:nowrap;">詳情 ▾</span>
                         </div>
-                        <div style="font-size:13.5px; font-weight:800; color:#1e293b; margin-top:5px;">${escapeHtml(ev.actName)}</div>
-                        <div style="font-size:12px; color:#64748b; margin-top:3px; line-height:1.45;">${linkifyHtml(ev.desc)}</div>
-                        <div style="margin-top:8px; display:flex; justify-content:flex-end; gap:6px;">
-                            ${ev.isCocoSpecial
-                                ? `<button type="button" onclick="closeTodayNoticeModal(); switchTab('coco');" style="background:${pal.bg}; color:${pal.text}; border:1.5px solid ${pal.border}; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:800; cursor:pointer;">🧋 前往 CoCo 聯名專頁 (346處)</button>`
-                                : ev.isFamilySpecial
-                                ? `<button type="button" onclick="closeTodayNoticeModal(); switchTab('family');" style="background:${pal.bg}; color:${pal.text}; border:1.5px solid ${pal.border}; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:800; cursor:pointer;">🏪 前往全家聯名專頁 (4537處)</button>`
-                                : `<button type="button" onclick="viewGoldbasinActListFromNotice('${safeActName}')" style="background:${pal.bg}; color:${pal.text}; border:1px solid ${pal.border}; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:700; cursor:pointer;">🔍 查看此活動金盆</button>`
-                            }
+                        <div style="font-size:18px; font-weight:900; color:#0f172a; margin-top:7px; line-height:1.35; letter-spacing:0.2px;">${titlePrefix}${escapeHtml(ev.actName)}</div>
+                        <div id="${detailId}" style="display:none; margin-top:10px; padding-top:10px; border-top:1px dashed ${pal.border};">
+                            <div style="font-size:13px; color:#475569; line-height:1.55;">${linkifyHtml(ev.desc)}</div>
+                            <div style="margin-top:10px; display:flex; justify-content:flex-end; gap:6px;">
+                                ${ev.isCocoSpecial
+                                    ? `<button type="button" onclick="event.stopPropagation(); closeTodayNoticeModal(); switchTab('coco');" style="background:${pal.bg}; color:${pal.text}; border:1.5px solid ${pal.border}; border-radius:7px; padding:5px 12px; font-size:12px; font-weight:800; cursor:pointer;">🧋 前往 CoCo 聯名專頁 (346處)</button>`
+                                    : ev.isFamilySpecial
+                                    ? `<button type="button" onclick="event.stopPropagation(); closeTodayNoticeModal(); switchTab('family');" style="background:${pal.bg}; color:${pal.text}; border:1.5px solid ${pal.border}; border-radius:7px; padding:5px 12px; font-size:12px; font-weight:800; cursor:pointer;">🏪 前往全家聯名專頁 (4537處)</button>`
+                                    : `<button type="button" onclick="event.stopPropagation(); viewGoldbasinActListFromNotice('${safeActName}');" style="background:${pal.bg}; color:${pal.text}; border:1px solid ${pal.border}; border-radius:7px; padding:5px 12px; font-size:12px; font-weight:800; cursor:pointer;">🔍 查看此活動金盆</button>`
+                                }
+                            </div>
                         </div>
                     </div>
                 `;
@@ -7262,16 +7278,26 @@ function layoutWeekEvents(weekEvents) {
                     barColor = '#eab308'; badgeBg = '#fefce8'; badgeColor = '#a16207'; badgeBorder = '#fef08a'; typeLabel = '🟡 提醒備忘';
                 }
 
+                const dateSpanText = ev.startDate === ev.endDate ? ev.startDate : `${ev.startDate} ~ ${ev.endDate}`;
+                const detailDescHtml = ev.desc
+                    ? `<div style="font-size:13px; color:#334155; line-height:1.55;">${linkifyHtml(ev.desc)}</div>`
+                    : `<div style="font-size:12.5px; color:#64748b; line-height:1.5;">活動期間：${escapeHtml(dateSpanText)}</div>`;
+
                 html += `
-                    <div style="background:#fff; border:1px solid ${badgeBorder}; border-left:4.5px solid ${barColor}; border-radius:10px; padding:10px 12px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px;">
-                            <span style="background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeBorder}; font-size:11px; font-weight:800; padding:2px 8px; border-radius:12px;">${typeLabel}</span>
-                            <span style="font-size:11px; color:#64748b;">${ev.startDate === ev.endDate ? ev.startDate : `${ev.startDate} ~ ${ev.endDate}`}</span>
+                    <div onclick="toggleTodayNoticeItem(${idx})" style="background:#fff; border:1px solid ${badgeBorder}; border-left:6px solid ${barColor}; border-radius:12px; padding:12px 14px; box-shadow:0 2px 6px rgba(0,0,0,0.05); cursor:pointer; transition:box-shadow 0.15s;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
+                            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                <span style="background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeBorder}; font-size:11px; font-weight:800; padding:2px 8px; border-radius:12px;">${typeLabel}</span>
+                                <span style="font-size:11.5px; font-weight:700; color:#64748b;">${escapeHtml(dateSpanText)}</span>
+                            </div>
+                            <span id="${toggleBadgeId}" style="font-size:11.5px; color:${badgeColor}; font-weight:800; background:${badgeBg}; border:1px solid ${badgeBorder}; padding:2px 8px; border-radius:999px; white-space:nowrap;">詳情 ▾</span>
                         </div>
-                        <div style="font-size:13.5px; font-weight:800; color:#1e293b; margin-top:5px;">${escapeHtml(ev.title)}</div>
-                        ${ev.desc ? `<div style="font-size:12px; color:#64748b; margin-top:3px; line-height:1.45;">${linkifyHtml(ev.desc)}</div>` : ''}
-                        <div style="margin-top:8px; display:flex; justify-content:flex-end;">
-                            <button type="button" onclick="goToCalendarFromNotice()" style="background:#f8fafc; color:#334155; border:1px solid #cbd5e1; border-radius:6px; padding:4px 10px; font-size:11.5px; font-weight:700; cursor:pointer;">📅 查看行事曆</button>
+                        <div style="font-size:18px; font-weight:900; color:#0f172a; margin-top:7px; line-height:1.35; letter-spacing:0.2px;">${escapeHtml(ev.title)}</div>
+                        <div id="${detailId}" style="display:none; margin-top:10px; padding-top:10px; border-top:1px dashed ${badgeBorder};">
+                            ${detailDescHtml}
+                            <div style="margin-top:10px; display:flex; justify-content:flex-end;">
+                                <button type="button" onclick="event.stopPropagation(); goToCalendarFromNotice();" style="background:#f8fafc; color:#334155; border:1px solid #cbd5e1; border-radius:7px; padding:5px 12px; font-size:12px; font-weight:700; cursor:pointer;">📅 查看行事曆</button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -7280,6 +7306,17 @@ function layoutWeekEvents(weekEvents) {
 
         html += `</div>`;
         container.innerHTML = html;
+    };
+
+    window.toggleTodayNoticeItem = function(idx) {
+        const detailEl = document.getElementById('today-notice-detail-' + idx);
+        const badgeEl = document.getElementById('today-notice-toggle-' + idx);
+        if (!detailEl) return;
+        const isHidden = detailEl.style.display === 'none';
+        detailEl.style.display = isHidden ? 'block' : 'none';
+        if (badgeEl) {
+            badgeEl.textContent = isHidden ? '收合 ▴' : '詳情 ▾';
+        }
     };
 
     window.closeTodayNoticeModal = function() {
